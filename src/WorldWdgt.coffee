@@ -1789,10 +1789,10 @@ class WorldWdgt extends IconGridPanelWdgt
   # (ActivePointerWdgt), a dying widget taking itself out of the focus (Widget._destroyNoSettle) and
   # the error-recovery reset (_softResetWorld) all come through here, so a change is ANNOUNCED
   # whichever of them made it: a markNonValueChange of mine (the focus is not my VALUE), heard by
-  # every text toolbar (TextToolbarWdgt subscribes to me, firesOnAnyChange) and drained by the
-  # cycle's dataflow station, ahead of layout and paint -- so what the text tools show is a function
-  # of the event stream, with no timer. DARK when nothing mirrors the edited text. Settles nothing,
-  # so it is safe inside a pass (the destroy core runs under layout flushes).
+  # every toolbar (ToolbarWdgt subscribes to me, firesOnAnyChange) and drained by the cycle's
+  # dataflow station, ahead of layout and paint -- so what the text tools show is a function of the
+  # event stream, with no timer. DARK while nothing subscribes. Settles nothing, so it is safe inside
+  # a pass (the destroy core runs under layout flushes).
   #   A TOP-LEVEL WINDOW IS FOCUSED, NEVER SELECTED (focus-and-selection plan D11). A write naming
   # one -- a frame standing on my desktop (FrameWdgt.isTopLevelWindow), or the transform island it
   # rides tilted (_frameSeenThroughIslands) -- changes nothing: the selection stays where it was.
@@ -1866,21 +1866,29 @@ class WorldWdgt extends IconGridPanelWdgt
   # (EditorContentPropertyChangerButtonWdgt's family) take their subject from here, through
   # editorStyleSubject and AlignButtonWdgt's stack-alignment branch, so they do nothing there and
   # show inactive. The focus itself stands: a click in view mode still sets it, and the selection
-  # reads it as it is. PUBLIC query; a mode flipping above the focus is announced like a new focus
-  # (noteEditModeChanged).
-  editableEditorFocus: ->
+  # reads it as it is.
+  #   WITHIN A WINDOW: a tool standing in a toolbar docked on `hostWindow` works for that window
+  # (ToolbarWdgt.hostWindowOf), so it is handed the focus only while the focus is in the window's
+  # REACH -- its content or anything inside it (a band is not its host's content) -- and nothing
+  # otherwise, wherever else the focus is. With no window (the tool works for the person: its
+  # toolbar floats, or it stands in none) the answer is the focus wherever it is. PUBLIC query; a mode
+  # flipping above the focus is announced like a new focus (noteEditModeChanged).
+  editableEditorFocus: (hostWindow) ->
     focus = @editorFocusWdgt
     return undefined if focus?.sitsInViewModeContent()
+    return focus unless hostWindow?
+    return undefined unless focus? and hostWindow.contents?.isAncestorOf focus
     focus
 
   # THE STYLE THE EDITOR FOCUS HANDS OVER: what the editing tools act on and what mirrors the edited
   # text reads — the focus's textStyleSubject when it has one (a spreadsheet hands over its selected
   # cell's, SheetCellStyle), else the focus itself (a text is its own style). Content in view mode
-  # hands over nothing (editableEditorFocus), so every tool of the family does nothing there and
-  # shows inactive. PUBLIC query; its changes are the ones I announce (a new focus,
-  # noteStyleChanged, noteEditModeChanged).
-  editorStyleSubject: ->
-    focus = @editableEditorFocus()
+  # hands over nothing, and neither does a focus outside the `hostWindow` a tool works for, when it
+  # works for one (editableEditorFocus), so every tool of the family does nothing there and shows
+  # inactive. PUBLIC query; its changes are the ones I announce (a new focus, noteStyleChanged,
+  # noteEditModeChanged).
+  editorStyleSubject: (hostWindow) ->
+    focus = @editableEditorFocus hostWindow
     focus?.textStyleSubject?() ? focus
 
   # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.

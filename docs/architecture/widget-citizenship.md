@@ -115,7 +115,7 @@ citizen:
    [`regularity-principles.md`](regularity-principles.md)): a `Simple*Wdgt` is a naked
    capability (data + a self-mutation API), and rich editing arrives from *outside*, as an
    external toolbar operating on whichever compatible widget has focus (`TextToolbarWdgt`
-   over any text). This keeps content embeddable anywhere and lets any number of editor
+   over any text; a toolbar docked on a window works only within that window). This keeps content embeddable anywhere and lets any number of editor
    styles serve the same content API.
 7. **It steps politely.** A widget wanting a process subscribes itself to the world's
    activity list (`world.steppingWdgts`, hook `step:`) rather than owning a timer — that is
@@ -144,8 +144,8 @@ in [`app-fit-criteria.md`](app-fit-criteria.md).
 ## Worked examples
 
 - **`SimpleTextWdgt` + `TextToolbarWdgt`** — the tiering in action: the Simple widget owns
-  the text and the mutation API; the external toolbar edits whichever text is focused;
-  nothing is baked into the content.
+  the text and the mutation API; the external toolbar edits whichever text is focused (a
+  docked one, only while that text is in its window); nothing is baked into the content.
 - **`AnalogClockWdgt`** — a widget with a subscribed step function, not a special mechanism;
   duplicate it and both copies tick.
 - **`SliderWdgt` / `ColorPaletteWdgt`** — generic controllers: pick any target from the

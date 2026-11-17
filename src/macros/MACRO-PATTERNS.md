@@ -2064,7 +2064,8 @@ assertion a recapture after a regression silently stores two different hashes an
   `PaintToolbarWdgt` shaped into a short column (`@resizeWindowTo_InputEvents paint, new Point 58, 160` hides all
   four), and pop it from `<strip>.contents.overflowChevron`; its rows reflect their tool cells, so a text tool's
   tick follows the EDITED text (click into a paragraph first — a desktop click leaves no row ticked) and a paint
-  tool's the armed tool (one cycle later: a paint toolbar tells its cells from its arrange). Several rows can be
+  tool's the armed tool (one cycle later: every toolbar tells its cells from the dataflow station,
+  `ToolbarWdgt.noteToolStatesChanged`). Several rows can be
   ticked at once there (bold and an alignment); `tickedRowLabelOfMenu` answers the first, so read a row's own
   `isTicked()` when that matters. A toggle row: click the PINNED row twice and assert the state both times — a row
   whose action was fixed when it was built does nothing the second time. Prove such a test by planting the stale
@@ -2086,9 +2087,13 @@ assertion a recapture after a regression silently stores two different hashes an
   the selection as `sheet.model.addressFor sheet.selectedCol, sheet.selectedRow` and a value as
   `sheet.model.cellAt(address)?.value`. A click elsewhere commits without moving.
 - **The toolbar on the selection** (`macroSpreadsheetToolbarActsOnSelection`): a click in a sheet makes the SHEET
-  `world.editorFocusWdgt`, so a tool found by class (`@findTopWidgetByClassNameOrClass BoldButtonWdgt`) acts on the
-  selected cell however the selection moved; assert the cell's `format` (document state) and the tool's
-  `isActiveTool()`. The fill tool opens the colour prompt: `picker = @getMostRecentlyOpenedMenu()`, its
+  `world.editorFocusWdgt`, so the sheet window's own docked tool (`@findTopWidgetByClassNameOrClass BoldButtonWdgt`
+  finds it while that Maker is the only one open) acts on the selected cell however the selection moved; assert the
+  cell's `format` (document state) and the tool's `isActiveTool()`. ⚠ A tool acts on the focus only within the
+  window its toolbar works for: a tool on a bar DOCKED on window A does nothing while the focus is in window B
+  (`WorldWdgt.editableEditorFocus hostWindow`, through `ToolbarWdgt.hostWindowOf`), and a FLOATING bar's tool acts
+  on the focus anywhere. With two Makers open, find the tool through the window it should act in (its docked bar),
+  or use a floating bar — never the first tool of that class in the world. The fill tool opens the colour prompt: `picker = @getMostRecentlyOpenedMenu()`, its
   `ColorPickerWdgt`'s palette at a fraction, then `@clickPromptButton_InputEvents picker, "OK"`.
 - **The formula bar** (`macroSpreadsheetFormulaBarEditsAndErrors`, `macroSpreadsheetPageAndZoom`):
   `bar = @findTopWidgetByClassNameOrClass SheetFormulaBarWdgt`; read `bar.addressWdgt.text`, `bar.textWdgt.text`,

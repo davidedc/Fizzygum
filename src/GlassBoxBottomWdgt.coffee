@@ -13,10 +13,10 @@
 # capability: a tool that is never active answers nothing). The look is read from the two as I am
 # painted (_fillForMyState), and repainted when I am told one moved (noteItemStateChanged): by the
 # tool whose pointer state moved (every tool family and the lid say so as the hand tells them), and
-# by the toolbar I stand in when which tool is active may have moved (the paint palette when its
-# tool's holder changed, ToolbarWdgt.noteToolHolderChanged; TextToolbarWdgt for the text tools,
-# which mirror the edited text). No tool pushes a colour onto me, and I keep none, so no family can
-# leave one behind.
+# by the toolbar I stand in when which tool is active may have moved
+# (ToolbarWdgt.noteToolStatesChanged: the selection, its style or its mode moved, a paint tool's
+# holder changed its tool, or the toolbar docked or left). No tool pushes a colour onto me, and I
+# keep none, so no family can leave one behind.
 #
 # MY TOOL IS CUT TO MY OUTLINE: it lies flush in my square, so I paint my children inside my rounded
 # outline, and a press in one of my corner notches reaches neither me nor my tool but whatever lies
@@ -58,10 +58,11 @@ class GlassBoxBottomWdgt extends BoxWdgt
   # MY TOOL'S STATE MOVED: the hand's answers about the widget a press on me reaches moved (that
   # widget's notePointerStateChanged tells me: CreatorWdgt, EditorContentPropertyChangerButtonWdgt,
   # CodeInjectingSimpleRectangularButtonWdgt), or my tool may have become or stopped being the active
-  # one (told by my toolbar: ToolbarWdgt.noteToolHolderChanged when the holder of a paint tool changed,
-  # TextToolbarWdgt when the edited text or its style moves). My look is read as I am painted, so I
-  # repaint, and I pass the news on, so what shows my tool's state THROUGH me re-reads it: a toolbar
-  # overflow menu's row for my tool, ticked by holdsActiveTool (OverflowChevronButtonWdgt).
+  # one (told by my toolbar, ToolbarWdgt.noteToolStatesChanged: the edited text, its style or its
+  # mode moved, the holder of a paint tool changed, the toolbar docked or left). My look is read as I
+  # am painted, so I repaint, and I pass the news on, so what shows my tool's state THROUGH me
+  # re-reads it: a toolbar overflow menu's row for my tool, ticked by holdsActiveTool
+  # (OverflowChevronButtonWdgt).
   # markNonValueChange: what moved is not a value (I have none to deliver).
   noteItemStateChanged: ->
     @_changed()

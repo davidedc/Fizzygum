@@ -1,13 +1,17 @@
 # The PAINT palette (Frame-model plan §5.D): the tool strip that occupies an ImageWdgt's
 # toolbar-slot (docked left), or floats like any toolbar. It is the PALETTE VARIANT of the ONE
-# toolbar construction -- four commands (pencil / brush / toothpaste / eraser) in the shared tool
-# grid, each cell holding a tool that answers its own tap. What makes it a palette rather than a rack
-# of drag-out thumbnails is SELECTION -- and the tool chosen is not MINE. It is my HOLDER's: the
-# window whose edge slot I occupy while I am docked (its FrameWdgt.armedDrawingTool), the person
-# while I float (world.user.armedDrawingTool, User) -- the one question every toolbar answers, who I
-# work for (ToolbarWdgt.hostWindow). Each of my tools asks it itself, so I am only where the tools
-# stand: a tap on one sets that tool on the holder, and each cell shows whether its tool is the one
-# the holder holds. See CommandSpec for the dispatch law both projections of a command obey.
+# toolbar construction (ToolbarWdgt), and like every variant it is an ITEM LIST -- four commands
+# (pencil / brush / toothpaste / eraser) in the shared tool grid, each cell holding a tool that
+# answers its own tap -- plus what a tool key MEANS: the stock tool sources. What makes it a palette
+# rather than a rack of drag-out thumbnails is SELECTION -- and the tool chosen is not MINE. It is
+# my HOLDER's: the window whose edge slot I occupy while I am docked (its
+# FrameWdgt.armedDrawingTool), the person while I float (world.user.armedDrawingTool, User) -- the
+# one question every toolbar answers, who I work for (ToolbarWdgt.hostWindow). Each of my tools asks
+# it itself, so I am only where the tools stand: a tap on one sets that tool on the holder, and each
+# cell shows whether its tool is the one the holder holds, re-derived by the refresh every toolbar
+# shares (ToolbarWdgt.noteToolStatesChanged, which hears the person's hand and is told by a host
+# window when its own tool changes). See CommandSpec for the dispatch law both projections of a
+# command obey.
 #
 # Nothing of mine reaches a drawing. A paint surface takes its tool up when it is USED
 # (CanvasGlassTopWdgt.hoverMoved / pressMoved), from its own nearest holder, and reads what a tool key
@@ -375,35 +379,6 @@ class PaintToolbarWdgt extends ToolbarWdgt
       when 'toothpaste' then PaintToolbarWdgt.TOOTHPASTE_TOOL_SOURCE
       when 'eraser' then PaintToolbarWdgt.ERASER_TOOL_SOURCE
       else undefined
-
-  # ONE edge user -> me, waking me whenever the person's hand changes by ANY route: a tap on a
-  # floating palette, a palette leaving a window, a restored snapshot (and when the person edits a
-  # tool's code, User.overrideDrawingTool, which moves no highlight). firesOnAnyChange because what
-  # I show is not the user's VALUE -- a person has no single value -- so markNonValueChange has to
-  # reach me; I never read what is delivered, my cells re-read their holder (noteToolHolderChanged).
-  # While I am docked my holder is my host window, which tells me itself when its tool changes
-  # (FrameWdgt.armDrawingTool), so then the hand's announcement only re-reads what has not moved.
-  # The reflecting menu row's own seam, one level up (MenuItemWdgt._subscribeToMyReflectedSource).
-  #   Lifecycle needs nothing at MY end: Widget._destroyNoSettle calls removeAllEdgesOf, so a
-  # destroyed palette drops itself out of the user's out-set as it dies.
-  _buildAndConnectChildrenNoSettle: ->
-    super
-    @_subscribeToTheArmedDrawingTool()
-
-  _subscribeToTheArmedDrawingTool: ->
-    return unless world?.user?
-    world.dataflow.addEdge world.user, @, action: "noteToolHolderChanged", firesOnAnyChange: true
-    return
-
-  # A palette arriving any way OTHER than construction still has to watch the same hand: neither a
-  # deserialized shell nor a duplicate runs a constructor, so each re-makes its one edge here.
-  _afterDeserialization: ->
-    super
-    @_subscribeToTheArmedDrawingTool()
-
-  _reactToBeingCopied: ->
-    super
-    @_subscribeToTheArmedDrawingTool()
 
   # my tools, in strip order
   _tools: ->

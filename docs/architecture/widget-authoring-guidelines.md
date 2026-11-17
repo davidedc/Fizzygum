@@ -689,9 +689,10 @@ mark after `add` + `setExtent` adds nothing.
   ⚠ **When WHOSE state a row shows changes, the source is the stable thing that follows it** — never
   the object it points at this moment. The text toolbar's font menu shows the font of whatever is
   being edited, and that changes with every click: its rows reflect the TOOLBAR
-  (`TextToolbarWdgt.currentFontName`, reading `world.editorStyleSubject()`), which already hears every
-  move of the focus, of its style or of the edit mode of the content holding it (content in view mode
-  hands over no style) and re-announces it (`mirrorTheEditedText`, `markNonValueChange @`).
+  (`TextToolbarWdgt.currentFontName`, reading `world.editorStyleSubject` within the window the toolbar
+  works for), which, like every toolbar, already hears every move of the focus, of its style or of the
+  edit mode of the content holding it (content in view mode hands over no style) and re-announces it
+  (`ToolbarWdgt.noteToolStatesChanged`, `markNonValueChange @`).
   The same holds when the state is DERIVED from elsewhere: a tool's "active" is read off the edited text
   or the person's hand, so the toolbar overflow's row for a tool reflects the tool's CELL
   (`GlassBoxBottomWdgt.holdsActiveTool`), which every toolbar already tells at each such move

@@ -1,21 +1,20 @@
-# The TEXT-editing toolbar -- ONE variant serving every text widget: its
-# buttons act on the focused widget (see EditorContentPropertyChangerButtonWdgt),
-# so the same list serves the docked home (a Docs frame's toolbar-slot) and the
-# floating home (TextToolbarCreatorButtonWdgt) alike.
+# The TEXT-editing toolbar -- ONE variant serving every text widget, an ITEM LIST on the shared
+# toolbar construction (ToolbarWdgt): its tools act on the style the editor focus hands over (see
+# EditorContentPropertyChangerButtonWdgt), so the same list serves the docked home (a Docs frame's
+# toolbar-slot) and the floating home (TextToolbarCreatorButtonWdgt) alike.
 #
-# I MIRROR THE EDITED TEXT: B, I, </> and the alignment trio each answer whether they are the active
-# tool from the widget being edited (world.editorFocusWdgt; BoldButtonWdgt.isActiveTool and its
-# siblings), and their cells show it (GlassBoxBottomWdgt); content in view mode hands them nothing,
-# so none is active there (WorldWdgt.editableEditorFocus). The world ANNOUNCES whenever that focus
-# moves, its style does, or the mode of the content holding it flips
-# (WorldWdgt._setEditorFocusNoSettle / noteStyleChanged / noteEditModeChanged), and I hear it
-# through ONE dataflow edge world -> me -- so every text toolbar in the world (a docked Docs Maker
-# band, a floating one, a copy) follows the same focus with no list of toolbars anywhere: the
-# engine's edge index is the set, and Widget._destroyNoSettle takes me out of it as I die.
-# firesOnAnyChange because the focus is not the world's VALUE (the announcement is a
-# markNonValueChange); I never read what is delivered, my tools re-read the focus. The drain runs in
-# the cycle's dataflow station, ahead of layout and paint, so what my cells show is a function of
-# the event stream.
+# WHOM IT WORKS FOR decides which focus its tools act on (ToolbarWdgt.hostWindow): docked on a
+# window, the focus only while it is in that window's reach -- a paragraph of another document, or
+# any text while the bar is docked on a window holding none, is nothing to them; floating, the focus
+# wherever it is, a paragraph of a Maker wearing its own bar included.
+#
+# B, I, </> and the alignment trio each answer whether they are the active tool from that same
+# subject (BoldButtonWdgt.isActiveTool and its siblings), and their cells show it
+# (GlassBoxBottomWdgt); content in view mode hands them nothing, so none is active there
+# (WorldWdgt.editableEditorFocus). Every toolbar hears the same announcements -- the focus moving,
+# its style moving, the mode of the content holding it flipping -- through the edges the shared
+# construction holds (ToolbarWdgt._subscribeToWhatMyToolsShow), and re-derives its cells on each;
+# a docked one shows the focus only while it is in its host's reach.
 
 class TextToolbarWdgt extends ToolbarWdgt
 
@@ -24,44 +23,11 @@ class TextToolbarWdgt extends ToolbarWdgt
   # depth derives from the standard grid metrics rather than from a private pair.
   dockSide: 'top'
 
-  # the edge world -> me (see the header), made with my tools; neither a deserialized shell nor a
-  # duplicate runs a constructor, so each makes it again here (PaintToolbarWdgt's precedent)
-  _buildAndConnectChildrenNoSettle: ->
-    super
-    @_followTheEditedText()
-
-  _afterDeserialization: ->
-    super
-    @_followTheEditedText()
-
-  _reactToBeingCopied: ->
-    super
-    @_followTheEditedText()
-
-  # Subscribe to the world's editor focus (once: the index already knows whether I am) and show the
-  # focus as it stands, so a toolbar built, loaded or copied while a bold text is being edited shows
-  # B active from the start.
-  _followTheEditedText: ->
-    if world?.dataflow? and !world.dataflow.hasEdge world, @
-      world.dataflow.addEdge world, @, action: "mirrorTheEditedText", firesOnAnyChange: true
-    @mirrorTheEditedText()
-    return
-
-  # The focus or its style moved: every one of my cells re-derives its look, asking its tool (a tool
-  # with no state to mirror answers nothing and stays at rest). The hidden cells too, so a cell my
-  # strip shows later shows the focus as it is then. And I pass the announcement on, so what shows
-  # the edited text THROUGH me re-reads it: my font menu's rows, ticked by currentFontName.
-  # markNonValueChange: what moved is not my value (I have none to deliver).
-  mirrorTheEditedText: ->
-    for cell in @contents.childrenNotHandlesNorCarets()
-      cell.noteItemStateChanged?()
-    world.dataflow?.markNonValueChange @
-    return
-
-  # the edited text's font: what my font menu's rows read to decide which is ticked
-  # (MenuRowReflectionSpec.readerName), as a text's own fonts menu reads StringWdgt.currentFontName
+  # the edited text's font, within the window I work for: what my font menu's rows read to decide
+  # which is ticked (MenuRowReflectionSpec.readerName), as a text's own fonts menu reads
+  # StringWdgt.currentFontName. They re-read it whenever I announce (ToolbarWdgt.noteToolStatesChanged).
   currentFontName: ->
-    world.editorStyleSubject()?.fontName
+    world.editorStyleSubject(@hostWindow())?.fontName
 
   _toolbarItems: -> [
     # the toolbar itself is the font-menu stash home (re-clicking re-focuses

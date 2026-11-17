@@ -1447,15 +1447,15 @@ class FrameWdgt extends ClippingWdgt
 
   # THE ONE WRITE of the tool I hold (armedDrawingTool above), the User's twin: it only states the
   # fact, and IDEMPOTENTLY -- holding what I already hold changes nothing and tells no one. After a
-  # real change each payload I wear is told to re-read its holder (noteToolHolderChanged, a
-  # capability: a payload with no tools to show answers nothing), so a palette docked on me shows my
+  # real change each payload I wear is told its tools' states may have moved (noteToolStatesChanged,
+  # a capability: a payload with no tools to show answers nothing), so a palette docked on me shows my
   # tool at once. The paint surfaces in my content need no telling: each takes its tool up at its
   # next use.
   armDrawingTool: (toolKey) ->
     return if toolKey is @armedDrawingTool
     @armedDrawingTool = toolKey
     for eachPayload in @dockedPayloads()
-      eachPayload.noteToolHolderChanged?()
+      eachPayload.noteToolStatesChanged?()
     return
 
   # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A

@@ -20,8 +20,8 @@ Phase status (update this table as phases close):
 | P0 | Spike S1 (the paint mechanism, planted); measure M1 (test fallout). D1–D8 are already ratified | DONE 2026-11-16: S1 passes every row; M1a, M1b empty; M1c 26 shots in 12 tests (§8 "P0 results") |
 | P1 | Content-side bugs: view-mode content refuses restyling; a drawing takes no click-placed widget | DONE 2026-11-16: `WorldWdgt.editableEditorFocus`, `StretchableCanvasWdgt.stampsDroppedWidgets`, two new tests; gauntlet green (§8 "P1 results") |
 | P2 | The seam + paint: the surface takes up its tool at use; windows hold their own tool | DONE 2026-11-17: the glass's class entries + take-up, `FrameWdgt`'s holder pair, the D3 transfers, D2's table and its save, three new tests; gauntlet green (§8 "P2 results") |
-| — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | OPEN: three behaviours to judge are listed in §8 "P2 results" |
-| P3 | Text tools and creators onto the seam; the refresh moves to `ToolbarWdgt`; mixed bars | not started |
+| — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | APPROVED 2026-11-17: D3 stands as built, with the three behaviours §8 "P2 results" lists |
+| P3 | Text tools and creators onto the seam; the refresh moves to `ToolbarWdgt`; mixed bars | DONE 2026-11-17: the host-scoped door, the creators' host placement, the two edges and one refresh on `ToolbarWdgt`, three new tests; no existing test changed; gauntlet green (§8 "P3 results") |
 | P4 | Tools with nothing to act on show dimmed (D5) | not started |
 | — | OWNER CHECKPOINT: the owner picks the dimmed look, then sees the diff page before P4's recapture | — |
 | P5 | Docs, archive, close | not started |
@@ -986,10 +986,10 @@ plant; each also passes on the pre-P2 build with S1's plant (`--plant-s1`) and f
   - ⚠ One row differs from S1: a palette dropped into an OCCUPIED slot. `_dockFrameNoSettle` destroys the
     occupant before the add, so the host wears no other palette and ADOPTS THE HAND (S1's plant compared
     against the state before the dock and kept the host's tool).
-- **For the owner's D3 checkpoint**, three behaviours to judge by hand: a palette dropped into an occupied slot
-  makes the window adopt the hand (above); a SECOND palette docked on a window shows the window's tool, not the
-  hand's it showed floating (P0 finding 5); undocking changes the tool of every other drawing that follows the
-  hand (D3's accepted side effect).
+- **The owner's D3 checkpoint — APPROVED 2026-11-17**, D3 standing as built, with its three behaviours: a palette
+  dropped into an occupied slot makes the window adopt the hand (above); a SECOND palette docked on a window shows
+  the window's tool, not the hand's it showed floating (P0 finding 5); undocking changes the tool of every other
+  drawing that follows the hand (D3's accepted side effect).
 - `p2-cost.js`: 34 of 34. A take-up costs a median of 1.9 / 5.1 / 6.8 / 1.9 ms (pencil / brush / toothpaste /
   eraser), worst 13.5 ms, once per change. An unchanged use costs 0.1 µs under the hand and 1.4 µs under a
   window.
@@ -1061,6 +1061,108 @@ plant; each also passes on the pre-P2 build with S1's plant (`--plant-s1`) and f
    means (most will want a floating bar, or the selection inside the host); update
    `src/macros/MACRO-PATTERNS.md` where it teaches "a tool found by class acts on the focus".
 4. Gates as P2. Summary + commit message; wait.
+
+#### P3 results (recorded 2026-11-17, on Fizzygum `8e4393c6` and tests `f90f0741e`)
+
+**Property tools (§6.3), as built.**
+- P1's door takes the host: `WorldWdgt.editableEditorFocus(hostWindow)`.
+  - With no host it gives today's answer.
+  - With a host it answers the focus only when `hostWindow.contents` is the focus or an ancestor of it (the
+    window's content reach; a band is not content). Otherwise it answers undefined.
+  - The view-mode refusal still comes first.
+- `editorStyleSubject(hostWindow)` passes the host on. `WorldWdgt` gains no member, so it stays at 128/128.
+- Every property tool asks through `EditorContentPropertyChangerButtonWdgt._styleSubject`, which now passes
+  `ToolbarWdgt.hostWindowOf @`.
+- The two direct readers go through the same door: `AlignButtonWdgt.activated`'s fallback, and
+  `TextToolbarWdgt.currentFontName` (with its own `hostWindow()`). `currentFontName` stays on the text bar,
+  because it is the font menu's reflected reader.
+
+**Creators (§6.4), as built.** `CreatorWdgt.activated` asks `ToolbarWdgt.hostWindowOf @` and then takes one of
+two paths:
+- `_placeIntoMyHost(host)`: it places into `host.contents` when that content `acceptsSmartPlacedWidgets`, and
+  otherwise makes nothing. This is decided before `createWidgetToBeHandled`, since a refused copy tells the
+  person why.
+- `_placeForThePerson()`: the old body, verbatim.
+
+The lid inherits it. `ToolbarCreatorButtonWdgt` and `TemplatesButtonWdgt` are untouched (D6).
+
+**The refresh (§6.5), as built.**
+- The verb is renamed `noteToolHolderChanged` → `ToolbarWdgt.noteToolStatesChanged`. It is now told when the
+  selection, its style or its mode moves, not only when a holder changes, and the new name parallels the cell's
+  `noteItemStateChanged`. No test or rig named the old verb.
+- It tells every cell and then announces the toolbar itself (`markNonValueChange @`), which the font menu's
+  ticks reflect.
+- `ToolbarWdgt._subscribeToWhatMyToolsShow` makes both edges, `world → me` and `world.user → me`.
+  - Each edge is guarded by `hasEdge`, and the method ends with a refresh.
+  - It is called from `_buildAndConnectChildrenNoSettle`, `_afterDeserialization` and `_reactToBeingCopied`
+    (the last two on `ToolbarWdgt`, after `super`).
+- `noteDockedOn` / `noteUndockedFrom` now refresh EVERY toolbar, because a text bar that docks or leaves changes
+  who it works for. The D3 transfer inside them stays guarded by `holdsDrawingTools`, byte-identical.
+- `TextToolbarWdgt` loses `_followTheEditedText`, `mirrorTheEditedText` and its three hooks. It keeps
+  `dockSide: 'top'`, `currentFontName` and its items.
+- `PaintToolbarWdgt` loses `_subscribeToTheArmedDrawingTool` and its three hooks. It keeps its tool fields,
+  stock sources and items.
+- Every toolbar, creator-only ones included, now holds two edges and refreshes its cells on every focus move.
+  This is accepted in §6.5.
+
+**Measured on the build** (acceptance probe `Fizzygum-tests/.scratch/p3/p3-accept.js`, gitignored, real CDP
+input, no plant): 46 of 46 checks pass under mouse and 46 of 46 under finger.
+- T1 inverted, X1 and R5 each hold.
+- The font menu reader holds, as does the align fallback across windows.
+- C3 holds: a text box created on a nested Slides Maker's own bar lands in its content, and D's stack and the
+  world are unchanged.
+- A creator docked on a Drawings Maker makes nothing (`createWidgetToBeHandled` is never called), with a Slides
+  Maker front-most.
+- A floating creator is unchanged.
+- The mixed bar holds: a creator-only bar given Bold and brush is refreshed by a focus move and by a hand tap,
+  and both cells hold their active tool.
+- Edges: every toolbar has both; a copy has both; a destroyed bar has neither.
+- A text bar's undock and re-dock each refresh it.
+
+**Tests.**
+- Three new tests, each with one screenshot at dpr 1 and 2, mouse and finger. The finger references are
+  byte-identical to the mouse ones.
+  - `SystemTest_macroDockedTextBarActsOnlyInItsWindow` (22 assertions) covers three rulings.
+    - T1 inverted: Bold on Docs A's bar with the caret in Docs B is delivered, leaves B's weight alone and
+      shows inactive. The control press with the caret in A bolds A.
+    - X1: a text bar docked on a Drawings Maker by a real drag-embed does nothing.
+    - R5: a floating bar bolds a paragraph of a Docs Maker that wears its own bar.
+  - `SystemTest_macroDockedCreatorPlacesOnlyIntoItsHost` (14) covers two cases.
+    - C3: a Slides Maker is dwell-embedded into a Docs Maker. Its own bar's text-box creator places into it,
+      and D's stack and the desktop stay unchanged.
+    - A Slides bar dock-embedded on a Drawings Maker makes no text anywhere, with a Slides Maker front-most
+      that would take one. A drag of the same creator still lands a text on the desktop.
+  - `SystemTest_macroMixedToolbarKeepsEveryLookCurrent` (12) covers R6. A floating creators-only bar
+    (`WindowsToolbarWdgt`) is given Bold and a brush tool, its overflow menu is pinned, and the focus and the
+    hand are moved from outside it. Its Bold and Brush rows tick and untick with each change.
+    - Those rows re-read only when their cell is told, so they read the refresh itself; a cell's look alone is
+      read at paint time.
+- Every press that must do nothing is shown delivered by the one value only it changes: it brings its
+  toolbar's window to the front.
+- Each test bites under both pointers through `--prelude=` (`Fizzygum-tests/.scratch/p3-tests/`):
+  - property tools ignoring the host fail the first test at T1 inverted and at X1;
+  - §11 item 5's rejected alternative (a floating bar refusing a focus inside a window that wears a bar) fails
+    it at R5;
+  - the pre-P3 creator search fails the second at C3 and at "nothing placed";
+  - the pre-P3 per-class refresh (only a text bar hears the world, only a palette the person) fails the third
+    at the focus move and at the hand move.
+- Each test's follower (`run-sequence-headless.js <new> SystemTest_macroAnalogClockInspectEdit`) runs clean on
+  both pointers, with no `WORLD_INVENTORY_` line.
+- No existing test was re-authored. M1b predicted that none fails, and none did.
+- `src/macros/MACRO-PATTERNS.md` now teaches that a tool acts on the focus only within the window its toolbar
+  works for.
+
+**Found on the way (not P3's).** A paint tool's miniature in a toolbar overflow menu's row draws as a stray
+stroke: Pencil, Brush and Eraser do this, while Toothpaste draws whole. It is visible in
+`macroPinnedMenuTicksFollowTheirState`'s reference since 2026-11-04 and in the new mixed-bar test's. Filed.
+
+**Gates.**
+- `fg presuite` passed after the source change (394 of 394) and with the new tests (397 of 397). Each run was
+  paint-truthful, and no existing reference changed.
+- The finger suite at dpr 1 passed: 379 of 379, then 382 of 382.
+- M1b's prediction holds: no existing test changed, and no ceiling or allowlist moved.
+- `fg gauntlet` passed all 20 legs with no retry (1325 s).
+- Ledger: U1 (the source) and T (the tests) each landed with 0 bounces.
 
 ### P4 — dimming
 
@@ -1196,5 +1298,7 @@ the content asking the same question as the text menu above.
 - [x] P0: spike S1 (the paint mechanism, planted) and measurement M1 (test fallout); decisions D1–D8 were ratified 2026-11-16 (§4.2) — CLOSED 2026-11-16: S1 passed every row; M1a and M1b empty; M1c 26 shots in 12 tests (§8 "P0 results"), Fizzygum `6b4c0d65`
 - [x] P1: content in view mode refuses restyling from any toolbar; a drawing takes no click-placed widget (rulings R8, R9) — CLOSED 2026-11-16: `WorldWdgt.editableEditorFocus` and `StretchableCanvasWdgt.stampsDroppedWidgets`, two new tests (§8 "P1 results")
 - [x] P2: a drawing paints with the previous tool while every palette shows the new one — the surface takes up its tool at use, windows hold their own (§6.2) — CLOSED 2026-11-17: `CanvasGlassTopWdgt._takeUpToolInReach`, `FrameWdgt.armedDrawingTool`, the D3 transfers on `ToolbarWdgt`, D2's table on `User` and its save, three new tests (§8 "P2 results")
+- [x] OWNER CHECKPOINT after P2: dock and undock palettes by hand and rule on D3 — CLOSED 2026-11-17: the owner approved D3 as built, with the three behaviours §8 "P2 results" lists
+- [x] P3: a toolbar docked on one window acts on another's selection; a creator docked on a nested Maker places outside it (§6.3–§6.5) — CLOSED 2026-11-17: `WorldWdgt.editableEditorFocus(hostWindow)`, `CreatorWdgt._placeIntoMyHost`, the refresh and its two edges on `ToolbarWdgt` (`noteToolStatesChanged`), three new tests (§8 "P3 results")
 - [x] "Don't save" leaks the closed window's whole subtree (found in P2) — CLOSED 2026-11-17 in P2: `SaveShortcutPromptWdgt`'s button dispatches `fullDestroy`
 - [x] A text's own menu restyles it in view mode (found in P1) — CLOSED 2026-11-16 in P1: `StringWdgt._addTextMenuEntries` and `TextWdgt`'s "Soft wrap" row ask `Widget.sitsInViewModeContent` and offer no editing row in view-mode content; V1 asserts it (§8 "P1 results")

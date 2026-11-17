@@ -1,15 +1,30 @@
 # The ONE shared toolbar construction (Frame-model plan §5.C): a scrollable
 # strip of tool thumbnails -- a ViewportWdgt wrapping a ToolPanelWdgt grid.
-# One subclass per toolbar; a subclass supplies only its item list
-# (_toolbarItems) and, where it differs, its docking defaults. The SAME
-# construction serves both toolbar homes, and in BOTH it is a FrameWdgt's content: FLOATING (a
-# window on the desktop, built by the toolbar creator buttons / ToolbarsApp) and DOCKED (a band
-# in a host frame's edge slot). The buttons inside don't bind to an editor instance, which is
-# exactly what lets one construction serve every home: each tool finds what it acts on itself, from
-# the one question I answer -- WHO I WORK FOR (hostWindow): the window whose edge slot I occupy
-# while I am docked, the person while I float (or stand inside a window as its content, which is
-# no dock). A paint tool sets its tool on that holder (hostWindowOf); the text tools act on the
-# focused widget, and the creators create by click or by drag.
+# The SAME construction serves both toolbar homes, and in BOTH it is a FrameWdgt's content: FLOATING
+# (a window on the desktop, built by the toolbar creator buttons / ToolbarsApp) and DOCKED (a band
+# in a host frame's edge slot). The tools inside don't bind to an editor instance, which is exactly
+# what lets one construction serve every home.
+#
+# I ANSWER ONE QUESTION -- WHO I WORK FOR (hostWindow): the window whose edge slot I occupy while I
+# am docked, the person while I float (or stand inside a window as its content, which is no dock).
+# Each tool resolves its own subject from that answer (hostWindowOf), by its own kind, so a toolbar
+# mixing kinds is right by construction:
+#   - a PROPERTY tool (bold, an alignment, a font: EditorContentPropertyChangerButtonWdgt) acts on
+#     the style the editor focus hands over -- within my host's reach while I am docked, anywhere
+#     while I work for the person (WorldWdgt.editorStyleSubject);
+#   - a CREATOR (CreatorWdgt) places what its click makes into my host's content, or nowhere when that
+#     content takes none, while I am docked; into the topmost window that takes it, else the desktop,
+#     while I work for the person;
+#   - a PAINT tool (CodeInjectingSimpleRectangularButtonWdgt) sets its tool on its HOLDER: my host,
+#     else the person.
+#
+# I HOLD THE ONE REFRESH of my tools' looks (noteToolStatesChanged) and the TWO EDGES a tool's look
+# can depend on (_subscribeToWhatMyToolsShow): world -> me (the selection, its style, the mode
+# holding it) and world.user -> me (the hand, the person's tool code). A host window tells me itself
+# when its own tool changes (FrameWdgt.armDrawingTool), and I tell myself when I dock or leave.
+#
+# A subclass is an ITEM LIST (_toolbarItems) and, where it differs, its docking side -- plus, for the
+# paint palette, the stock tool sources, and for the text bar, the font menu's reader.
 #
 # Colloquial name rides the contents: ToolPanelWdgt.viewportColloquialName
 # names the whole strip "toolbar" in hierarchy menus.
@@ -103,39 +118,74 @@ class ToolbarWdgt extends ViewportWdgt
   @wearsDrawingTools: (aFrame) ->
     (aFrame.dockedPayloads?() ? []).some (each) -> each.holdsDrawingTools?()
 
-  # MY TOOLS' LOOKS MAY HAVE MOVED: the holder I work for changed its tool, or I changed holder by
-  # docking or leaving. Every one of my cells re-derives its look, asking its tool (a tool with no
-  # state to show answers nothing and stays at rest), the hidden ones too, so a cell my strip shows
-  # later is already right; each cell passes the news on to what shows it through it (a toolbar
-  # overflow menu's row).
-  noteToolHolderChanged: ->
+  # MY TOOLS' STATES MAY HAVE MOVED: the selection, its style or the mode holding it moved (the
+  # world's announcement), the person's hand or tool code did (the user's), the window I work for
+  # changed its tool (FrameWdgt.armDrawingTool), or I changed whom I work for by docking or leaving.
+  # Every one of my cells re-derives its look, asking its tool (a tool with no state to show answers
+  # nothing and stays at rest), the hidden ones too, so a cell my strip shows later is already right;
+  # each cell passes the news on to what shows it through it (a toolbar overflow menu's row). And I
+  # pass it on myself, so what shows my tools' subject THROUGH me re-reads it: the text bar's font
+  # menu's rows, ticked by TextToolbarWdgt.currentFontName. markNonValueChange: what moved is not my
+  # value (I have none to deliver).
+  noteToolStatesChanged: ->
     for cell in @contents.childrenNotHandlesNorCarets()
       cell.noteItemStateChanged?()
+    world.dataflow?.markNonValueChange @
     return
 
-  # I ARRIVED in `host`'s edge slot (told by FrameWdgt._dockFrameNoSettle, my slot already mine).
-  # Moving a palette changes neither what it shows nor what the drawing it joins paints with: so when
-  # I carry drawing tools and no other payload `host` wears does, the host adopts the person's tool
-  # as it stands, an empty hand included. A host already wearing drawing tools keeps its own, which I
-  # show from now on.
+  # THE TWO EDGES a tool's look can depend on, made once each (the index already knows whether I
+  # hold one): world -> me, which announces the editor focus, its style and the mode of the content
+  # holding it (WorldWdgt._setEditorFocusNoSettle / noteStyleChanged / noteEditModeChanged), and
+  # world.user -> me, which announces the person's hand and the person's tool code (User). Both
+  # firesOnAnyChange, because neither announcement is the producer's VALUE (each is a
+  # markNonValueChange); I never read what is delivered, my tools re-read their subjects. There is no
+  # list of toolbars anywhere: the engine's edge index is the set, and Widget._destroyNoSettle takes
+  # me out of it as I die. The drain runs in the cycle's dataflow station, ahead of layout and
+  # paint, so what my cells show is a function of the event stream. Then I show the state as it
+  # stands, so a toolbar built, loaded or copied while a bold text is being edited shows B active from
+  # the start. Made with my tools, and again by a deserialized shell and by a duplicate, neither of
+  # which runs a constructor.
+  _subscribeToWhatMyToolsShow: ->
+    return unless world?.dataflow?
+    unless world.dataflow.hasEdge world, @
+      world.dataflow.addEdge world, @, action: "noteToolStatesChanged", firesOnAnyChange: true
+    if world.user? and !world.dataflow.hasEdge world.user, @
+      world.dataflow.addEdge world.user, @, action: "noteToolStatesChanged", firesOnAnyChange: true
+    @noteToolStatesChanged()
+    return
+
+  _afterDeserialization: ->
+    super
+    @_subscribeToWhatMyToolsShow()
+
+  _reactToBeingCopied: ->
+    super
+    @_subscribeToWhatMyToolsShow()
+
+  # I ARRIVED in `host`'s edge slot (told by FrameWdgt._dockFrameNoSettle, my slot already mine), so
+  # I work for `host` from now on and every tool of mine re-derives its look. Moving a palette changes
+  # neither what it shows nor what the drawing it joins paints with: so when I carry drawing tools and
+  # no other payload `host` wears does, the host adopts the person's tool as it stands, an empty hand
+  # included. A host already wearing drawing tools keeps its own, which I show from now on.
   noteDockedOn: (host) ->
-    return unless @holdsDrawingTools()
-    othersHoldDrawingTools = host.dockedPayloads().some (each) => each isnt @ and each.holdsDrawingTools?()
-    host.armDrawingTool world.user?.armedDrawingTool unless othersHoldDrawingTools
-    @noteToolHolderChanged()
+    if @holdsDrawingTools()
+      othersHoldDrawingTools = host.dockedPayloads().some (each) => each isnt @ and each.holdsDrawingTools?()
+      host.armDrawingTool world.user?.armedDrawingTool unless othersHoldDrawingTools
+    @noteToolStatesChanged()
     return
 
   # I LEFT `host`'s edge slot by being re-homed (told by FrameWdgt._reactToChildRemoved, my slot
-  # already free; never for a destroy, a re-side, a disengage or a collapse). The same invariant:
-  # when I carried drawing tools and `host` wears none any more, the person takes the host's tool,
-  # which I go on showing, and the host gives it up.
+  # already free; never for a destroy, a re-side, a disengage or a collapse), so I work for the person
+  # from now on and every tool of mine re-derives its look. The same invariant: when I carried drawing
+  # tools and `host` wears none any more, the person takes the host's tool, which I go on showing, and
+  # the host gives it up.
   noteUndockedFrom: (host) ->
-    return unless @holdsDrawingTools()
-    unless ToolbarWdgt.wearsDrawingTools host
-      toolKey = host.armedDrawingTool
-      host.armDrawingTool undefined
-      world.user.armDrawingTool toolKey
-    @noteToolHolderChanged()
+    if @holdsDrawingTools()
+      unless ToolbarWdgt.wearsDrawingTools host
+        toolKey = host.armedDrawingTool
+        host.armDrawingTool undefined
+        world.user.armDrawingTool toolKey
+    @noteToolStatesChanged()
     return
 
   # THE BOX A FRAME AROUND ME TAKES WHEN I FLOAT -- my grid's own natural box within the `room`
@@ -164,6 +214,7 @@ class ToolbarWdgt extends ViewportWdgt
     # yields a copy), not editable content -- every home wants the drops/edits
     # lock, so the build applies it once instead of each call site.
     @_disableDragsDropsAndEditingNoSettle()
+    @_subscribeToWhatMyToolsShow()
 
   # A width change re-WRAPS the grid, and the base viewport re-fit is
   # measure-then-commit: it reads the items' APPLIED bounds, commits the
