@@ -1,5 +1,7 @@
 # Opens (or re-focuses) the editor's font-selection menu and applies the chosen
-# font to the last-clicked widget.
+# font to the last-clicked widget. My verb is setting a font by name: while I am
+# handed nothing that sets one, I have nothing to act on, and a press on me
+# opens no menu.
 # See EditorContentPropertyChangerButtonWdgt for the shared family contract.
 
 class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
@@ -11,10 +13,13 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "change font"
 
-  constructor: (@fontSelectionMenuHolder) ->
-    super undefined  # undefined keeps @color = undefined as before; icon line-colour set in createAppearance
+  # a font set by name: what my menu's rows apply
+  verb: "setFontName"
 
-  createAppearance: -> new ChangeFontIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  constructor: (@fontSelectionMenuHolder) ->
+    super undefined  # no colour passed: my glyph's ink is read as I paint (the family's _fillForMyState)
+
+  createAppearance: -> new ChangeFontIconAppearance @
 
   # the menu is a WORLD child, so it opens at my on-SCREEN position — my own @position()
   # is plane-local and lands offset-pixels away when I sit in a scrolled pane (or inside an
@@ -23,7 +28,9 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   _menuPopUpPoint: ->
     (@localPointToScreen @position()).round().subtract new Point 80, 0
 
-  activated: ->
+  # My act is the MENU, not the font: a row of it applies its font to whatever subject I am handed
+  # when the row is chosen (setFontNameFromMenu), so the subject a press found is not kept.
+  actOn: (ignoredSubject) ->
     # if there is already a font selection menu for the editor,
     # bring that one up, otherwise create one and remember that we created it
     if @fontSelectionMenuHolder.fontSelectionMenu? and

@@ -6,8 +6,6 @@ class MoreDecimalsButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "more decimals"
 
-  createAppearance: -> new MoreDecimalsIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  verb: "moreDecimals"
 
-  activated: ->
-    @_styleSubject()?.moreDecimals?()
-    return
+  createAppearance: -> new MoreDecimalsIconAppearance @

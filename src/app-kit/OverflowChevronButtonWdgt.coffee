@@ -80,7 +80,9 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # (Duplicator), so neither its resize nor its destruction reaches the strip. It exists for one
   # shot and is destroyed straight after: what the row keeps is a picture (InertIconHolderWdgt: pixels, or
   # for a typed face a live copy of the face's appearance, never the tool), which is also what keeps
-  # the row's tap the ROW's -- a live tool held on a row would take the tap itself.
+  # the row's tap the ROW's -- a live tool held on a row would take the tap itself. The copy stands in
+  # no cell, so the picture wears the plain toolbar glyph ink even of a tool its cell shows dimmed: a
+  # menu row has no dimmed look.
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
   # costs its row its picture (its copy's refusal is told, Widget.fullCopy).
   _miniatureOf: (tool) ->
@@ -103,6 +105,7 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # drag-out thumbnail, or the tool itself where it handles its own clicks. The cell answers
   # which; clicking the wrapped tool instead leaves every lid-covered tool inert, because such a
   # tool is there to be COPIED and carries no click at all. Capability via ?() throughout, so a
-  # cell with nothing clickable in it is simply inert.
+  # cell with nothing clickable in it is simply inert. A tool with nothing to act on refuses the
+  # row's tap exactly as it refuses a tap on its cell (EditorContentPropertyChangerButtonWdgt.activated).
   triggerToolFromMenu: (ignored, ignored2, cell) ->
     (cell.thumbnailClickReceiver?() ? cell).activated?()

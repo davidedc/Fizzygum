@@ -2093,7 +2093,11 @@ assertion a recapture after a regression silently stores two different hashes an
   window its toolbar works for: a tool on a bar DOCKED on window A does nothing while the focus is in window B
   (`WorldWdgt.editableEditorFocus hostWindow`, through `ToolbarWdgt.hostWindowOf`), and a FLOATING bar's tool acts
   on the focus anywhere. With two Makers open, find the tool through the window it should act in (its docked bar),
-  or use a floating bar — never the first tool of that class in the world. The fill tool opens the colour prompt: `picker = @getMostRecentlyOpenedMenu()`, its
+  or use a floating bar — never the first tool of that class in the world. A tool with nothing to act on in its reach
+  is DIMMED and REFUSES its press, wherever it stands, so the font tool opens no menu then: give it its subject first
+  (click into a text, as `macroFontMenuOpensAtVisualPositionInScrolledPane` does), and read
+  `tool.hasSomethingToActOn()` / its cell's `holdsToolWithNothingToActOn()` to assert either state
+  (`macroDimmedToolsWakeWithTheirSubject`). The fill tool opens the colour prompt: `picker = @getMostRecentlyOpenedMenu()`, its
   `ColorPickerWdgt`'s palette at a fraction, then `@clickPromptButton_InputEvents picker, "OK"`.
 - **The formula bar** (`macroSpreadsheetFormulaBarEditsAndErrors`, `macroSpreadsheetPageAndZoom`):
   `bar = @findTopWidgetByClassNameOrClass SheetFormulaBarWdgt`; read `bar.addressWdgt.text`, `bar.textWdgt.text`,

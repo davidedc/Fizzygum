@@ -26,8 +26,9 @@ class Appearance
   # the fills' and can cut an edge column (found at dpr 2, macroDropIntoRotatedStretchablePanel…).
   clipsToDamageBox: true
   # A colour of my own, painted instead of my widget's @color: an icon whose ink is fixed whatever
-  # its widget's colour says -- a toolbar tool's glyph, in the toolbarGlyph ink, on a tool cell whose
-  # look shows the tool's state (GlassBoxBottomWdgt) -- takes it here, at construction.
+  # its widget's colour says -- a toolbar creator's glyph, in the toolbarGlyph ink, on a tool cell
+  # whose look shows the tool's state (GlassBoxBottomWdgt) -- takes it here, at construction. (A
+  # toolbar property tool takes none: its ink follows its state, read at paint.)
   ownColorInsteadOfWidgetColor: undefined
 
   constructor: (@widget, @ownColorInsteadOfWidgetColor) ->

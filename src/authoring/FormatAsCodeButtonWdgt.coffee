@@ -6,18 +6,19 @@ class FormatAsCodeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "format as code"
 
-  createAppearance: -> new FormatAsCodeIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  # a font set by name: the mono stack, or Arial back from it
+  verb: "setFontName"
 
-  activated: ->
-    if @_styleSubject()?.setFontName?
-      widgetClickedLast = @_styleSubject()
-      if widgetClickedLast.fontName != widgetClickedLast.monoFontStack
-        widgetClickedLast.setFontName widgetClickedLast.monoFontStack
-      else
-        widgetClickedLast.setFontName widgetClickedLast.justArialFontStack
+  createAppearance: -> new FormatAsCodeIconAppearance @
+
+  actOn: (subject) ->
+    if subject.fontName != subject.monoFontStack
+      subject.setFontName subject.monoFontStack
+    else
+      subject.setFontName subject.justArialFontStack
 
   # ACTIVE while the text I act on is in its mono stack -- the very test my toggle above makes, so I
   # show active exactly when a press would set it back to Arial (the family's mirror)
   isActiveTool: ->
-    focus = @_styleSubject()
-    focus?.setFontName? and focus.monoFontStack? and focus.fontName is focus.monoFontStack
+    subject = @_subjectOfferingMyVerb()
+    subject?.monoFontStack? and subject.fontName is subject.monoFontStack

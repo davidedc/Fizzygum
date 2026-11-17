@@ -97,14 +97,15 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
-### `plans/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (AUTHORED 2026-11-16; P0–P3 landed and the owner approved D3, see its ledger; next = P4, which opens with the owner choosing the dimmed look)
+### `plans/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (AUTHORED 2026-11-16; P0–P4 landed, see its ledger; next = P5, docs and close)
 - [ ] **A text menu pinned in edit mode keeps its editing rows after a flip to view mode** — a menu is built when it opens, so a pinned one still offers Bold and the rest once its content goes to view mode, and they act — reachable, low.
 - [ ] **Choosing a context-menu row takes the editor focus, and closing the menu clears it** — the row press focuses the `MenuItemWdgt` (an ordinary menu is not editor chrome), its teardown clears the focus, so a selected paragraph is unselected — reachable, low.
 - [ ] **A sheet inside a view-mode document still takes typed entries** — a click on its cell then typing commits (A1 = 42 measured): editing, not restyling, so R8's refusal does not reach it — reachable, medium.
 - [ ] **A drawing standing bare in a view-mode document still takes paint** — its canvas holds its own mode, which the document's flip does not reach (the shape of the sheet above); found in P2 — reachable, low.
 - [ ] **Home and End leave the caret wrong in a multi-line text** — `TextWdgt.startOfLine` / `endOfLine` read `.y` from `slotRowAndColumn`, which answers `[row, column]`: End stays put, and Home after it leaves `world.caret` undefined (measured in a tool's code prompt); found in P2, independent of it — reachable, medium.
 - [ ] **A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke** — Pencil, Brush and Eraser (Toothpaste draws whole); in `macroPinnedMenuTicksFollowTheirState`'s reference since 2026-11-04; found in P3, independent of it — reachable, low.
-- [ ] ⛔ P4: tools with nothing to act on show dimmed — the owner picks the look and sees the diff page before its recapture (§6.6) — not started
+- [ ] **A dimmed tool's row in a toolbar overflow menu does not look dimmed** — a menu row has no disabled look, so the row shows the tool in its plain ink while its tap is refused; ruled out of P4 (§8 "P4 rulings") — reachable, low.
+- [ ] **A narrow Docs Maker's docked toolbar clips its overflow chevron** — at 90 px wide the bar's viewport is 25 px and the 44 px chevron shows its left ~19 px; a press at the chevron's centre lands on the window, measured; found in P4 by its probe, independent of it — reachable, low.
 - [ ] P5: `architecture/toolbars.md`, the class headers stating the old model, archive and close — not started
 
 ### `plans/affine-transforms-plan.md`

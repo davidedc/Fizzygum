@@ -200,10 +200,15 @@ reads that look as it paints, from the hand's answers about the widget a tap on 
 text), so no tool leaves a stale colour on it. The text tools MIRROR the edited text (the editor focus,
 `world.editorFocusWdgt`, or the style it hands over: a spreadsheet hands over its selected cell's, `SheetCellStyle`):
 B is active while it is bold, I while it is italic, `</>` while it is monospaced, an align tool
-while it has that alignment. The focus has ONE write (`WorldWdgt._setEditorFocusNoSettle`), and a text's style setters
+while it has that alignment. A text or sheet tool with NOTHING TO ACT ON is DIMMED. It has nothing to act on when no
+subject offering its verb is handed over: within its window for a docked bar, anywhere for a floating one, and never by
+content in view mode (`EditorContentPropertyChangerButtonWdgt.hasSomethingToActOn`). Its cell keeps the rest fill in every
+pointer state (`GlassBoxBottomWdgt.holdsToolWithNothingToActOn`), and its glyph takes `toolbarGlyphDimmed`
+(`disabledText`, the ink of a disabled button's label). Like a disabled button, it drops its hover and press look and
+refuses its press (the font tool opens no menu). Creators, paint tools and Templates never dim. The focus has ONE write (`WorldWdgt._setEditorFocusNoSettle`), and a text's style setters
 announce a change while it is the focus (`noteStyleChanged`); each text toolbar hears both through one dataflow edge
 world → toolbar, so it follows in the same cycle with no timer. A hidden active tool ticks its row in the `»` menu. It clips its tool to its rounded outline, so a press in a corner notch
-falls through. Every glyph in a toolbar is `toolbarGlyph` (`ink`); the overflow `»` is the drawn double chevron at
+falls through. Every glyph in a toolbar is `toolbarGlyph` (`ink`), a dimmed tool's `toolbarGlyphDimmed`; the overflow `»` is the drawn double chevron at
 `toolOverflowGlyphSize` (16) on the same state plate. The text toolbar's faces are B, I and `</>` typed in their
 faces' fonts, and the rest drawn as size-aware control glyphs on the » × − + weight (2 px in the 44 cell), ink only and
 every part a fill, so the cell's state plate shows through them: the script A (font family), the align trio as four

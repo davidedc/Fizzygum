@@ -22,8 +22,8 @@ Phase status (update this table as phases close):
 | P2 | The seam + paint: the surface takes up its tool at use; windows hold their own tool | DONE 2026-11-17: the glass's class entries + take-up, `FrameWdgt`'s holder pair, the D3 transfers, D2's table and its save, three new tests; gauntlet green (§8 "P2 results") |
 | — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | APPROVED 2026-11-17: D3 stands as built, with the three behaviours §8 "P2 results" lists |
 | P3 | Text tools and creators onto the seam; the refresh moves to `ToolbarWdgt`; mixed bars | DONE 2026-11-17: the host-scoped door, the creators' host placement, the two edges and one refresh on `ToolbarWdgt`, three new tests; no existing test changed; gauntlet green (§8 "P3 results") |
-| P4 | Tools with nothing to act on show dimmed (D5) | not started |
-| — | OWNER CHECKPOINT: the owner picks the dimmed look, then sees the diff page before P4's recapture | — |
+| P4 | Tools with nothing to act on show dimmed (D5) | DONE 2026-11-17: one contract for the property tools (verb, subject, one refusal), the cell-derived dimmed look, two new tests, 17 tests recaptured; gauntlet green (§8 "P4 rulings", "P4 results") |
+| — | OWNER CHECKPOINT: the owner picks the dimmed look, then sees the diff page before P4's recapture | APPROVED 2026-11-17: the look picked (§8 "P4 rulings"), the diff page (31 shots) reviewed before the recapture |
 | P5 | Docs, archive, close | not started |
 
 ---
@@ -1173,6 +1173,88 @@ stroke: Pencil, Brush and Eraser do this, while Toothpaste draws whole. It is vi
    `fg recapture --auto --pointer=finger --dprs=1,2`.
 3. `fg gauntlet`. Summary + commit message; wait.
 
+#### P4 rulings (2026-11-17, the owner's look checkpoint)
+
+The preview (`Fizzygum-tests/.scratch/p4-preview/`, the real build painting real toolbars) showed four looks:
+faded to 50%, 35% and 20%, and the glyph re-inked grey. The owner rejected the 50% fade and left the pick among the
+rest to architecture, code elegance and uniformity. The rulings:
+
+- **Creators are never dimmed** (owner). A creator docked on a host that takes no placed widget keeps its
+  look; its click still makes nothing (§6.4), and its drag works as before. So only PROPERTY tools ever dim.
+- **The look: the glyph re-inked in `disabledText`**, through a new `Theme` role (`toolbarGlyphDimmed`).
+  Every property tool is a one-ink glyph in `toolbarGlyph`. An icon already reads its ink from its widget's
+  state at paint (`IconAppearance._iconColorString` → `_fillForMyState`; `IconButtonWdgt` is the precedent),
+  so the dimmed look needs no new paint mechanism. Its ink is the one disabled buttons already use
+  (`buttonDisabledText`). A fade would need an opacity path for one family; it earned its place only while
+  full-colour creators could dim.
+- **A dimmed cell shows no hover, pressed or active fill.** Every disabled control drops its hover and pressed look:
+  `SimpleButtonWdgt`, `ChipWdgt` and `LabelledToggleWdgt`. The owner was unsure, so this follows that
+  precedent; its tooltip still shows.
+- **The cell derives the look.** The tool answers whether it has something to act on; the cell it stands in
+  answers whether it holds a tool with nothing to act on; the tool's ink asks that cell. A tool in no cell
+  (the detached copy an overflow row photographs) wears the plain ink.
+- **A dimmed tool refuses its press in ONE place:** the family's `activated`, which every tap and every
+  overflow row's `triggerToolFromMenu` reaches. Subclasses name their verb once (`_offersMyVerb`) and act
+  through `_actOn`. The base resolves the subject, refuses when nothing offers the verb, and answers
+  `hasSomethingToActOn`. `TemplatesButtonWdgt` is subject-less (D6): it keeps its own `activated` and always
+  has something to act on.
+- **Overflow rows are not dimmed in P4.** A row's picture wears the plain ink, and its tap is refused by the
+  tool. Menu rows have no disabled look today; filed in BACKLOG.
+- **The refusal holds wherever the tool stands** (owner, option A, after the first presuite). A property tool
+  in no cell refuses a press with nothing to act on, though no cell shows it dimmed. Only the font tool
+  behaves differently there: its act is a menu, which it used to open with nothing selected. The
+  alternative kept "refused exactly while shown dimmed" true outside a toolbar too, at the price of a
+  second rule (an act that needs no subject in hand). No product path puts a property tool outside a
+  toolbar. `macroFontMenuOpensAtVisualPositionInScrolledPane` builds one bare, so its fixture selects a text
+  before the click. Its subject, the pop-up's position, is unchanged; its menu shot gains the tick of that
+  text's font.
+- **The measured set.** The first presuite failed 17 tests. That is P0's model re-run over today's suite
+  (16 tests, 30 shots: M1c's 12 plus `macroDockedCreatorPlacesOnlyIntoItsHost`,
+  `macroDockedTextBarActsOnlyInItsWindow`, `macroDrawingToolReachesEveryDrawingOfItsHolder` and
+  `macroViewModeTextRefusesFloatingBold`, added in P1–P3), plus the font-menu test above. The instrument
+  is `Fizzygum-tests/.scratch/p4/` (`m1-observe-prelude-p4.js`, `forecast.js`).
+
+#### P4 results (2026-11-17)
+
+**As built.**
+- `EditorContentPropertyChangerButtonWdgt` gives the family one contract:
+  - a `verb` named once per tool, as data;
+  - `_subjectOfferingMyVerb` and `hasSomethingToActOn`;
+  - `activated`, the one refusal;
+  - `actOn`, the act. It is public because it calls the subject's self-settling setters, which the
+    `_`-tier may not (check-layering [A]), so it is allowlisted for call-separation [U] beside
+    `createWidgetToBeHandled`.
+- `AlignButtonWdgt` folds its second subject, a stack element's layout spec, into that contract
+  (`alignDirectMethod` became the family's `verb`).
+- `GlassBoxBottomWdgt.holdsToolWithNothingToActOn` drives the cell's fill and the tool's ink.
+  `_fillForMyState` on the family answers `toolbarGlyph` or `toolbarGlyphDimmed`, and the family's
+  appearances take no own colour.
+- `IconAppearance._iconColor` holds the ink precedence, which `TypedFaceIconAppearance.livePictureOn` shares.
+
+**Tests.**
+- `macroDimmedToolsWakeWithTheirSubject` (both pointers): 3 shots, 23 assertions.
+- `macroDimmedToolCellStaysDarkUnderThePointer` (mouse only): 2 shots.
+- Each test fails under its plant (`Fizzygum-tests/.scratch/p4-tests/`): no dimming, a dimmed cell that lights,
+  the font refusal removed. Each leaves the world clean for a follower.
+- The acceptance probe `.scratch/p4/p4-accept.js` passes 46 of 46 (mouse) and 42 of 42 (finger).
+
+**Measured.**
+- The presuite's failing set is the forecast exactly: 17 tests at dpr 1, and the same 17 under the finger,
+  each a screenshot mismatch only.
+- The owner reviewed the diff page (31 shots) and approved the recapture.
+- `fg recapture --auto --dprs=1,2`, then the same with `--pointer=finger`: both RECAPTURE COMPLETE.
+
+**Found on the way.**
+- The menu sweep's overflow root pressed the font row with nothing focused. It now focuses the narrow
+  Maker's paragraph first, so the row still opens Fonts.
+- A 90-wide Docs Maker clips its docked bar's overflow chevron to ~19 px (filed in BACKLOG).
+- During a playing test a tooltip appears at once, not after its 500 ms. The hover test clears tooltips
+  before each shot.
+
+**Gates.** `fg gauntlet` passed all 20 legs with no retry (1289 s): dpr 1, dpr 2 and WebKit 399 of 399, finger 383 of
+383, menu sweep OK, paint-truthful, every audit gate clean. Ledger: U1 (the source) and T (the tests) each landed with 0
+bounces; the first presuite STOPPED on the one test outside the forecast, and the owner ruled (option A).
+
 ### P5 — docs and close
 
 1. A present-tense reference for the subsystem: `docs/architecture/toolbars.md` (construction, the
@@ -1300,5 +1382,6 @@ the content asking the same question as the text menu above.
 - [x] P2: a drawing paints with the previous tool while every palette shows the new one — the surface takes up its tool at use, windows hold their own (§6.2) — CLOSED 2026-11-17: `CanvasGlassTopWdgt._takeUpToolInReach`, `FrameWdgt.armedDrawingTool`, the D3 transfers on `ToolbarWdgt`, D2's table on `User` and its save, three new tests (§8 "P2 results")
 - [x] OWNER CHECKPOINT after P2: dock and undock palettes by hand and rule on D3 — CLOSED 2026-11-17: the owner approved D3 as built, with the three behaviours §8 "P2 results" lists
 - [x] P3: a toolbar docked on one window acts on another's selection; a creator docked on a nested Maker places outside it (§6.3–§6.5) — CLOSED 2026-11-17: `WorldWdgt.editableEditorFocus(hostWindow)`, `CreatorWdgt._placeIntoMyHost`, the refresh and its two edges on `ToolbarWdgt` (`noteToolStatesChanged`), three new tests (§8 "P3 results")
+- [x] P4: tools with nothing to act on show dimmed (D5, §6.6) — CLOSED 2026-11-17: the property tools' one contract (`verb`, `_subjectOfferingMyVerb`, `hasSomethingToActOn`, the refusal in `activated`), `GlassBoxBottomWdgt.holdsToolWithNothingToActOn`, `toolbarGlyphDimmed`, two new tests, 17 tests recaptured (§8 "P4 rulings", "P4 results")
 - [x] "Don't save" leaks the closed window's whole subtree (found in P2) — CLOSED 2026-11-17 in P2: `SaveShortcutPromptWdgt`'s button dispatches `fullDestroy`
 - [x] A text's own menu restyles it in view mode (found in P1) — CLOSED 2026-11-16 in P1: `StringWdgt._addTextMenuEntries` and `TextWdgt`'s "Soft wrap" row ask `Widget.sitsInViewModeContent` and offer no editing row in view-mode content; V1 asserts it (§8 "P1 results")

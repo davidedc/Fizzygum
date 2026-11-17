@@ -462,14 +462,19 @@ class Theme
     # tool's state; a toolbar's overflow chevron, standing in no cell, wears the same look): its fill
     # at rest -- none, so whatever the strip stands on shows around the tool's glyph -- while its tool
     # is hovered, while its tool is pressed, and while its tool is the ACTIVE one (the armed paint
-    # tool), hovered or not; pressed wins over active. A cell has no border in any state.
+    # tool), hovered or not; pressed wins over active. A cell whose tool has nothing to act on is
+    # DIMMED and keeps its rest fill in every pointer state. A cell has no border in any state.
     @toolCellFill = Color.TRANSPARENT
     @toolCellHoverFill = @desk
     @toolCellPressedFill = @chrome
     @toolCellActiveFill = @desk
     # the ink of a TOOLBAR's glyphs -- a text tool's face, a creator button's, a paint tool's, the
-    # overflow chevron -- the same in every state (the cell under a glyph shows the state).
+    # overflow chevron -- the same in every pointer state (the cell under a glyph shows the state) ...
     @toolbarGlyph = @ink
+    # ... and of a toolbar glyph whose tool has nothing to act on (a property tool in a DIMMED cell:
+    # EditorContentPropertyChangerButtonWdgt._fillForMyState): the disabled ink of buttons
+    # (buttonDisabledText).
+    @toolbarGlyphDimmed = @disabledText
     # the corner "edit code" MARK (UpperRightTriangleIconicButtonWdgt: a paint tool's edit mark,
     # EditableMarkWdgt): its triangle's fill at rest, hovered and pressed, read as it is painted
     # (UpperRightTriangleIconicButtonWdgt._fillForMyState) ...

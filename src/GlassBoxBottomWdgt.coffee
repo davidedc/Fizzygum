@@ -7,16 +7,21 @@
 # button): a square rounded at toolCellCornerRadius with no border; no fill at rest, so the glyph
 # stands alone on whatever the strip stands on; toolCellHoverFill while my tool is hovered,
 # toolCellPressedFill while it is pressed, toolCellActiveFill while it is the ACTIVE tool (hovered or
-# not; pressed shows pressed). The pointer state is the hand's answer about the widget a press on me
-# reaches (thumbnailClickReceiver: the lid, or the tool itself), when that widget is a tool that
-# lights its cell (lightsAToolCell); whether my tool is active is its own answer (isActiveTool, a
-# capability: a tool that is never active answers nothing). The look is read from the two as I am
+# not; pressed shows pressed). While my tool has NOTHING TO ACT ON (a property tool handed no subject
+# that offers its verb) I am DIMMED: no fill in any pointer state -- the disabled look every control
+# wears, hover and press dropped with it -- and my tool's glyph re-inks itself in toolbarGlyphDimmed,
+# asking me (EditorContentPropertyChangerButtonWdgt._fillForMyState), so my fill and its ink come
+# from one answer. The pointer state is the hand's answer about the widget a press on me reaches
+# (thumbnailClickReceiver: the lid, or the tool itself), when that widget is a tool that lights its
+# cell (lightsAToolCell); whether my tool is active, and whether it has something to act on, are its
+# own answers (isActiveTool, hasSomethingToActOn: capabilities, so a tool that is never active, or
+# never dims -- a creator, a paint tool --, need not answer). The look is read from these as I am
 # painted (_fillForMyState), and repainted when I am told one moved (noteItemStateChanged): by the
 # tool whose pointer state moved (every tool family and the lid say so as the hand tells them), and
-# by the toolbar I stand in when which tool is active may have moved
-# (ToolbarWdgt.noteToolStatesChanged: the selection, its style or its mode moved, a paint tool's
-# holder changed its tool, or the toolbar docked or left). No tool pushes a colour onto me, and I
-# keep none, so no family can leave one behind.
+# by the toolbar I stand in when which tool is active, or which has
+# something to act on, may have moved (ToolbarWdgt.noteToolStatesChanged: the selection, its style
+# or its mode moved, a paint tool's holder changed its tool, or the toolbar docked or left). No tool
+# pushes a colour onto me, and I keep none, so no family can leave one behind.
 #
 # MY TOOL IS CUT TO MY OUTLINE: it lies flush in my square, so I paint my children inside my rounded
 # outline, and a press in one of my corner notches reaches neither me nor my tool but whatever lies
@@ -58,11 +63,11 @@ class GlassBoxBottomWdgt extends BoxWdgt
   # MY TOOL'S STATE MOVED: the hand's answers about the widget a press on me reaches moved (that
   # widget's notePointerStateChanged tells me: CreatorWdgt, EditorContentPropertyChangerButtonWdgt,
   # CodeInjectingSimpleRectangularButtonWdgt), or my tool may have become or stopped being the active
-  # one (told by my toolbar, ToolbarWdgt.noteToolStatesChanged: the edited text, its style or its
-  # mode moved, the holder of a paint tool changed, the toolbar docked or left). My look is read as I
-  # am painted, so I repaint, and I pass the news on, so what shows my tool's state THROUGH me
-  # re-reads it: a toolbar overflow menu's row for my tool, ticked by holdsActiveTool
-  # (OverflowChevronButtonWdgt).
+  # one, or gained or lost something to act on (told by my toolbar, ToolbarWdgt.noteToolStatesChanged:
+  # the edited text, its style or its mode moved, the holder of a paint tool changed, the toolbar
+  # docked or left). My look is read as I am painted, so I repaint -- my tool's glyph with me, whose
+  # ink reads me -- and I pass the news on, so what shows my tool's state THROUGH me re-reads it: a
+  # toolbar overflow menu's row for my tool, ticked by holdsActiveTool (OverflowChevronButtonWdgt).
   # markNonValueChange: what moved is not a value (I have none to deliver).
   noteItemStateChanged: ->
     @_changed()
@@ -74,9 +79,17 @@ class GlassBoxBottomWdgt extends BoxWdgt
   holdsActiveTool: ->
     @glassBoxItem()?.isActiveTool?() ? false
 
+  # Has my tool NOTHING TO ACT ON, by its own answer (hasSomethingToActOn answering false; a tool that
+  # answers nothing is never dimmed)? Read by my look and by my tool's ink
+  # (EditorContentPropertyChangerButtonWdgt._fillForMyState).
+  holdsToolWithNothingToActOn: ->
+    @glassBoxItem()?.hasSomethingToActOn?() is false
+
   # My fill for my tool's state now, which my BoxyAppearance reads as it paints me (and no border: I
-  # answer no stroke).
+  # answer no stroke). Dimmed, I show the rest fill whatever the pointer does; else the tool cell's
+  # look (fillForToolState).
   _fillForMyState: ->
+    return WorldWdgt.theme.toolCellFill if @holdsToolWithNothingToActOn()
     GlassBoxBottomWdgt.fillForToolState @thumbnailClickReceiver(), @holdsActiveTool()
 
   # THE TOOL CELL'S FILL for a tool whose pointer state `stateHolder` shows -- the hand's answers about

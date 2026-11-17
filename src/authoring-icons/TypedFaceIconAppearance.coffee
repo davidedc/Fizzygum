@@ -17,7 +17,8 @@
 # design's "line centred in a taller box" rule, baseline = round((boxHeight - (A + D)) / 2) + A, A and
 # D the font box's ascent and descent rounded to whole pixels (StringWdgt.fontBoxAscentAndDescentOf,
 # the one measure and cache the line box uses too).
-#   INK: my own colour if I was given one (a toolbar's glyph role), else my widget's colour, read at
+#   INK: my own colour if I was given one, else the ink my widget's state shows (a text tool's: the
+# toolbar glyph ink, dimmed while its tool has nothing to act on), else my widget's colour, read at
 # every paint like every icon's (IconAppearance._iconColorString).
 #   THE SHADOW PASS paints the same text in the shadow colour at the shadow's alpha: the face is ONE
 # fill, so its silhouette is its ink.
@@ -79,8 +80,11 @@ class TypedFaceIconAppearance extends IconAppearance
 
   # A PICTURE OF MY FACE THAT STAYS LIVE, for a widget that shows what my widget looks like
   # (InertIconHolderWdgt: a toolbar overflow menu's row picture): my own kind of face, worn by that
-  # widget, in my ink. A raster taken once cannot be that picture: a face typed while its atlas is
-  # still loading is typed in placeholder boxes, and only a face that is typed again when the atlas
-  # lands -- the holder's own, recorded as the holder's cold draw -- shows the glyph.
+  # widget, in the ink my face shows as the picture is taken (_iconColor), given to the picture as its
+  # own colour -- the holder's own state and colour are no ink of mine. A toolbar tool's picture is
+  # taken of a copy standing in no cell, so it wears the plain toolbar glyph ink. A raster taken once
+  # cannot be that picture: a face typed while its atlas is still loading is typed in placeholder
+  # boxes, and only a face that is typed again when the atlas lands -- the holder's own, recorded as
+  # the holder's cold draw -- shows the glyph.
   livePictureOn: (aWidget) ->
-    new @constructor aWidget, (@ownColorInsteadOfWidgetColor ? @widget.color)
+    new @constructor aWidget, @_iconColor()

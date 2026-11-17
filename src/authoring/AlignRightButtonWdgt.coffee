@@ -4,8 +4,8 @@
 class AlignRightButtonWdgt extends AlignButtonWdgt
 
   toolTipMessage: "align right"
-  alignDirectMethod: "alignRight"
+  verb: "alignRight"
   layoutAlignSetterMethod: "setAlignmentToRight"
   horizontalAlignmentName: "RIGHT"
 
-  createAppearance: -> new AlignRightIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  createAppearance: -> new AlignRightIconAppearance @

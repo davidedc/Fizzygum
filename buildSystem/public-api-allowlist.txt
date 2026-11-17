@@ -33,6 +33,7 @@ processTripleClick  # ActivePointerWdgt public process* event-dispatch family (d
 addText             # ErrorsLogViewerWdgt log-append verb; its body drives the public .setText on the text pane — rule [A] forbids the _-form
 bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
 createWidgetToBeHandled   # creator-button build protocol (5-class family); builds via public addMany/setExtent — [A]/[G] forbid the _-form
+actOn                     # content-property tools' act protocol (EditorContentPropertyChangerButtonWdgt family, 2026-11-17 toolbar plan P4); drives the subject's public self-settling setters (toggleWeight / setFontName / setFontSize) — [A] forbids the _-form
 bringUpReferencedWidget   # ShortcutWdgt shared "open the referenced widget" ritual; drives public show/spawnNextTo/setTitle on other widgets — [A]/[G] forbid the _-form
 addHighlightingWidgets    # WorldWdgt's per-cycle highlight reconciler; it destroys stale highlighters through the public fullDestroy — [G] forbids the _-form
 autoScroll                # ViewportWdgt's drag auto-scroll step; it scrolls through the public scrollX/scrollY — [S] forbids the _-form

@@ -5,22 +5,23 @@ class IncreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "increase font size"
 
-  createAppearance: -> new IncreaseFontSizeIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  # a stated font size, the one I step up from (setFontSize sets the next)
+  verb: "originallySetFontSize"
 
-  activated: ->
-    if @_styleSubject()?.originallySetFontSize?
-      widgetClickedLast = @_styleSubject()
-      if widgetClickedLast.originallySetFontSize < 12
-        widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 1
-      else if widgetClickedLast.originallySetFontSize < 28
-        widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 2
-      else if widgetClickedLast.originallySetFontSize < 36
-        widgetClickedLast.setFontSize 36
-      else if widgetClickedLast.originallySetFontSize < 48
-        widgetClickedLast.setFontSize 48
-      else if widgetClickedLast.originallySetFontSize < 72
-        widgetClickedLast.setFontSize 72
-      else if widgetClickedLast.originallySetFontSize < 80
-        widgetClickedLast.setFontSize 80
-      else
-        widgetClickedLast.setFontSize widgetClickedLast.originallySetFontSize + 10
+  createAppearance: -> new IncreaseFontSizeIconAppearance @
+
+  actOn: (subject) ->
+    if subject.originallySetFontSize < 12
+      subject.setFontSize subject.originallySetFontSize + 1
+    else if subject.originallySetFontSize < 28
+      subject.setFontSize subject.originallySetFontSize + 2
+    else if subject.originallySetFontSize < 36
+      subject.setFontSize 36
+    else if subject.originallySetFontSize < 48
+      subject.setFontSize 48
+    else if subject.originallySetFontSize < 72
+      subject.setFontSize 72
+    else if subject.originallySetFontSize < 80
+      subject.setFontSize 80
+    else
+      subject.setFontSize subject.originallySetFontSize + 10

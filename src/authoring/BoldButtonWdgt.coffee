@@ -5,13 +5,10 @@ class BoldButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "bold"
 
-  createAppearance: -> new BoldIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  verb: "toggleWeight"
 
-  activated: ->
-    @_styleSubject()?.toggleWeight?()
-    return
+  createAppearance: -> new BoldIconAppearance @
 
   # ACTIVE while the text I act on is bold: what I would undo if pressed (the family's mirror)
   isActiveTool: ->
-    focus = @_styleSubject()
-    focus?.toggleWeight? and focus.isBold is true
+    @_subjectOfferingMyVerb()?.isBold is true

@@ -10,8 +10,11 @@ class SliderInCellButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   # the formula a cell gets: from 1 to 100, at 50, in steps of 1
   sliderSource: "new SliderWdgt 1, 100, 50, 1"
 
-  createAppearance: -> new SliderNodeIconAppearance @, WorldWdgt.theme.toolbarGlyph
+  # a source entered in the cell, as if typed: my slider's formula
+  verb: "enterSource"
 
-  activated: ->
-    @_styleSubject()?.enterSource? @sliderSource
+  createAppearance: -> new SliderNodeIconAppearance @
+
+  actOn: (subject) ->
+    subject.enterSource @sliderSource
     return

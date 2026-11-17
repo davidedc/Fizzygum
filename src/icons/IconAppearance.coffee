@@ -8,14 +8,21 @@ class IconAppearance extends Appearance
   # that the actual code paints on.
   specificationSize: new Point 200, 200
 
-  # Icon fill color as a string: the explicit ownColorInsteadOfWidgetColor if set,
-  # otherwise the fill the host widget's pointer STATE shows, for a widget whose ink is a
-  # function of its state (an icon button's glyph, IconButtonWdgt._fillForMyState), read as
-  # I paint, otherwise the host widget's color. Subclass paintFunctions call this instead of
+  # Icon fill color: the explicit ownColorInsteadOfWidgetColor if set, otherwise the ink the
+  # host widget's STATE shows, for a widget whose ink is a function of its state (an icon
+  # button's glyph by its pointer state, IconButtonWdgt._fillForMyState; a toolbar property
+  # tool's by whether it has something to act on,
+  # EditorContentPropertyChangerButtonWdgt._fillForMyState), read as I paint, otherwise the
+  # host widget's color. The one precedence: my paint reads it as a string
+  # (_iconColorString), a live picture of me takes it as a colour (TypedFaceIconAppearance).
+  _iconColor: ->
+    @ownColorInsteadOfWidgetColor ? @widget._fillForMyState?() ? @widget.color
+
+  # The icon fill color as a string. Subclass paintFunctions call this instead of
   # repeating the ownColorInsteadOfWidgetColor?-ternary inline (was copied ~64×).
   # _-tier: internal paint helper, only ever @-self-called from paintFunctions.
   _iconColorString: ->
-    (@ownColorInsteadOfWidgetColor ? @widget._fillForMyState?() ? @widget.color).toString()
+    @_iconColor().toString()
 
   # The system-wide icon outline colour, as a string (the theme's iconOutline role; Color.toString
   # computes the string once per Color and keeps it, so every paint after the first reads a field).
