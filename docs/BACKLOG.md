@@ -97,7 +97,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
-### `archive/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (✅ CLOSED 2026-11-17: P0–P5, see its ledger; living truth `architecture/toolbars.md`)
+### `archive/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (✅ CLOSED 2026-11-17: P0–P5, see its ledger; living truth `architecture/toolbars.md`; the open items below are planned in `plans/toolbar-arc-residue-plan.md`)
 - [ ] **A text menu pinned in edit mode keeps its editing rows after a flip to view mode** — a menu is built when it opens, so a pinned one still offers Bold and the rest once its content goes to view mode, and they act — reachable, low.
 - [ ] **Choosing a context-menu row takes the editor focus, and closing the menu clears it** — the row press focuses the `MenuItemWdgt` (an ordinary menu is not editor chrome), its teardown clears the focus, so a selected paragraph is unselected — reachable, low.
 - [ ] **A sheet inside a view-mode document still takes typed entries** — a click on its cell then typing commits (A1 = 42 measured): editing, not restyling, so R8's refusal does not reach it — reachable, medium.
