@@ -2004,7 +2004,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # the new one.
   #   The same pass caches the SELECTED ICON: the widget the focus selects (_widgetTheFocusSelects)
   # when it is a desktop icon (isDesktopIcon), else undefined -- so none while a caret is in its
-  # caption (a rename). On a change it invalidates the old icon (when still attached here) and the
+  # caption (a rename). On a change it invalidates the old icon (when still on a screen) and the
   # new one, whole subtree, since its caption's ink changes with its border and plate and the caption
   # is its child, which may stand outside its box (WidgetHolderWithCaptionWdgt).
   # PULL, not push (D-3-iii): the target is recomputed here, never wired into the focus-set sites. Same
@@ -2017,7 +2017,7 @@ class WorldWdgt extends IconGridPanelWdgt
       @_selectedIcon = icon
       # cross-invalidation-sanctioned: selection-overlay reconciler — PULL model (D-3-iii), no method
       # ever runs on the old/new icon in which it could self-invalidate
-      previousIcon._fullChanged() if previousIcon? and previousIcon.root() is @
+      previousIcon._fullChanged() if previousIcon? and !previousIcon.isOrphan()
       # cross-invalidation-sanctioned: selection-overlay reconciler (see above)
       icon?._fullChanged()
     target = @_widgetBeingEdited()
@@ -2035,17 +2035,18 @@ class WorldWdgt extends IconGridPanelWdgt
     if target is previous and host is previousHost
       host.notePageSelectionRingChanged()
       return
-    # only invalidate a still-attached previous widget: a destroyed one already invalidated its region on
-    # fullDestroy, and _changed() on a detached widget can't reach the damage-rect list anyway.
+    # only invalidate a previous widget still on a screen -- in the world or carried by the hand, which
+    # paints it again only when it moves (isOrphan asks for neither): a destroyed one invalidated its
+    # region on fullDestroy, and a detached one as it left.
     # cross-invalidation-sanctioned: selection-overlay reconciler — PULL model (D-3-iii), no
     # method ever runs on the old/new target in which it could self-invalidate
-    previous._changed() if previous? and previous.root() is @
+    previous._changed() if previous? and !previous.isOrphan()
     # cross-invalidation-sanctioned: selection-overlay reconciler (see above)
     target?._changed()
-    # the same rule for the windows painting a page's ring in their gutter: a still-attached old one
+    # the same rule for the windows painting a page's ring in their gutter: an old one still on a screen
     # clears the ring it painted, a new one paints it, and one that keeps the ring repaints it where
     # its box has moved to
-    previousHost.notePageSelectionRingChanged() if previousHost? and previousHost isnt host and previousHost.root() is @
+    previousHost.notePageSelectionRingChanged() if previousHost? and previousHost isnt host and !previousHost.isOrphan()
     host?.notePageSelectionRingChanged() if host isnt previousHost or !sameRingBox
 
   # The frame that paints `target`'s selection ring in its gutter, or undefined. Only the NEAREST
