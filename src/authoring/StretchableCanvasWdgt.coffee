@@ -180,6 +180,14 @@ class StretchableCanvasWdgt extends CanvasWdgt
     # due to rounding errors
     @behindTheScenesBackBufferContext.useLogicalPixelsUntilRestore()
 
+  # I STAMP WHAT IS DROPPED ON ME: a drop paints the dropped widget's picture into my image and hands
+  # the widget itself back to the world (_reactToChildDropped below), so a drop never leaves a live
+  # widget in me. Asked through ?() by the container holding me
+  # (StretchableWidgetContainerWdgt.acceptsSmartPlacedWidgets): a creator's click ends in the same
+  # kind of result a drop would, so a drawing takes no click-placed widget and the click passes over
+  # it (CreatorWdgt.activated).
+  stampsDroppedWidgets: -> true
+
   # Runs inside the drop's single settle: re-home the dropped widget through the non-settling add core.
   _reactToChildDropped: (droppedWidget) ->
     @_paintImage droppedWidget.position(), droppedWidget.fullImage(forceShadow: true)

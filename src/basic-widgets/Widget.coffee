@@ -748,6 +748,28 @@ class Widget extends TreeNode
   isInEditMode: ->
     @dragsDropsAndEditingEnabled
 
+  # Do I sit in content in VIEW mode -- content whose editing is off, which refuses restyling
+  # whatever asks: the editing tools (WorldWdgt.editableEditorFocus) and a text's own menu, which
+  # then offers none of its editing rows (StringWdgt._addTextMenuEntries)? The content I sit in
+  # decides: the nearest of my ANCESTORS that holds an edit mode (answers providesAmenitiesForEditing
+  # true) answers by that mode (isInEditMode: a window answers its content's). The walk starts at my
+  # PARENT, so a widget that holds a mode of its own is asked about the content it stands in: a Docs
+  # Maker nested in a document and selected as an item answers to the document holding it, not to
+  # its own pencil. An ancestor answering providesAmenitiesForEditing false (a spreadsheet, a sheet's
+  # cell panel, a command panel) holds no mode and is passed over: a sheet in a document in view
+  # mode sits in view-mode content, a sheet in its own window sits in none. My ROOT is never asked:
+  # the root (on screen, the world) holds no mode for what stands on it, so a text on the desktop,
+  # with no such ancestor below the root, is never in view mode. PUBLIC query of me about myself.
+  #   The selection ring's walk (WorldWdgt._widgetBeingEdited) STOPS at an ancestor answering false
+  # instead, because such a container draws its own selection: that walk asks who paints the ring,
+  # this one whether the content may be edited.
+  sitsInViewModeContent: ->
+    holder = @parent
+    while holder?.parent?
+      return not holder.isInEditMode() if holder.providesAmenitiesForEditing is true
+      holder = holder.parent
+    false
+
   # The shared "Enable editing" / "Disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
   # VerticalStackViewportWdgt). The children list varies by
@@ -5324,6 +5346,14 @@ class Widget extends TreeNode
     if @dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = true
+    # MY MODE FLIPPED (past the guard above), so I tell the world I stand in, which re-announces what
+    # its editing tools act on when its editor focus is me or inside me (WorldWdgt.noteEditModeChanged).
+    # Every core that writes this flag tells it, the disable core below and ViewportWdgt's two
+    # included; the flag written on my @contents further down needs no telling of its own, since that
+    # content stands inside me. The world asked is the root I stand under, never the global one: a
+    # widget can flip while detached (a toolbar locks itself as it is built) or while the world it
+    # stands in is being built, and a root that is no world answers nothing (?).
+    @root().noteEditModeChanged? @
 
     if @contents?
       whereToAct = @contents
@@ -5361,6 +5391,8 @@ class Widget extends TreeNode
     if !@dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = false
+    # (told as in the enable core above)
+    @root().noteEditModeChanged? @
 
     if @contents?
       whereToAct = @contents

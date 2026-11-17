@@ -143,12 +143,15 @@ class StretchableWidgetContainerWdgt extends Widget
         @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
         @parent._moveWithin world
 
-  # Smart-placement protocol (CreatorWdgt.activated routes a
-  # creator-button click to a frame's CONTENT -- for the §5.B container
-  # citizens that content is me; the retired editor's version centred in me
-  # anyway).
+  # SMART PLACEMENT (CreatorWdgt.activated): a creator's click places the widget it makes into the
+  # CONTENT of the topmost window that takes one, and for a window holding me that content is me; I
+  # centre it in me and hand it to my content (add, above). I take one while my editing is on (a
+  # window in view mode takes none) and while my content keeps what it is given: a content that
+  # stamps what is dropped on it (a drawing's canvas, StretchableCanvasWdgt.stampsDroppedWidgets,
+  # asked through ?()) takes no click-placed widget, because a click ends in the same kind of result
+  # a drop would. Either way the search passes over my window to the next one down.
   acceptsSmartPlacedWidgets: ->
-    @dragsDropsAndEditingEnabled
+    @dragsDropsAndEditingEnabled and !@contents?.stampsDroppedWidgets?()
 
   smartPlace: (widgetToBePlaced, creator) ->
     widgetToBePlaced._applyMoveTo @center().round().subtract widgetToBePlaced.extent().floorDivideBy 2

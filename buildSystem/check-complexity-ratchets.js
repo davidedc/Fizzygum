@@ -46,8 +46,13 @@ const ROOTS = sourceRoots(ARGV, 'complexity-ratchets');
 // the classes held, their files (src-relative) and their ceilings — recorded 2026-11-13 at the tree's own counts, and
 // lowered whenever a class holds fewer
 const METHOD_CEILINGS = {
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 391 },
-  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 126 },
+  // raised 391 -> 392 on 2026-11-16, owner-approved (the right shape over the count): sitsInViewModeContent, the one
+  // question "do I sit in content in view mode", asked by the world's editable focus and by a text's own menu
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 392 },
+  // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
+  // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
+  // intent-named notification, noteEditModeChanged
+  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 128 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
   FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 170 },
 };
@@ -114,7 +119,6 @@ const RECORDED = {
   'StackElementsSizeAdjustingWdgt#nonFloatDragging': 19,
   'StackLayoutEngine.arrange': 43,
   'StorageSorter#_auditStorageNoSettle': 27,
-  'StringWdgt#_addTextMenuEntries': 18,
   'StringWdgt#activated': 17,
   'StringWdgt#searchLongestFittingTextByMultiCroppingIt': 55,
   'TemplatesIconAppearance#_heartOutline': 30,

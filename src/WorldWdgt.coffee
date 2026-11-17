@@ -1845,12 +1845,42 @@ class WorldWdgt extends IconGridPanelWdgt
     @dataflow?.markNonValueChange @
     return
 
+  # A WIDGET'S EDIT MODE FLIPPED -- told by the cores that write the mode (Widget's and
+  # ViewportWdgt's enable/disable cores, on the root they stand under), at every flip and only
+  # then. When the editor focus is that widget or inside it, the content holding the focus may have
+  # gone into view mode or come out of it, and with it what the editing tools act on
+  # (editableEditorFocus), so I announce it exactly as I announce a new focus; a flip anywhere else
+  # is nothing the editor's tools show. One toggle can flip several widgets above the focus (a
+  # window's page and the stack in it): the announcement is one mark, so the toolbars re-read once.
+  noteEditModeChanged: (aWdgt) ->
+    focus = @editorFocusWdgt
+    return unless focus? and aWdgt.isAncestorOf focus
+    @dataflow?.markNonValueChange @
+    return
+
+  # THE EDITOR FOCUS THE EDITING TOOLS MAY ACT ON: the focus, or undefined while it sits in content in
+  # VIEW mode (the focus's own sitsInViewModeContent, the question a text's menu asks too before it
+  # offers its editing rows) -- a paragraph of a document whose window shows the eye, a sheet inside
+  # such a document, a text in a stack whose editing is off. Content in view mode refuses restyling
+  # whatever toolbar asks, docked or floating: the text and cell tools
+  # (EditorContentPropertyChangerButtonWdgt's family) take their subject from here, through
+  # editorStyleSubject and AlignButtonWdgt's stack-alignment branch, so they do nothing there and
+  # show inactive. The focus itself stands: a click in view mode still sets it, and the selection
+  # reads it as it is. PUBLIC query; a mode flipping above the focus is announced like a new focus
+  # (noteEditModeChanged).
+  editableEditorFocus: ->
+    focus = @editorFocusWdgt
+    return undefined if focus?.sitsInViewModeContent()
+    focus
+
   # THE STYLE THE EDITOR FOCUS HANDS OVER: what the editing tools act on and what mirrors the edited
   # text reads — the focus's textStyleSubject when it has one (a spreadsheet hands over its selected
-  # cell's, SheetCellStyle), else the focus itself (a text is its own style). PUBLIC query; its
-  # changes are the ones I announce (a new focus, noteStyleChanged).
+  # cell's, SheetCellStyle), else the focus itself (a text is its own style). Content in view mode
+  # hands over nothing (editableEditorFocus), so every tool of the family does nothing there and
+  # shows inactive. PUBLIC query; its changes are the ones I announce (a new focus,
+  # noteStyleChanged, noteEditModeChanged).
   editorStyleSubject: ->
-    focus = @editorFocusWdgt
+    focus = @editableEditorFocus()
     focus?.textStyleSubject?() ? focus
 
   # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.

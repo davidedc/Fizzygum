@@ -5,8 +5,10 @@
 #
 # I MIRROR THE EDITED TEXT: B, I, </> and the alignment trio each answer whether they are the active
 # tool from the widget being edited (world.editorFocusWdgt; BoldButtonWdgt.isActiveTool and its
-# siblings), and their cells show it (GlassBoxBottomWdgt). The world ANNOUNCES whenever that focus
-# moves or its style does (WorldWdgt._setEditorFocusNoSettle / noteStyleChanged), and I hear it
+# siblings), and their cells show it (GlassBoxBottomWdgt); content in view mode hands them nothing,
+# so none is active there (WorldWdgt.editableEditorFocus). The world ANNOUNCES whenever that focus
+# moves, its style does, or the mode of the content holding it flips
+# (WorldWdgt._setEditorFocusNoSettle / noteStyleChanged / noteEditModeChanged), and I hear it
 # through ONE dataflow edge world -> me -- so every text toolbar in the world (a docked Docs Maker
 # band, a floating one, a copy) follows the same focus with no list of toolbars anywhere: the
 # engine's edge index is the set, and Widget._destroyNoSettle takes me out of it as I die.

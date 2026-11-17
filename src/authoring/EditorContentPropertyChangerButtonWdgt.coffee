@@ -2,7 +2,9 @@
 # buttons in the text-editing toolbar (bold, italic, the alignment trio, font,
 # font-size, format-as-code, templates) that act on the LAST widget the user
 # clicked or dropped (world.editorFocusWdgt) — or on the style it hands over
-# (_styleSubject: a spreadsheet hands over its selected cell's).
+# (_styleSubject: a spreadsheet hands over its selected cell's). Content in view
+# mode hands over nothing (WorldWdgt.editableEditorFocus), so there every tool
+# that acts on it does nothing and shows inactive.
 #
 # They share: a hover/press look shown on the tool cell each stands in rather
 # than on the button (the cell asks the hand about the button as it paints,
@@ -13,9 +15,10 @@
 # (toolTipMessage), and its activated -- and, when it toggles a state of the text
 # it acts on (bold, italic, the mono font, an alignment), whether it is the ACTIVE
 # tool: isActiveTool, true while that text has the state, so its cell MIRRORS the
-# edited text (re-derived whenever the world announces the focus or its style
-# moved, TextToolbarWdgt). A tool with no state (the font, font-size and
-# templates buttons) answers nothing and is never active.
+# edited text (re-derived whenever the world announces the focus, its style or
+# the mode of the content holding it moved, TextToolbarWdgt). A tool with no
+# state (the font, font-size and templates buttons) answers nothing and is never
+# active.
 #
 # All of them are icon-shaped, hence the IconWdgt base: they paint through icon
 # appearances, like every other glyph-faced tool. Bold, italic and format-as-code
@@ -49,7 +52,9 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   # WHAT I ACT ON: the style the editor focus hands over (WorldWdgt.editorStyleSubject — a
   # spreadsheet's selected cell's style, SheetCellStyle, or a text itself). Every tool of the family
   # reads and writes through this, so a tool works the same on a text and on a sheet's selected
-  # cell, and the focus decides what that is.
+  # cell, and the focus decides what that is. A focus sitting in content in view mode hands over
+  # nothing (WorldWdgt.editableEditorFocus), whatever toolbar I stand in, docked or floating: a
+  # tool acting through this does nothing when pressed there and shows inactive.
   _styleSubject: ->
     world.editorStyleSubject()
 

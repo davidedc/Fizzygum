@@ -1405,8 +1405,12 @@ class StringWdgt extends ControllerWdgt
     @_addTextMenuEntries menu
     @_addTargetConnectionMenuEntries menu
 
-  # My text rows: content, font, style, alignment, fitting. TextWdgt extends them with its own.
+  # My text rows: content, font, style, then alignment and fitting
+  # (_addAlignmentAndFittingMenuEntries). TextWdgt extends them with its own. Every one of them edits
+  # me, so content in VIEW mode (sitsInViewModeContent) offers none of them: it refuses restyling
+  # from my menu as it does from the editing tools (WorldWdgt.editableEditorFocus).
   _addTextMenuEntries: (menu) ->
+    return if @sitsInViewModeContent()
     menu.addLine()
     menu.addMenuItem "Edit…", @, "editPopout", toolTip: "set this String's\ncontent"
     menu.addMenuItem "Font size…", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
@@ -1434,6 +1438,11 @@ class StringWdgt extends ControllerWdgt
     else
       menu.addMenuItem "Hide characters", @, "toggleIsPassword"
 
+    @_addAlignmentAndFittingMenuEntries menu
+
+  # my rows placing my text in my box -- alignment, then fitting -- the rest of my text rows
+  # (_addTextMenuEntries), and so offered only where I may be edited
+  _addAlignmentAndFittingMenuEntries: (menu) ->
     menu.addLine()
     if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
       menu.addMenuItem "← Align left", @, "alignLeft"

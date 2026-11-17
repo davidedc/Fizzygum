@@ -1,6 +1,8 @@
 # A CREATOR: a toolbar tool that makes a widget when clicked (createWidgetToBeHandled, my
-# subclasses') and places it -- into the topmost window that smart-places widgets, else beside me
-# on the desktop. The base of the creator buttons and of a tool cell's lid (GlassBoxTopWdgt).
+# subclasses') and places it -- into the topmost window whose content takes a click-placed widget,
+# else beside me on the desktop. A window in view mode takes none, and neither does a content that
+# stamps what is dropped on it (a drawing): a click ends in the same kind of result a drop would, so
+# it passes over both. The base of the creator buttons and of a tool cell's lid (GlassBoxTopWdgt).
 
 class CreatorWdgt extends Widget
 
@@ -27,12 +29,12 @@ class CreatorWdgt extends Widget
     #  - empty window with drop-in placeholder
     #  - window with panel
     #  - window with scrollpanel
-    # find the topmost editing-enabled window whose contents knows how to
-    # accept a smart-placed widget, then let that content widget place it.
-    # The contents-type branching that used to be here is now polymorphic:
-    # acceptsSmartPlacedWidgets / smartPlace live on the content widgets
-    # (the citizens' StretchableWidgetContainerWdgt payload, and a
-    # DocumentWdgt's DocumentViewportWdgt payload -- §5.B).
+    # find the topmost window whose content takes a smart-placed widget, then let that content
+    # place it. acceptsSmartPlacedWidgets / smartPlace live on the content widgets (the citizens'
+    # StretchableWidgetContainerWdgt payload, and a DocumentWdgt's DocumentViewportWdgt payload),
+    # asked through ?(). A content takes none while its editing is off (a window in view mode), nor
+    # when it stamps what is dropped on it (a drawing: StretchableCanvasWdgt.stampsDroppedWidgets),
+    # so the search passes over such a window and goes on to the next one down.
     where = world.topmostChildSuchThat (w) ->
       # instead of `w instanceof FrameWdgt` (type-test-elimination campaign)
       w.isFrame?() and w.contents?.acceptsSmartPlacedWidgets?()

@@ -6,6 +6,123 @@
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
+### A firing gate says how to go quiet, never when the quiet fix is wrong
+
+**The owner's rule (2026-11-16):** "if the right architectural shape needs a raise of the ratchet, go ahead. Don't
+make the solution worse because of the ratchet." A ratchet still flags real growth, so a session first asks whether a
+member is genuinely redundant or misplaced; it never trades clarity for the count. The same day the owner widened
+this from ratchets to every gate whose cheapest fix is a contortion (the second half of this item, below).
+
+**What is wrong.** Every ratchet gate (a recorded number that may fall and may not rise) tells a session how to get
+back under its number, and none says when raising it is the right answer. Some forbid it outright:
+- `buildSystem/check-complexity-ratchets.js`'s footer reads "A ratchet may fall and may not rise: split the function
+  or the class rather than raising a number here". A NEW function above the complexity ceiling can never be
+  recorded, even when it is born from a split that lowers a recorded parent.
+- `check-call-separation.js` says "never raise the baseline to ship".
+
+Others are partial: `check-stinks.js` and `census-widget-conformance.js` say "if genuinely intentional, raise … with
+a one-line reason". `check-doc-narration.js` allows an instruction-file ceiling to rise only for a new rule, not for
+a sentence that must grow to stay true. Only `check-plane-discipline.js` B states the legitimate case outright
+("same-plane-by-construction ⇒ raise the baseline with a one-line reason"). Three practices add to the pressure:
+- the loop briefs say "a unit never RAISES a recorded ratchet value (if it cannot land without, PARK)";
+- every gain is banked at once (all four method ceilings sat exactly at their counts on 2026-11-16);
+- subagents are barred from `buildSystem/`, so they cannot raise even when it is right.
+
+**Evidence** (audit of 433 session transcripts, git history and memory, 2026-11-16):
+1. The docked-and-floating-toolbars arc, P1 (R8, 2026-11-16): `WorldWdgt` was held at 126. The clean shape (a
+   public door, a named climb, an intent-named notification) needed 129, and the orchestrator first bounced it toward
+   a zero-net contortion. The owner stopped that: the shape was restored and the ceiling raised to 129 with its
+   reason. Contortion, reverted.
+2. Fizzygum `2868c732` (round-4 loop, U4): a `Fizzygum/CLAUDE.md` sentence was reworded to fit its byte ceiling and
+   became false (the vendored CoffeeScript is not pinned). Review caught it, and the line is accurate today.
+   Contortion.
+3. Fizzygum `324f6d64` (round-2 loop, U6): a test-playing query meant as a `WorldWdgt` static became a boot function,
+   `window.aTestIsPlaying`, because `WorldWdgt` was at its method ceiling. The commit gives only an after-the-fact
+   reason. Leaning contortion: re-judge its home.
+4. Fizzygum `9966b424` (round-1 loop, U10): `WorldWdgt.loadWorldSnapshot` (complexity 67, recorded) was left unsplit
+   because a split adds methods to a class at its ceiling. One ratchet vetoed the refactor the other exists to
+   drive. Re-judge.
+5. Fizzygum `495e67ed` (2026-10-17): a redundant `instanceof` was removed to keep the type-test stink net-zero.
+   Defensible, but the count drove it. Borderline.
+6. Fizzygum `def42b0f` (round-3 loop, U3): an instruction-file sentence was chosen by measuring candidate lengths.
+   It stayed accurate. Mild.
+
+**To do.**
+- One shared advice text (e.g. `buildSystem/lib/ratchet-advice.js`) that every ratchet rule prints beside its own
+  `why`. It says:
+  - (a) what drift the number holds back;
+  - (b) the legitimate raises: the right shape needs it (a named helper, a public door, an intent-named
+    notification, the natural home); a refactor a ratchet exists to drive crosses another one (a split adds
+    methods); the gate's measurement widened; an instruction-file sentence must grow to stay true;
+  - (c) the forbidden answers: inlining a helper that deserves a name, folding two concepts into one, an odd home,
+    an offsetting trade made only for the count, a wording chosen by length, a true fact dropped;
+  - (d) how to raise: in the same change, with a dated reason beside the number (the trailing-comment form the
+    ceilings and baselines already use), naming the ratchet in the commit message and the report.
+- Rewrite the complexity footer, the call-separation line and the loop-brief rule to match: a brief says "STOP and
+  report the right shape and the raise it needs", never "PARK".
+- Let a split's child be recorded when the split lowers a recorded parent.
+- State the policy in `docs/architecture/lint-and-static-checks.md`.
+- Prove it the every-gate-bites way: each ratchet's self-test asserts the advice is printed with each rule it fires.
+- Then re-judge cases 3 and 4 under the rule.
+
+**The other gates (widened by the owner, 2026-11-16).** A gate whose cheapest way back to green is a rename, a move,
+a deletion, an inlining or a stub invites the same contortion, number or not. Each one's failure line should name its
+QUIET fix as the wrong answer and say what the right one is:
+
+| Gate | The quiet fix (wrong when followed blindly) | The right answer |
+|---|---|---|
+| `check-part-edges` | an `if X?` guard | right for INCLUSION only; a LAZY part's door awaits `world.parts.ensureLoaded`, since a guard swallows the click |
+| `check-unresolved-sends` | a stub method, at worst a `-> false` default on `Widget` | the missing dispatch is real (§14 forbids the default): implement it on the answering class or drop the call |
+| `check-dead-methods` | delete it | a member reached by a string name (a menu action, a pin setter) is live: allowlist it with its reason |
+| `check-layering` [D] | promote a private member to public product API so a macro can reach it | product API never exists for a test: an oracle line with `# macro-private-call-sanctioned: <reason>`, or a toolkit verb |
+| `check-call-separation` [S]/[U] | rename a member's tier so the call goes quiet | a tier states a member's role: re-tier only when the role is wrong, else sanction the caller with its reason |
+| `check-layering` [G] and the tier rules | fold a helper into its caller | keep a helper that deserves its name; sanction or re-tier it instead |
+| `instanceof-type-test` stink | a type-named predicate (`isScrollPanel`), or a duck-typed type test in disguise | move the behaviour, or a query named for the CAPABILITY (§14); an honest type test is kept with its reason |
+| `check-hand-lists` | replace a clear list by reflection, or reshape the literal so the detector misses it | derive the list when it can be, else assert it both ways and sanction it |
+| `census-hierarchy-duplication --gate` | delete an identical override | it changes what `super` reaches and what a prototype owns (guidelines §16): sanction a deliberate one |
+| `comment-narration`, `check-doc-narration` | delete a warning that names a retired shape | restate it as a present-tense constraint ("never X, because Y") |
+| the two CLAUDE.md byte ceilings, the BACKLOG line length | shorten a true sentence until it is false | the ratchet half of this item: raise the ceiling for a sentence that must grow to stay true |
+| `WORLD_CONSTRUCTION_DRIFT` | add the field to `_worldStateAuditExemptions` | find what the constructor or `finishWorldSetup` reads; only a field no render can reach is exempt |
+| the revisits and settle gates | a flag that suppresses the re-visit | remove the cause (`docs/architecture/layout.md`) |
+| macro `AIM MISSED` | `@pressMustLandOn` whatever the press hit, or aim at a raw point | aim by meaning; a declared aim names what the press must meet |
+| `pointerKinds: ["mouse"]` | declare a test mouse-only to dodge a finger failure | only a test whose SUBJECT is a mouse mechanism; otherwise the finger failure is a finding |
+| `check-plane-discipline`, `check-raw-pointer-reads` | map coordinates wholesale | map only what feeds an input event (a wholesale map broke a caret-slot test) |
+| the cognitive-complexity ceiling (15) | split blindly, threading state through many-parameter helpers or across a `try/finally` | split along a real seam, or raise with a reason (the ratchet half) |
+
+Most of these gates already have a sanction marker with a required reason (`lint-and-static-checks.md` §5 lists
+them); what none of their messages says is WHEN a sanction or a design change is right, as opposed to the quiet fix.
+The same shared advice text carries one row per gate. Its self-test asserts that each gate's failure line prints
+that gate's row.
+
+### No audit has looked for shapes chosen only to quiet a non-ratchet gate
+
+**The owner's request (2026-11-16):** search the sessions and logs for places where a suboptimal shape was used just to
+quiet a gate, complying with it blindly.
+
+**What exists.** The ratchet half of the item above was audited the same day, over 433 session transcripts (about
+2026-10-16 to 11-16; July to mid-October is visible only in git), git history and memory. The non-ratchet gates in that
+item's table were not audited.
+
+**To do.**
+- Per gate in that table, search for its quiet-fix spelling, in three places:
+  - the session transcripts, `~/.claude/projects/-Users-davidedellacasa-code-Fizzygum-all/*.jsonl` and the subagent
+    transcripts beside them (grep windows, never a whole file);
+  - the git history of both repos (`git log -p -S` / `-G` on the spellings);
+  - the memory notes.
+- Spellings to search for:
+  - an `if <Class>?` guard added next to a part-edge failure;
+  - a new method whose body is `undefined`, `false` or empty, added next to an unresolved-send failure;
+  - a method deleted next to a dead-method failure;
+  - a `_` rename next to a [S]/[U] failure;
+  - a new sanction marker or exemption entry;
+  - a `pointerKinds: ["mouse"]` declaration;
+  - a `pressMustLandOn` added next to an `AIM MISSED`;
+  - a new `_worldStateAuditExemptions` entry.
+- For each find, read enough of the session to judge what was done: the right shape, a defensible sanction, or a
+  contortion. Report a table (date, session or commit, gate, what was done, verdict, evidence excerpt).
+- File each contortion that still stands in the tree as its own BACKLOG item, re-judged on its merits.
+- Reach: medium, since a contortion that stands is a design defect nobody chose.
+
 ### Pointer hit-test rework 2026-08-21 — the backlog's note
 
 `isTransparentAt` + the `noticesTransparentClick` flag retired for three single-meaning members —

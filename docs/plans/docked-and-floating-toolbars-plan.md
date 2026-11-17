@@ -18,7 +18,7 @@ Phase status (update this table as phases close):
 | Phase | What | Status |
 |---|---|---|
 | P0 | Spike S1 (the paint mechanism, planted); measure M1 (test fallout). D1–D8 are already ratified | DONE 2026-11-16: S1 passes every row; M1a, M1b empty; M1c 26 shots in 12 tests (§8 "P0 results") |
-| P1 | Content-side bugs: view-mode content refuses restyling; a drawing takes no click-placed widget | not started |
+| P1 | Content-side bugs: view-mode content refuses restyling; a drawing takes no click-placed widget | DONE 2026-11-16: `WorldWdgt.editableEditorFocus`, `StretchableCanvasWdgt.stampsDroppedWidgets`, two new tests; gauntlet green (§8 "P1 results") |
 | P2 | The seam + paint: the surface takes up its tool at use; windows hold their own tool | not started |
 | — | OWNER CHECKPOINT: dock / undock by hand, judge the feel (D3) | — |
 | P3 | Text tools and creators onto the seam; the refresh moves to `ToolbarWdgt`; mixed bars | not started |
@@ -481,7 +481,9 @@ deserializer restores structure directly), so no transfer runs and the saved too
 - ONE query decides the subject, in `WorldWdgt` (core, generic): the style subject **within a window**.
   With no window it is today's answer. With a window it is the same answer only when the editor focus is
   in that window's reach, else undefined. R8's refusal lives in the same query: content in view mode
-  hands over no subject.
+  hands over no subject. P1 landed that half as a door, `WorldWdgt.editableEditorFocus` (the focus, or
+  undefined while it sits in view-mode content), which `editorStyleSubject` and the align fallback
+  already read: P3 gives the door the host, so both readers keep reading one answer (§8 "P1 results").
 - `EditorContentPropertyChangerButtonWdgt._styleSubject` passes its toolbar's host. Every subclass
   already goes through it. Route the two direct readers through the same door:
   `AlignButtonWdgt.activated`'s fallback and `TextToolbarWdgt.currentFontName`.
@@ -768,6 +770,126 @@ the host's `contents`. A PROPERTY tool is an `EditorContentPropertyChangerButton
    with the new widget asserted a child of the world, plus the drag asserted to stamp as it does today.
 4. Gates: `fg presuite`; the finger suite; `fg gauntlet`. Then summary + commit message; wait.
 
+#### P1 results (recorded 2026-11-16, on Fizzygum `6b4c0d65` and tests `f470874b0`)
+
+**R9: a drawing takes no click-placed widget.**
+- The capability lives on the canvas. `StretchableCanvasWdgt.stampsDroppedWidgets` states it: what is dropped on me is
+  stamped into my image and the widget is handed back to the world.
+- The container consults it: `StretchableWidgetContainerWdgt.acceptsSmartPlacedWidgets` is now
+  `@dragsDropsAndEditingEnabled and !@contents?.stampsDroppedWidgets?()`. `CreatorWdgt.activated`'s logic is unchanged.
+- Measured on the build (`Fizzygum-tests/.scratch/p1-r9/r9-accept.js`, 6 of 6):
+  - Slides, Dashboards, Patch programming, Generic panel and Docs still take a click-placed widget; Drawings does not.
+  - C2 with only the drawing open: the text lands on the desktop beside the tool and the canvas is untouched, both
+    by `activated()` and by a real click. A drag of the same creator still stamps.
+- Consequences, as R4 states them:
+  - With a Slides Maker behind the front-most drawing, the click places into the Slides Maker. The search passes over
+    a window that takes no placed widget, as it already passes over a window in view mode.
+  - A tool cell's lid (`GlassBoxTopWdgt`) behaves the same.
+  - A drawing nested in a front-most Docs Maker leaves the click to the document, because the search reads only the
+    world's direct children.
+
+**R8: how "this content is in view mode" is asked.**
+- The door: `WorldWdgt.editableEditorFocus`, public, answers the focus, or undefined while it sits in view-mode content.
+- The question behind it is the widget's own: `Widget.sitsInViewModeContent`, a public query of a widget about
+  itself.
+  - It starts at the widget's PARENT, so a selected nested Maker answers to the content it stands in.
+  - The first ancestor below the root answering `providesAmenitiesForEditing is true` decides, by `isInEditMode()`.
+  - An ancestor answering `false` (a spreadsheet, a sheet's cell panel, a command panel) holds no mode and is passed
+    over. The selection ring's walk stops there instead, because that container draws its own selection.
+  - No holder below the root means no mode, so the content is restylable.
+- `editorStyleSubject` and `AlignButtonWdgt.activated`'s stack-alignment fallback both read the door.
+- **A text's own menu asks the same question.** `StringWdgt._addTextMenuEntries` offers none of its editing rows in
+  view-mode content: Edit…, Font size…, Font, Bold, Italic, the header line, the alignments and the fitting rows.
+  `TextWdgt` withholds its "Soft wrap" row there too, but keeps its run rows, because running code edits nothing.
+  Before the fix, a right-click on a view-mode paragraph → "Text" → "Bold" bolded it (measured,
+  `.scratch/p1-r8/r8-menu-door.js`). This is the content-side refusal of the owner's first direction, so R8 holds at
+  the toolbars and at the content's own door alike.
+  - The alignment and fitting rows moved to their own method, `_addAlignmentAndFittingMenuEntries`. The guard would
+    have raised the method's complexity record, and those rows already formed groups of their own, all about placing
+    the text in its box. Judged on its merits the split stands, and the record falls away.
+  - A residual is filed: a text menu PINNED while its content was in edit mode keeps its rows after the mode flips,
+    because a menu is built when it opens.
+  - Two members joined the inspected chains (`Widget.sitsInViewModeContent`,
+    `StringWdgt._addAlignmentAndFittingMenuEntries`), so the inspector member lists moved. 13 of the 16 tests in the
+    measured churn set (`Fizzygum-tests/scripts/inspector-churn-set.json`) failed on exactly that, and were
+    recaptured with `fg recapture-inspector`, mouse and finger, under the owner's standing ruling that inspector
+    member-list churn is a non-cost.
+  - The same shift exposed a HARNESS gap. `bringInViewAndClickOnListItem` nudges the list's thumb one pixel at a
+    time, but on a long enough list one thumb pixel carries the window further than the pane is tall: measured, 228
+    px per pixel on a 21,000 px class-member list under a 141 px pane. A row between two thumb stops was then
+    unreachable: `macroClassEditShowsOnTheNextFrame`'s `linePitch` row swung across the gap and the macro threw.
+    - The verb now finishes with wheel notches (`MacroToolkit.wheelListTowardItem_InputEvents`, which scroll by
+      content pixels), and only once the thumb nudges have failed. So every scroll the nudges already finish replays
+      byte-identically, and that test passes with no recapture.
+- A mode flip above the focus is announced: `WorldWdgt.noteEditModeChanged`, told by `Widget`'s and `ViewportWdgt`'s
+  mode cores through `@root()`. So a bar stops showing a tool active the moment its content goes to view mode.
+  `ViewportWdgt`'s cores never reach `Widget`'s, so both tell it.
+- Measured on the build (`.scratch/p1-r8/r8-accept.js`, 15 of 15, real clicks wherever a person would click):
+
+| Focus | The holder that decides | Answer |
+|---|---|---|
+| a paragraph in a Docs Maker | `DocumentViewportWdgt` | refused in view mode, applied in edit mode |
+| a text box in a slide | `StretchablePanelWdgt` | refused in view mode, applied in edit mode |
+| a sheet (focused as a whole, handing over its cell's style) | none in its own window; a document's viewport when nested in one | a sheet in its own window has no mode and stays restylable; a sheet in a view-mode document refuses |
+| a text on the bare desktop | none | restylable |
+| nested Makers | the nearest | outer view, inner edit: restylable; outer edit, inner view: refused |
+| a text in a desktop stack after "Disable editing" | the stack | refused |
+| inspector, console and text-area texts (22 + 1 checked) | edit-mode panes, or none | never refused |
+
+  Further measurements:
+  - Each mode toggle makes two mirror calls, and a toggle on an unrelated window makes none.
+  - A rectangle in a view-mode Docs Maker nested in an edit-mode one no longer moves its window when an align tool is
+    pressed; in edit mode the align still works.
+  - P0's M1c already measured that this refusal changes no existing shot. The suite agrees: no existing reference
+    changed.
+
+**Ratchets.**
+- In `buildSystem/check-complexity-ratchets.js`, `WorldWdgt`'s method ceiling rises from 126 to 128 (the door and the
+  notification) and `Widget`'s from 391 to 392 (`sitsInViewModeContent`), each with its reason beside the number.
+  - The owner approved this on 2026-11-16: "if the right architectural shape needs a raise of the ratchet, go ahead.
+    Don't make the solution worse because of the ratchet".
+  - A zero-net reshape was tried first and reverted.
+  - `StringWdgt#_addTextMenuEntries` leaves the complexity records (see the split above).
+- The `comment-narration` stink falls from 83 to 82 (banked).
+- ⚠ For P2: `FrameWdgt` and `ActivePointerWdgt` sit exactly at their ceilings (170 and 74). §6.1 and §6.2 put about five members on `FrameWdgt`: the dock-host query,
+  `armedDrawingTool`, `armDrawingTool`, `dockedPayloads` and `wearsDrawingTools`. Judge the shape first, and raise
+  the ceiling with its reason where the right shape needs it.
+
+**Tests.**
+- `SystemTest_macroViewModeTextRefusesFloatingBold` (V1) carries an edit-mode control proving the press is real.
+  It then checks the text-menu door: the paragraph's own menu offers its weight and font rows in edit mode and none
+  of its editing rows in view mode. That half bites on its own plant (`.scratch/p1-tests/bite-menu-plant.js`) under
+  both pointers, failing at the view-mode row assertions with the toolbar half untouched.
+- `SystemTest_macroDrawingTakesNoClickPlacedWidget` (C2) also drags the creator onto the drawing, which stamps. The
+  dragged-out text is then moved off, so the screenshot shows the stamp.
+- One screenshot each, at dpr 1 and 2, mouse and finger; the finger references are byte-identical to the mouse ones.
+- Each test bites under both pointers with the bug planted through `--prelude=`
+  (`.scratch/p1-tests/bite-v1-plant.js`, `bite-c2-plant.js`), failing first at its ruling's assertion.
+- A follower (`run-sequence-headless.js <new> SystemTest_macroAnalogClockInspectEdit`) runs clean on both pointers,
+  with no `WORLD_INVENTORY_` lines.
+
+**Found on the way** (filed in BACKLOG; not in P1's scope):
+- **A text menu pinned in edit mode keeps its editing rows after a flip to view mode.** See the residual above.
+- **Choosing a context-menu row takes the editor focus, and closing the menu clears it.** The press on a menu row
+  focuses the row, because an ordinary menu is not editor chrome, and the menu's teardown clears the focus. So a
+  selected paragraph is unselected after its menu is used. Measured with a focus-write trace; V1's menu steps assert
+  only that the closing press does not focus the desktop.
+- **A sheet inside a view-mode document still takes typed entries.** Typing "42" then Enter stored A1 = 42. This is
+  editing, not restyling.
+
+**Gates.**
+- `fg presuite` passed after R9 (389 of 389), after R8 (389 of 389) and after the tests (391 of 391). Each was
+  paint-truthful, and no existing reference changed.
+- The finger suite at dpr 1 passed: 376 of 376.
+- `fg gauntlet` passed all 20 legs with no retry (1150 s): dpr1, dpr2, webkit, apps, parts, menusweep, pinsweep,
+  graph, selftests, paint, tiernaming, settle, capstone, refs, revisits, census, serialization, storage, vmtruth and
+  finger.
+- The text-menu door and the list verb's wheel fallback were added after that.
+  - Their presuite failed on exactly the 13 inspector-churn tests and the unreachable list row (both described
+    above).
+  - `fg recapture-inspector` then completed, with the full suite green mouse and finger at dpr 1 and 2.
+  - The final `fg gauntlet` passed all 20 legs, again with no retry (1128 s).
+
 ### P2 — the seam and paint
 
 1. §6.1, then §6.2 in this order: the surface's entries and take-up → the holder pair on `FrameWdgt` →
@@ -900,6 +1022,50 @@ All through the wrapper, by absolute path, from any directory:
   `src/serialization/CLAUDE.md`; `Fizzygum-tests/CLAUDE.md`, `Fizzygum-tests/DETERMINISM.md`.
 - Session memory note `paint-tool-stale-surface` (the investigation and the rulings as they were made).
 
+## BACKLOG detail
+
+### A text menu pinned in edit mode keeps its editing rows after a flip to view mode
+
+A text's own menu leaves out its editing rows when the text sits in view-mode content
+(`StringWdgt._addTextMenuEntries` asks `Widget.sitsInViewModeContent`; P1 results). It asks once, though: a menu is
+built when it opens. So a text menu opened while its content was in edit mode, and then PINNED, keeps Bold, Italic,
+Font, Font size…, Edit… and the alignment rows after the window is turned to view mode, and those rows still act.
+The editing tools do not have this gap, because the mode flip is announced to them (`WorldWdgt.noteEditModeChanged`).
+
+A person reaches it with a gesture: open the paragraph's menu, pin it, press the window's pencil, then choose Bold.
+Two fixes are possible:
+- the setters refuse in view-mode content; mind construction-time styling, which happens before a document is turned
+  to view mode;
+- a pinned text menu rebuilds or hides its editing rows when told of the flip.
+
+Low severity.
+
+### Choosing a context-menu row takes the editor focus, and closing the menu clears it
+
+Found in P1 while extending `SystemTest_macroViewModeTextRefusesFloatingBold` with the text-menu door, and measured
+with a focus-write trace (`Fizzygum-tests/.scratch/p1-tests/focus-trace-prelude.js`). The paragraph is selected; a
+right-click opens the hierarchy menu, and the press on its "Text" row runs `_setEditorFocusNoSettle` with the
+`MenuItemWdgt` from `ActivePointerWdgt.processPointerUp`. When the menus close, `MenuItemWdgt._destroyNoSettle`
+clears the focus to undefined. So after using a widget's context menu, the paragraph that was selected is not, and
+the text tools have nothing to act on until it is clicked again.
+
+The cause: an ordinary menu is not editor chrome (`MenuWdgt.excludedFromEditorFocusTracking` answers
+`@actsAsEditorChrome`, false by default), so a press in it is tracked like a press in content. To decide: whether every
+pop-up menu is editor chrome for focus purposes (a press in it neither steals nor clears the selection), which is what
+the toolbars already are.
+
+### A sheet inside a view-mode document still takes typed entries
+
+Found by P1's research and measured on the build: a Sheets Maker carried into a Docs Maker that is then turned to
+view mode still accepts typing. A click on a cell, then "42" and Enter, stored A1 = 42.
+
+R8 refuses restyling, so the sheet's style tools are refused there (P1 results), but the sheet's own key path
+(`SimpleSpreadsheetWdgt.processKeyDown`, which acts while the sheet is the editor focus) asks no mode. A sheet in its
+own window has no view mode at all, so the question only arises when it sits inside content that has one. The fix is
+the content asking the same question as the text menu above.
+
 ## BACKLOG ledger
 
-(empty until items close — README rule 2)
+- [x] P0: spike S1 (the paint mechanism, planted) and measurement M1 (test fallout); decisions D1–D8 were ratified 2026-11-16 (§4.2) — CLOSED 2026-11-16: S1 passed every row; M1a and M1b empty; M1c 26 shots in 12 tests (§8 "P0 results"), Fizzygum `6b4c0d65`
+- [x] P1: content in view mode refuses restyling from any toolbar; a drawing takes no click-placed widget (rulings R8, R9) — CLOSED 2026-11-16: `WorldWdgt.editableEditorFocus` and `StretchableCanvasWdgt.stampsDroppedWidgets`, two new tests (§8 "P1 results")
+- [x] A text's own menu restyles it in view mode (found in P1) — CLOSED 2026-11-16 in P1: `StringWdgt._addTextMenuEntries` and `TextWdgt`'s "Soft wrap" row ask `Widget.sitsInViewModeContent` and offer no editing row in view-mode content; V1 asserts it (§8 "P1 results")

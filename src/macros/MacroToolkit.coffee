@@ -2326,6 +2326,19 @@ class MacroToolkit
     from = thumb.center()
     @_dragSliderButtonFromTo_InputEvents v.list.vBar, (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
 
+  # THE WHEEL'S CORRECTION toward the named row, for a row NO thumb position shows: on a long enough
+  # list one thumb pixel carries the window further than the pane is tall (measured: 228px of a
+  # 21,000px class-member list per pixel, under a 141px pane), so the window steps right over a row
+  # that falls between two of its stops, and the thumb nudges above only swing across it. A wheel
+  # notch scrolls by CONTENT pixels, so it carries the window the distance that centres the row in
+  # the pane.
+  wheelListTowardItem_InputEvents: (list, listItemString) ->
+    v = @_listRowVisibility list, listItemString
+    return  unless v?
+    delta = Math.round ((v.label.top() + v.label.bottom()) - (v.paneTop + v.paneBottom)) / 2
+    return  if delta is 0
+    @wheelOn_InputEvents v.list, delta
+
   # CLICK THE ROW OF `list` THAT STANDS FOR `listItemString` — found by identity (_listRowOf), so a
   # row whose rendered name is ellipsized is still the row it names.
   clickOnListItem_InputEvents: (list, listItemString, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
@@ -2447,6 +2460,13 @@ class MacroToolkit
         for attempt in [0..2]
           break if @listItemIsAimable_InputEvents list, whichItem
           @nudgeListTowardItem_InputEvents list, whichItem
+          yield "waitNoInputsOngoing"
+        # a row between two thumb stops is shown by no thumb nudge: the wheel, which scrolls by content
+        # pixels, brings it in (wheelListTowardItem_InputEvents) -- only once the nudges have failed,
+        # so every scroll the nudges already finish replays as it is
+        for attempt in [0..2]
+          break if @listItemIsAimable_InputEvents list, whichItem
+          @wheelListTowardItem_InputEvents list, whichItem
           yield "waitNoInputsOngoing"
         @clickOnListItem_InputEvents list, whichItem
         yield "waitNoInputsOngoing"

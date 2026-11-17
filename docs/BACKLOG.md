@@ -97,9 +97,10 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
-### `plans/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (AUTHORED 2026-11-16, nothing landed)
-- [ ] P0: spike S1 (the paint mechanism, planted) and measurement M1 (test fallout); decisions D1–D8 were ratified 2026-11-16 (§4.2) — not started
-- [ ] P1: content in view mode refuses restyling from any toolbar; a drawing takes no click-placed widget (rulings R8, R9) — not started
+### `plans/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (AUTHORED 2026-11-16; P0 and P1 landed, see its ledger)
+- [ ] **A text menu pinned in edit mode keeps its editing rows after a flip to view mode** — a menu is built when it opens, so a pinned one still offers Bold and the rest once its content goes to view mode, and they act — reachable, low.
+- [ ] **Choosing a context-menu row takes the editor focus, and closing the menu clears it** — the row press focuses the `MenuItemWdgt` (an ordinary menu is not editor chrome), its teardown clears the focus, so a selected paragraph is unselected — reachable, low.
+- [ ] **A sheet inside a view-mode document still takes typed entries** — a click on its cell then typing commits (A1 = 42 measured): editing, not restyling, so R8's refusal does not reach it — reachable, medium.
 - [ ] P2: a drawing paints with the previous tool while every palette shows the new one — the surface takes up its tool at use, windows hold their own (§6.2) — not started
 - [ ] P3: a toolbar docked on one window acts on another's selection; a creator docked on a nested Maker places outside it (§6.3–§6.5) — not started
 - [ ] ⛔ P4: tools with nothing to act on show dimmed — the owner picks the look and sees the diff page before its recapture (§6.6) — not started
@@ -300,6 +301,10 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] **`putImageData` of (255,0,0,0) keeps its RGB** (SWCanvas), where Chrome reads back 0,0,0,0. Invisible (alpha 0).
 - [ ] **`xor` is binary on partial alpha** (SWCanvas), and `lighter` and the blend modes fall back to source-over (off by up to 220). Fizzygum uses only source-over, source-in and destination-out.
 - [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
+
+### Gate audit 2026-11-16 — residue (no plan doc; detail in `archive/backlog-open-items-detail.md`)
+- [ ] **A firing gate says how to go quiet, never when the quiet fix is wrong** — ratchets steered sessions to inline helpers, home code by a ceiling, make a CLAUDE.md line false; many gates have a cheap quiet fix that is a contortion; each should print why it exists and when a raise or sanction is right — medium.
+- [ ] **No audit has looked for shapes chosen only to quiet a non-ratchet gate** — search the session transcripts and git for each gate's quiet-fix spelling (an `if X?` guard, a stub, a deletion, a tier rename, a new exemption) and re-judge each find on its merits — medium.
 
 ### Tooling arc 2026-10-29 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 - [ ] **A screenshot whose reference never LOADED reports as a pixel mismatch** — an empty candidate set says "no screenshots like this one" (seen in a loaded `settle` leg); give it its own line, then find why one goes missing. → "A screenshot whose reference never LOADED reports as a pixel mismatch."

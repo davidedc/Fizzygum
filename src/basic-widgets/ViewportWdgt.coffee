@@ -1669,6 +1669,9 @@ class ViewportWdgt extends ClippingWdgt
     # (macro/cross-object surface) — settle-free, consciously reused by this core.
     @enableDrops()
     @dragsDropsAndEditingEnabled = true
+    # my flag is my mode, and the mode a window holding me answers with: its flip is told to the
+    # world I stand in as the base core tells its own (Widget._enableDragsDropsAndEditingNoSettle)
+    @root().noteEditModeChanged? @
 
     # told once my mode has changed, as every core in this family tells it: my window re-asks the
     # windows standing in me whether they offer a grip, and they read my mode to answer
@@ -1682,6 +1685,7 @@ class ViewportWdgt extends ClippingWdgt
     # public-call-sanctioned: disableDrops — see the enableDrops note in the enable core above.
     @disableDrops()
     @dragsDropsAndEditingEnabled = false
+    @root().noteEditModeChanged? @
 
     # (after the flag: see the enable core above)
     @parent?.showViewModeInBar?()

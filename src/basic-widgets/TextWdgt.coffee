@@ -620,14 +620,18 @@ class TextWdgt extends StringWdgt
   isSoftWrapping: -> @softWrap
 
   # my rows after my chain's text rows, and so before the connection block that closes the menu
-  # (StringWdgt.addWidgetSpecificMenuEntries)
+  # (StringWdgt.addWidgetSpecificMenuEntries). A wrap is an edit, so content in VIEW mode
+  # (sitsInViewModeContent) gets no "Soft wrap" row, as it gets none of my chain's rows; running the
+  # code typed in me edits nothing, so my run rows are offered in either mode.
   _addTextMenuEntries: (menu) ->
     super
-    menu.addLine()
-    # the row SHOWS my soft-wrap state rather than being built from a snapshot of it, so a menu left
-    # open while the state changes (another copy of this menu, a script) re-ticks instead of lying
-    menu.addMenuItem "Soft wrap", @, "toggleSoftWrap",
-      reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "Soft wrap"
+    unless @sitsInViewModeContent()
+      menu.addLine()
+      # the row SHOWS my soft-wrap state rather than being built from a snapshot of it, so a menu
+      # left open while the state changes (another copy of this menu, a script) re-ticks instead of
+      # lying
+      menu.addMenuItem "Soft wrap", @, "toggleSoftWrap",
+        reflection: MenuRowReflectionSpec.tickWhen @, "isSoftWrapping", true, "Soft wrap"
 
     # my RUN rows, in a group of their own: code typed in me runs against what the place I stand in
     # names (_codeReceiver), and where it names nothing I offer none. The selection rows only while
