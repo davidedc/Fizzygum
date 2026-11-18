@@ -1232,6 +1232,34 @@ class FrameWdgt extends ClippingWdgt
   shortestBarKeepingMyGrip: ->
     @bar.shortestStripLeaving @resizer.reachFromMyFramesCorner()
 
+  # THE SMALLEST EXTENT MY DOCKED BARS STAY USABLE AT (owner ruling: a person's grip drag stops where
+  # my docked bars' overflow chevron stays usable; never a minimum, since code can still force me to
+  # any extent). My grip's drag stops here (FrameGripWdgt._extentMyDragAsksOfMyTarget). Every band
+  # that counts (_dockedFrameAt: engaged, my body there) and is itself expanded, and whose payload
+  # answers shortestDockedRun, floors me on BOTH axes:
+  #   - along its run, so the band's chevron stands whole: the band's inset at both ends, the band's own
+  #     chrome along the run, and that run, plus what else my body spends along it -- for a top or
+  #     bottom band my body's edges and margins, for a left or right one my whole chrome height (a
+  #     column runs between my top and bottom slots);
+  #   - across it: my chrome there, the extent at which my content is empty and the band still inside me.
+  # Undefined when no band asks for anything, so a window wearing none is not floored at all. Pure:
+  # theme dials and my bands' own measures, the terms my arrange lays the bands out by.
+  smallestExtentKeepingMyBandsUsable: ->
+    floor = undefined
+    for side in FrameWdgt.DOCK_SIDES
+      band = @_dockedFrameAt side
+      continue if !band? or band.contents?.collapsed
+      run = band.contents?.shortestDockedRun?()
+      continue unless run?
+      if side is "top" or side is "bottom"
+        along = @_bodyEdgeLeft() + @_bodyEdgeRight() + 2 * (@_bodyMargin() + @_dockedBandInset()) + band._chromeWidth() + run
+        bandFloor = new Point along, @_chromeHeight()
+      else
+        along = @_chromeHeight() + 2 * @_dockedBandInset() + band._chromeHeight() + run
+        bandFloor = new Point @_chromeWidth(), along
+      floor = if floor? then floor.max bandFloor else bandFloor
+    floor
+
   # Is the nearest window around me in view mode? The climb ends at the first frame it meets
   # (enclosingFrame), and a window nested in a nested window answers to the one holding it, not to
   # the outermost. A root that is no frame (the desktop, a parked subtree) has no mode to ask.

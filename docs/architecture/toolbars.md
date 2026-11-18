@@ -38,7 +38,11 @@ nothing: a docked toolbar never falls back to working for the person.
 - **Hidden tools.** Tools the strip cannot show are reached through its overflow chevron
   (`OverflowChevronButtonWdgt`). Each row clicks the widget a tap on that cell reaches
   (`GlassBoxBottomWdgt.thumbnailClickReceiver`, `triggerToolFromMenu`), so a row and a tap obey one dispatch
-  contract.
+  contract. A docked bar's chevron stays usable under a person's grip: a drag of a window's resize grip stops at
+  the smallest extent at which every docked bar keeps its one-slot run (`ToolbarWdgt.shortestDockedRun`) and
+  stays inside the window (`FrameWdgt.smallestExtentKeepingMyBandsUsable`, asked by
+  `FrameGripWdgt._extentMyDragAsksOfMyTarget`). That is the person's gesture only, never a minimum: code can
+  still force a window to any extent, and a window in view mode, whose bands are disengaged, has no floor.
 - **Chrome.** `ToolbarWdgt.excludedFromEditorFocusTracking` answers true: a press anywhere in a toolbar
   neither takes nor clears the editor focus, which is what its property tools act on.
 

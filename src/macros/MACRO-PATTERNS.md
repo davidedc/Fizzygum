@@ -679,6 +679,10 @@ assertion a recapture after a regression silently stores two different hashes an
   `@collapseOrUncollapseWindow_InputEvents win` (`.collapseUncollapseSwitchButton` — the SAME verb collapses or uncollapses
   per current state), `@resizeWindowBy_InputEvents win, (new Point dW, dH)` (drags the `.resizer` grip, a non-float drag
   → setExtent, so the extent changes by exactly that delta; `@resizeWindowTo_InputEvents win, extent` for an absolute one).
+  A window WEARING DOCKED BARS stops the drag at `win.smallestExtentKeepingMyBandsUsable()` (each engaged bar keeps its
+  one-slot run and stays inside; `macroGripStopsWhereDockedBarsStayUsable`), so a drag past it lands exactly there: state
+  a far-too-small extent and assert that floor. Code still sets any extent (`win.setExtent`), and in view mode there is
+  no floor.
 - **A collapsed bar's grip, and the bar's own width** (`macroCollapsedBarGrip`, `macroCollapsedBarHasTheWindowsWidth`):
   the collapsed-bar follow-on to the chrome-button entry above. A collapsed `FrameWdgt` keeps its `.resizer` while the bar has
   room beside its pieces (`FrameWdgt.offersAResizeHandle`, `shortestBarKeepingMyGrip`: 129 px for close + collapse), so the

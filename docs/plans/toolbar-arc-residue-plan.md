@@ -16,7 +16,7 @@ Status:
 | U1 | Home and End leave the caret wrong in a multi-line text | LANDED 2026-11-17 |
 | U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | LANDED 2026-11-18 |
 | U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | PARKED 2026-11-18: owner decision (§U3) |
-| U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | not started |
+| U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | LANDED 2026-11-18 |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | not started |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | not started |
 | U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | not started |
@@ -353,6 +353,40 @@ chevron stays whole; code can still force any size); `src/macros/MACRO-PATTERNS.
 
 Time box 2.5 h.
 
+**Landed 2026-11-18.**
+- Built as the fix says, both axes per D-E8-a:
+  - `ToolPanelWdgt.shortestUsableRun` (60 px measured);
+  - `ToolbarWdgt.shortestDockedRun`;
+  - `FrameWdgt.smallestExtentKeepingMyBandsUsable`;
+  - the `FrameGripWdgt` seam and header;
+  - `FrameWdgt`'s ceiling 171 → 172, dated, under the grant.
+- Floors measured: a Docs Maker at 125×171, a Drawings Maker's height at 212.
+- Test: `SystemTest_macroGripStopsWhereDockedBarsStayUsable`, value-only.
+  - The Docs Maker's drag toward 20×20 stops at its floor; the bar is exactly its shortest run, inside the window;
+    the chevron is whole, and a press on it opens its menu.
+  - Code sets the window 90 wide, and a 1 px drag then takes it to 125.
+  - View mode has no floor.
+  - The Drawings Maker's drag toward 400×20 stops at 400×212, and toward 20×20 at its whole floor, 84×212, with the
+    palette inside the window.
+  - At each floor the window gives its content no more than the content's own minimum: the cross axis is checked by
+    meaning, not only against the method's own answer.
+  - At the floor the window's own pencil is clipped (D-E8-b, filed), so the test widens the window by code before
+    pressing it.
+- Bite, on both pointers:
+  - the seam restored fails the floor assertions (20×20, run 5, the 1 px snap at 91, the Drawings Maker at 400×20);
+  - `shortestDockedRun` answering 0 fails the run and chevron ones;
+  - a floor 20 px too big fails the content-minimum anchors.
+- From the review: a grip that "Attach" gives a widget that is no frame asks no floor (`?()`). Before the fix, its
+  drag threw, as probed.
+- Followers: clean on both pointers.
+- Prediction met (EMPTY): the presuite failed nothing (403 tests), and neither did the finger suite.
+- Found while authoring:
+  - A hover over a paint surface that has never painted throws in the pencil's `applyToolAt` (its back buffer is
+    made at the first paint): a macro opening a Drawings Maker under the resting pointer reached it.
+  - It predates this change and no person reaches it (a person's next move comes after the opening cycle's paint),
+    so it is in the loop's ledger, not BACKLOG.
+- Commits: one per repo, each titled "Windows: a person's grip drag stops …".
+
 ## U5 — View mode reaches every holder inside a window (report C)
 
 **Facts (VERIFIED).**
@@ -530,3 +564,9 @@ Time box 3 h.
   — CLOSED 2026-11-18 (overnight loop, U2; filed under `archive/docked-and-floating-toolbars-plan.md`): every tool with
   children was cropped (Toothpaste too); `InertIconHolderWdgt` now sizes such a widget through the settle before its
   shot; covered by `SystemTest_macroOverflowRowPicturesTheWholeTool` (§U2, "Landed").
+
+- [x] **A narrow Docs Maker's docked toolbar clips its overflow chevron** — at 90 px wide the bar's viewport is 25 px and the 44 px chevron shows its left ~19 px; a press at the chevron's centre lands on the window, measured; found in P4 by its probe, independent of it — reachable, low.
+  — CLOSED 2026-11-18 (overnight loop, U4; filed under `archive/docked-and-floating-toolbars-plan.md`): a person's grip drag
+  stops at `FrameWdgt.smallestExtentKeepingMyBandsUsable`, where every docked bar keeps its one-slot run and stays
+  inside the window; code still forces any extent; covered by `SystemTest_macroGripStopsWhereDockedBarsStayUsable`
+  (§U4, "Landed").

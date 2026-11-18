@@ -189,6 +189,14 @@ class ToolPanelWdgt extends PanelWdgt
   naturalGridCrossExtent: ->
     @_naturalRunFor @_stripDepthInCells(), @_crossPadding()
 
+  # MY SHORTEST USABLE RUN as a strip: the run that holds exactly one slot at my along padding --
+  # the overflow chevron's slot, once a second cell would not fit -- so the chevron stands whole
+  # and takes its press. The along-axis sibling of naturalGridCrossExtent, and PURE in the same way
+  # (theme dials only): a docked band's host asks it, through ToolbarWdgt.shortestDockedRun, for
+  # the narrowest extent a person's grip drag may leave the band.
+  shortestUsableRun: ->
+    @_naturalRunFor 1, @_alongPadding()
+
   # THE BOX THAT HUGS MY CELLS, within the `room` a free-floating home can offer (owner ruling:
   # a floating toolbar hugs its payload; C10's never-bigger-than-the-world is what `room` carries).
   # Across: toolRows columns -- a cell column with my cross padding beside it, so nothing

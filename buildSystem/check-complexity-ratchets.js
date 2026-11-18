@@ -57,8 +57,10 @@ const METHOD_CEILINGS = {
   // raised 170 -> 171 on 2026-11-17 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
   // window is a holder of a paint tool and answers the person's pair (armedDrawingTool / armDrawingTool), offers its
   // docked payloads (dockedPayloads) and the window whose edge slot it occupies (dockHost) as generic queries, so a
-  // toolbar can ask whom it works for; the paintingOverlay chain and _dockedToolbar went
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 171 },
+  // toolbar can ask whom it works for; the paintingOverlay chain and _dockedToolbar went. Raised 171 -> 172 on
+  // 2026-11-18, owner-granted for the toolbar residue's U4 (owner ruling #8): smallestExtentKeepingMyBandsUsable, the
+  // extent a person's grip drag stops at so every docked bar's overflow chevron stays usable, derived from the bands
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 172 },
 };
 
 const COMPLEXITY_CEILING = 15;

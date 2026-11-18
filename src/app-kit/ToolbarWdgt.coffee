@@ -69,6 +69,14 @@ class ToolbarWdgt extends ViewportWdgt
   dockThickness: ->
     @contents.naturalGridCrossExtent()
 
+  # THE SHORTEST RUN I STAY USABLE AT, DOCKED: the twin of dockThickness along the band's run -- my
+  # grid's one-slot run, where my overflow chevron stands whole (ToolPanelWdgt.shortestUsableRun).
+  # The host whose edge slot I occupy asks it of each docked payload, as a capability, so a payload
+  # that is no toolbar answers nothing (FrameWdgt.smallestExtentKeepingMyBandsUsable). Pure, like
+  # dockThickness.
+  shortestDockedRun: ->
+    @contents.shortestUsableRun()
+
   # WHAT I SHOW SAYS WHAT I AM: my tools are my identity, so a frame around me needs no title while I
   # show (FrameWdgt._payloadIdentifiesItself, which adds the "while"), and with nothing to read its
   # bar is free to run down its side (FrameWdgt._runAxis). Not true of every payload: two text panes

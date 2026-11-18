@@ -1697,7 +1697,9 @@ class MacroToolkit
   # grip's centre bakes in. The delta is in the frame's own plane, carried to the screen through any
   # island or scrolled pane like every aim. The frame's layout keeps the last word on a dimension it
   # does not size freely: a content that dictates its own height (wrapping text) takes the width and
-  # sets the height itself, and a minimum extent stands. Verifies that the press lands on the grip.
+  # sets the height itself, a minimum extent stands, and a window wearing docked bars stops at the
+  # smallest extent they stay usable at (FrameWdgt.smallestExtentKeepingMyBandsUsable, the grip's own
+  # floor). Verifies that the press lands on the grip.
   resizeWindowBy_InputEvents: (frame, extentDelta, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     resizer = frame.resizer
     @_aimingAt resizer, "resizeWindowBy", =>

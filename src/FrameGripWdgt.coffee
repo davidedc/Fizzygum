@@ -22,7 +22,10 @@
 #     (FrameWdgt.offersAResizeHandle). There it wears the bar's glyph inks and sizes the bar's own width
 #     (FrameWdgt.barsOwnWidth), leaving the width the window comes back at alone, and stops at the
 #     narrowest bar that keeps it (FrameWdgt.shortestBarKeepingMyGrip). A press that does not travel is
-#     a tap on the bar, which expands the frame (ruling C17), so the grip takes nothing from the bar's tap.
+#     a tap on the bar, which expands the frame (ruling C17), so the grip takes nothing from the bar's tap;
+#   - on an expanded frame that wears docked bars, a drag stops at the smallest extent at which every
+#     bar's overflow chevron stays whole and inside the frame (FrameWdgt.smallestExtentKeepingMyBandsUsable).
+#     This is the PERSON's gesture only: code can still force a frame to any extent.
 # A halo's handles, a naked inspector's resizer and the demo handles stay plain HandleWdgts, on a plate
 # that casts the desktop shadow (HandleAppearance, HandleWdgt._castMyShadow).
 
@@ -90,10 +93,16 @@ class FrameGripWdgt extends HandleWdgt
   # On a collapsed bar a drag stops at the narrowest width that keeps me on it. The pointer can overshoot
   # that and come back: the drag re-derives from the pointer each time, so I rejoin it where it rejoins
   # me. (The height is the frame's to refuse: FrameWdgt._noteAWidthAskedOfMyBar.) An expanded frame takes
-  # what the pointer asks.
+  # what the pointer asks, down to the smallest extent its docked bars stay usable at
+  # (FrameWdgt.smallestExtentKeepingMyBandsUsable): a frame wearing no band takes it all. A frame made
+  # smaller than that by code is taken up to it at my drag's first pixel; nothing remembers the extent
+  # it had when the press began. Attached to a widget that is no frame ("Attach"), I ask no floor.
   _extentMyDragAsksOfMyTarget: (anExtent) ->
-    return anExtent unless @_standsOnACollapsedBar()
-    new Point (Math.max anExtent.x, @target.shortestBarKeepingMyGrip()), anExtent.y
+    if @_standsOnACollapsedBar()
+      return new Point (Math.max anExtent.x, @target.shortestBarKeepingMyGrip()), anExtent.y
+    floor = @target.smallestExtentKeepingMyBandsUsable?()
+    return anExtent unless floor?
+    anExtent.max floor
 
   # A collapsed bar expands on a tap anywhere on it (ruling C17), and I am on it. Reached only by a press
   # that began on me and released on me, and the hand sends that here after a drag as well, which is
