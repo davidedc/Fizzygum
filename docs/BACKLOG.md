@@ -102,13 +102,13 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **Choosing a context-menu row takes the editor focus, and closing the menu clears it** — the row press focuses the `MenuItemWdgt` (an ordinary menu is not editor chrome), its teardown clears the focus, so a selected paragraph is unselected — reachable, low.
 - [ ] **A sheet inside a view-mode document still takes typed entries** — a click on its cell then typing commits (A1 = 42 measured): editing, not restyling, so R8's refusal does not reach it — reachable, medium.
 - [ ] **A drawing standing bare in a view-mode document still takes paint** — its canvas holds its own mode, which the document's flip does not reach (the shape of the sheet above); found in P2 — reachable, low.
-- [ ] **A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke** — Pencil, Brush and Eraser (Toothpaste draws whole); in `macroPinnedMenuTicksFollowTheirState`'s reference since 2026-11-04; found in P3, independent of it — reachable, low.
 - [ ] **A dimmed tool's row in a toolbar overflow menu does not look dimmed** — a menu row has no disabled look, so the row shows the tool in its plain ink while its tap is refused; ruled out of P4 (§8 "P4 rulings") — reachable, low.
 - [ ] **A narrow Docs Maker's docked toolbar clips its overflow chevron** — at 90 px wide the bar's viewport is 25 px and the 44 px chevron shows its left ~19 px; a press at the chevron's centre lands on the window, measured; found in P4 by its probe, independent of it — reachable, low.
 
 ### `plans/toolbar-arc-residue-plan.md` — the toolbar arc's residue, fixed in one overnight loop (items filed on the way)
 - [ ] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low.
 - [ ] **No keyboard way to a line's ends on a keyboard without Home and End** — `CaretWdgt._ctrl` / `cmd` handle only `a` and `z`, so Cmd+Left/Right (a MacBook has no Home or End key) and Ctrl+Home/End do nothing in a text (found by the U1 review, read from code) — reachable, low.
+- [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — its text is typed into the row's one-time raster while that size's glyphs are cold (at the glyph size it fits at no size, -1), so the boxes never resolve; true before U2's sizing too (boxes at 16 px); probe in the U2 scratch — reachable, low.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"

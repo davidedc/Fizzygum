@@ -44,7 +44,16 @@ class InertIconHolderWdgt extends Widget
   constructor: (widgetToPicture, opts = {}) ->
     super()
     @appearance = @createAppearance()
-    @_takePictureOf widgetToPicture, opts.fitInto  if widgetToPicture?
+    if widgetToPicture?
+      # A WIDGET WITH CHILDREN IS SIZED THROUGH THE SETTLE: its apply (Widget._applyExtent) only
+      # SCHEDULES the re-lay of its interior, so a face sized that way would still stand at its strip
+      # size when shot, and the picture would be its corner. The public setter settles the widget's own
+      # subtree before it returns, given what my callers hand me: a free-floating copy (a widget held by
+      # a layout ignores the setter), from an event handler, never mid-pass (where a settle defers). It is
+      # called here, in the constructor, because check-layering's rule [A] keeps it out of `_` methods.
+      if widgetToPicture.children.length isnt 0
+        widgetToPicture.setExtent @_extentFitting widgetToPicture, opts.fitInto
+      @_takePictureOf widgetToPicture, opts.fitInto
 
   createAppearance: -> new InertIconAppearance @
 
@@ -76,9 +85,9 @@ class InertIconHolderWdgt extends Widget
       @appearance = livePicture
       @__commitExtent extent
       return
-    # the APPLY tier, not the public setter: the widget I am shooting is a throwaway orphan, and
-    # what I need before the shot is exactly what this does -- re-lay its own contents at the new
-    # size. There is no world state to settle around it.
+    # the APPLY tier: a widget with no children re-lays itself in place at the new size, which is all
+    # it needs before the shot; one with children has been sized and settled by my constructor's
+    # setter, so for it this commits nothing new.
     aWdgt._applyExtent extent
     # `bounds:` rather than fullImage's default fullBounds: my picture is the widget's OWN box,
     # which is what a strip shows of a tool anyway, so my extent is known BEFORE the shot instead

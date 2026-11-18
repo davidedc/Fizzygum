@@ -14,7 +14,7 @@ Status:
 | Unit | Item (BACKLOG title, abridged) | Status |
 |---|---|---|
 | U1 | Home and End leave the caret wrong in a multi-line text | LANDED 2026-11-17 |
-| U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | not started |
+| U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | LANDED 2026-11-18 |
 | U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | not started |
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | not started |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | not started |
@@ -203,6 +203,32 @@ mechanism U7 reuses. U8 last.
   decides; a new revisit is a FINDING (park, do not baseline).
 
 Time box 2 h.
+
+**Landed 2026-11-18.**
+- Built as the fix says:
+  - the `InertIconHolderWdgt` constructor sizes a widget with children through `setExtent` before the shot;
+  - `_takePictureOf`'s comment now says what its apply does: it re-lays a widget with no children in place, and is a
+    no-op for one the constructor already sized.
+- Test: `SystemTest_macroOverflowRowPicturesTheWholeTool`, value-only, pixel for pixel.
+  - The bare brush's row picture equals the plain brush face's picture, and equals the picture of a copy first made
+    80×80.
+  - Every inked pixel of each paint tool's plain face is inked in its row.
+- Bite:
+  - `plant-b-unsettled-picture` (the apply-tier sizing back) fails all six picture assertions on both pointers at
+    dpr 1 and 2, with research's shipped numbers (54, 10, 66, 44, 86, 80 px);
+  - `plant-b2-face-only` (a row picturing the face alone) fails the four paint rows' edit-mark assertions on both
+    pointers.
+- Followers: clean on both pointers.
+- Prediction met, test for test and shot for shot:
+  - the presuite failed exactly `macroPinnedMenuTicksFollowTheirState` and `macroMixedToolbarKeepsEveryLookCurrent`,
+    and the finger suite exactly their image_1;
+  - the diffpage (dpr 1 and 2) shows only the four paint rows' pictures and the Brush row's picture, each crop
+    replaced by the whole tool (the paint tools with their edit mark);
+  - the 8 references were recaptured.
+- Filed from the review, under this plan's BACKLOG section: the speech-bubble tool's row picture types its text into
+  the one-time raster while that size's glyphs are cold, so it keeps placeholder boxes. That was true before this fix
+  too (measured: boxes at 16 px then, at the glyph size now).
+- Commits: one per repo, each titled "Toolbars: an overflow row pictures …".
 
 ## U3 — Every menu is editor chrome (report E, item 4)
 
@@ -468,3 +494,8 @@ Time box 3 h.
   — CLOSED 2026-11-17 (overnight loop, U1; filed under `archive/docked-and-floating-toolbars-plan.md`): `startOfLine` /
   `endOfLine` destructure `[row]`, and Home and End remember the caret's column like every horizontal move; covered
   by `SystemTest_macroHomeAndEndInAMultiLineText` (§U1, "Landed").
+
+- [x] **A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke** — Pencil, Brush and Eraser (Toothpaste draws whole); in `macroPinnedMenuTicksFollowTheirState`'s reference since 2026-11-04; found in P3, independent of it — reachable, low.
+  — CLOSED 2026-11-18 (overnight loop, U2; filed under `archive/docked-and-floating-toolbars-plan.md`): every tool with
+  children was cropped (Toothpaste too); `InertIconHolderWdgt` now sizes such a widget through the settle before its
+  shot; covered by `SystemTest_macroOverflowRowPicturesTheWholeTool` (§U2, "Landed").
