@@ -440,12 +440,14 @@ class CaretWdgt extends BlinkerWdgt
     @gotoSlot @target.startOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
+    @target.rememberCaretColumn @slot
 
   goEnd: (shift) ->
     @updateSelection shift
     @gotoSlot @target.endOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
+    @target.rememberCaretColumn @slot
   
   gotoPos: (aPoint) ->
     slotToGoTo = @target.slotAt aPoint

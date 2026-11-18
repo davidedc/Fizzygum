@@ -601,11 +601,15 @@ class TextWdgt extends StringWdgt
   
   startOfLine: (slot) ->
     # answer the first slot (index) of the line for the given slot
-    @wrappedLineSlots[@slotRowAndColumn(slot).y]
-  
+    [row] = @slotRowAndColumn slot
+    @wrappedLineSlots[row]
+
   endOfLine: (slot) ->
-    # answer the slot (index) indicating the EOL for the given slot
-    @startOfLine(slot) + @wrappedLines[@slotRowAndColumn(slot).y].length - 1
+    # answer the slot (index) indicating the EOL for the given slot: a wrapped line's string ends with
+    # its invisible trailing break, and the EOL is that break's own slot, right after the line's last
+    # visible character
+    [row] = @slotRowAndColumn slot
+    @wrappedLineSlots[row] + @wrappedLines[row].length - 1
 
   toggleSoftWrap: ->
     @softWrap = not @softWrap

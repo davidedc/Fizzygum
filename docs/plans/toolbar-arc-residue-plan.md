@@ -13,7 +13,7 @@ Status:
 
 | Unit | Item (BACKLOG title, abridged) | Status |
 |---|---|---|
-| U1 | Home and End leave the caret wrong in a multi-line text | not started |
+| U1 | Home and End leave the caret wrong in a multi-line text | LANDED 2026-11-17 |
 | U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | not started |
 | U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | not started |
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | not started |
@@ -149,6 +149,27 @@ mechanism U7 reuses. U8 last.
   `A/plant-a-homeend-misread.js` and `A/plant-a2-home-forgets-column.js`. Each must fail the new test.
 
 **Docs.** None beyond the plan; no architecture doc states this. Time box 1.5 h.
+
+**Landed 2026-11-17.**
+- Built as the fix says:
+  - `TextWdgt.startOfLine` / `endOfLine` destructure `[row]`;
+  - `CaretWdgt.goHome` / `goEnd` end with `@target.rememberCaretColumn @slot`.
+- Test: `SystemTest_macroHomeAndEndInAMultiLineText`, value-only. Every clicked and expected slot is named from the
+  text, and every click is followed by the caret slot it placed.
+  - A wide text: End, Home, Down after Home, End inside the last line, Up after End, Shift+End.
+  - A narrow soft-wrapped text: End stops where the first row wraps; Home stops where the last row starts.
+  - A `TextWdgt` scales its font to its box, so the test asserts the wrapped rows before relying on them.
+- Bite:
+  - `plant-a-homeend-misread` fails it on both pointers: End leaves the caret at 20, Home leaves it undefined, and the
+    error console opens.
+  - `plant-a2-home-forgets-column` fails it on both: Down after Home lands at 43, not 38; Up after End lands at 7,
+    not 15.
+- Followers: clean on both pointers.
+- Prediction met: the presuite failed nothing (401 tests), and so did the finger suite; no reference changed.
+- Filed from the review, under this plan's BACKLOG section:
+  - the caret's remembered column, which some caret moves still do not set;
+  - no keyboard way to a line's ends on a keyboard without Home and End.
+- Commits: one per repo, each titled "Text: Home and End …".
 
 ## U2 — The overflow row's picture of a tool with children (report A, "BUG B")
 
@@ -442,3 +463,8 @@ Time box 3 h.
 - Research: `Fizzygum-tests/.scratch/overnight-toolbar-residue/research/` (A, C, D, E).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **Home and End leave the caret wrong in a multi-line text** — `TextWdgt.startOfLine` / `endOfLine` read `.y` from `slotRowAndColumn`, which answers `[row, column]`: End stays put, and Home after it leaves `world.caret` undefined (measured in a tool's code prompt); found in P2, independent of it — reachable, medium.
+  — CLOSED 2026-11-17 (overnight loop, U1; filed under `archive/docked-and-floating-toolbars-plan.md`): `startOfLine` /
+  `endOfLine` destructure `[row]`, and Home and End remember the caret's column like every horizontal move; covered
+  by `SystemTest_macroHomeAndEndInAMultiLineText` (§U1, "Landed").
