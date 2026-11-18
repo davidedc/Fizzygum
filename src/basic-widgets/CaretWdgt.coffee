@@ -17,6 +17,11 @@ class CaretWdgt extends BlinkerWdgt
   viewPadding: 1
   # the height my extent was last taken at (_updateDimension re-takes it only when that changes)
   currentCaretFontSize: undefined
+  # the VERTICAL RUN I am on: the column slot my Ups and Downs keep, and the text they kept it in ({text,
+  # columnSlot}; _columnForVerticalMove reads it). Every placement of mine ends it (_gotoSlotNoSettle) and only
+  # an Up or Down starts it again, after its own move. A string and a number, never a widget; a caret is built for
+  # each edit, so a run never outlives one.
+  _verticalRun: undefined
 
   constructor: (@target) ->
     @slot = @target.text.length
@@ -190,8 +195,8 @@ class CaretWdgt extends BlinkerWdgt
   # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- the move + scroll-follow flush once,
   # DURING the event that moved the caret (the doOneCycle model: process events fixing layouts step by step,
   # then run the end-of-cycle flush, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
-  # handlers), by the caret's own click / undo-redo restore, AND by the arrow / Home / End navigation keystrokes
-  # (goLeft/goRight/...). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT defer its settle
+  # handlers), by the caret's own click / undo-redo restore, AND by the Home / End navigation keystrokes (the arrows
+  # move through the non-settling core, inside their own settle). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT defer its settle
   # (contrast _setMaxDimDeferredSettle, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
   # per discrete move. The follow NEVER rides the end-of-cycle flush.
   #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret where it stands at the
@@ -209,6 +214,9 @@ class CaretWdgt extends BlinkerWdgt
     @_settleLayoutsAfter => @_gotoSlotNoSettle slot, becauseOfMouseClick
 
   _gotoSlotNoSettle: (slot, becauseOfMouseClick) ->
+    # every placement ENDS my vertical run: a click, an arrow, Home, End, typing, a delete, an undo -- none has to say
+    # so; an Up or Down starts a new run after its own placement (_goVerticallyNoSettle)
+    @_verticalRun = undefined
     # clamp slot to [0, text length].
     length = @target.text.length
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
@@ -399,9 +407,9 @@ class CaretWdgt extends BlinkerWdgt
   # early -- the flush would converge the follow before the keystroke re-sizes the caret for the new text
   # (_updateDimension), and the viewport's follow reads the caret's box. They move with the non-settling
   # _gotoSlotNoSettle, which enqueues the follow off-settle, and the editing handler's tail settles it in-place once
-  # the caret is re-sized (processKeyDown -> _settleScrollFollow). goLeft/goRight are a self-settling public wrapper
-  # (the keystroke path) around a non-settling _go*NoSettle core; goUp/goDown/goHome/goEnd self-settle inline via
-  # gotoSlot. Each step is one CHARACTER, wherever that is more than one code unit (TextSlots). updateSelection /
+  # the caret is re-sized (processKeyDown -> _settleScrollFollow). goLeft/goRight and goUp/goDown are self-settling
+  # public wrappers (the keystroke path) around a non-settling core (_goLeftNoSettle, _goRightNoSettle,
+  # _goVerticallyNoSettle); goHome/goEnd self-settle inline via gotoSlot. Each step is one CHARACTER, wherever that is more than one code unit (TextSlots). updateSelection /
   # clearSelectionIf... only touch selection marks (no layout).
   goLeft: (shift) ->
     @_settleLayoutsAfter => @_goLeftNoSettle shift
@@ -414,7 +422,6 @@ class CaretWdgt extends BlinkerWdgt
       @_gotoSlotNoSettle TextSlots.slotBefore @target.text, @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-    @target.rememberCaretColumn @slot
 
   goRight: (shift) ->
     @_settleLayoutsAfter => @_goRightNoSettle shift
@@ -427,41 +434,47 @@ class CaretWdgt extends BlinkerWdgt
       @_gotoSlotNoSettle TextSlots.slotAfter @target.text, @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-    @target.rememberCaretColumn @slot
 
+  # Up and Down share one core (_goVerticallyNoSettle), self-settling as goLeft and goRight do.
   goUp: (shift) ->
-    if !shift and @target.lastSelectedSlot()?
-      @gotoSlot @target.firstSelectedSlot()
-      @updateSelection shift
-    else
-      @updateSelection shift
-      @gotoSlot @target.upFrom @slot
-      @updateSelection shift
-      @clearSelectionIfStartAndEndMeet shift
+    @_settleLayoutsAfter => @_goVerticallyNoSettle shift, true
 
   goDown: (shift) ->
+    @_settleLayoutsAfter => @_goVerticallyNoSettle shift, false
+
+  # THE COLUMN an Up or Down keeps is DERIVED from the vertical run I am on (_verticalRun): a run goes on only from
+  # Up or Down to Up or Down, with no other placement of mine between them (each ends it) and my text unchanged, so
+  # two Downs across a short line land back under the column the first one started from; after any other move or
+  # edit the next Up or Down starts from where I stand. No move has to remember a column.
+  _columnForVerticalMove: ->
+    run = @_verticalRun
+    if run? and run.text is @target.text then run.columnSlot else @slot
+
+  # a plain Up or Down over a selection only collapses it, to its first or its last slot; else I land on the line
+  # above or below, under the run's column (_columnForVerticalMove), and the run goes on from there
+  _goVerticallyNoSettle: (shift, up) ->
     if !shift and @target.lastSelectedSlot()?
-      @gotoSlot @target.lastSelectedSlot()
+      @_gotoSlotNoSettle (if up then @target.firstSelectedSlot() else @target.lastSelectedSlot())
       @updateSelection shift
     else
+      column = @_columnForVerticalMove()
       @updateSelection shift
-      @gotoSlot @target.downFrom @slot
+      @_gotoSlotNoSettle (if up then @target.upFrom @slot, column else @target.downFrom @slot, column)
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
+      @_verticalRun = text: @target.text, columnSlot: column
 
   goHome: (shift) ->
     @updateSelection shift
     @gotoSlot @target.startOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
-    @target.rememberCaretColumn @slot
 
   goEnd: (shift) ->
     @updateSelection shift
     @gotoSlot @target.endOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
-    @target.rememberCaretColumn @slot
   
   gotoPos: (aPoint) ->
     slotToGoTo = @target.slotAt aPoint
@@ -562,7 +575,6 @@ class CaretWdgt extends BlinkerWdgt
       # flag's second half typed before its first). setText dropped any selection. Settles at the handler's tail,
       # NOT early (see goLeft/goRight).
       @_gotoSlotNoSettle TextSlots.slotAtOrAfter @target.text, @slot + key.length
-      @target.rememberCaretColumn @slot
       @_updateDimension()
       @target.pushUndoState? @slot
   
@@ -602,7 +614,6 @@ class CaretWdgt extends BlinkerWdgt
       @target.setText text.slice(0, before) + text.slice @slot
       # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
       @_gotoSlotNoSettle TextSlots.slotAtOrBefore @target.text, before
-      @target.rememberCaretColumn @slot
 
     @updateSelection false
     @_gotoSlotNoSettle @slot

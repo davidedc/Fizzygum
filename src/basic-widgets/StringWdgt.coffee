@@ -213,8 +213,6 @@ class StringWdgt extends ControllerWdgt
   #      WIDTH_ADJUSTS_TO_HEIGHT=false never shipped.)
   fittingSpecBoxWhichDimensionAdjusts: true
 
-  caretHorizPositionForVertMovement: undefined
-
   # THE INVISIBLE CARRIAGE RETURN (U+2063, the invisible separator): a wrapped line's last slot, where its
   # trailing space or its paragraph's end stood (TextWdgt.replaceLastSpaceWithInvisibleCarriageReturn), so a
   # line's length counts every slot it holds. One constant of the text model, never a widget's own field: the
@@ -545,14 +543,9 @@ class StringWdgt extends ControllerWdgt
       @redoHistory.push poppedElement
     return poppedElement
 
-  # Caret-editing-session state (undoHistory, caretHorizPositionForVertMovement) lives here so the
-  # caret asks rather than pokes; history: docs/archive/oo-smells-refactoring-backlog.md (Phase 7a).
-
-  # The caret remembers the column it should land on during vertical (up/down) movement, so a
-  # short line passed over on the way doesn't lose the original horizontal position. Read by
-  # TextWdgt.upFrom / downFrom; set by the caret on horizontal moves and by activated below.
-  rememberCaretColumn: (slot) ->
-    @caretHorizPositionForVertMovement = slot
+  # Caret-editing-session state (undoHistory) lives here so the caret asks rather than pokes; history:
+  # docs/archive/oo-smells-refactoring-backlog.md (Phase 7a). The column an Up or Down keeps is no state of mine:
+  # the caret derives it from its own vertical run (CaretWdgt._columnForVerticalMove).
 
   # When a caret first attaches via a positioning click, the only undo entry is that click, which
   # we discard so the user's first real edit becomes the first undo step (CaretWdgt's constructor).
@@ -1294,10 +1287,12 @@ class StringWdgt extends ControllerWdgt
 
     return @slotAtSingleLineString aPoint.x, @textPossiblyCroppedToFit
   
-  upFrom: (slot) ->
+  # my one line has no line above or below: Up goes to its start and Down to its end, whatever the column the
+  # caret's vertical run keeps (TextWdgt's pair reads it)
+  upFrom: (slot, columnSlot) ->
     @startOfLine()
-  
-  downFrom: (slot) ->
+
+  downFrom: (slot, columnSlot) ->
     @endOfLine()
   
   startOfLine: ->
@@ -1950,7 +1945,6 @@ class StringWdgt extends ControllerWdgt
       if editResult?
         world.caret.gotoSlot slotUserClickedOn, true
         world.caret.show()
-        @rememberCaretColumn world.caret.slot
 
     else
       @escalateEvent "activated", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9

@@ -13,8 +13,8 @@ Status:
 
 | Unit | Item | Status |
 |---|---|---|
-| U1 | The caret steps over a character whole (emoji, the smiley) | LANDED 2026-11-18 (§U1) |
-| U2 | The caret's remembered column is derived from its vertical run | OPEN |
+| U1 | The caret steps over a character whole (emoji, the smiley) | CLOSED 2026-11-18 (§U1) |
+| U2 | The caret's remembered column is derived from its vertical run | LANDED 2026-11-18 (§U2) |
 | U3 | Line ends, document ends and word jumps follow the keyboard's platform | OPEN |
 | U4 | A text menu shows its state as ticks; every editing row tested | OPEN |
 | U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | OPEN |
@@ -188,7 +188,7 @@ finger suite failed exactly the predicted `HideCharacters` image_3; its diff is 
 the asterisks'. The review's fix to `selectAll` then moved two churn-set tests that SHOW that method's source in an
 inspector's code pane (`InspectorCodePaneRunsAgainstItsSubject` image_3, `InspectorResizingOKEvenWhenTakenApart`
 image_2 and image_3): the shown line, and in the first a right-click at the code text's centre, which widens with it.
-Commits: one per repo, each titled "Text: a caret steps over a character whole …".
+Commits: Fizzygum `3220143b`, Fizzygum-tests `ba196f192`, each titled "Text: a caret steps over a character whole …".
 
 ## U2 — The caret's remembered column is derived (R1 §A)
 
@@ -209,6 +209,23 @@ them. `goUp` and `goDown` share one core.
 **Needs:** U1 CLOSED or PARKED (if parked: re-derive the edit list on the untouched methods).
 
 Time box 1.5 h.
+
+**Landed 2026-11-18.** `CaretWdgt._verticalRun` ({text, columnSlot}), `_columnForVerticalMove` and one core
+`_goVerticallyNoSettle shift, up`; `goUp`/`goDown` are thin self-settling wrappers, as `goLeft`/`goRight` are (a private
+core may not call the self-settling `gotoSlot`). Every placement ENDS the run (`_gotoSlotNoSettle`, the funnel every
+caret move passes) and the core starts it again after its own move, so any other move or edit ends it without saying
+so -- the review found the first shape (the run went on while the caret stood where it had landed) let End, Left then
+Right, x then Backspace or x then undo at the landing slot keep a stale column, and the test (every case began with a
+click, which builds a new caret) could not see it. `TextWdgt.upFrom`/`downFrom` take the column slot; `StringWdgt`'s
+single-line pair takes and ignores it. `rememberCaretColumn`, `caretHorizPositionForVertMovement`, their six calls (the
+caret's Left, Right, Home, End, insert and Backspace) and the click's call are deleted. Evidence: the new
+`SystemTest_macroUpAndDownLandUnderTheCaretAfterAnyMove` (a monospace three-line text; six moves after a run at
+column 2; the run down and back up across a short line; four key moves that end where a Down left the caret)
+passes under both pointers and WebKit, its follower is clean, and three plants fail it under both pointers (a column
+kept per text across carets, the old storage, fails the move cases; a run forgetting its column fails the run down
+and up; a run surviving placements fails the four key moves). Pixel set predicted by MEASUREMENT before the code was written (`u2/forecast-members-gone.js`: the two
+`StringWdgt` members hidden from every member list, behaviour kept): 7 churn tests, 20 shots; the presuite failed
+exactly those. Commits: one per repo, each titled "Text: Up and Down take their column from the caret's run …".
 
 ## U3 — Line ends, document ends and word jumps follow the keyboard's platform (R1 §B)
 
@@ -481,4 +498,5 @@ Time box 1 h.
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] **The caret splits an emoji** — moves, deletes, clicks, selections, crops and the password mask count UTF-16 units, so 😀 is stepped into, half-deleted and masked as two stars (owner report; §U1) — reachable, medium. — CLOSED 2026-11-18 (overnight loop, U1; filed under `plans/editing-residue-plan.md`): `TextSlots`, one definition of a slot (between grapheme clusters), asked by every slot reader; `SystemTest_macroCaretStepsOverTheSmileyWhole`.
+- [x] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low. — CLOSED 2026-11-18 (overnight loop, U2; filed under `archive/toolbar-arc-residue-plan.md`): the column lives only in the caret's vertical run (`CaretWdgt._columnForVerticalMove`), which every other placement ends, never in the text; `SystemTest_macroUpAndDownLandUnderTheCaretAfterAnyMove`.
 - [x] **`eliminateInvisibleCharacter` strips only the first marker** — `String.replace` with a string pattern replaces one occurrence, so a text holding two U+2063 is measured with the second. — CLOSED 2026-11-18 (overnight loop, U1; filed under `archive/argument-holes-both-repos-plan.md`): it strips every one (`replaceAll`), and `_drawTextLine` strips them at the one line-draw seam; a password's mask pads with them.

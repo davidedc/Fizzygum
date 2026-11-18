@@ -582,19 +582,20 @@ class TextWdgt extends StringWdgt
     return @slotAtRow row, aPoint.x
 
   
-  upFrom: (slot) ->
-    # answer the slot above the given one
+  # the slot on the line above `slot`, under the column of `columnSlot` (the column the caret's vertical run keeps:
+  # CaretWdgt._columnForVerticalMove)
+  upFrom: (slot, columnSlot) ->
     [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow < 1
       return 0
-    return @slotAtRow slotRow, (@slotCoordinates @caretHorizPositionForVertMovement).x
-  
-  downFrom: (slot) ->
-    # answer the slot below the given one
+    return @slotAtRow slotRow, (@slotCoordinates columnSlot).x
+
+  # the slot on the line below `slot`, under the column of `columnSlot` (as upFrom)
+  downFrom: (slot, columnSlot) ->
     [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow > @wrappedLines.length - 2
       return @textPossiblyCroppedToFit.length
-    return @slotAtRow(slotRow+2, (@slotCoordinates @caretHorizPositionForVertMovement).x)
+    return @slotAtRow(slotRow+2, (@slotCoordinates columnSlot).x)
   
   startOfLine: (slot) ->
     # answer the first slot (index) of the line for the given slot
