@@ -15,7 +15,7 @@ Status:
 |---|---|---|
 | U1 | Home and End leave the caret wrong in a multi-line text | LANDED 2026-11-17 |
 | U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | LANDED 2026-11-18 |
-| U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | not started |
+| U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | PARKED 2026-11-18: owner decision (§U3) |
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | not started |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | not started |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | not started |
@@ -279,6 +279,37 @@ Time box 2 h.
 **Docs.** `toolbars.md` §1 "Chrome" (every menu is chrome); `widget-authoring-guidelines.md` §9 chrome list.
 
 Time box 3 h.
+
+**Parked 2026-11-18 (overnight loop).** The ruled door gets the VALUE right and leaves the LOOK stale; the fix
+needs a mechanism this plan does not name.
+- **Built, then set aside** (the tree is back to its last commit):
+  - every menu answers `excludedFromEditorFocusTracking: -> true`, and the three opt-ins and the field are gone;
+  - the `editableEditorFocus` door asks `surelyNotShowingUp…`;
+  - the falsified comments are trued up;
+  - the build ran clean. The patch is `u3/parked.patch` in the loop's scratch.
+- **Predicted pixel set, measured on the untouched tree** (`u3/PREDICTED.md`):
+  - the research instrument plus a model of the door, over the whole suite, on both pointers;
+  - mouse: 14 tests and 27 shots; finger: 12 and 22;
+  - every shot is a selection ring that now persists after a menu press, or the ring missing on the dropped pinned
+    menu;
+  - the door changes no shot.
+- **Measured with the change built** (`u3/probe/stale-look.js`):
+  - "Delete" or "Hide" from the focused paragraph's own menu leaves the paragraph the focus;
+  - a floating text bar's tools then READ dim (`hasSomethingToActOn` false) but stay PAINTED lit: 2534 of the bar's
+    pixels differ between the incremental paint and a forced full repaint (control, "Italic": 0);
+  - nothing tells the bar: a close or a hide announces nothing, and the focus does not change;
+  - today those two rows dim the tools correctly, because the row takes the focus and the close clears it, which
+    announces. So the ruling as written would ship tools that look lit and refuse their press.
+- **For the owner to decide:** how the toolbars learn that the focus stopped showing.
+  - (a) The world announces it, as it does an edit-mode flip above the focus (`noteEditModeChanged`): a close to
+    storage, a hide and a collapse tell the world, and it announces when the focus is that widget or inside it.
+    That is a hook on those three cores, against this plan's "with no hook". `WorldWdgt` sits at its method
+    ceiling (128), so a new method needs a raise, or `noteEditModeChanged` is generalised into one
+    "the focus's door may have changed" announcement.
+  - (b) The research's close hygiene: a close, and a hide, clear the focus they put off screen. Clearing the focus
+    announces it. The plan rejected this as a close hook.
+  - (c) Accept the stale look for these rows.
+- U7 needs U3, so it waits on this decision too.
 
 ## U4 — The resize grip stops where docked bars stay usable (report E, item 8)
 
