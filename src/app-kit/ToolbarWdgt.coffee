@@ -126,8 +126,8 @@ class ToolbarWdgt extends ViewportWdgt
   @wearsDrawingTools: (aFrame) ->
     (aFrame.dockedPayloads?() ? []).some (each) -> each.holdsDrawingTools?()
 
-  # MY TOOLS' STATES MAY HAVE MOVED: the selection, its style or the mode holding it moved (the
-  # world's announcement), the person's hand or tool code did (the user's), the window I work for
+  # MY TOOLS' STATES MAY HAVE MOVED: the selection, its style or where it stands moved, or an edit
+  # mode flipped (the world's announcement), the person's hand or tool code did (the user's), the window I work for
   # changed its tool (FrameWdgt.armDrawingTool), or I changed whom I work for by docking or leaving.
   # Every one of my cells re-derives its look, asking its tool (a tool with no state to show answers
   # nothing and stays at rest), the hidden ones too, so a cell my strip shows later is already right;
@@ -142,8 +142,9 @@ class ToolbarWdgt extends ViewportWdgt
     return
 
   # THE TWO EDGES a tool's look can depend on, made once each (the index already knows whether I
-  # hold one): world -> me, which announces the editor focus, its style and the mode of the content
-  # holding it (WorldWdgt._setEditorFocusNoSettle / noteStyleChanged / noteEditModeChanged), and
+  # hold one): world -> me, which announces the editor focus, its style, where it stands and every
+  # edit-mode flip (WorldWdgt._setEditorFocusNoSettle / noteStyleChanged /
+  # _keepEditingOnScreenNoSettle / noteEditModeChanged), and
   # world.user -> me, which announces the person's hand and the person's tool code (User). Both
   # firesOnAnyChange, because neither announcement is the producer's VALUE (each is a
   # markNonValueChange); I never read what is delivered, my tools re-read their subjects. There is no

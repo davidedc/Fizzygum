@@ -97,10 +97,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
-### `archive/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (✅ CLOSED 2026-11-17: P0–P5, see its ledger; living truth `architecture/toolbars.md`; the open item below is planned in `plans/toolbar-arc-residue-plan.md` §U7)
-- [ ] **A text menu pinned in edit mode keeps its editing rows after a flip to view mode** — a menu is built when it opens, so a pinned one still offers Bold and the rest once its content goes to view mode, and they act — reachable, low.
-
-### `plans/toolbar-arc-residue-plan.md` — the toolbar arc's residue, fixed in one overnight loop (items filed on the way)
+### `archive/toolbar-arc-residue-plan.md` — the toolbar arc's residue (✅ CLOSED 2026-11-18: U1–U7 landed, see its ledger; living truth `architecture/toolbars.md`; the items below were filed on the way)
 - [ ] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low.
 - [ ] **No keyboard way to a line's ends on a keyboard without Home and End** — `CaretWdgt._ctrl` / `cmd` handle only `a` and `z`, so Cmd+Left/Right (a MacBook has no Home or End key) and Ctrl+Home/End do nothing in a text (found by the U1 review, read from code) — reachable, low.
 - [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — its text is typed into the row's one-time raster while that size's glyphs are cold (at the glyph size it fits at no size, -1), so the boxes never resolve; true before U2's sizing too (boxes at 16 px); probe in the U2 scratch — reachable, low.
@@ -109,6 +106,8 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **A widget's base context menu still acts on view-mode content** — its rows ("Pick up", "Color…", "Resize/move…") ask no mode: "Pick up" on a widget hosted in a cell of a sheet in a view-mode document empties the cell, and "Color…" restyles past the editing tools' refusal (U5 review, read from code) — reachable, low.
 - [ ] **Other bare mode holders in view-mode content still take drops** — only a cell and a drawing's canvas ask the view mode around them, so a slide panel picked up into a Docs Maker, which is then flipped to view mode, still embeds a dropped widget (U5 review, read from code) — reachable, low.
 - [ ] **A copy of a pinned wire menu shows and drives a clone of the wire** — a wire row's source is its `WireSpec`, which a copy copies rather than shares, so the copy's "Fires per event" tick never follows the real wire and toggling it flips only the clone (U6 review, read from code) — reachable, low.
+- [ ] **A pinned copy of the toolbar's Fonts menu does not grey its rows while the font tool has nothing to act on** — they refuse silently and look enabled (§U7 "Landed") — reachable, low.
+- [ ] **A pinned text menu's label-swap rows keep the wording they were built with** — a pinned menu says "Bold" over a bold text, though its press still toggles (§U7 "Landed") — reachable, low.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"

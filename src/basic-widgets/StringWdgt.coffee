@@ -1386,11 +1386,14 @@ class StringWdgt extends ControllerWdgt
     # Each row DECLARES that it shows my current font; it is born with the right tick and re-derives
     # it whenever I announce a change, here and in every other open copy of this menu. Nothing
     # indexes rows[1..9] any more — that hand-numbering broke the day anyone added a divider, and it
-    # could only ever fix up the ONE menu whose item had just been clicked.
+    # could only ever fix up the ONE menu whose item had just been clicked. A font is an edit, so
+    # each row is enabled while I may be edited (_editingRowEnablement), its tick greyed with it.
+    editable = @_editingRowEnablement()
     for [ fontStack, menuLabel ] in StringWdgt.fontStackMenuEntries()
       menu.addMenuItem menuLabel, @, "setFontNameFromMenu",
         arg1: fontStack
         reflection: MenuRowReflectionSpec.tickWhen @, "currentFontName", fontStack, menuLabel
+        enablement: editable
 
     menu.popUpAtHand()
 
@@ -1408,68 +1411,84 @@ class StringWdgt extends ControllerWdgt
   # My text rows: content, font, style, then alignment and fitting
   # (_addAlignmentAndFittingMenuEntries). TextWdgt extends them with its own. Every one of them edits
   # me, so content in VIEW mode (sitsInViewModeContent) offers none of them: it refuses restyling
-  # from my menu as it does from the editing tools (WorldWdgt.editableEditorFocus).
+  # from my menu as it does from the editing tools (WorldWdgt.editableEditorFocus). A menu built in
+  # edit mode and left open across a flip greys them instead (_editingRowEnablement).
   _addTextMenuEntries: (menu) ->
     return if @sitsInViewModeContent()
+    editable = @_editingRowEnablement()
     menu.addLine()
-    menu.addMenuItem "Edit…", @, "editPopout", toolTip: "set this String's\ncontent"
-    menu.addMenuItem "Font size…", @, "fontSizePopout", toolTip: "set this String's\nfont point size"
+    menu.addMenuItem "Edit…", @, "editPopout", toolTip: "set this String's\ncontent", enablement: editable
+    menu.addMenuItem "Font size…", @, "fontSizePopout", toolTip: "set this String's\nfont point size", enablement: editable
 
-    menu.addMenuItem "Font", @, "fontsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "pick a font"
+    menu.addMenuItem "Font", @, "fontsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "pick a font", enablement: editable
 
     if @isBold
-      menu.addMenuItem "Normal weight", @, "toggleWeight"
+      menu.addMenuItem "Normal weight", @, "toggleWeight", enablement: editable
     else
-      menu.addMenuItem "Bold", @, "toggleWeight"
+      menu.addMenuItem "Bold", @, "toggleWeight", enablement: editable
 
     if @isItalic
-      menu.addMenuItem "Non-italic", @, "toggleItalic"
+      menu.addMenuItem "Non-italic", @, "toggleItalic", enablement: editable
     else
-      menu.addMenuItem "Italic", @, "toggleItalic"
+      menu.addMenuItem "Italic", @, "toggleItalic", enablement: editable
 
     if @isHeaderLine
-      menu.addMenuItem "No header line", @, "toggleHeaderLine"
+      menu.addMenuItem "No header line", @, "toggleHeaderLine", enablement: editable
     else
-      menu.addMenuItem "Header line", @, "toggleHeaderLine"
+      menu.addMenuItem "Header line", @, "toggleHeaderLine", enablement: editable
 
 
     if @isPassword
-      menu.addMenuItem "Show characters", @, "toggleIsPassword"
+      menu.addMenuItem "Show characters", @, "toggleIsPassword", enablement: editable
     else
-      menu.addMenuItem "Hide characters", @, "toggleIsPassword"
+      menu.addMenuItem "Hide characters", @, "toggleIsPassword", enablement: editable
 
     @_addAlignmentAndFittingMenuEntries menu
 
   # my rows placing my text in my box -- alignment, then fitting -- the rest of my text rows
-  # (_addTextMenuEntries), and so offered only where I may be edited
+  # (_addTextMenuEntries), and so offered only where I may be edited, and enabled only while I may
+  # (_editingRowEnablement)
   _addAlignmentAndFittingMenuEntries: (menu) ->
+    editable = @_editingRowEnablement()
     menu.addLine()
     if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
-      menu.addMenuItem "← Align left", @, "alignLeft"
+      menu.addMenuItem "← Align left", @, "alignLeft", enablement: editable
     if @horizontalAlignment != AlignmentSpecHorizontal.CENTER
-      menu.addMenuItem "∸ Align center", @, "alignCenter"
+      menu.addMenuItem "∸ Align center", @, "alignCenter", enablement: editable
     if @horizontalAlignment != AlignmentSpecHorizontal.RIGHT
-      menu.addMenuItem "→ Align right", @, "alignRight"
+      menu.addMenuItem "→ Align right", @, "alignRight", enablement: editable
 
     menu.addLine()
     if @verticalAlignment != AlignmentSpecVertical.TOP
-      menu.addMenuItem "↑ Align top", @, "alignTop"
+      menu.addMenuItem "↑ Align top", @, "alignTop", enablement: editable
     if @verticalAlignment != AlignmentSpecVertical.MIDDLE
-      menu.addMenuItem "⍿ Align middle", @, "alignMiddle"
+      menu.addMenuItem "⍿ Align middle", @, "alignMiddle", enablement: editable
     if @verticalAlignment != AlignmentSpecVertical.BOTTOM
-      menu.addMenuItem "↓ Align bottom", @, "alignBottom"
+      menu.addMenuItem "↓ Align bottom", @, "alignBottom", enablement: editable
 
     menu.addLine()
 
     if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-      menu.addMenuItem "←☓→ Don't expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←☓→ Don't expand to fill", @, "togglefittingSpecWhenBoundsTooLarge", enablement: editable
     else
-      menu.addMenuItem "←→ Expand to fill", @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←→ Expand to fill", @, "togglefittingSpecWhenBoundsTooLarge", enablement: editable
 
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      menu.addMenuItem "→← Shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→← Shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall", enablement: editable
     else
-      menu.addMenuItem "→⋯← Crop to fit", @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→⋯← Crop to fit", @, "togglefittingSpecWhenBoundsTooSmall", enablement: editable
+
+  # WHEN MY EDITING ROWS ACT: the enablement every menu row that edits me carries (my text rows, my
+  # Fonts menu's, TextWdgt's "Soft wrap"): enabled exactly while I do not sit in content in view
+  # mode -- the question that leaves those rows out of a menu built there (_addTextMenuEntries). A
+  # menu built in edit mode and left open (pinned) across a flip of the content around me greys
+  # them, and they refuse their press, as the editing tools dim and refuse
+  # (WorldWdgt.editableEditorFocus). The flip is not mine, so no edge from me carries it: the world
+  # announces every flip (WorldWdgt.noteEditModeChanged), and it is the rows' announcer.
+  #   About MYSELF only: a widget standing in a toolbar, which is born locked, answers
+  # sitsInViewModeContent true too, so this is never the enablement of a row acting on another.
+  _editingRowEnablement: ->
+    MenuRowReflectionSpec.enabledWhile @, "sitsInViewModeContent", false, announcedBy: world
 
 
   togglefittingSpecWhenBoundsTooSmall: ->

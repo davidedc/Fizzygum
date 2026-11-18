@@ -1858,14 +1858,15 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # A WIDGET'S EDIT MODE FLIPPED -- told by the cores that write the mode (Widget's and
   # ViewportWdgt's enable/disable cores, on the root they stand under), at every flip and only
-  # then. When the editor focus is that widget or inside it, the content holding the focus may have
-  # gone into view mode or come out of it, and with it what the editing tools act on
-  # (editableEditorFocus), so I announce it exactly as I announce a new focus; a flip anywhere else
-  # is nothing the editor's tools show. One toggle can flip several widgets above the focus (a
-  # window's page and the stack in it): the announcement is one mark, so the toolbars re-read once.
-  noteEditModeChanged: (aWdgt) ->
-    focus = @editorFocusWdgt
-    return unless focus? and aWdgt.isAncestorOf focus
+  # then. Whatever reads a mode may have moved with it, wherever the flip is: what the editing tools
+  # act on, when the flip is above the editor focus (editableEditorFocus), and whether a text's
+  # editing rows in a menu left open still act, whatever the focus (StringWdgt._editingRowEnablement:
+  # the rows read their text's sitsInViewModeContent). A mode is the flipped widget's own, so nothing
+  # the text announces carries it, and no reader can tell which flip it hangs on: I announce EVERY
+  # flip, exactly as I announce a new focus, and whoever subscribed to me re-reads. One toggle can
+  # flip several widgets (a window's page and the stack in it): the announcement is one mark, so
+  # each reader re-reads once.
+  noteEditModeChanged: ->
     @dataflow?.markNonValueChange @
     return
 

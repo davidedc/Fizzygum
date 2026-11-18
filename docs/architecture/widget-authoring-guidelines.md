@@ -710,8 +710,11 @@ mark after `add` + `setExtent` adds nothing.
   records, because the two can be read from different sources. The source must be able to announce, as above,
   or the row must be told who announces for it: `enabledWhile source, "readerName", theValue, announcedBy: aProducer`.
   The toolbar overflow's row of a property tool is the model: enabled while its cell does not hold the tool with
-  nothing to act on (`OverflowChevronButtonWdgt.actOnClick`). Reuse the source's own question, negated through
-  `theValue`; never add a reader per row kind.
+  nothing to act on (`OverflowChevronButtonWdgt.actOnClick`). A text's editing rows show the announcer form: each
+  is enabled while the text does not sit in view-mode content (`StringWdgt._editingRowEnablement`), a mode the
+  text cannot announce since the flip is its holder's, so the WORLD announces, at every mode flip
+  (`WorldWdgt.noteEditModeChanged`). Reuse the source's own question, negated through `theValue`; never add a
+  reader per row kind.
 
 ---
 

@@ -1,5 +1,12 @@
 # The toolbar arc's residue — eight open items, fixed in one overnight loop
 
+**✅ CLOSED 2026-11-18: every unit landed.** U1, U2, U4, U5 and U6 in the overnight loop; U3 and U7 after it, U3 on
+the owner's decision (§U3). Commit pairs (Fizzygum / Fizzygum-tests): U1 `ec27cd61` / `8881a97d2`, U2 `b819a68a` /
+`8187399e7`, U3 `bbe570c5` / `7342f23ab`, U4 `23ec3a2f` / `cb5344ba8`, U5 `197975e1` / `ed56a0b9c`, U6 `cb8997b3` /
+`1e742ebff`, U7 the pair titled "Menus: a pinned text menu greys its editing rows in view mode" (it also archives
+this plan). Living truth: `docs/architecture/toolbars.md`; items filed on the way: `docs/BACKLOG.md`, this plan's
+section.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 AUTHORED 2026-11-17 against Fizzygum master `2f4e8d98` and Fizzygum-tests master `732841f9f` (400 SystemTests,
 build FRESH). Executed by an UNATTENDED overnight loop whose process (the per-unit cycle, the grants, park and stop
@@ -19,8 +26,8 @@ Status:
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | LANDED 2026-11-18 |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | LANDED 2026-11-18 |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | LANDED 2026-11-18 |
-| U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | OPEN: U3 landed, ready to run |
-| U8 | Close: this plan archived, or left open with what parked | DONE 2026-11-18: left open, U3 and U7 parked |
+| U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | LANDED 2026-11-18, after the loop (§U7) |
+| U8 | Close: this plan archived, or left open with what parked | DONE 2026-11-18: every unit landed, plan archived |
 
 ---
 
@@ -646,6 +653,55 @@ decision, so U7 waits on the same decision.
 - What U7 would also prove: U6 cannot reach a disabled row's greyed tick or chevron (its rows are never ticked and
   open no submenu). U7's "Soft wrap" row and the Fonts submenu row reach them, so its screenshots should show them.
 
+**Landed 2026-11-18, after the loop (U3 having landed on the owner's decision).**
+- Built as the fix says:
+  - `WorldWdgt.noteEditModeChanged` announces every flip; its argument went with the guard that read it, so the
+    four mode cores call it bare;
+  - one helper builds the enablement, `StringWdgt._editingRowEnablement`
+    (`enabledWhile @, "sitsInViewModeContent", false, announcedBy: world`), its comment stating the toolbar trap;
+  - every editing row carries it: `_addTextMenuEntries` (Edit…, Font size…, Font, the weight, slant, header-line and
+    password rows), `_addAlignmentAndFittingMenuEntries`, `fontsMenu`'s rows and `TextWdgt`'s "Soft wrap";
+  - every `addMenuItem` stays literal; the run rows and the connection block carry none.
+- Test: `SystemTest_macroPinnedTextMenuGreysItsEditingRowsInViewMode`, values and three shots, both pointers.
+  - The fixture differs from research D's in two ways, both measured on the first run:
+    - a press on the bare desktop does not clear the editor focus (it stays the paragraph the right-click chose), so
+      the test puts the focus on a desktop rectangle;
+    - the focused window is the frontmost one, and a pinned menu is a top-level window, so the test brings the
+      Docs Maker to the front by its title strip before each flip. The pencil's press then changes no window's
+      focus, and only the announcement can repaint the menus.
+  - image_1 is edit mode; image_2 is view mode, every editing row of both menus greyed, the "Soft wrap" and font
+    ticks and the Font row's chevron included. image_3, after the flip back, is asserted byte-identical to image_1.
+    The finger shots are byte-identical to the mouse ones.
+  - Bold, a font row and Font size… refuse in view mode. Color…, Run contents and Connect stay enabled.
+- Bite, on both pointers, each plant failing what it should:
+  - every row enabled: the view-mode values, image_2 and image_3;
+  - no refusal: the refusal assertion;
+  - the world announcing no flip (what the old focus-gated body did here, the focus a desktop rectangle): image_2
+    and image_3 only, since the values are read live;
+  - no repaint on the enablement edge: image_2 and image_3 only;
+  - the enablement dropped from the alignment rows, the Fonts rows, "Soft wrap", or the text rows: each, the
+    view-mode value for its rows;
+  - the enablement given to "Run contents" too: the "rows that edit nothing stay enabled" value.
+- Followers: clean on both pointers.
+- The pixel prediction (EMPTY) missed one class: the new `StringWdgt` method joins the inspector member lists. The
+  presuite failed exactly 7 tests, all in `scripts/inspector-churn-set.json`. Their diffpage triage read 28 diffs as
+  pure vertical shifts of a member list and 12 as edge rows re-clipped by the same shift (two looked at). Recaptured
+  under the owner's standing rule that benign inspector churn is recaptured.
+- Not reached: a `SimpleTextWdgt` keeps no header-line, vertical-alignment or fitting rows, so those rows'
+  enablement is not exercised. A text whose `sitsInViewModeContent` changes by a reparent with no flip would keep a
+  stale look until the next world announcement (its press is still refused, read live); drops into view-mode
+  content are refused, so no person reaches it.
+- Filed (reachable, low), both noted in research D §4 and left out of scope:
+  - A pinned copy of the TOOLBAR's Fonts menu refuses without greying. Its rows act on the font tool and refuse
+    silently through the style door (`ChangeFontButtonWdgt.actOn`'s menu) while the tool has nothing to act on. They
+    could carry `enabledWhile tool, "hasSomethingToActOn", true, announcedBy:` the text bar, which re-announces in
+    `noteToolStatesChanged`.
+  - A pinned text menu's label-swap rows keep the wording they were built with: "Bold"/"Normal weight",
+    "Italic"/"Non-italic", "Hide/Show characters", and the align rows left out for the current alignment are
+    chosen at build. So a pinned menu says "Bold" over a bold text, though its press still toggles. It is the same
+    staleness as "a row's ACTION must not be fixed at build" (`widget-authoring-guidelines.md` §10), for the
+    wording.
+
 ## U8 — Close
 
 - If every unit CLOSED:
@@ -665,6 +721,10 @@ decision, so U7 waits on the same decision.
   holds the items filed on the way.
 - When U3's question is answered: run U3, then U7, then close this plan as above. (U3 landed 2026-11-18 on the
   owner's decision; U7 is next.)
+
+**Closed 2026-11-18, after the loop.** U3 and U7 landed, so every unit has, and this plan moved to `docs/archive/`
+with its `archive/INDEX.md` line. BACKLOG's section for the archived toolbar plan had only U7's item left and is
+gone; this plan's own section keeps the items filed on the way, two of them from U7.
 
 ---
 
@@ -731,3 +791,16 @@ decision, so U7 waits on the same decision.
   enablement and is then disabled — greyed, refusing its press — while it fails; an overflow row of a property tool
   is disabled exactly while its cell dims the tool; covered by `SystemTest_macroOverflowRowOfADimmedToolIsDisabled`
   (§U6, "Landed").
+
+- [x] **Choosing a context-menu row takes the editor focus, and closing the menu clears it** — the row press focuses the `MenuItemWdgt` (an ordinary menu is not editor chrome), its teardown clears the focus, so a selected paragraph is unselected — reachable, low.
+  — CLOSED 2026-11-18 (after the overnight loop, U3, on the owner's decision; filed under
+  `archive/docked-and-floating-toolbars-plan.md`): every menu is editor chrome, and the world derives once per cycle
+  where the editor focus stands (`WorldWdgt._keepEditingOnScreenNoSettle`), announcing a change and ending an edit
+  whose text is on no screen; covered by `SystemTest_macroMenuRowKeepsTheSelection` and
+  `SystemTest_macroEditingFollowsAParagraphOffScreen` (§U3, "Landed").
+
+- [x] **A text menu pinned in edit mode keeps its editing rows after a flip to view mode** — a menu is built when it opens, so a pinned one still offers Bold and the rest once its content goes to view mode, and they act — reachable, low.
+  — CLOSED 2026-11-18 (after the overnight loop, U7; filed under `archive/docked-and-floating-toolbars-plan.md`): a
+  text's editing rows carry its enablement (`StringWdgt._editingRowEnablement`), announced by the world at every mode
+  flip, so in view mode they grey and refuse; covered by
+  `SystemTest_macroPinnedTextMenuGreysItsEditingRowsInViewMode` (§U7, "Landed").

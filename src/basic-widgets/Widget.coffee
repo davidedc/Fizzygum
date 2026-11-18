@@ -5357,14 +5357,14 @@ class Widget extends TreeNode
     if @dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = true
-    # MY MODE FLIPPED (past the guard above), so I tell the world I stand in, which re-announces what
-    # its editing tools act on when its editor focus is me or inside me (WorldWdgt.noteEditModeChanged).
-    # Every core that writes this flag tells it, the disable core below and ViewportWdgt's two
-    # included; the flag written on my @contents further down needs no telling of its own, since that
-    # content stands inside me. The world asked is the root I stand under, never the global one: a
-    # widget can flip while detached (a toolbar locks itself as it is built) or while the world it
-    # stands in is being built, and a root that is no world answers nothing (?).
-    @root().noteEditModeChanged? @
+    # MY MODE FLIPPED (past the guard above), so I tell the world I stand in, which announces it to
+    # whatever reads a mode: its editing tools, and a text's editing rows in a menu left open
+    # (WorldWdgt.noteEditModeChanged). Every core that writes this flag tells it, the disable core
+    # below and ViewportWdgt's two included; the flag written on my @contents further down needs no
+    # telling of its own, since it flips with me. The world asked is the root I stand under, never
+    # the global one: a widget can flip while detached (a toolbar locks itself as it is built) or
+    # while the world it stands in is being built, and a root that is no world answers nothing (?).
+    @root().noteEditModeChanged?()
 
     if @contents?
       whereToAct = @contents
@@ -5403,7 +5403,7 @@ class Widget extends TreeNode
       return
     @dragsDropsAndEditingEnabled = false
     # (told as in the enable core above)
-    @root().noteEditModeChanged? @
+    @root().noteEditModeChanged?()
 
     if @contents?
       whereToAct = @contents

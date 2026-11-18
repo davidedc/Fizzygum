@@ -247,7 +247,11 @@ no cell (the detached copy an overflow row photographs) wears the plain ink. The
 row of a dimmed tool is DISABLED exactly while its cell dims the tool: its row carries the enablement
 `MenuRowReflectionSpec.enabledWhile cell, "holdsToolWithNothingToActOn", false`
 (`OverflowChevronButtonWdgt.actOnClick`), so it greys and refuses its tap, leaving the menu open, and it re-reads
-whenever the cell announces, as its tick does. The tool's own refusal stays behind it.
+whenever the cell announces, as its tick does. The tool's own refusal stays behind it. A text's own menu follows
+the same rule as the tools in view mode: a menu built there leaves its editing rows out, and one built in edit mode
+and left open (pinned) across a flip to view mode greys them and they refuse, its Fonts menu's rows and "Soft wrap"
+included (`StringWdgt._editingRowEnablement`: enabled while the text does not sit in view-mode content, announced
+by the world at every flip).
 
 ## 6. Creators
 
@@ -274,8 +278,8 @@ What a tool SHOWS (active, dimmed) is read when its cell is painted; the refresh
 - **Two edges per toolbar**, made by `ToolbarWdgt._subscribeToWhatMyToolsShow` at build, after deserialization
   and after a copy (each guarded by `world.dataflow.hasEdge`, then one refresh):
   - `world → toolbar`: the editor focus moved (`WorldWdgt._setEditorFocusNoSettle`), its style moved
-    (`noteStyleChanged`), the mode of the content holding it flipped (`noteEditModeChanged`), or where it stands
-    moved. That last one has no writer to tell it: a close to the bin, a hide, a collapse, a drag out of a window's
+    (`noteStyleChanged`), an edit mode flipped (`noteEditModeChanged`: EVERY flip, whatever the focus, because a
+    text's editing rows in a menu left open read a mode too, §5.3), or where the focus stands moved. That last one has no writer to tell it: a close to the bin, a hide, a collapse, a drag out of a window's
     reach are generic writes that know nothing of the focus. So the world DERIVES it once per cycle, just before
     the dataflow station (`WorldWdgt._keepEditingOnScreenNoSettle`): the focus with every widget above it, and
     whether the door hands it over, compared with its last look. A change is announced like a new focus, so a
