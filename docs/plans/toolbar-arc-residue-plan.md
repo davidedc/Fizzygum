@@ -20,7 +20,7 @@ Status:
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | LANDED 2026-11-18 |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | LANDED 2026-11-18 |
 | U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | PARKED 2026-11-18: waits on U3 |
-| U8 | Close: this plan archived, or left open with what parked | not started |
+| U8 | Close: this plan archived, or left open with what parked | DONE 2026-11-18: left open, U3 and U7 parked |
 
 ---
 
@@ -608,6 +608,15 @@ decision, so U7 waits on the same decision.
 - If any PARKED: the plan stays in `plans/` with each parked unit's question written into its section, and BACKLOG
   points at it.
 - The memory note and its MEMORY.md line, either way.
+
+**Done 2026-11-18 (overnight loop).**
+- U1, U2, U4, U5 and U6 landed; U3 and U7 are parked.
+- So this plan stays in `plans/`:
+  - §U3 holds the owner's question (how the toolbars learn that the editor focus stopped showing; options a/b/c);
+  - §U7 waits on it.
+- BACKLOG's section for the archived toolbar plan points here for its two open items. This plan's own section
+  holds the items filed on the way.
+- When U3's question is answered: run U3, then U7, then close this plan as above.
 
 ---
 
