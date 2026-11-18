@@ -103,6 +103,55 @@ class CaretWdgt extends BlinkerWdgt
       @currentCaretFontSize = extent.y
       @_applyExtent extent
   
+  # THE KEYS I MOVE ON, the one definition of the keys I act on as COMMANDS (verbFor): each a key, or a chord spelled
+  # as the macro toolkit spells one ("Meta+ArrowLeft"; Shift is left out, since every verb takes it), and the verb
+  # it runs. Two tables:
+  #   - keyVerbs: every keyboard family's plain keys, the arrows and Home and End, whatever modifier but Ctrl or Cmd
+  #     is held (Alt+Left on a PC is Left to me);
+  #   - chordVerbs: each FAMILY's own chords (User.keyboardFamily), STRICT (owner ruling 2026-11-18): a Mac's
+  #     Ctrl+A and Ctrl+Z, and a PC's Win+A and Win+Z, do nothing. A word jump to the right lands at the word's END
+  #     on a Mac, at the next word's START on a PC.
+  # The browser bridge asks verbFor too, to keep the browser's own default (Back on Cmd+Left, on a PC's Alt+Left;
+  # the page's scroll on Home and End) off every key I act on while I am live.
+  @keyVerbs:
+    "ArrowLeft": "goLeft"
+    "ArrowRight": "goRight"
+    "ArrowUp": "goUp"
+    "ArrowDown": "goDown"
+    "Home": "goHome"
+    "End": "goEnd"
+
+  @chordVerbs:
+    mac:
+      "Meta+ArrowLeft": "goHome"
+      "Meta+ArrowRight": "goEnd"
+      "Meta+ArrowUp": "goDocumentStart"
+      "Meta+ArrowDown": "goDocumentEnd"
+      "Alt+ArrowLeft": "goWordStart"
+      "Alt+ArrowRight": "goWordEnd"
+      "Meta+a": "selectAll"
+      "Meta+z": "undo"
+    pc:
+      "Ctrl+Home": "goDocumentStart"
+      "Ctrl+End": "goDocumentEnd"
+      "Ctrl+ArrowLeft": "goWordStart"
+      "Ctrl+ArrowRight": "goNextWordStart"
+      "Ctrl+a": "selectAll"
+      "Ctrl+z": "undo"
+
+  # a chord as the tables spell it: its modifiers, then the key (a one-character key in lower case, so Shift+Cmd+Z
+  # is "Meta+z" with Shift held); undefined when no Ctrl, Alt or Cmd is held
+  @chordOf: (key, ctrlKey, altKey, metaKey) ->
+    return undefined unless ctrlKey or altKey or metaKey
+    (if ctrlKey then "Ctrl+" else "") + (if altKey then "Alt+" else "") + (if metaKey then "Meta+" else "") +
+      (if TextSlots.isOneCharacter key then key.toLowerCase() else key)
+
+  # the verb I run for a key pressed with these modifiers on a keyboard of this family, or undefined where I do not
+  # act on it as a command (typing, the keys processKeyDown's switch reads, a chord of another family)
+  @verbFor: (key, ctrlKey, altKey, metaKey, family) ->
+    CaretWdgt.chordVerbs[family]?[CaretWdgt.chordOf key, ctrlKey, altKey, metaKey] ?
+      (CaretWdgt.keyVerbs[key] unless ctrlKey or metaKey)
+
   # CaretWdgt event processing:
 
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
@@ -111,26 +160,13 @@ class CaretWdgt extends BlinkerWdgt
     #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
     #   https://w3c.github.io/uievents/tools/key-event-viewer.html
 
-    if ctrlKey
-      @_ctrl key, shiftKey
-    else if metaKey
-      @cmd key, shiftKey
-    else
+    verb = CaretWdgt.verbFor key, ctrlKey, altKey, metaKey, world.user.keyboardFamily
+    if verb?
+      @[verb] shiftKey
+    else unless ctrlKey or metaKey
       switch key
         when " "
           @insert " "
-        when "ArrowLeft"
-          @goLeft shiftKey
-        when "ArrowRight"
-          @goRight shiftKey
-        when "ArrowUp"
-          @goUp shiftKey
-        when "ArrowDown"
-          @goDown shiftKey
-        when "Home"
-          @goHome shiftKey
-        when "End"
-          @goEnd shiftKey
         when "Delete"
           @deleteRight()
         when "Backspace"
@@ -179,7 +215,7 @@ class CaretWdgt extends BlinkerWdgt
   # "Dead" of an accent waiting for its letter, "Unidentified"), and a name is not text.
   _typeKey: (key, shiftKey) ->
     # public-call-sanctioned: the keystroke DISPATCHER branch -- insert is the public typing command, one
-    # settle per discrete keystroke (the same shape as _ctrl's undo).
+    # settle per discrete keystroke.
     if !key? then console.error "INVARIANT_VIOLATED: a keystroke to insert has no key"
     @insert key, shiftKey if TextSlots.isOneCharacter key
 
@@ -195,8 +231,8 @@ class CaretWdgt extends BlinkerWdgt
   # gotoSlot is the public "move the caret to slot N" API: it SELF-SETTLES -- the move + scroll-follow flush once,
   # DURING the event that moved the caret (the doOneCycle model: process events fixing layouts step by step,
   # then run the end-of-cycle flush, then paint). Reached cross-widget (world.caret.gotoSlot from StringWdgt/TextWdgt click
-  # handlers), by the caret's own click / undo-redo restore, AND by the Home / End navigation keystrokes (the arrows
-  # move through the non-settling core, inside their own settle). Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT defer its settle
+  # handlers) and by the caret's own click / undo-redo restore; the navigation keystrokes move through the
+  # non-settling core, each inside its own settle. Per-keystroke caret navigation is NOT a high-traffic stream, so it does NOT defer its settle
   # (contrast _setMaxDimDeferredSettle, for ~50-per-frame drag/scroll STREAMS) -- each keystroke self-settles, one flush
   # per discrete move. The follow NEVER rides the end-of-cycle flush.
   #   _gotoSlotNoSettle does ONLY the layout-free work: clamp the slot, re-place the caret where it stands at the
@@ -409,8 +445,9 @@ class CaretWdgt extends BlinkerWdgt
   # _gotoSlotNoSettle, which enqueues the follow off-settle, and the editing handler's tail settles it in-place once
   # the caret is re-sized (processKeyDown -> _settleScrollFollow). goLeft/goRight and goUp/goDown are self-settling
   # public wrappers (the keystroke path) around a non-settling core (_goLeftNoSettle, _goRightNoSettle,
-  # _goVerticallyNoSettle); goHome/goEnd self-settle inline via gotoSlot. Each step is one CHARACTER, wherever that is more than one code unit (TextSlots). updateSelection /
-  # clearSelectionIf... only touch selection marks (no layout).
+  # _goVerticallyNoSettle), as the line, document and word jumps are around _jumpToNoSettle. Each step is one
+  # CHARACTER, wherever that is more than one code unit (TextSlots). updateSelection / clearSelectionIf... only
+  # touch selection marks (no layout).
   goLeft: (shift) ->
     @_settleLayoutsAfter => @_goLeftNoSettle shift
   _goLeftNoSettle: (shift) ->
@@ -464,18 +501,42 @@ class CaretWdgt extends BlinkerWdgt
       @clearSelectionIfStartAndEndMeet shift
       @_verticalRun = text: @target.text, columnSlot: column
 
-  goHome: (shift) ->
+  # THE ONE JUMP every line, document and word move makes: to `slot`, the selection extended to it while Shift is held
+  _jumpToNoSettle: (slot, shift) ->
     @updateSelection shift
-    @gotoSlot @target.startOfLine @slot
+    @_gotoSlotNoSettle slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
 
+  # the line's ends (Home and End; on a Mac, Cmd+Left and Cmd+Right too)
+  goHome: (shift) ->
+    @_settleLayoutsAfter => @_jumpToNoSettle (@target.startOfLine @slot), shift
+
   goEnd: (shift) ->
-    @updateSelection shift
-    @gotoSlot @target.endOfLine @slot
-    @updateSelection shift
-    @clearSelectionIfStartAndEndMeet shift
-  
+    @_settleLayoutsAfter => @_jumpToNoSettle (@target.endOfLine @slot), shift
+
+  # the text's ends (Cmd+Up and Cmd+Down on a Mac, Ctrl+Home and Ctrl+End on a PC)
+  goDocumentStart: (shift) ->
+    @_settleLayoutsAfter => @_jumpToNoSettle 0, shift
+
+  goDocumentEnd: (shift) ->
+    @_settleLayoutsAfter => @_jumpToNoSettle @target.text.length, shift
+
+  # the word jumps (TextSlots's words): left to a word's start in both families; right to the word's end on a Mac
+  # (Option+Right), to the next word's start on a PC (Ctrl+Right)
+  goWordStart: (shift) ->
+    @_settleLayoutsAfter => @_jumpToNoSettle (TextSlots.wordStartBefore @target.text, @slot), shift
+
+  goWordEnd: (shift) ->
+    @_settleLayoutsAfter => @_jumpToNoSettle (TextSlots.wordEndAfter @target.text, @slot), shift
+
+  goNextWordStart: (shift) ->
+    @_settleLayoutsAfter => @_jumpToNoSettle (TextSlots.wordStartAfter @target.text, @slot), shift
+
+  # Cmd+A on a Mac, Ctrl+A on a PC: my target selects all it shows (Shift changes nothing)
+  selectAll: (shift) ->
+    @target.selectAll()
+
   gotoPos: (aPoint) ->
     slotToGoTo = @target.slotAt aPoint
     @gotoSlot slotToGoTo   # discrete (click-to-position) -> public self-settling gotoSlot
@@ -577,22 +638,6 @@ class CaretWdgt extends BlinkerWdgt
       @_gotoSlotNoSettle TextSlots.slotAtOrAfter @target.text, @slot + key.length
       @_updateDimension()
       @target.pushUndoState? @slot
-  
-  _ctrl: (key, shiftKey) ->
-    # public-call-sanctioned: the keystroke DISPATCHER branch — undo is the public self-settling
-    # command, one settle per discrete ctrl-Z keystroke (same shape as the public cmd sibling below).
-    switch key
-      when "a", "A"
-        @target.selectAll()
-      when "z", "Z"
-        @undo shiftKey
-
-  cmd: (key, shiftKey) ->
-    switch key
-      when "a", "A"
-        @target.selectAll()
-      when "z", "Z"
-        @undo shiftKey
   
   deleteRight: ->
     if @target.selection() isnt ""

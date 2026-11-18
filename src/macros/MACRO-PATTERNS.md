@@ -99,7 +99,7 @@ assertion a recapture after a regression silently stores two different hashes an
   `setExtent` (tall enough not to crop); a shift-click PAST a line's end clamps to the line-end slot, so two
   clicks past the end produce identical shots — land clicks WITHIN the line text.
 - **Keyboard selection — the anchor model in full** (`macroStringWdgtImprovedSelection`): the KEYBOARD sibling of
-  shift-click above. The rules, all driven by the caret's `cmd` off one clicked anchor slot: Shift+ArrowLeft/Right GROW
+  shift-click above. The rules, all driven by the caret's keystroke handling off one clicked anchor slot: Shift+ArrowLeft/Right GROW
   a selection from the caret one slot at a time, and the moving end can cross THROUGH the anchor (the selection dies on
   one side and is reborn on the other, no special-casing); a PLAIN Arrow with a selection COLLAPSES it to an EDGE —
   Left/Up to the LEFT edge, Right/Down to the RIGHT edge — NOT to caret±1 and NOT to the text's extremities (mid-text
@@ -169,8 +169,9 @@ assertion a recapture after a regression silently stores two different hashes an
   and enqueues a `Cut`/`CopyInputEvent`; later `@pasteText_InputEvents clip` enqueues a `PasteInputEvent`. Fizzygum has
   NO internal clipboard — synthetic Meta+x/c/v can't fire the browser's real clipboard EVENTS — so the text rides IN
   the event (a macro-local var), exactly as oncut/oncopy/onpaste → queue → `caret.process{Cut,Copy,Paste}`.
-- **Undo** (`macroCaretResizesOKOnUndo`): `@repeatSpecialKey_InputEvents "Meta+z", 4` (the caret's `cmd` handles Meta+a
-  and Meta+z). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back;
+- **Undo** (`macroCaretResizesOKOnUndo`): `@repeatSpecialKey_InputEvents "Meta+z", 4` (Meta+a and Meta+z are the Mac
+  family's chords, `CaretWdgt.chordVerbs`; the harness pins every test's keyboard to a Mac's, and a test sets
+  `world.user.keyboardFamily = "pc"` to press a PC's — `macroCaretJumpsFollowTheKeyboardFamily`). image-before and image-after-undo come out pixel-identical — the round-trip proof the caret resizes back;
   assert the pair with `@assertScreenshotsIdentical` (preamble).
 - **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextWdgtCaretResizing`): the forward sibling of the
   Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextWdgt made via the

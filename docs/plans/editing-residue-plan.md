@@ -14,8 +14,8 @@ Status:
 | Unit | Item | Status |
 |---|---|---|
 | U1 | The caret steps over a character whole (emoji, the smiley) | CLOSED 2026-11-18 (§U1) |
-| U2 | The caret's remembered column is derived from its vertical run | LANDED 2026-11-18 (§U2) |
-| U3 | Line ends, document ends and word jumps follow the keyboard's platform | OPEN |
+| U2 | The caret's remembered column is derived from its vertical run | CLOSED 2026-11-18 (§U2) |
+| U3 | Line ends, document ends and word jumps follow the keyboard's platform | LANDED 2026-11-18 (§U3) |
 | U4 | A text menu shows its state as ticks; every editing row tested | OPEN |
 | U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | OPEN |
 | U6 | Folders, the bin and their links hold a fixed edit mode | OPEN |
@@ -225,7 +225,8 @@ passes under both pointers and WebKit, its follower is clean, and three plants f
 kept per text across carets, the old storage, fails the move cases; a run forgetting its column fails the run down
 and up; a run surviving placements fails the four key moves). Pixel set predicted by MEASUREMENT before the code was written (`u2/forecast-members-gone.js`: the two
 `StringWdgt` members hidden from every member list, behaviour kept): 7 churn tests, 20 shots; the presuite failed
-exactly those. Commits: one per repo, each titled "Text: Up and Down take their column from the caret's run …".
+exactly those. Commits: Fizzygum `4aa89b4b`, Fizzygum-tests `d2fee7405`, each titled "Text: Up and Down take their
+column from the caret's run …".
 
 ## U3 — Line ends, document ends and word jumps follow the keyboard's platform (R1 §B)
 
@@ -253,6 +254,29 @@ Chrome's Back on Cmd+Left — record it in the digest for the owner's hand check
 **Needs:** U1 CLOSED (`TextSlots`); U1 PARKED ⇒ U3 parks.
 
 Time box 3 h.
+
+**Landed 2026-11-18.** The boot stashes `?keys=` raw (`window.FIZZYGUM_KEYS`, as `?pointer=` is) and the person derives
+the family (`User.keyboardFamily` from `User.keyboardFamilyOfThisPage`). ONE definition, `CaretWdgt.verbFor`, reads
+`chordVerbs[family]` (the plan's table, with word-right `goWordEnd` on a Mac, `goNextWordStart` on a PC) and then
+`keyVerbs` (every family's arrows, Home and End, with any modifier but Ctrl or Cmd); `processKeyDown` and the browser
+bridge both read it, the bridge through `_caretActsOnAsCommand`, which its canvas listener
+(`_keydownDefaultIsPrevented`, extracted with its old Backspace, space and Tab rules) and the virtual keyboard's
+input listener both ask (the review found the second one missed). One jump core `_jumpToNoSettle`; goHome, goEnd, goDocumentStart, goDocumentEnd, goWordStart,
+goWordEnd, goNextWordStart are thin self-settling wrappers, selectAll asks the target. `TextSlots` walks a text's
+words once (`_wordWalk`, starting at the slot at or before the one asked: a stale slot clamps, as the arrows
+do) for `wordAround` and the three jumps. `_ctrl` and `cmd` are deleted, and the call-separation
+allowlist lost seven entries (`cmd`; goHome, goEnd, goLeft, goRight, goUp, goDown, which the tables' strings now
+name) and gained none. The first cut raised two complexity records (the boot function 30 → 33, the keydown
+listener 19 → 22); restructured instead (the raw stash; the extracted method), both fell: the listener's record is
+deleted, `processKeyDown`'s is 27. Ruled here: the verb names (by what they do) and `keyVerbs` as the shared table
+the bridge's "every key the caret acts on" reads (typing never prevented). Evidence: the new
+`SystemTest_macroCaretJumpsFollowTheKeyboardFamily` (values only) passes under both pointers and WebKit, its follower
+is clean, six plants fail it under both pointers (the family ignored, Shift dropped, a PC page without the suite
+pin, a PC's word-right to the end, the bridge never preventing, the bridge ignoring whether a caret is live: the
+test reads the bridge's verdict on fake keydowns, an oracle); the presuite and the finger suite were green (the EMPTY
+prediction). Filed from the review: AltGr typing on a PC (pre-existing), a sheet's selection-mode Cmd+Left. Hand check for the owner: in a
+headed Chrome on a Mac, Cmd+Left in a text must not navigate Back. Commits: one per repo, each titled "Text: a
+caret's line, text and word jumps follow the keyboard family …".
 
 ## U4 — A text menu shows its state as ticks; every editing row tested (R2 §J, §L)
 
@@ -496,6 +520,8 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **No keyboard way to a line's ends on a keyboard without Home and End** — `CaretWdgt._ctrl` / `cmd` handle only `a` and `z`, so Cmd+Left/Right (a MacBook has no Home or End key) and Ctrl+Home/End do nothing in a text (found by the U1 review, read from code) — reachable, low. — CLOSED 2026-11-18 (overnight loop, U3; filed under `archive/toolbar-arc-residue-plan.md`): a caret follows its person's keyboard family (`CaretWdgt.verbFor`), with line and text ends and word jumps on a Mac and on a PC; `SystemTest_macroCaretJumpsFollowTheKeyboardFamily`.
 
 - [x] **The caret splits an emoji** — moves, deletes, clicks, selections, crops and the password mask count UTF-16 units, so 😀 is stepped into, half-deleted and masked as two stars (owner report; §U1) — reachable, medium. — CLOSED 2026-11-18 (overnight loop, U1; filed under `plans/editing-residue-plan.md`): `TextSlots`, one definition of a slot (between grapheme clusters), asked by every slot reader; `SystemTest_macroCaretStepsOverTheSmileyWhole`.
 - [x] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low. — CLOSED 2026-11-18 (overnight loop, U2; filed under `archive/toolbar-arc-residue-plan.md`): the column lives only in the caret's vertical run (`CaretWdgt._columnForVerticalMove`), which every other placement ends, never in the text; `SystemTest_macroUpAndDownLandUnderTheCaretAfterAnyMove`.

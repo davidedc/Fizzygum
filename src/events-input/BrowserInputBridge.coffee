@@ -94,18 +94,11 @@ class BrowserInputBridge
     @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
       @world.inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
 
-      # Default in several browsers
-      # is for the backspace button to trigger
-      # the "back button", so we prevent that
-      # default here. The key is read as the canvas's own keydown listener reads it, by
+      # the browser's own default is kept off: Backspace (in several browsers the "back button"), Tab (so every
+      # browser hands it to us rather than moving the focus), and every key the caret acts on as a command
+      # (_caretActsOnAsCommand), as on my canvas. The key is read as the canvas's own keydown listener reads it, by
       # `event.key`.
-      if event.key is "Backspace"
-        event.preventDefault()
-
-      # suppress tab override and make sure tab gets
-      # received by all browsers
-      if event.key is "Tab"
-        event.preventDefault()
+      event.preventDefault() if event.key in ["Backspace", "Tab"] or @_caretActsOnAsCommand event
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
@@ -214,49 +207,35 @@ class BrowserInputBridge
     canvas.addEventListener "gesturechange", @gesturechangeBrowserEventListener, false
 
 
+  # WHETHER THE BROWSER'S OWN DEFAULT for a keydown is kept off:
+  # - Backspace, outside a text field (or in a read-only or disabled one), is the browser's "back button"
+  #   (http://stackoverflow.com/a/2768256);
+  # - space on my canvas scrolls the page (https://stackoverflow.com/a/22559917). Preventing it also stops the
+  #   keypress event (just the keydown comes), which is why the keydown processes the space (stopPropagation
+  #   instead, or as well, did not work);
+  # - Tab on my canvas: browsers do special things with it;
+  # - while a caret is live, every key it acts on as a COMMAND (_caretActsOnAsCommand).
+  _keydownDefaultIsPrevented: (event) ->
+    if event.key == "Backspace"
+      d = event.srcElement or event.target
+      tag = d.tagName.toUpperCase()
+      inATextField = (tag == 'INPUT' and d.type.toUpperCase() in ['TEXT', 'PASSWORD', 'FILE', 'SEARCH', 'EMAIL', 'NUMBER', 'DATE']) or tag == 'TEXTAREA'
+      return if inATextField then (d.readOnly or d.disabled) else true
+    return true if event.target == @world.worldCanvas and event.key in [" ", "Tab"]
+    @_caretActsOnAsCommand event
+
+  # whether a live caret acts on this key as a COMMAND, so that the browser's own default must stay off it, whichever
+  # of my two listeners (my canvas's, the virtual keyboard's input) it reaches: Cmd+Left is Back to a Mac browser,
+  # Alt+Left to a PC's, Home and End scroll the page. CaretWdgt.verbFor is the one definition of those keys, which
+  # the caret's own keystroke handling reads too; typing is never one of them.
+  _caretActsOnAsCommand: (event) ->
+    @world.caret? and (CaretWdgt.verbFor event.key, event.ctrlKey, event.altKey, event.metaKey, @world.user.keyboardFamily)?
+
   _initKeyboardEventListeners: ->
     canvas = @world.worldCanvas
     @keydownBrowserEventListener = (event) =>
       @world.inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
-
-      # this paragraph is to prevent the browser going
-      # "back button" when the user presses delete backspace.
-      # taken from http://stackoverflow.com/a/2768256
-      doPrevent = false
-      if event.key == "Backspace"
-        d = event.srcElement or event.target
-        if d.tagName.toUpperCase() == 'INPUT' and
-        (d.type.toUpperCase() == 'TEXT' or
-          d.type.toUpperCase() == 'PASSWORD' or
-          d.type.toUpperCase() == 'FILE' or
-          d.type.toUpperCase() == 'SEARCH' or
-          d.type.toUpperCase() == 'EMAIL' or
-          d.type.toUpperCase() == 'NUMBER' or
-          d.type.toUpperCase() == 'DATE') or
-        d.tagName.toUpperCase() == 'TEXTAREA'
-          doPrevent = d.readOnly or d.disabled
-        else
-          doPrevent = true
-
-      # this paragraph is to prevent the browser scrolling when
-      # user presses spacebar, see
-      # https://stackoverflow.com/a/22559917
-      if event.key == " " and event.target == @world.worldCanvas
-        # Note that doing a preventDefault on the spacebar
-        # causes it not to generate the keypress event
-        # (just the keydown), so we had to modify the keydown
-        # to also process the space.
-        # (I tried to use stopPropagation instead/inaddition but
-        # it didn't work).
-        doPrevent = true
-
-      # also browsers tend to do special things when "tab"
-      # is pressed, so let's avoid that
-      if event.key == "Tab" and event.target == @world.worldCanvas
-        doPrevent = true
-
-      if doPrevent
-        event.preventDefault()
+      event.preventDefault() if @_keydownDefaultIsPrevented event
 
     canvas.addEventListener "keydown", @keydownBrowserEventListener, false
 

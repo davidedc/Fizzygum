@@ -6,15 +6,9 @@
 # Delete an entry when the method gains real external callers or gets renamed/deleted.
 
 # --- T4 owner triage, 2026-07-12 (public/private call-separation plan §6/App-F) ---
-# Caret keyboard command surface (user scripting/inspector verbs):
-goHome        # caret keyboard verb — user command surface
-goEnd         # caret keyboard verb — user command surface
+# Caret keyboard command surface (user scripting/inspector verbs; the moves are named by CaretWdgt's key tables):
 deleteLeft    # caret keyboard verb — user command surface
 deleteRight   # caret keyboard verb — user command surface
-goLeft        # caret keyboard verb — user command surface
-goRight       # caret keyboard verb — user command surface
-goUp          # caret keyboard verb — user command surface
-goDown        # caret keyboard verb — user command surface
 setHorizontalAlignment  # StringWdgt's user-facing alignment setter (the align rows call it), sibling of the soft-wrap toggle
 setVerticalAlignment    # StringWdgt's user-facing alignment setter (the align rows call it), sibling of the soft-wrap toggle
 scrollX       # ViewportWdgt's scroll-by verb, sibling of scrollToBottom/setScrollPolicy, which macros call
@@ -39,7 +33,6 @@ addHighlightingWidgets    # WorldWdgt's per-cycle highlight reconciler; it destr
 autoScroll                # ViewportWdgt's drag auto-scroll step; it scrolls through the public scrollX/scrollY — [S] forbids the _-form
 startAutoScrolling        # ViewportWdgt's drag auto-scroll start; its step drives the public autoScroll — [S] forbids the _-form
 wrapContent               # TransformFrameWdgt's slot-wrapping constructor helper; it builds through the public settling add — [S]/[G] forbid the _-form
-cmd                       # CaretWdgt's meta-key command dispatcher (sibling of _ctrl); it runs the public settling undo — [S] forbids the _-form
 runAllSystemTestsAtSpeed  # AutomatorPlayer's run-the-suite-at-a-speed step behind the three speed menu verbs; it starts the run through the public runAllSystemTests — [S] forbids the _-form
 startTestPlayingWithSlideIntro  # AutomatorPlayer's intro-slide-then-play step; its slide callback starts the test through the public startTestPlaying — [S] forbids the _-form
 subWidgetsMergedPreferredBounds  # Widget §4.1 pure-measure API, sibling of the cross-called subWidgetsMergedFullBounds; the P5 scrolled-content contract implementations (scrolledContentMeasure) call it on THEMSELVES, which is what left it with only self-calls

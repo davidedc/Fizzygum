@@ -45,6 +45,21 @@ class User
   # builds my own object -- never an object on the prototype, which every person would share.
   drawingToolOverrides: undefined
 
+  # THE KEYBOARD FAMILY I type on: "mac" (Cmd and Option) or "pc" (Ctrl), whose conventions every caret follows
+  # for line and document ends, word jumps, select-all and undo (CaretWdgt.chordVerbs). The page's
+  # (keyboardFamilyOfThisPage), never saved with a world -- my record is an explicit one (Serializer._userRecord)
+  # -- so a world saved on a Mac imposes no Cmd on a PC.
+  keyboardFamily: undefined
+
+  constructor: ->
+    @keyboardFamily = User.keyboardFamilyOfThisPage()
+
+  # the family the page's ?keys= names (stashed at boot: window.FIZZYGUM_KEYS), else the platform's own: a Mac's,
+  # an iPhone's or an iPad's keyboard is a Mac's (Cmd and Option), every other a PC's (Ctrl)
+  @keyboardFamilyOfThisPage: ->
+    return window.FIZZYGUM_KEYS if window.FIZZYGUM_KEYS in ["mac", "pc"]
+    if /^(Mac|iPhone|iPad|iPod)/.test navigator.platform then "mac" else "pc"
+
   # THE ONE WRITE, and it only STATES the fact: this tool is now in hand (undefined = an empty
   # hand, which paints nothing). IDEMPOTENT -- arming what is already held changes nothing and
   # announces nothing -- so re-stating a recorded hand, as a restored snapshot does, is as safe as

@@ -52,7 +52,7 @@ class TextSlots
   # arithmetic on a text it did not segment: a text's shown end where a crop's ellipsis stands for characters
   # longer than itself, a wrapped line's end where its break is one character with what precedes it (a "\r\n").
   @slotAtOrBefore: (text, offset) ->
-    return 0 if offset <= 0
+    return 0 unless offset > 0
     return text.length if offset >= text.length
     (TextSlots._characterAt text, offset).index
 
@@ -91,17 +91,47 @@ class TextSlots
   @isWordCharacter: (character) ->
     /^[\p{L}\p{N}_]/u.test character
 
-  @_characterAfter: (text, slot) ->
-    text.slice slot, TextSlots.slotAfter text, slot
-
-  @_characterBefore: (text, slot) ->
-    text.slice (TextSlots.slotBefore text, slot), slot
+  # A WORD WALK: the text's characters walked once, as `slots` (slotsOf: character i stands between slots[i] and
+  # slots[i + 1]) and `words` (whether character i is a word character). Every word answer below steps an index
+  # through it from `at`, the index of the slot it starts at (an offset that is no slot of the text -- one past
+  # its end, after a script shortened it -- starts at the slot at or before it, as the arrows clamp).
+  @_wordWalk: (text, slot) ->
+    slots = TextSlots.slotsOf text
+    words = (TextSlots.isWordCharacter text.slice slots[i], slots[i + 1] for i in [0...slots.length - 1])
+    {slots, words, at: slots.indexOf TextSlots.slotAtOrBefore text, slot}
 
   # the word a slot stands in or touches, as [its start, its end] (a double-click's selection); [slot, slot]
   # where no word character touches it
   @wordAround: (text, slot) ->
-    start = slot
-    start = TextSlots.slotBefore text, start while start > 0 and TextSlots.isWordCharacter TextSlots._characterBefore text, start
-    end = slot
-    end = TextSlots.slotAfter text, end while end < text.length and TextSlots.isWordCharacter TextSlots._characterAfter text, end
-    [start, end]
+    {slots, words, at} = TextSlots._wordWalk text, slot
+    start = end = at
+    start-- while start > 0 and words[start - 1]
+    end++ while end < words.length and words[end]
+    [slots[start], slots[end]]
+
+  # where a word jump to the LEFT lands, in both keyboard families: back over what is not a word, then over the
+  # word, to its start
+  @wordStartBefore: (text, slot) ->
+    {slots, words, at} = TextSlots._wordWalk text, slot
+    i = at
+    i-- while i > 0 and !words[i - 1]
+    i-- while i > 0 and words[i - 1]
+    slots[i]
+
+  # where a Mac's word jump to the RIGHT lands (Option+Right): on over what is not a word, then over the word, to
+  # its END
+  @wordEndAfter: (text, slot) ->
+    {slots, words, at} = TextSlots._wordWalk text, slot
+    i = at
+    i++ while i < words.length and !words[i]
+    i++ while i < words.length and words[i]
+    slots[i]
+
+  # where a PC's word jump to the RIGHT lands (Ctrl+Right): on over the rest of the word, then over what is not a
+  # word, to the START of the next word (the text's end where none follows)
+  @wordStartAfter: (text, slot) ->
+    {slots, words, at} = TextSlots._wordWalk text, slot
+    i = at
+    i++ while i < words.length and words[i]
+    i++ while i < words.length and !words[i]
+    slots[i]

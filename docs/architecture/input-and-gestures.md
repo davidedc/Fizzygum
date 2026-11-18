@@ -441,6 +441,26 @@ the canvas's own keyboard listeners to do the typing. A machine that mixes the t
 stroke, exactly like every other branch of this grammar. `useVirtualKeyboard` (default `true`) is
 the opt-out for a touch machine that has a real keyboard anyway.
 
+### The keyboard family: whose chords a caret follows
+
+A caret follows its person's KEYBOARD FAMILY, `User.keyboardFamily`: "mac" (Cmd and Option) or "pc"
+(Ctrl), from the page's `?keys=mac|pc` (stashed raw at boot as `?pointer=` is), else the platform's
+own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", every other machine
+"pc"). It is never saved with a world, so a world saved on a Mac imposes no Cmd on a PC.
+- ONE definition maps a key to a caret verb, `CaretWdgt.verbFor`: `chordVerbs[family]` first (a Mac's
+  Cmd+Left/Right line ends, Cmd+Up/Down text ends, Option+Left/Right word jumps, Cmd+A, Cmd+Z; a PC's
+  Ctrl+Home/End, Ctrl+Left/Right, Ctrl+A, Ctrl+Z), then `keyVerbs` (every family's arrows, Home and
+  End, with any modifier but Ctrl or Cmd: a PC's Alt+Left is Left). STRICT: a Mac's Ctrl chords and a
+  PC's Cmd chords do nothing. A word jump to the right lands at the word's END on a Mac, at the next
+  word's START on a PC (`TextSlots.wordEndAfter` / `wordStartAfter`; a word is TextSlots's).
+- The caret's keystroke handling and the browser bridge both read it: while a caret is live, every
+  key it acts on as a command has its browser default kept off, on the canvas and on the virtual
+  keyboard's input alike (`BrowserInputBridge._caretActsOnAsCommand`: Back on a Mac's Cmd+Left and a
+  PC's Alt+Left, the page's scroll on Home and End); typing is never prevented.
+- The test harness pins "mac" on every test's world (`WorldTestSupport._afterWorldResetNoSettle`), as
+  it pins the screen's extent; a test exercises a PC by setting `world.user.keyboardFamily = "pc"`. That
+  the prevention stops a headed browser's Back is a hand check: a headless browser has no accelerators.
+
 ## See also
 
 - [`viewports-and-planes.md`](viewports-and-planes.md) — the scroll-drag step's own side of the

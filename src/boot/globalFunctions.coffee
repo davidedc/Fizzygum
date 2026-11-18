@@ -447,6 +447,12 @@ boot = ->
   if bootQueryParams? and bootQueryParams.get("pointer")?
     window.FIZZYGUM_POINTER_KIND = bootQueryParams.get("pointer")
 
+  # ?keys=mac|pc — the KEYBOARD FAMILY whose conventions a caret follows (CaretWdgt.chordVerbs): line and document
+  # ends, word jumps, select-all and undo. Sibling of ?pointer above: the raw string is stashed here, and the person
+  # who holds the family reads it (User.keyboardFamilyOfThisPage), falling back to the platform's own for an absent
+  # or unknown value. The test harness pins "mac" on every test's world, as it pins the screen's extent.
+  window.FIZZYGUM_KEYS = bootQueryParams?.get "keys"
+
   # ?intro=0|off — suppress the per-test faded TITLE/DESCRIPTION slide the test
   # player shows BEFORE each SystemTest (AutomatorPlayer._setUpIntroSlide). That
   # slide is purely for a HUMAN watching a run; it costs a fixed ~2.5s of real
