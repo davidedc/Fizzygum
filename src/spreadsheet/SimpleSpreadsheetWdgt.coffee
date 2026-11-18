@@ -68,6 +68,9 @@
 #
 # Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers, which
 # I join when built, + processKeyDown, which acts while I am the editor focus); never a DOM listener.
+# While I sit in view-mode content (sitsInViewModeContent: nested in a document whose window shows the
+# eye) I take no entry -- my edit start, commit and clear, and my cells' drop and drag-out, refuse --
+# and the arrows, Tab, the wheel and the zoom still act.
 
 class SimpleSpreadsheetWdgt extends ClippingWdgt
 
@@ -765,8 +768,10 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     return
 
   # clear the selected cell: a blank commit through the ordinary path (which also drops a dropped
-  # widget entry), keeping the record and so its format
+  # widget entry), keeping the record and so its format. Content in view mode (sitsInViewModeContent:
+  # a sheet in a document whose window shows the eye) refuses it, as it refuses every entry.
   _clearSelectedCellNoSettle: ->
+    return if @sitsInViewModeContent()
     address = @model.addressFor @selectedCol, @selectedRow
     cell = @model.cellAt address
     return unless cell? and (cell.source isnt "" or cell.widgetEntry?)
@@ -785,9 +790,10 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # Start an edit of the selected cell, its text `seedText`, with the caret in the cell's editor —
   # or, `inBar`, in the formula bar's text. Both show the text either way: the cell's editor is
   # mounted in both cases and the bar takes the same text, and whichever does not hold the caret
-  # follows it as it is typed (reactToKeystroke).
+  # follows it as it is typed (reactToKeystroke). Content in view mode (sitsInViewModeContent) starts
+  # no edit: the one door for typing, Enter and F2, a double-click and the formula bar alike.
   _startEditNoSettle: (seedText, inBar = false) ->
-    return if @_editing
+    return if @_editing or @sitsInViewModeContent()
     # F1: the selection can sit OFF-viewport (wheel-scrolled away); editing it needs its
     # CellWdgt on screen for the overlay editor — scroll-follow first (Excel: typing jumps
     # the view back to the active cell). A no-op when the selection is already visible.
@@ -820,9 +826,14 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # editor (its cell vanished under the edit — not a known path, the edit commits before any
   # scroll) must NOT masquerade as one: abandon instead of blanking. An error never blocks a
   # commit: a #SYNTAX, #ERR or #LOOP is the cell's VALUE (spec §9.6), shown in the cell and
-  # explained in the formula bar.
+  # explained in the formula bar. An edit still open when my content went into view mode (its window's
+  # pencil pressed mid-edit) ends WITHOUT writing: content in view mode takes no entry, on any commit
+  # path.
   _commitEditNoSettle: ->
     return unless @_editing
+    if @sitsInViewModeContent()
+      @_teardownEditorNoSettle()
+      return
     source = @_liveEditorWdgt()?.text
     unless source?
       @_teardownEditorNoSettle()

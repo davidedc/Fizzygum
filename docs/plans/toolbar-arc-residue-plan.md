@@ -17,7 +17,7 @@ Status:
 | U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | LANDED 2026-11-18 |
 | U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | PARKED 2026-11-18: owner decision (§U3) |
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | LANDED 2026-11-18 |
-| U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | not started |
+| U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | LANDED 2026-11-18 |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | not started |
 | U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | not started |
 | U8 | Close: this plan archived, or left open with what parked | not started |
@@ -434,6 +434,45 @@ Time box 2.5 h.
 
 Time box 3 h.
 
+**Landed 2026-11-18.**
+- Built as the fix says:
+  - `Widget.sitsInViewModeContent`'s body is rule B, research C §4.2's validated shape; no new Widget member;
+  - `FrameWdgt.offersEditToggle` is read by `_barSpec`, with the ceiling 172 → 173, dated, under the grant;
+  - the sheet's five doors;
+  - `StretchableCanvasWdgt.wantsDropOfChild`;
+  - the `CanvasGlassTopWdgt` comment.
+- Tests, value-only, both pointers:
+  - `SystemTest_macroViewModeSheetRefusesEditing`:
+    - edit-mode controls: typing, and a drop into a cell;
+    - in view mode, refused: typing with Enter, Delete, a double-click, the formula bar, a drop, a drag-out, and an
+      edit open across the flip;
+    - in view mode, kept: ArrowRight still moves the selection.
+  - `SystemTest_macroViewModeBareDrawingTakesNoPaint`:
+    - an edit-mode stroke lays the pencil;
+    - in view mode a stroke lays nothing, a drop is not stamped, and a nested Drawings Maker window in edit mode
+      still paints (the boundary).
+- Bite, on both pointers: research C §6.3's plants, plus one plant per sheet door, each failing its own assertions.
+  - Every sheet door opened at once fails the refusals.
+  - Each door alone (the start, the commit, the clear, the drop, the drag-out) fails the assertions only that door
+    guards.
+  - The nearest climb fails the bare drawing's "sits in view-mode content" and its stroke.
+  - The canvas drop door alone fails the drop.
+  - Rule A fails the nested window's paint.
+- Followers: clean on both pointers.
+- Prediction met (EMPTY): the presuite failed nothing (405 tests), and neither did the finger suite.
+- Filed, under this plan's BACKLOG section:
+  - the selection ring frames a drawing's paint surface after a click in view mode (research C §3.3);
+  - from the review: a widget's base context menu ("Pick up", "Color…") still acts on view-mode content;
+  - from the review: other bare mode holders in view-mode content still take drops.
+- Rule B's consequences beyond the two items, for the owner's second look:
+  - the Degrees Converter's formula boxes refuse restyling (typing still works);
+  - the chrome of a mode-holding window nested in a view-mode outer answers view mode (its title's menu offers no
+    editing rows), as research C §4.1 records;
+  - a halo-rotated paragraph in a view-mode document is view-only (the rotation wrapper is a holder);
+  - an edit open across the flip keeps taking keys until its end writes nothing, and that Enter still moves the
+    selection down.
+- Commits: one per repo, each titled "View mode: …".
+
 ## U6 — A disabled menu row, and the overflow rows of dimmed tools (report D)
 
 **The mechanism (report D §8; this plan's rulings above).**
@@ -570,3 +609,9 @@ Time box 3 h.
   stops at `FrameWdgt.smallestExtentKeepingMyBandsUsable`, where every docked bar keeps its one-slot run and stays
   inside the window; code still forces any extent; covered by `SystemTest_macroGripStopsWhereDockedBarsStayUsable`
   (§U4, "Landed").
+
+- [x] **A sheet inside a view-mode document still takes typed entries** — a click on its cell then typing commits (A1 = 42 measured): editing, not restyling, so R8's refusal does not reach it — reachable, medium.
+  — CLOSED 2026-11-18 (overnight loop, U5; filed under `archive/docked-and-floating-toolbars-plan.md`): every door to a cell (an edit start, a commit, a clear, a drop, a drag-out) asks `sitsInViewModeContent`; covered by `SystemTest_macroViewModeSheetRefusesEditing` (§U5, "Landed").
+
+- [x] **A drawing standing bare in a view-mode document still takes paint** — its canvas holds its own mode, which the document's flip does not reach (the shape of the sheet above); found in P2 — reachable, low.
+  — CLOSED 2026-11-18 (overnight loop, U5; filed under `archive/docked-and-floating-toolbars-plan.md`): view mode is inherited downward up to the nearest window with its own edit toggle, so the drawing's own canvas no longer masks it, and its canvas stamps no drop; covered by `SystemTest_macroViewModeBareDrawingTakesNoPaint` (§U5, "Landed").

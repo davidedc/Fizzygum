@@ -224,9 +224,11 @@ class CellWdgt extends Widget
   # its real class): PLAIN payloads embed instantly (the drag-embed payload-class rule), WINDOW
   # payloads are refused — a 68x20 cell is no place for a window, and the cells panel + sheet
   # above refuse too, so a window drop falls through to the desktop. An override, not
-  # enableDrops(): the boolean flag can't discriminate payloads.
+  # enableDrops(): the boolean flag can't discriminate payloads. A cell in view-mode content
+  # (sitsInViewModeContent: its sheet in a document in view mode) takes no drop: a dropped widget is
+  # an entry, and content in view mode takes none.
   wantsDropOfChild: (aWdgt) ->
-    not aWdgt.requiresDeliberateEmbedding()
+    not aWdgt.requiresDeliberateEmbedding() and not @sitsInViewModeContent()
 
   # The drag-out enabler (the parent-side opt-in Widget.grabsToParentWhenDragged consults in
   # its solid-with-parent branch — the wantsDropOfChild-style query family): ONLY my hosted
@@ -234,9 +236,10 @@ class CellWdgt extends Widget
   # grabbable out of a cell (the generic solid-with-parent rule climbs the grab to the window;
   # the plan's "slider-only" risk framing was falsified — the blocker was class-independent).
   # The overlay editor and any other child stay solid with the cell. A loose PRESENTER is
-  # fine: grabbing a swatch out just makes the next reconcile rebuild the derived presenter.
+  # fine: grabbing a swatch out just makes the next reconcile rebuild the derived presenter. In
+  # view-mode content nothing comes out: taking the entry out would empty the cell.
   wantsDetachOfChild: (aWdgt) ->
-    aWdgt is @hostedWidget
+    aWdgt is @hostedWidget and not @sitsInViewModeContent()
 
   # The drop's recipient hook (runs inside ActivePointerWdgt.drop's single settle — all NoSettle
   # cores here, the cores-call-cores discipline its block comment requires). The dropped widget

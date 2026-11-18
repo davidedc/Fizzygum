@@ -91,6 +91,20 @@ wears its own bar.
 (`WorldWdgt.editableEditorFocus`, §5.1), and a drawing in view mode carries no tool (§4.2). A creator's click
 into a window in view mode places nothing there (its content does not take placed widgets).
 
+**Which content is in view mode** (`Widget.sitsInViewModeContent`): view mode is inherited DOWNWARD, bounded by
+windows.
+- A window that offers its own edit toggle (`FrameWdgt.offersEditToggle`, the one definition its strip's pencil
+  reads) answers alone for its content, by its mode. So an edit-mode Maker nested in a view-mode document stays
+  editable.
+- Any other mode holder in view mode makes everything in it view-only, whatever a holder nearer the widget says.
+  So a bare drawing in a view-mode document refuses paint, although its own canvas, a holder by class, keeps its
+  flag on: its surface carries no tool and its canvas stamps no drop (`StretchableCanvasWdgt.wantsDropOfChild`).
+- A sheet in a view-mode document takes no entry. Every door to a cell asks: an edit start, a commit (an edit
+  open across the flip ends without writing), a clear, a drop into a cell, a drag out of one. The arrows still
+  move its selection.
+- Typing into a field authored to take it still works in view mode (the Degrees Converter's inputs): view mode is
+  a USE mode, so no world-level or caret-level door refuses typing.
+
 ## 4. Mode tools: the holders and the paint surface
 
 ### 4.1 The holders

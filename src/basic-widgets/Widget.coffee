@@ -748,25 +748,36 @@ class Widget extends TreeNode
   isInEditMode: ->
     @dragsDropsAndEditingEnabled
 
-  # Do I sit in content in VIEW mode -- content whose editing is off, which refuses restyling
-  # whatever asks: the editing tools (WorldWdgt.editableEditorFocus) and a text's own menu, which
-  # then offers none of its editing rows (StringWdgt._addTextMenuEntries)? The content I sit in
-  # decides: the nearest of my ANCESTORS that holds an edit mode (answers providesAmenitiesForEditing
-  # true) answers by that mode (isInEditMode: a window answers its content's). The walk starts at my
-  # PARENT, so a widget that holds a mode of its own is asked about the content it stands in: a Docs
-  # Maker nested in a document and selected as an item answers to the document holding it, not to
-  # its own pencil. An ancestor answering providesAmenitiesForEditing false (a spreadsheet, a sheet's
-  # cell panel, a command panel) holds no mode and is passed over: a sheet in a document in view
-  # mode sits in view-mode content, a sheet in its own window sits in none. My ROOT is never asked:
-  # the root (on screen, the world) holds no mode for what stands on it, so a text on the desktop,
-  # with no such ancestor below the root, is never in view mode. PUBLIC query of me about myself.
+  # Do I sit in content in VIEW mode -- content whose editing is off, which refuses editing whatever
+  # asks: the editing tools (WorldWdgt.editableEditorFocus), a text's own menu, which then offers
+  # none of its editing rows (StringWdgt._addTextMenuEntries), a sheet's entries and a drawing's
+  # paint? View mode is INHERITED DOWNWARD, bounded by windows:
+  #   - a WINDOW that offers its own edit toggle (FrameWdgt.offersEditToggle) answers alone for its
+  #     content, by its mode: what stands around that window does not reach in, so an edit-mode
+  #     Maker nested in a view-mode document stays editable;
+  #   - any other ancestor that holds an edit mode (answers providesAmenitiesForEditing true) and is
+  #     in view mode makes everything in it view-only, whatever a holder nearer me says -- a canvas
+  #     or a viewport is a holder by class, with its own flag on, and must not mask the content's mode.
+  # The walk starts at my PARENT, so a widget that holds a mode of its own is asked about the content
+  # it stands in. A window with its own toggle STOPS the walk only when the walk came up through the
+  # window's CONTENTS; coming up through its chrome (its bar, its title, its docked bands) the walk
+  # passes on, so chrome answers to the content around the window -- and to the window's own view
+  # mode as well, where the window itself holds a mode (a Docs Maker is one).
+  # An ancestor answering providesAmenitiesForEditing false (a spreadsheet, a sheet's cell panel, a
+  # command panel) holds no mode and is passed over: a sheet in a document in view mode sits in
+  # view-mode content, a sheet in its own window sits in none. My ROOT is never asked: the root (on
+  # screen, the world) holds no mode for what stands on it, so a text on the desktop is never in view
+  # mode. PUBLIC query of me about myself.
   #   The selection ring's walk (WorldWdgt._widgetBeingEdited) STOPS at an ancestor answering false
   # instead, because such a container draws its own selection: that walk asks who paints the ring,
   # this one whether the content may be edited.
   sitsInViewModeContent: ->
+    cameThrough = @
     holder = @parent
     while holder?.parent?
-      return not holder.isInEditMode() if holder.providesAmenitiesForEditing is true
+      return not holder.isInEditMode() if holder.contents is cameThrough and holder.offersEditToggle?()
+      return true if holder.providesAmenitiesForEditing is true and not holder.isInEditMode()
+      cameThrough = holder
       holder = holder.parent
     false
 

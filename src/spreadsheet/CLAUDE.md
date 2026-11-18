@@ -347,7 +347,11 @@ copied sheet recommits every cell and the next drain recomputes them, as a loade
 focus:** every sheet joins `world.keyboardEventsReceivers` when built (a copy or a restore through the
 membership it carries), and `processKeyDown` acts only while that sheet is `world.editorFocusWdgt`
 and no caret is live — so of several sheets only the focused one acts (a duplicate never edits in
-lockstep), and a sheet worked on earlier never takes keys typed into another text.
+lockstep), and a sheet worked on earlier never takes keys typed into another text. **A sheet in view-mode
+content takes no entry** (`Widget.sitsInViewModeContent`: a sheet nested in a document whose window shows the
+eye; a sheet in its own window has no view mode): `_startEditNoSettle`, `_commitEditNoSettle` (an edit open
+across the flip ends without writing), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop and drag-out doors
+each ask it, while the arrows, Tab, the wheel and the zoom still act.
 
 ## Design north star (spec §9, F5, and the UX arc `docs/archive/spreadsheet-ux-plan.md`)
 

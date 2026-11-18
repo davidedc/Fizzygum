@@ -215,7 +215,7 @@ class FrameWdgt extends ClippingWdgt
     # placement owns what my strip offers, exactly as it owns my close piece. Set free on the
     # desktop I am an ordinary window again and carry the edit toggle my payload's amenities call for
     # (ruling C5).
-    pieces.push "edit" if !@_myEdgeDockSpec()? and (@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
+    pieces.push "edit" if @offersEditToggle()
 
     axis = @_barAxis()
     pieces: pieces
@@ -240,6 +240,15 @@ class FrameWdgt extends ClippingWdgt
     textHeight: @_windowTitleTextHeight()
     fontRole: theme.fonts.windowTitle
     titleStyle: "windowBar"
+
+  # Do I offer my own edit toggle -- the pencil in my strip? When my payload, or I, hold an edit mode
+  # (providesAmenitiesForEditing) and I am not a docked band (a band's strip is a grip: editing what
+  # it holds is not a band gesture). What my window strip's "edit" piece reads (_barSpec; a transient
+  # pop-up wears its own strip, with no such piece, and holds no mode anyway), and what makes me a
+  # mode BOUNDARY: a window with its own toggle answers alone for its content's view mode, whatever
+  # stands around it (Widget.sitsInViewModeContent). PUBLIC query.
+  offersEditToggle: ->
+    !@_myEdgeDockSpec()? and !!(@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
 
   # The height my window title takes in my strip: the title piece's own line height (a fitted
   # string paints its text at the TOP of the box it is granted, so the box is exactly its text and

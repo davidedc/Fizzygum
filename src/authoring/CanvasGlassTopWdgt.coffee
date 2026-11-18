@@ -104,7 +104,8 @@ class CanvasGlassTopWdgt extends CanvasWdgt
 
   # The source of the tool I should carry now, or undefined for none: none while my drawing sits in
   # view-mode content (Widget.sitsInViewModeContent: the canvas under me holds my drawing's mode, which
-  # the container coordinating it sets -- a Drawings Maker's edit toggle reaches it there), else what
+  # the container coordinating it sets -- a Drawings Maker's edit toggle reaches it there -- and view
+  # mode around the drawing reaches in too, up to the nearest window with an edit toggle), else what
   # my holder's key means now (the person's edit of that tool, else the stock one:
   # PaintToolbarWdgt.sourceForToolKey); a holder holding no key gives none.
   _sourceOfToolInReach: ->
