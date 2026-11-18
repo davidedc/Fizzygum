@@ -107,6 +107,10 @@ is stated at the size the text is set in); at any other size the pitch scales wi
   whole box inside the field less `viewPadding` at each side, so it stays visible at either edge; inside a viewport's
   plane the viewport's own follow keeps it in view instead (the two would disagree), and every follow pass reads its
   text re-fitted, so the pass run during a keystroke and the settle's confirming pass agree. A selection spans the whole line box, so a multi-line selection has no gaps.
+- A caret stands at a SLOT: a UTF-16 offset that falls between two characters as a person sees them (grapheme
+  clusters; `TextSlots` is the one definition), so an emoji or a decomposed accent is stepped over, deleted, hit,
+  selected (one plate), cropped and masked (one asterisk) whole. A slot's boundary is measured on the text as it
+  SHOWS, so a hidden text's caret stands after the asterisks.
 - Every number is a whole logical pixel, so dpr 2 doubles each exactly. The line height is part of the wrap and
   back-buffer cache keys.
 - Four roles state a line height, at the draft's values: `document` 22, `code` 18, `desktopCaption` 16, `tooltip` 16.

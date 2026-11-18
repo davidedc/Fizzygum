@@ -13,7 +13,7 @@ Status:
 
 | Unit | Item | Status |
 |---|---|---|
-| U1 | The caret steps over a character whole (emoji, the smiley) | OPEN |
+| U1 | The caret steps over a character whole (emoji, the smiley) | LANDED 2026-11-18 (§U1) |
 | U2 | The caret's remembered column is derived from its vertical run | OPEN |
 | U3 | Line ends, document ends and word jumps follow the keyboard's platform | OPEN |
 | U4 | A text menu shows its state as ticks; every editing row tested | OPEN |
@@ -162,6 +162,33 @@ mouse and finger, 4 files): the caret moves to the asterisks' width. No inspecto
 emoji; DETERMINISM.md if the segmenter's engine agreement is worth a line (R1 §C.4: identical on 13 probes).
 
 Time box 3.5 h.
+
+**Landed 2026-11-18.** `src/TextSlots.coffee` (core, class-side only) is the one definition: `spansOf`, `slotsOf`,
+`characters`, `count`, `isOneCharacter`, `slotAtOrBefore`, `slotAtOrAfter`, `isSlot`, `slotAfter`, `slotBefore`,
+`isWordCharacter` (`[\p{L}\p{N}_]`), `wordAround`, over a lazily made grapheme `Intl.Segmenter`. Every reader of §C.3
+asks it; `_gotoSlotNoSettle` reports `INVARIANT_VIOLATED` for a slot inside a character and stands at its start; and,
+from the unit's review, every PRODUCER of a slot answers one: the hit test, a string's line end and select-all
+(`slotAtOrBefore`: a crop's ellipsis can hide a character longer than itself, as in a sheet cell's editor), a
+wrapped line's end (a "\r\n" is one character), Backspace (its neighbours can join into one, two flag halves) and
+the insert's advance (`slotAtOrAfter`: a typed flag half joins the one after it). `goRight` lost `howMany` (the
+insert advances by the typed length); `String::isLetter` is deleted; `_drawTextLine` strips the invisible character at the
+one line-draw seam (TextWdgt passes its line bare), and `eliminateInvisibleCharacter` strips every one. Ruled here:
+`isOneCharacter` is a `TextSlots` member (the caret's `_typeKey` and the sheet's `_isPrintable` share it); `spansOf` is
+kept beside `slotsOf` (the hit test and the selection paint walk pairs); `_typeKey` is sanctioned as the
+keystroke dispatcher, as `_ctrl` is. The character at an offset is found by WALKING the segments
+(`TextSlots._characterAt`), never by the segments' `containing`: the first gauntlet failed both WebKit legs on the
+new test alone, and WebKit 26.4's `containing(2)` on "ab😀 cd_2" answers the "b" three units long (measured; its
+iteration is right, which is all R1 had compared). The call-separation [U] query baseline banked 104 → 103 (the
+new test reads `searchLongestFittingTextByMultiCroppingIt` from outside). Evidence: the new test passes under both
+pointers, its follower is clean, and twelve plants each fail it under both pointers (slots by unit, hit test by
+unit, mask by unit, crop by unit, coordinates by the stored text, a named key typing, a word of letters only, the
+undo dedupe by unit, and no snap on the typed join, the Backspace join, a crop's shown end and a CRLF line end); the
+crop plant needed R1's mixed text `a😀b😀c😀😀d😀` at every width (eight smileys alone never cut one in half). The presuite and the
+finger suite failed exactly the predicted `HideCharacters` image_3; its diff is the caret moving from the hidden letters' width to
+the asterisks'. The review's fix to `selectAll` then moved two churn-set tests that SHOW that method's source in an
+inspector's code pane (`InspectorCodePaneRunsAgainstItsSubject` image_3, `InspectorResizingOKEvenWhenTakenApart`
+image_2 and image_3): the shown line, and in the first a right-click at the code text's centre, which widens with it.
+Commits: one per repo, each titled "Text: a caret steps over a character whole …".
 
 ## U2 — The caret's remembered column is derived (R1 §A)
 
@@ -452,3 +479,6 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **The caret splits an emoji** — moves, deletes, clicks, selections, crops and the password mask count UTF-16 units, so 😀 is stepped into, half-deleted and masked as two stars (owner report; §U1) — reachable, medium. — CLOSED 2026-11-18 (overnight loop, U1; filed under `plans/editing-residue-plan.md`): `TextSlots`, one definition of a slot (between grapheme clusters), asked by every slot reader; `SystemTest_macroCaretStepsOverTheSmileyWhole`.
+- [x] **`eliminateInvisibleCharacter` strips only the first marker** — `String.replace` with a string pattern replaces one occurrence, so a text holding two U+2063 is measured with the second. — CLOSED 2026-11-18 (overnight loop, U1; filed under `archive/argument-holes-both-repos-plan.md`): it strips every one (`replaceAll`), and `_drawTextLine` strips them at the one line-draw seam; a password's mask pads with them.

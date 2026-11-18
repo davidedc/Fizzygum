@@ -1,9 +1,6 @@
-# A multi-line, word-wrapping String
-#
-# TODO Note that this class has problems with text that has multi-code characters, i.e. characters that for a cursor behave like a single character
-# (i.e. the cursor moves around them with one single arrow key press) BUT that, unintuitively, have .length property > 1 (e.g. "ä".length is 2)
-# this is because the code assumes that the .length property of a string is the number of characters in the string, which, as in the "ä"
-# example, is not true.
+# A multi-line, word-wrapping String. A slot is a UTF-16 offset that stands between two characters
+# (TextSlots), so a character of more than one code unit (an emoji, a decomposed "ä") is stepped over,
+# deleted, selected and hit whole.
 
 class TextWdgt extends StringWdgt
 
@@ -476,11 +473,8 @@ class TextWdgt extends StringWdgt
       lineTop = i * pitch
       i++
 
-      # you'd think that we don't need to eliminate the invisible character
-      # to draw the text, as it's supposed to be, well, invisible.
-      # Unfortunately some fonts do draw it, so we indeed have to eliminate
-      # it.
-      @_drawTextLine backBufferContext, (@eliminateInvisibleCharacter line), x, lineTop + inkOffset + textVerticalPosition
+      # the line ends with its invisible break, which _drawTextLine strips
+      @_drawTextLine backBufferContext, line, x, lineTop + inkOffset + textVerticalPosition
 
       # header line
       # NB the geometry means one wrapped line here and the whole fitting line at the
@@ -548,9 +542,12 @@ class TextWdgt extends StringWdgt
 
     if row > @wrappedLines.length
       return @textPossiblyCroppedToFit.length
-    
-    return @wrappedLineSlots[Math.max(row - 1, 0)] +
-      @slotAtSingleLineString xPosition, @wrappedLines[row - 1]
+
+    # a wrapped line ends with its invisible break, and a press past its last character picks that break's own
+    # slot (endOfLine)
+    line = @wrappedLines[row - 1]
+    start = @wrappedLineSlots[Math.max(row - 1, 0)]
+    @slotAtSingleLineString xPosition, line, start, start + line.length - 1
 
 
   pointIsAboveFirstLine: (aPoint) ->
@@ -607,9 +604,10 @@ class TextWdgt extends StringWdgt
   endOfLine: (slot) ->
     # answer the slot (index) indicating the EOL for the given slot: a wrapped line's string ends with
     # its invisible trailing break, and the EOL is that break's own slot, right after the line's last
-    # visible character
+    # visible character -- or, where that break is one character with what precedes it (a "\r\n"), that
+    # character's start (TextSlots.slotAtOrBefore)
     [row] = @slotRowAndColumn slot
-    @wrappedLineSlots[row] + @wrappedLines[row].length - 1
+    TextSlots.slotAtOrBefore @text, @wrappedLineSlots[row] + @wrappedLines[row].length - 1
 
   toggleSoftWrap: ->
     @softWrap = not @softWrap

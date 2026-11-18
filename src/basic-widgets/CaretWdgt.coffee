@@ -158,8 +158,7 @@ class CaretWdgt extends BlinkerWdgt
         when "Shift", "Alt", "CapsLock"
           return
         else
-          if !key? then console.error "INVARIANT_VIOLATED: a keystroke to insert has no key"
-          @insert key, shiftKey
+          @_typeKey key, shiftKey
 
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", key, code, shiftKey, ctrlKey, altKey, metaKey
@@ -169,6 +168,15 @@ class CaretWdgt extends BlinkerWdgt
     # end-of-cycle flush. (No-op for a nav/no-move keystroke -- see _settleScrollFollow. Typing/delete enqueue
     # off-settle here, so this is where their follow settles.)
     @_settleScrollFollow()
+
+  # A key the switch above does not name types itself only when it IS one character (TextSlots.isOneCharacter):
+  # a letter, a digit, a symbol, an emoji. Any other key arrives by its NAME ("PageDown", "F3", "Insert", the
+  # "Dead" of an accent waiting for its letter, "Unidentified"), and a name is not text.
+  _typeKey: (key, shiftKey) ->
+    # public-call-sanctioned: the keystroke DISPATCHER branch -- insert is the public typing command, one
+    # settle per discrete keystroke (the same shape as _ctrl's undo).
+    if !key? then console.error "INVARIANT_VIOLATED: a keystroke to insert has no key"
+    @insert key, shiftKey if TextSlots.isOneCharacter key
 
   processCut: (selectedText) ->
     @deleteLeft()
@@ -204,9 +212,15 @@ class CaretWdgt extends BlinkerWdgt
     # clamp slot to [0, text length].
     length = @target.text.length
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
+    # a caret never stands inside a character (TextSlots): a slot comes from TextSlots, or from a text's own
+    # answer that asks it (the hit test, a line's ends, a crop's shown end), so one that does not is a fault to
+    # report, and the caret stands at that character's start
+    unless TextSlots.isSlot @target.text, @slot
+      console.error "INVARIANT_VIOLATED: caret slot #{@slot} stands inside a character of #{@target}"
+      @slot = TextSlots.slotAtOrBefore @target.text, @slot
 
     # Scroll-follow the move ONE pass right here, DURING the event (not at paint). The pass reads its target
-    # re-fitted (see _oneScrollCaretIntoViewPassNoSettle), so in in-place TYPING too (insert -> _goRightNoSettle,
+    # re-fitted (see _oneScrollCaretIntoViewPassNoSettle), so in in-place TYPING too (insert's advance,
     # before the keystroke's _updateDimension) it lands where the flush's pass would: that pass then moves
     # nothing and confirms in one visit. One pass suffices where the follow converges immediately (e.g. a
     # single-line horizontal scroll) ...
@@ -380,15 +394,15 @@ class CaretWdgt extends BlinkerWdgt
 
   
   # Navigation keystrokes SELF-SETTLE (one flush per arrow press, during the event) -- caret navigation is not a
-  # high-traffic stream, so it does not defer its settle (see the comment on gotoSlot). goLeft / goRight are ALSO called
-  # INTERNALLY (insert -> goRight to advance past the typed char; deleteLeft -> goLeft), where the caret advance
-  # must NOT self-settle early -- its flush would converge the follow before the keystroke re-sizes the caret for
-  # the new text (_updateDimension), and the viewport's follow reads the caret's box. The advance instead
-  # enqueues the follow off-settle and lets the editing handler's tail settle it in-place once the caret is
-  # re-sized (processKeyDown -> _settleScrollFollow). So goLeft/goRight split into a self-settling public
-  # wrapper (the keystroke path) + a non-settling _go*NoSettle core (the internal path). goUp/goDown/goHome/
-  # goEnd have NO internal callers, so they self-settle inline via gotoSlot. updateSelection / clearSelectionIf...
-  # only touch selection marks (no layout). (end-of-cycle-flush-drawdown CONVERT.)
+  # high-traffic stream, so it does not defer its settle (see the comment on gotoSlot). The caret's moves inside an
+  # edit (insert advancing past what it typed, deleteLeft stepping back over what it deleted) must NOT self-settle
+  # early -- the flush would converge the follow before the keystroke re-sizes the caret for the new text
+  # (_updateDimension), and the viewport's follow reads the caret's box. They move with the non-settling
+  # _gotoSlotNoSettle, which enqueues the follow off-settle, and the editing handler's tail settles it in-place once
+  # the caret is re-sized (processKeyDown -> _settleScrollFollow). goLeft/goRight are a self-settling public wrapper
+  # (the keystroke path) around a non-settling _go*NoSettle core; goUp/goDown/goHome/goEnd self-settle inline via
+  # gotoSlot. Each step is one CHARACTER, wherever that is more than one code unit (TextSlots). updateSelection /
+  # clearSelectionIf... only touch selection marks (no layout).
   goLeft: (shift) ->
     @_settleLayoutsAfter => @_goLeftNoSettle shift
   _goLeftNoSettle: (shift) ->
@@ -397,20 +411,20 @@ class CaretWdgt extends BlinkerWdgt
       @updateSelection shift
     else
       @updateSelection shift
-      @_gotoSlotNoSettle @slot - 1
+      @_gotoSlotNoSettle TextSlots.slotBefore @target.text, @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
     @target.rememberCaretColumn @slot
 
-  goRight: (shift, howMany) ->
-    @_settleLayoutsAfter => @_goRightNoSettle shift, howMany
-  _goRightNoSettle: (shift, howMany) ->
+  goRight: (shift) ->
+    @_settleLayoutsAfter => @_goRightNoSettle shift
+  _goRightNoSettle: (shift) ->
     if !shift and @target.lastSelectedSlot()?
       @_gotoSlotNoSettle @target.lastSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
-      @_gotoSlotNoSettle @slot + (howMany || 1)
+      @_gotoSlotNoSettle TextSlots.slotAfter @target.text, @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
     @target.rememberCaretColumn @slot
@@ -525,7 +539,7 @@ class CaretWdgt extends BlinkerWdgt
       # selection saves state pre-selection-touch, letting undo return the user there; (2) before, so
       # undo lands on the position BEFORE an edit rather than jumping to the end of the prior edit,
       # matching real-editor undo semantics. In continuous typing this doesn't spam history:
-      # pushUndoState dedupes a state that is only a position change of one from the previous state.
+      # pushUndoState dedupes a state that is only a position change of one character from the previous state.
 
       @target.pushUndoState? @slot
 
@@ -543,7 +557,12 @@ class CaretWdgt extends BlinkerWdgt
       # slotCoordinates -- insert (typing + paste) is the only path that can grow inline-edited text past the
       # fit. If it hands off, the inline caret is gone, so stop here (no advance / dimension / undo to do).
       return if @target.handOffToPopoutEditorIfOverflowing()
-      @_goRightNoSettle false, key.length   # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
+      # the caret ADVANCES PAST what was typed, however many characters that is (a paste, the two spaces of a
+      # Tab): an offset, not a step, and past the whole of a character the typing joined to the one after it (a
+      # flag's second half typed before its first). setText dropped any selection. Settles at the handler's tail,
+      # NOT early (see goLeft/goRight).
+      @_gotoSlotNoSettle TextSlots.slotAtOrAfter @target.text, @slot + key.length
+      @target.rememberCaretColumn @slot
       @_updateDimension()
       @target.pushUndoState? @slot
   
@@ -569,17 +588,21 @@ class CaretWdgt extends BlinkerWdgt
       @target.deleteSelection()
     else
       text = @target.text
-      text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.setText text
-  
+      @target.setText text.slice(0, @slot) + text.slice TextSlots.slotAfter text, @slot
+
+  # Backspace deletes the character before me whole (TextSlots), and I step back over it: to where it began, or
+  # to the start of the character its two neighbours joined into once it went (two flag halves)
   deleteLeft: ->
     if @target.selection()
       @_gotoSlotNoSettle @target.firstSelectedSlot()
       @target.deleteSelection()
     else
       text = @target.text
-      @target.setText text.substring(0, @slot - 1) + text.substr(@slot)
-      @_goLeftNoSettle()   # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
+      before = TextSlots.slotBefore text, @slot
+      @target.setText text.slice(0, before) + text.slice @slot
+      # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
+      @_gotoSlotNoSettle TextSlots.slotAtOrBefore @target.text, before
+      @target.rememberCaretColumn @slot
 
     @updateSelection false
     @_gotoSlotNoSettle @slot

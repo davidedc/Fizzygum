@@ -126,9 +126,9 @@ assertion a recapture after a regression silently stores two different hashes an
   GOTCHA: a TextWdgt opens an "edit:" PROMPT (not an inline caret) when its text is CROPPED, so ENLARGE the widget
   so the demo text fits → inline caret.
 - **Double-click selects the WORD under the cursor (clean StringWdgt + wrapped TextWdgt)** (`macroDoubleClickSelectsWord`): the
-  distinct sibling of the through-the-caret entry above. `StringWdgt.doubleActivated` (`:1535`) reads the slot the prior click
-  placed (`world.caret.slot`) and expands left/right while `String.isLetter()` (`String-extensions.coffee:43-45`, `[a-z]` only —
-  spaces/punctuation/digits are boundaries) then `selectBetween()`s the contiguous letter run, so EXACTLY the word under the cursor
+  distinct sibling of the through-the-caret entry above. `StringWdgt.doubleActivated` reads the slot the prior click
+  placed (`world.caret.slot`) and asks `TextSlots.wordAround` for the word it touches (a run of characters each beginning
+  with a letter, a digit or `_` — spaces, punctuation and emoji are boundaries) then `selectBetween()`s it, so EXACTLY the word under the cursor
   selects (paper on an accent plate, `StringWdgt.drawSelection`, read at paint). TextWdgt inherits it verbatim (extends StringWdgt with no own
   `doubleActivated`), resolving the slot per WRAPPED visual line. `@doubleClickAtFractionOf_InputEvents widget, [fx,fy]` is
   self-sufficient — its FIRST click focuses + places `world.caret`, the SECOND is recognised as the double-click — so no separate prior
@@ -139,6 +139,15 @@ assertion a recapture after a regression silently stores two different hashes an
   landed on "condimentum" on the second-to-last line — eyeball which word the highlight covers; the exact word doesn't matter, a clean
   interior word does). Distinct from `macroDoubleAndTripleClickThroughCaretWdgt` (double-clicks ON the caret of a tiny pre-typed
   TextWdgt — pass-through); this proves word-granularity from a CLEAN state on a single-line StringWdgt AND wrapped text. No new verb.
+- **A character of several code units is one character: typing, stepping and aiming at an emoji**
+  (`macroCaretStepsOverTheSmileyWhole`): a caret SLOT is a UTF-16 offset between two characters as a person sees them
+  (`TextSlots`, grapheme clusters), so the smiley `String.fromCodePoint 0x1F600` (length 2) is stepped, deleted, hit,
+  selected, cropped and masked whole. Type one with `@syntheticEventsStringKeys_InputEvents smiley` (the verb sends ONE
+  keydown per character, as a keyboard does) or paste it (`@pasteText_InputEvents`); name slots from the text as always
+  — `textSlotScreenPoint` REFUSES a slot inside a character, the way a caret can never stand there. The SWCanvas fonts
+  draw 😊😀😃 as ☺ and 😢☹️ as ☹ (one glyph each), so assert the premise `txt.measureText(smiley)` equals the ☺'s. A
+  crop only cuts a character in half where half of it would fit and the whole would not: give a crop fixture letters
+  between its emoji (`'a😀b😀c😀😀d😀'`) and sweep every width, or no width reaches that case.
 - **Triple-click scoping: whole string · VISUAL line · LOGICAL line** (`macroTripleClickSelection`): WHAT a triple-click
   selects, per class and wrap regime — the triple sibling of the word entry above. `StringWdgt.tripleActivated`
   (`:1556`) is `selectAll()` + caret to the text's END: on a single-line string ANY click point selects the whole

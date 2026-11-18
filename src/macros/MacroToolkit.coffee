@@ -418,23 +418,25 @@ class MacroToolkit
       @syntheticEventsShortcutsAndSpecialKeys_InputEvents keyName, 35, t
       t += millisecondsBetweenKeys
 
+  # Types theString one CHARACTER per key press, as a keyboard sends one: an emoji is ONE keydown whose
+  # key is the emoji (TextSlots), never two keydowns of half a character each.
   syntheticEventsStringKeys_InputEvents: (theString, millisecondsBetweenKeys = 35, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     scheduledTimeOfEvent = startTime
 
-    for i in [0...theString.length]
+    for character in TextSlots.characters theString
 
-      isUpperCase = theString.charAt(i) == theString.charAt(i).toUpperCase()
+      isUpperCase = character == character.toUpperCase()
 
       if isUpperCase
         @queueInputEvent new KeydownInputEvent "Shift", "ShiftLeft", true, false, false, false, true, scheduledTimeOfEvent
         scheduledTimeOfEvent += millisecondsBetweenKeys
 
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      @queueInputEvent new KeydownInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      @queueInputEvent new KeydownInputEvent character, character, isUpperCase, false, false, false, true, scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
 
       # note that the second parameter (code) we are making up, assuming a hypothetical "1:1" key->code layout
-      @queueInputEvent new KeyupInputEvent theString.charAt(i), theString.charAt(i), isUpperCase, false, false, false, true, scheduledTimeOfEvent
+      @queueInputEvent new KeyupInputEvent character, character, isUpperCase, false, false, false, true, scheduledTimeOfEvent
       scheduledTimeOfEvent += millisecondsBetweenKeys
 
       if isUpperCase
@@ -1186,6 +1188,8 @@ class MacroToolkit
   textSlotScreenPoint: (text, slot) ->
     unless Number.isInteger(slot) and 0 <= slot <= text.text.length
       throw new Error "#{slot} is not a slot of #{text} — its slots run 0..#{text.text.length}"
+    unless TextSlots.isSlot text.text, slot
+      throw new Error "#{slot} stands inside a character of #{text} — a caret never stands there (TextSlots)"
     boundary = text.slotCoordinates slot
     lineMiddle = boundary.y + Math.floor (text.linePitch text.fittingFontSize) / 2
     for nudge in [0, -1, 1, -2, 2]

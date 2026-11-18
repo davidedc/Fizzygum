@@ -46,7 +46,6 @@ items whose arc never had a plan file are collected in `archive/backlog-closed-i
 - [ ] ⛔ **A load judges an app key's kind by the page's edited members, then returns them to boot** — a `wellKnownKey` edit passes the up-front check and empties the desktop when `resolveApp` throws; parked for the owner. → "A load judges an app key's kind by the page's edited members"
 - [ ] **A kept-source alias loses its identity on a copy and a load** — `B.g = P.f` is compiled afresh on B's copy, so `B'.g` is no longer `P'.f`; whether an alias across widgets should follow its referent is open.
 - [ ] **A copy pixel-copies every back buffer it will discard** — `_cloneContentInto` deep-copies each widget's `backBuffer` render cache (`_copyCanvas`), though the copy repaints at its first paint anyway.
-- [ ] **`eliminateInvisibleCharacter` strips only the first marker** — `String.replace` with a string pattern replaces one occurrence, so a text holding two U+2063 is measured with the second.
 - [ ] ⛔ **The Smalltalk talk plan describes a `<name>_source` field** — it says `Class.applyMemberEdit` sets `proto[memberName + "_source"]`; the source is kept with its function (`Widget.keptSourceOf`). The owner's plan.
 - [ ] **`fg recapture-inspector` recaptures a churn-set test's behaviour shots blindly** — it acts per test, so a shot proving behaviour is re-recorded with the member list's churn; by reading, low.
 - [ ] **A scrolled pane keeps its height when its content shrinks in the same settle** — after a class edit an inspector's pane stayed 9164 px where a second re-lay gives 7420; the scroll range is wrong until then.
@@ -98,7 +97,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
 ### `plans/editing-residue-plan.md` — the editing residue, fixed in one unattended loop (U1–U12; the residue items below are its units too)
-- [ ] **The caret splits an emoji** — moves, deletes, clicks, selections, crops and the password mask count UTF-16 units, so 😀 is stepped into, half-deleted and masked as two stars (owner report; §U1) — reachable, medium.
 - [ ] **A folder window offers a pencil, and in view mode refuses every drop** — folders and the bin are always in edit mode by the owner's ruling, and links to them keep taking drops in view-mode content (§U6) — reachable, low.
 
 ### `archive/toolbar-arc-residue-plan.md` — the toolbar arc's residue (✅ CLOSED 2026-11-18: U1–U7 landed, see its ledger; living truth `architecture/toolbars.md`; the items below were filed on the way)

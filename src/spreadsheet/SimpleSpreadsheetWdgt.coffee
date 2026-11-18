@@ -692,10 +692,11 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     w: @_colW()
     h: @_rowH()
 
-  # a single character that should type INTO a cell (starts / extends an edit); Arrow/Enter/etc.
-  # are multi-character key names, so length-1 excludes them. Ctrl/Cmd chords are not text.
+  # a single character that should type INTO a cell (starts / extends an edit), an emoji included;
+  # Arrow/Enter/etc. are key NAMES, several characters, so the caret's own test excludes them
+  # (TextSlots.isOneCharacter). Ctrl/Cmd chords are not text.
   _isPrintable: (key, ctrlKey, metaKey) ->
-    key? and key.length is 1 and not ctrlKey and not metaKey
+    key? and (TextSlots.isOneCharacter key) and not ctrlKey and not metaKey
 
   # standard keyboard path (§1.17): the keys are mine while I am the EDITOR FOCUS — the thing the
   # user works on, which a click in me, or my window's opening, makes me (WorldWdgt.openFrameWith) —

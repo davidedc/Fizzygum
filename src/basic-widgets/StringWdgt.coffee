@@ -505,13 +505,14 @@ class StringWdgt extends ControllerWdgt
     # pair for each insert (see comment in "insert" for why)
     # we want to actually forget the "trivial" positional
     # changes when the user is just typing, so discard the
-    # positional changes of one
+    # positional changes of one character (TextSlots: an emoji
+    # is one character, two code units)
     if @undoHistory.length > 0
       lastUndoState = @undoHistory[@undoHistory.length - 1]
       if lastUndoState.selectionStart == @startMark and
        lastUndoState.selectionEnd == @endMark and
        lastUndoState.textContent == @text and
-       Math.abs(slot - lastUndoState.cursorPos) <= 1
+       (TextSlots.count @text.slice (Math.min slot, lastUndoState.cursorPos), (Math.max slot, lastUndoState.cursorPos)) <= 1
         return
 
     # We never want three consecutive positional-only undo states -- just the
@@ -620,14 +621,11 @@ class StringWdgt extends ControllerWdgt
     textWithoutLocationOrInstanceNo = @text.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
-  obfuscateAsPassword: (letter, length) ->
-    # there is an alternative to this, using an idiom
-    # http://stackoverflow.com/a/19892144
-    # but it's clearer this way
-    ans = ""
-    for i in [0...length]
-      ans += letter
-    ans
+  # My text MASKED: one "*" per character (TextSlots). A character longer than one code unit (an emoji) pads its "*"
+  # with the invisible character every measure and paint strips (eliminateInvisibleCharacter), so the mask is
+  # exactly as long as my text (transformTextOneToOne's contract) and a slot of one is the same slot of the other.
+  obfuscateAsPassword: (theText) ->
+    ("*" + StringWdgt.INVISIBLE_CARRIAGE_RETURN.repeat(character.length - 1) for character in TextSlots.characters theText).join ""
 
   # in the weight I draw in, or in `bold` when given (my fit measures in fitBold)
   buildCanvasFontProperty: (overrideFontSize = @fittingFontSize, bold = @isBold) ->
@@ -706,7 +704,7 @@ class StringWdgt extends ControllerWdgt
   # decide whether a cropped text is still worth drawing at all: a frame bar grades its title on it
   # (ruling C13), because a title cropped to "W…" names nothing and is worse than no title.
   numberOfCharactersThatFit: ->
-    (@searchLongestFittingTextByMultiCroppingIt().replace "…", "").length
+    TextSlots.count @searchLongestFittingTextByMultiCroppingIt().replace "…", ""
 
   # what we are tyring to do here is to fit the text into
   # a boundary that potentially is too small. We are not going
@@ -753,15 +751,18 @@ class StringWdgt extends ControllerWdgt
 
       if !@doesTextFitInExtent(fittingText, @originallySetFontSize)
 
-        start = 0    # minimum string length that we are gonna examine
-        stop  = fittingText.length
+        # the search runs over CHARACTERS, never code units, so no crop cuts a character in two (an emoji's
+        # two halves): start, stop, pivot and reducing count characters, and slots[n] is where the n-th ends
+        slots = TextSlots.slotsOf fittingText
+        start = 0    # minimum number of characters that we are gonna examine
+        stop  = slots.length - 1
 
         # since we round the pivot to the floor, we
         # always end up start and pivot coinciding
         while start != (pivot = Math.floor (start + stop) / 2)
 
 
-          textAtPivot = fittingText.substring 0, pivot
+          textAtPivot = fittingText.substring 0, slots[pivot]
           itFitsAtPivot = @doesTextFitInExtent textAtPivot, @originallySetFontSize
 
           if itFitsAtPivot
@@ -775,7 +776,7 @@ class StringWdgt extends ControllerWdgt
 
         #replace the blurb we just tested with the piece of it that actually
         # fits, and that might have a crop in it.
-        if start != fittingText.length
+        if slots[start] != fittingText.length
 
           # TODO you should count the newlines
           paragraphBeforeWithNewLineHasBeenCropped = false
@@ -785,7 +786,7 @@ class StringWdgt extends ControllerWdgt
           reducing = 0
           while (start - reducing > 0) and !@doesTextFitInExtent(
               @generateTextWithEllipsis(
-                fittingText.substring(0, start - reducing)
+                fittingText.substring(0, slots[start - reducing])
                 ),
               @originallySetFontSize
               )
@@ -797,7 +798,7 @@ class StringWdgt extends ControllerWdgt
             else
               fittingText = ""
           else
-            fittingText = @generateTextWithEllipsis(fittingText.substring 0, start - reducing)
+            fittingText = @generateTextWithEllipsis(fittingText.substring 0, slots[start - reducing])
 
           if paragraphBeforeWithNewLineHasBeenCropped
             if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
@@ -835,8 +836,10 @@ class StringWdgt extends ControllerWdgt
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN
         @textPossiblyCroppedToFit = textToFit
 
+  # every invisible character goes, not only the first: a wrapped line ends with one, and a password's mask holds
+  # one per extra code unit of each character it hides (obfuscateAsPassword)
   eliminateInvisibleCharacter: (string) ->
-    string.replace StringWdgt.INVISIBLE_CARRIAGE_RETURN, ''
+    string.replaceAll StringWdgt.INVISIBLE_CARRIAGE_RETURN, ''
 
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
@@ -859,24 +862,26 @@ class StringWdgt extends ControllerWdgt
 
   # My text as it SHOWS. This must be a 1-1 transformation: the shown text is exactly as long as
   # the stored one, so a slot in one is the same slot in the other. A password shows one "*" per
-  # character and no case (an asterisk has none); any other text shows in my display case.
+  # character (obfuscateAsPassword) and no case (an asterisk has none); any other text shows in my
+  # display case.
   transformTextOneToOne: (theText) ->
-    return @obfuscateAsPassword("*", theText.length) if @isPassword
+    return @obfuscateAsPassword theText if @isPassword
     StringWdgt.inDisplayCase theText, @displayCase
 
-  # A text in a DISPLAY CASE, one character for one: "upper" capitalises every character,
-  # "sentence" the first one only, and no case leaves the text as it is. A character whose capital
-  # is longer than itself ("ß" capitalises to "SS") is kept as it is, so the result is always
-  # exactly as long as the text (transformTextOneToOne's contract).
+  # A text in a DISPLAY CASE, one character for one (TextSlots): "upper" capitalises every
+  # character, "sentence" the first one only, and no case leaves the text as it is. A character
+  # whose capital is longer than itself ("ß" capitalises to "SS") is kept as it is, so the result is
+  # always exactly as long as the text (transformTextOneToOne's contract).
   @inDisplayCase: (theText, displayCase) ->
     capitalOf = (character) ->
       capital = character.toUpperCase()
-      if capital.length is 1 then capital else character
+      if capital.length is character.length then capital else character
     switch displayCase
       when "upper"
-        (capitalOf character for character in theText).join ""
+        (capitalOf character for character in TextSlots.characters theText).join ""
       when "sentence"
-        if theText.length is 0 then theText else (capitalOf theText[0]) + theText.slice 1
+        first = TextSlots.slotAfter theText, 0
+        (capitalOf theText.slice 0, first) + theText.slice first
       else
         theText
 
@@ -1011,10 +1016,12 @@ class StringWdgt extends ControllerWdgt
 
 
   # Draw ONE complete line of text at (x, y) in my ink (_textInk, a key of my buffer too). StringWdgt's
-  # single-line paint and TextWdgt's wrapped-lines loop both draw every line through here.
+  # single-line paint and TextWdgt's wrapped-lines loop both draw every line through here, so this is
+  # where the invisible character goes (eliminateInvisibleCharacter): some fonts draw it, and the
+  # SWCanvas fonts have no glyph for it at all.
   _drawTextLine: (backBufferContext, line, x, y) ->
     backBufferContext.fillStyle = @_textInk().toString()
-    backBufferContext.fillText line, x, y
+    backBufferContext.fillText (@eliminateInvisibleCharacter line), x, y
 
   # MY INK, the ONE answer my line paint and my buffer's key both read: my own colour; while I hold
   # none, the ink my PARENT answers for me (its inkForChildText, a soft hook asked through ?(): a
@@ -1183,8 +1190,9 @@ class StringWdgt extends ControllerWdgt
   # this way. I profiled this, just see how highlighting gets slower
   # and slower as selection gets longer.
   #
-  # Each selected character's plate spans its whole line box (slotCoordinates answers the box's
-  # top), so a selection over several lines has no gaps between them.
+  # One plate per selected CHARACTER (TextSlots), however many code units it is, and each plate spans
+  # its whole line box (slotCoordinates answers the box's top), so a selection over several lines has
+  # no gaps between them.
   #   The look is the theme's, read here as I paint (so a saved or duplicated text wears the look of
   # the world it is painted in): the plate textSelectionFill, the character on it textSelectionText
   # -- a solid accent plate with paper text. The plate must stay OPAQUE: each one is a pixel wider
@@ -1192,12 +1200,13 @@ class StringWdgt extends ControllerWdgt
   # every overlap as a darker seam.
   drawSelection: (backBufferContext) ->
     startSlot = @firstSelectedSlot()
+    return unless startSlot?
     endSlot = @lastSelectedSlot()
     plateFill = WorldWdgt.theme.textSelectionFill.toString()
     characterInk = WorldWdgt.theme.textSelectionText.toString()
-    for i in [startSlot...endSlot]
-      p = @slotCoordinates(i).subtract @position()
-      c = @textPossiblyCroppedToFit.charAt(i)
+    for [from, to] in TextSlots.spansOf @text.slice startSlot, endSlot
+      p = @slotCoordinates(startSlot + from).subtract @position()
+      c = @eliminateInvisibleCharacter @textPossiblyCroppedToFit.slice startSlot + from, startSlot + to
       backBufferContext.fillStyle = plateFill
       backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText c) + 1, @linePitch @fittingFontSize
       backBufferContext.fillStyle = characterInk
@@ -1210,8 +1219,10 @@ class StringWdgt extends ControllerWdgt
     # (used to fire one here; moved to handOffToPopoutEditorIfOverflowing -- see docs/archive/layout-system-architecture-assessment.md.)
 
     # answer the position point of the given index ("slot"): its boundary, at the top of my line
-    # box (caretTopLeftAt moves it down to the caret box's top; a caret stands just right of it)
-    text = @text
+    # box (caretTopLeftAt moves it down to the caret box's top; a caret stands just right of it),
+    # measured on my text as it SHOWS -- a password's asterisks, a display case's capitals -- which is
+    # as long as my stored text, slot for slot (transformTextOneToOne)
+    text = @transformTextOneToOne @text
 
     # let's be defensive and check that the
     # slot is in the right interval
@@ -1234,42 +1245,25 @@ class StringWdgt extends ControllerWdgt
 
     new Point x, y
 
-  slotAtSingleLineString: (xPosition, text) ->
-
-    widthOfText = @calculateTextWidth text
-    textHorizontalPosition = @_textHorizontalPosition widthOfText
-
-    xPosition = xPosition - textHorizontalPosition
-    if xPosition - @left() >= widthOfText
-      if text[text.length - 1] == StringWdgt.INVISIBLE_CARRIAGE_RETURN
-        return text.length - 1
-      else
-        return text.length
-
-    # answer the slot (index) closest to the given point
-    # so the caret can be moved accordingly
-    idx = 0
-    charX = 0
-
-    # This code to pick the correct slot works but it's
-    # way too convoluted, as I arrived to this
-    # tweaking it by trial and error rather than by smarts.
-    # TODO Probably need a little patience to rewrite, I got
-    # other parts to move on to now.
-    while true
-      if charX > xPosition - @left()
-        if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
-          return idx - 1
-        break
-
-      charXMinusOne = charX
-      charX += @calculateTextWidth text[idx]
-
-      idx += 1
-      if idx is text.length
-        if ((@calculateTextWidth(text)) - ((@calculateTextWidth(text[idx-1])) / 2)) < (xPosition - @left())
-          return idx
-    idx
+  # THE SLOT OF `line` NEAREST xPosition, the hit test of a press. `line` is shown text (a password's
+  # asterisks, a display case's capitals, a crop's ellipsis) standing at lineStartSlot of my text; its
+  # characters are my STORED text's (TextSlots), each measured as it SHOWS, and the press picks the nearer
+  # boundary of the character it falls in (the later one on a tie). A press past the line's last character
+  # answers the line's end, which my caller states: the end of my one line as it shows, a wrapped line's
+  # invisible break for TextWdgt's. Every answer is a slot of my stored text (TextSlots.slotAtOrBefore): a
+  # crop's ellipsis stands for characters longer than itself, and a wrapped line's break can be one character
+  # with what precedes it (a "\r\n").
+  slotAtSingleLineString: (xPosition, line, lineStartSlot = 0, lineEndSlot = lineStartSlot + line.length) ->
+    slotAt = (offset) => TextSlots.slotAtOrBefore @text, offset
+    widthOfText = @calculateTextWidth line
+    x = xPosition - (@_textHorizontalPosition widthOfText) - @left()
+    return slotAt lineEndSlot if x >= widthOfText
+    left = 0
+    for [from, to] in TextSlots.spansOf @text.slice lineStartSlot, lineStartSlot + line.length
+      right = left + @calculateTextWidth line.slice from, to
+      return slotAt lineStartSlot + (if x - left < right - x then from else to) if right > x
+      left = right
+    slotAt lineEndSlot
 
   pointIsAboveFirstLine: (aPoint) ->
     textVerticalPosition = @_textVerticalPosition @linePitch @fittingFontSize
@@ -1283,9 +1277,9 @@ class StringWdgt extends ControllerWdgt
     textVerticalPosition = @_textVerticalPosition(@linePitch @fittingFontSize) + @linePitch(@fittingFontSize)
 
     # if pointer is below the line, the slot is at
-    # the last character.
+    # the end of my one line (endOfLine).
     if (aPoint.y - textVerticalPosition) - @top() > @linePitch @fittingFontSize
-      return @textPossiblyCroppedToFit.length
+      return @endOfLine()
 
     return false
 
@@ -1310,9 +1304,10 @@ class StringWdgt extends ControllerWdgt
     # answer the first slot (index) of the line for the given slot
     0
   
+  # the slot at the end of my one line as it SHOWS: my text's end, or, where a crop ends me in an ellipsis,
+  # the slot where the ellipsis stands, which is never inside a character it hides (TextSlots.slotAtOrBefore)
   endOfLine: ->
-    # answer the slot (index) indicating the EOL for the given slot
-    @textPossiblyCroppedToFit.length
+    TextSlots.slotAtOrBefore @text, @textPossiblyCroppedToFit.length
 
   fontSizePopout: (menuItem)->
     @prompt menuItem.parent.promptTitleAsking("font\nsize:"), @, "setFontSize",
@@ -1872,9 +1867,11 @@ class StringWdgt extends ControllerWdgt
     stop = Math.max @startMark, @endMark
     @setText @text.slice(0, start) + @text.slice(stop)
 
+  # everything that SHOWS: to my text's end, or to where a crop's ellipsis stands, never inside a character it
+  # hides (TextSlots.slotAtOrBefore)
   selectAll: ->
     @startMark = 0
-    @endMark = @textPossiblyCroppedToFit.length
+    @endMark = TextSlots.slotAtOrBefore @text, @textPossiblyCroppedToFit.length
     @_changed()
 
   # used when shift-clicking somewhere when there is
@@ -1907,28 +1904,16 @@ class StringWdgt extends ControllerWdgt
     if @startMark == @endMark
       @clearSelection()
 
-  # An EDITABLE string word-selects around the caret; a non-editable one escalates (the
-  # same else-escalate activated has always had), so a double-click on a passive label
-  # reaches the first ancestor that wants it — e.g. a spreadsheet cell's scalar-text child
-  # escalating to the CellWdgt, which starts a caret edit at the clicked slot.
+  # An EDITABLE string selects the WORD around the caret (TextSlots.wordAround: letters, digits
+  # and underscores); a non-editable one escalates (the same else-escalate activated has always
+  # had), so a double-click on a passive label reaches the first ancestor that wants it — e.g. a
+  # spreadsheet cell's scalar-text child escalating to the CellWdgt, which starts a caret edit at
+  # the clicked slot.
   doubleActivated: (pos) ->
     if @isEditable
-      previousCaretSlot = world.caret?.slot
-
-      extendRight = 0
-      while previousCaretSlot + extendRight < @text.length
-        if !@text[previousCaretSlot + extendRight].isLetter()
-          break
-        extendRight++
-
-      extendLeft = 0
-      while previousCaretSlot + extendLeft - 1 >= 0
-        if !@text[previousCaretSlot + extendLeft - 1].isLetter()
-          break
-        extendLeft--
-
-      @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
-      world.caret?.gotoSlot (previousCaretSlot + extendRight)
+      [start, end] = TextSlots.wordAround @text, world.caret?.slot
+      @selectBetween start, end
+      world.caret?.gotoSlot end
     else
       @escalateEvent "doubleActivated", pos
 
