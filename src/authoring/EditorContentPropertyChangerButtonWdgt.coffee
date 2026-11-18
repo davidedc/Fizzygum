@@ -77,7 +77,8 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   # glyph ink, or its dimmed twin while the cell I stand in holds me with nothing to act on
   # (GlassBoxBottomWdgt.holdsToolWithNothingToActOn). The cell answers for its own fill and for my ink
   # alike, so the two never disagree. Standing in no cell -- the detached copy a toolbar overflow row
-  # takes its picture of (OverflowChevronButtonWdgt._miniatureOf) -- I wear the plain ink.
+  # takes its picture of (OverflowChevronButtonWdgt._miniatureOf) -- I wear the plain ink, which the
+  # row greys while it is disabled.
   _fillForMyState: ->
     if @parent?.holdsToolWithNothingToActOn?()
       WorldWdgt.theme.toolbarGlyphDimmed

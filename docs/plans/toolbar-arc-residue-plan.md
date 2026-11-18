@@ -18,7 +18,7 @@ Status:
 | U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | PARKED 2026-11-18: owner decision (§U3) |
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | LANDED 2026-11-18 |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | LANDED 2026-11-18 |
-| U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | not started |
+| U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | LANDED 2026-11-18 |
 | U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | not started |
 | U8 | Close: this plan archived, or left open with what parked | not started |
 
@@ -517,6 +517,48 @@ enabled, and names its announcer); `MACRO-PATTERNS.md` (how to assert a disabled
 
 Time box 4 h.
 
+**Landed 2026-11-18.**
+- Built as the mechanism says:
+  - `MenuRowReflectionSpec.enabledWhile`, with an optional `announcedBy`, and `isTicked` renamed `holds`;
+  - `CommandSpec.enablement`;
+  - in `MenuItemWdgt`:
+    - `rowEnablement`, with one edge per slot (`_subscribeToWhatIShow`);
+    - `isDisabled` (live);
+    - the refusal in `activated` / `doubleActivated`;
+    - `_shownState` "atRest";
+    - the label's ink through `inkForChildText`;
+    - the copy and load hooks re-making the edges;
+  - the indicators' and the picture's `_fillForMyState`;
+  - the silhouette paint;
+  - the typed face's ink handed to its holder;
+  - `Theme.menuRowDisabledText`;
+  - the overflow rows' enablement.
+- Names chosen on the way:
+  - the enablement's lane is `_refreshRowEnablementConnector`: it applies nothing, it repaints;
+  - the parts ask `isDisabled` themselves.
+- A press on a disabled row still raises a pinned menu, as any press on a window does.
+- Test: `SystemTest_macroOverflowRowOfADimmedToolIsDisabled`, values and three shots, both pointers:
+  - every row is disabled exactly while its cell dims its tool, and Templates is enabled;
+  - a press on disabled Bold leaves the menu open;
+  - pinned and clear: the rows are greyed (image_1), enabled after a click into the paragraph (image_2), and Bold
+    works;
+  - a copy re-subscribes, and both menus grey again (image_3).
+- Bite, on both pointers unless noted:
+  - never disabled: the values;
+  - no refusal: the menu closes;
+  - no repaint: image_2 and image_3;
+  - the picture not greyed: image_1 and image_3;
+  - the copy not re-subscribed: the subscription and image_3;
+  - a hover plate: image_1, under the mouse only (a finger never hovers).
+- Followers: clean on both pointers.
+- Prediction met, test for test and shot for shot: the presuite failed exactly `macroTabletDockedToolbarChevron`
+  image_2. The diffpage and the recapture are recorded in the loop's ledger.
+- Not reached by this unit:
+  - the greyed tick and chevron (a disabled overflow row is never ticked and opens no submenu): U7's "Soft wrap"
+    row reaches them;
+  - the copy fix does not help a wire row, whose `WireSpec` a copy clones. Filed.
+- Commits: one per repo, each titled "Menus: …".
+
 ## U7 — A pinned text menu greys its editing rows in view mode (report D)
 
 **Fix.**
@@ -615,3 +657,9 @@ Time box 3 h.
 
 - [x] **A drawing standing bare in a view-mode document still takes paint** — its canvas holds its own mode, which the document's flip does not reach (the shape of the sheet above); found in P2 — reachable, low.
   — CLOSED 2026-11-18 (overnight loop, U5; filed under `archive/docked-and-floating-toolbars-plan.md`): view mode is inherited downward up to the nearest window with its own edit toggle, so the drawing's own canvas no longer masks it, and its canvas stamps no drop; covered by `SystemTest_macroViewModeBareDrawingTakesNoPaint` (§U5, "Landed").
+
+- [x] **A dimmed tool's row in a toolbar overflow menu does not look dimmed** — a menu row has no disabled look, so the row shows the tool in its plain ink while its tap is refused; ruled out of P4 (§8 "P4 rulings") — reachable, low.
+  — CLOSED 2026-11-18 (overnight loop, U6; filed under `archive/docked-and-floating-toolbars-plan.md`): a menu row can carry an
+  enablement and is then disabled — greyed, refusing its press — while it fails; an overflow row of a property tool
+  is disabled exactly while its cell dims the tool; covered by `SystemTest_macroOverflowRowOfADimmedToolIsDisabled`
+  (§U6, "Landed").

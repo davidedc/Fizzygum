@@ -19,7 +19,7 @@
 # identity -- the SecondsSource / FrameSource precedent for a non-widget source). A change here
 # ANNOUNCES with markNonValueChange, the weaker of the two verbs, because a person has no single
 # VALUE for a wire to carry: my watchers RE-READ me. They subscribe with `firesOnAnyChange`, which
-# is exactly the seam a reflecting menu row uses (MenuItemWdgt._subscribeToMyReflectedSource), one
+# is exactly the seam a reflecting menu row uses (MenuItemWdgt._subscribeToWhatIShow), one
 # level up: a row reflects a widget's property, a palette reflects a person's hand.
 #
 # ── WHAT IS AND IS NOT MINE ──────────────────────────────────────────────────────────────────

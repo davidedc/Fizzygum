@@ -64,6 +64,15 @@ class InertIconHolderWdgt extends Widget
   catchesPointerAt: (aPoint) ->
     false
 
+  # MY INK FOR MY ROW'S STATE, read as I paint: the disabled ink while the row carrying me is
+  # disabled (MenuItemWdgt.isDisabled), nothing otherwise. A raster is then painted as its
+  # silhouette in that ink (InertIconAppearance), a live typed face takes it through the icon-ink
+  # precedence (IconAppearance._iconColor); so the row of a dimmed tool shows the tool as its dimmed
+  # cell shows it. A silhouette is exact for a one-ink picture (every tool that can be disabled is one);
+  # a picture of several inks would turn into one shape of the disabled ink.
+  _fillForMyState: ->
+    WorldWdgt.theme.menuRowDisabledText  if @parent?.isDisabled?()
+
   # I am a picture, not an editing surface. The editor SELECTION walk
   # (WorldWdgt._widgetBeingEdited) climbs to the first ancestor with an OPINION, and mine is none:
   # `undefined` lets the walk pass through me to whoever is really being edited.

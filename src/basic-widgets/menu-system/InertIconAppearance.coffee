@@ -1,6 +1,8 @@
 # Paints an InertIconHolderWdgt: one blit of the raster the holder took at derive time, and
-# nothing else. No art of its own, no state, no reading of the widget beyond its picture and its
-# box -- the holder IS its picture.
+# nothing else -- or, while the holder answers an ink for its state (its row disabled:
+# InertIconHolderWdgt._fillForMyState), the raster's silhouette in that ink, made per paint
+# (HTMLCanvasElement.blackSilhouetteOf: every visible pixel in the ink, its alpha kept). No art of
+# its own -- the holder IS its picture.
 
 class InertIconAppearance extends Appearance
 
@@ -19,5 +21,7 @@ class InertIconAppearance extends Appearance
       # draws in LOGICAL pixels, so handing drawImage my logical extent maps it back one device
       # pixel to one: a blit, not a resample. Art geometry comes from the WIDGET (origin 0,0, my
       # own extent) and never from the damage box, which the scope has already clipped to.
-      ctx.drawImage @widget.raster, 0, 0, @widget.width(), @widget.height()
+      ink = @widget._fillForMyState?()
+      picture = if ink? then HTMLCanvasElement.blackSilhouetteOf @widget.raster, ink else @widget.raster
+      ctx.drawImage picture, 0, 0, @widget.width(), @widget.height()
       return

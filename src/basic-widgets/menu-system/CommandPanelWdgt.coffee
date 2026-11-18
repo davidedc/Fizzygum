@@ -213,7 +213,7 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
 
   # ── REFLECTED ROWS are not mine ─────────────────────────────────────────────────────────────
   # A row that SHOWS somebody else's value (MenuRowReflectionSpec) subscribes ITSELF to that source
-  # and re-reads it on delivery: MenuItemWdgt._subscribeToMyReflectedSource, and the
+  # and re-reads it on delivery: MenuItemWdgt._subscribeToWhatIShow, and the
   # _applyRowReflectionConnector lane the drain calls. I hold no edge and take no part — what
   # reflects is the ROW, so a row keeps showing its value wherever it goes, including out of me.
 

@@ -100,7 +100,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 ### `archive/docked-and-floating-toolbars-plan.md` — who a tool works for: a docked toolbar its host window, a floating one the person (✅ CLOSED 2026-11-17: P0–P5, see its ledger; living truth `architecture/toolbars.md`; the open items below are planned in `plans/toolbar-arc-residue-plan.md`)
 - [ ] **A text menu pinned in edit mode keeps its editing rows after a flip to view mode** — a menu is built when it opens, so a pinned one still offers Bold and the rest once its content goes to view mode, and they act — reachable, low.
 - [ ] **Choosing a context-menu row takes the editor focus, and closing the menu clears it** — the row press focuses the `MenuItemWdgt` (an ordinary menu is not editor chrome), its teardown clears the focus, so a selected paragraph is unselected — reachable, low.
-- [ ] **A dimmed tool's row in a toolbar overflow menu does not look dimmed** — a menu row has no disabled look, so the row shows the tool in its plain ink while its tap is refused; ruled out of P4 (§8 "P4 rulings") — reachable, low.
 
 ### `plans/toolbar-arc-residue-plan.md` — the toolbar arc's residue, fixed in one overnight loop (items filed on the way)
 - [ ] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low.
@@ -110,6 +109,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **The selection ring frames a drawing's paint surface after a click in view mode** — the ring asks the clicked glass's own edit flag, which no mode flip writes, so a view-mode Drawings Maker, or a bare drawing in a view-mode document, rings its surface (research C §3.3, U5) — reachable, low.
 - [ ] **A widget's base context menu still acts on view-mode content** — its rows ("Pick up", "Color…", "Resize/move…") ask no mode: "Pick up" on a widget hosted in a cell of a sheet in a view-mode document empties the cell, and "Color…" restyles past the editing tools' refusal (U5 review, read from code) — reachable, low.
 - [ ] **Other bare mode holders in view-mode content still take drops** — only a cell and a drawing's canvas ask the view mode around them, so a slide panel picked up into a Docs Maker, which is then flipped to view mode, still embeds a dropped widget (U5 review, read from code) — reachable, low.
+- [ ] **A copy of a pinned wire menu shows and drives a clone of the wire** — a wire row's source is its `WireSpec`, which a copy copies rather than shares, so the copy's "Fires per event" tick never follows the real wire and toggling it flips only the clone (U6 review, read from code) — reachable, low.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"

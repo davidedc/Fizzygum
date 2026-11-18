@@ -23,7 +23,14 @@
 #
 # CONSTRUCTOR SHAPE (docs/architecture/constructor-and-parameter-conventions.md): `source` and
 # `readerName` are the identity — WHOSE state and HOW to read it — so they stay positional; the
-# value and the label ride `opts`. Callers use the `tickWhen` door below.
+# value, the label and the announcer ride `opts`. Callers use the two doors below.
+#
+# TWO SLOTS, ONE RECORD SHAPE: a row's TICK (`tickWhen`, CommandSpec.reflection) and its ENABLEMENT
+# (`enabledWhile`, CommandSpec.enablement) are each one of these -- one condition on somebody's
+# state, re-read whenever it announces. They are two records, not one with two readers, because
+# the two can be read from different sources and announced by different producers: a row can tick
+# from one object's state and be enabled by a condition that some other producer announces.
+# `announcer` names that producer when it is not the source.
 
 class MenuRowReflectionSpec
 
@@ -31,21 +38,33 @@ class MenuRowReflectionSpec
   source: undefined
   # name of the method on `source` that answers the current value
   readerName: undefined
-  # the value that ticks the row
+  # the value the condition holds at
   whenValue: undefined
-  # what the row SAYS, ticked or not: its plain wording
+  # what the row SAYS, ticked or not: its plain wording (a tick's record only)
   label: undefined
+  # who announces a change of the value, when that is not `source` itself: the producer the row
+  # subscribes to (MenuItemWdgt._subscribeToWhatIShow); undefined means the source
+  announcer: undefined
 
   constructor: (@source, @readerName, opts = {}) ->
     @whenValue = opts.whenValue
     @label = opts.label
+    @announcer = opts.announcedBy  if opts.announcedBy?
 
-  # THE ONE DOOR: one row per choice, ticked while that choice is the current one, saying theLabel.
+  # THE TICK'S DOOR: one row per choice, ticked while that choice is the current one, saying theLabel.
   @tickWhen: (source, readerName, theValue, theLabel) ->
     new MenuRowReflectionSpec source, readerName,
       whenValue: theValue
       label: theLabel
 
-  # is the row ticked RIGHT NOW
-  isTicked: ->
+  # THE ENABLEMENT'S DOOR: the row is ENABLED exactly while `source[readerName]()` is theValue, and
+  # disabled (greyed, refusing its press) otherwise. `opts.announcedBy` names who announces the value
+  # when the source cannot.
+  @enabledWhile: (source, readerName, theValue, opts = {}) ->
+    new MenuRowReflectionSpec source, readerName,
+      whenValue: theValue
+      announcedBy: opts.announcedBy
+
+  # does the condition hold RIGHT NOW -- for a tick, the row is ticked; for an enablement, enabled
+  holds: ->
     @source[@readerName]() is @whenValue

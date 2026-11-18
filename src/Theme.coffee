@@ -89,6 +89,10 @@ class Theme
     # leading column saying the row's choice is the current one.
     @menuRowSubmenuChevron = @muted3
     @menuRowTick = @ink
+    # ... and, while the row is DISABLED (its action refused: MenuItemWdgt.isDisabled), the ONE ink of
+    # everything it draws -- its label, its tick, its chevron and its picture: the ink of a disabled
+    # button's label and of a dimmed tool's glyph. A disabled row keeps its shape and loses contrast.
+    @menuRowDisabledText = @disabledText
     # the rule a pop-up's group divider paints across its band (DividerWdgt; redesign plan §2,
     # rule D: a band painting its own rule).
     @menuDivider = @chrome

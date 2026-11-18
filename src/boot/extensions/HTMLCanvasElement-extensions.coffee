@@ -28,8 +28,8 @@ HTMLCanvasElement.createOfPhysicalDimensions = (extentPoint) ->
   canvas
 
 # Turn a canvas's pixels into a silhouette IN PLACE: every visible pixel becomes
-# `shadowColor` (the caller passes the theme's, black), per-pixel alpha (AA
-# fringes, semi-transparent content) is kept.
+# `shadowColor` (the theme's black for a shadow; blackSilhouetteOf's caller may
+# pass another ink), per-pixel alpha (AA fringes, semi-transparent content) is kept.
 # The one primitive behind the shadow-pass contract (Widget.coffee "How the
 # shadow painting works"): a shadow is the caster's per-pixel COVERAGE, chroma
 # always the shadow colour. "source-in" is a canvas-wide composite op on both
@@ -44,9 +44,11 @@ HTMLCanvasElement.blackenIntoSilhouetteInPlace = (canvas, shadowColor) ->
   ctx.fillRect 0, 0, canvas.width, canvas.height
   ctx.restore()
 
-# A NEW canvas holding the black silhouette of `sourceCanvas` (which is left
-# untouched) — for shadow passes that blit an existing buffer (island buffers,
-# a widget's BackBuffer) rather than re-painting art.
+# A NEW canvas holding the silhouette of `sourceCanvas` (which is left untouched)
+# in `shadowColor` — black for shadow passes that blit an existing buffer
+# (island buffers, a widget's BackBuffer) rather than re-painting art; any
+# other ink for a picture re-inked whole (a disabled menu row's picture,
+# InertIconAppearance).
 HTMLCanvasElement.blackSilhouetteOf = (sourceCanvas, shadowColor) ->
   sil = HTMLCanvasElement.createOfPhysicalDimensions new Point sourceCanvas.width, sourceCanvas.height
   sil.getContext("2d").drawImage sourceCanvas, 0, 0

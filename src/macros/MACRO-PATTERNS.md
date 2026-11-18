@@ -489,7 +489,12 @@ assertion a recapture after a regression silently stores two different hashes an
   `@tickedRowLabelOfMenu menu` (the plain label of the ticked row, read from the rows' tick state), a row's own
   `isTicked()` / `ticks()`, and the row's `opensSubmenu` flag (the fact its chevron shows:
   `(@rowOfMenuStandingFor menu, widget).opensSubmenu`, `(@getTextMenuItemFromMenu menu, "Attach").opensSubmenu`), each
-  through `@assertValuesEqual`.
+  through `@assertValuesEqual`. A DISABLED row is read the same way, by meaning: `row.isDisabled()` (live, the answer
+  its paint and its press read), asserted as one joined string over the menu's rows (`macroOverflowRowOfADimmedToolIsDisabled`
+  joins "<label>: disabled|enabled" and checks each row against its source's own answer). Because the value is live, it
+  cannot see a missed repaint: assert the LOOK with a screenshot, the menu set clear of anything else that repaints
+  (a premise assertion that their bounds do not intersect), and press a disabled row to show it refuses (the menu stays
+  open, nothing changes).
 - **Hierarchy menu (a non-world child)**: right-clicking a widget whose parent ≠ world opens the framework's ANCESTOR
   HIERARCHY menu (`Widget.buildContextMenu`/`buildHierarchyMenu`) — one row per ancestor that has a menu, each a
   submenu row (`opensSubmenu: true`, drawn with its chevron) reading the ancestor's human name ("Rectangle", "Window" or

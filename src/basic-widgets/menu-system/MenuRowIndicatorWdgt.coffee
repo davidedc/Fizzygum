@@ -30,3 +30,10 @@ class MenuRowIndicatorWdgt extends Widget
   # THE ROLE (see the header): something to look at, never a pointer target.
   catchesPointerAt: (aPoint) ->
     false
+
+  # MY INK FOR MY ROW'S STATE, read by my appearance as it paints (IconAppearance._iconColor, ahead
+  # of my @color): the row's disabled ink while my row is disabled (MenuItemWdgt.isDisabled), nothing
+  # otherwise, so I wear my own ink. A disabled row's tick stays, greyed: the state it reports still
+  # holds.
+  _fillForMyState: ->
+    WorldWdgt.theme.menuRowDisabledText  if @parent?.isDisabled?()

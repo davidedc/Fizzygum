@@ -55,7 +55,7 @@
 #                                out-edges declared `firesOnAnyChange`.
 #   • edge opt firesOnAnyChange  "my consumer RE-READS the producer rather than receiving its
 #                                value, so wake it for either announcement". A reflected menu row
-#                                is the shape (MenuItemWdgt._subscribeToMyReflectedSource):
+#                                is the shape (MenuItemWdgt._subscribeToWhatIShow):
 #                                the delivered value is ignored; the row re-reads via its own
 #                                reader name. Wires leave it false and stay value-only.
 #

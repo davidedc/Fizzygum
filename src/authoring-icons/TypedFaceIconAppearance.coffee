@@ -80,11 +80,13 @@ class TypedFaceIconAppearance extends IconAppearance
 
   # A PICTURE OF MY FACE THAT STAYS LIVE, for a widget that shows what my widget looks like
   # (InertIconHolderWdgt: a toolbar overflow menu's row picture): my own kind of face, worn by that
-  # widget, in the ink my face shows as the picture is taken (_iconColor), given to the picture as its
-  # own colour -- the holder's own state and colour are no ink of mine. A toolbar tool's picture is
-  # taken of a copy standing in no cell, so it wears the plain toolbar glyph ink. A raster taken once
-  # cannot be that picture: a face typed while its atlas is still loading is typed in placeholder
-  # boxes, and only a face that is typed again when the atlas lands -- the holder's own, recorded as
-  # the holder's cold draw -- shows the glyph.
+  # widget, with no colour of its own. The ink my face shows as the picture is taken (_iconColor)
+  # becomes the HOLDER's colour, so the picture paints in the holder's ink by the one icon-ink
+  # precedence: the ink its state asks for when it asks one (its row disabled), else that colour. A
+  # toolbar tool's picture is taken of a copy standing in no cell, so it wears the plain toolbar glyph
+  # ink. A raster taken once cannot be that picture: a face typed while its atlas is still loading is
+  # typed in placeholder boxes, and only a face that is typed again when the atlas lands -- the
+  # holder's own, recorded as the holder's cold draw -- shows the glyph.
   livePictureOn: (aWidget) ->
-    new @constructor aWidget, @_iconColor()
+    aWidget.setColor @_iconColor()
+    new @constructor aWidget

@@ -701,6 +701,16 @@ mark after `add` + `setExtent` adds nothing.
   the state when clicked (`toggleSoftWrap`), never an "on" or "off" chosen by the builder; a subclass
   whose toggle means more specialises the verb (`SimpleTextWdgt.toggleSoftWrap` takes its viewport with
   it) and keeps its chain's row.
+- **A row whose action can be REFUSED must DECLARE when it is enabled.** [convention] Pass an
+  `enablement:` — `MenuRowReflectionSpec.enabledWhile source, "readerName", theValue`, the second door of the
+  same record: the row is enabled exactly while `source[readerName]()` is `theValue`, and otherwise greys and
+  refuses its press (`MenuItemWdgt.isDisabled`, read live as it paints and as it is pressed, so a missed
+  announcement can only leave a stale look, never a wrong act). A row carries its tick and its enablement as two
+  records, because the two can be read from different sources. The source must be able to announce, as above,
+  or the row must be told who announces for it: `enabledWhile source, "readerName", theValue, announcedBy: aProducer`.
+  The toolbar overflow's row of a property tool is the model: enabled while its cell does not hold the tool with
+  nothing to act on (`OverflowChevronButtonWdgt.actOnClick`). Reuse the source's own question, negated through
+  `theValue`; never add a reader per row kind.
 
 ---
 

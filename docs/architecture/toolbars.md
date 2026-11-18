@@ -238,7 +238,10 @@ and the tool's ink (`EditorContentPropertyChangerButtonWdgt._fillForMyState`), s
 no cell (the detached copy an overflow row photographs) wears the plain ink. The look itself (the glyph re-inked
 `toolbarGlyphDimmed`, no hover, pressed or active fill) is in [`visual-design-system.md`](visual-design-system.md),
 "The tool cell". Only property tools dim: creators, paint tools and subject-less actions never do. An overflow
-row of a dimmed tool is not drawn dimmed; its tap is refused by the tool (`docs/BACKLOG.md`).
+row of a dimmed tool is DISABLED exactly while its cell dims the tool: its row carries the enablement
+`MenuRowReflectionSpec.enabledWhile cell, "holdsToolWithNothingToActOn", false`
+(`OverflowChevronButtonWdgt.actOnClick`), so it greys and refuses its tap, leaving the menu open, and it re-reads
+whenever the cell announces, as its tick does. The tool's own refusal stays behind it.
 
 ## 6. Creators
 

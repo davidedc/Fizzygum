@@ -50,7 +50,7 @@ class Wallpaper
 
     # Each row DECLARES that it shows my current pattern; the row is born with the right tick and
     # re-derives it whenever I announce a change, in this menu and in every other open copy
-    # (MenuItemWdgt._subscribeToMyReflectedSource). Nothing here indexes rows[1..7] any more —
+    # (MenuItemWdgt._subscribeToWhatIShow). Nothing here indexes rows[1..7] any more —
     # that hand-numbering broke the day anyone added a divider. A row SHOWS its pattern's name
     # capitalised ("Vert. stripes") -- the label it is born with and the label its reflection keeps
     # it at -- while its argument and its tick's value are the pattern name itself, the value

@@ -65,10 +65,17 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
       # gives a row with no tick.
       reflection = if tool.isActiveTool? and cell.holdsActiveTool?
         MenuRowReflectionSpec.tickWhen cell, "holdsActiveTool", true, label
+      # a tool that can have NOTHING TO ACT ON (hasSomethingToActOn, the capability its cell dims it by)
+      # is refused while it has none, and its row says so as its cell does: disabled exactly while the
+      # cell holds the tool with nothing to act on -- greyed, refusing the tap, the menu left open. The
+      # row re-reads it whenever the cell announces, as it does its tick.
+      enablement = if tool.hasSomethingToActOn? and cell.holdsToolWithNothingToActOn?
+        MenuRowReflectionSpec.enabledWhile cell, "holdsToolWithNothingToActOn", false
       menu.addMenuItem label, @, "triggerToolFromMenu",
         arg1: cell
         icon: @_miniatureOf tool
         reflection: reflection
+        enablement: enablement
     menu.popUpAtHand()
 
   # A ROW SHOWS WHAT ITS TOOL LOOKS LIKE: a picture of the tool at glyph size, beside the name.
@@ -81,8 +88,8 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # shot and is destroyed straight after: what the row keeps is a picture (InertIconHolderWdgt: pixels, or
   # for a typed face a live copy of the face's appearance, never the tool), which is also what keeps
   # the row's tap the ROW's -- a live tool held on a row would take the tap itself. The copy stands in
-  # no cell, so the picture wears the plain toolbar glyph ink even of a tool its cell shows dimmed: a
-  # menu row has no dimmed look.
+  # no cell, so the picture is taken in the plain toolbar glyph ink; a row of a dimmed tool greys it
+  # as it greys its label, while the row is disabled (InertIconHolderWdgt._fillForMyState).
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
   # costs its row its picture (its copy's refusal is told, Widget.fullCopy).
   _miniatureOf: (tool) ->
@@ -106,7 +113,8 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # drag-out thumbnail, or the tool itself where it handles its own clicks. The cell answers
   # which; clicking the wrapped tool instead leaves every lid-covered tool inert, because such a
   # tool is there to be COPIED and carries no click at all. Capability via ?() throughout, so a
-  # cell with nothing clickable in it is simply inert. A tool with nothing to act on refuses the
-  # row's tap exactly as it refuses a tap on its cell (EditorContentPropertyChangerButtonWdgt.activated).
+  # cell with nothing clickable in it is simply inert. A tool with nothing to act on never gets here:
+  # its row is disabled and refuses the tap itself (MenuItemWdgt.activated), and the tool would
+  # refuse it anyway, as it refuses a tap on its cell (EditorContentPropertyChangerButtonWdgt.activated).
   triggerToolFromMenu: (ignored, ignored2, cell) ->
     (cell.thumbnailClickReceiver?() ? cell).activated?()

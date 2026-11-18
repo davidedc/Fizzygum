@@ -65,6 +65,10 @@ class CommandSpec
   # value is the row's choice; undefined for an ordinary row. The one door to a tick: a row that
   # shows a state reads it from its owner, never from a snapshot its builder took.
   reflection: undefined
+  # a MenuRowReflectionSpec (its `enabledWhile` door) when the row's action can be REFUSED: the row is
+  # enabled exactly while that condition holds, and greyed and refusing its press otherwise; undefined
+  # for a row that is always enabled. Read from its owner as it changes, like the tick.
+  enablement: undefined
   # does the row OPEN A SUBMENU? Its builder's to state (`opensSubmenu: true`), because what an
   # action does cannot be read off its name; the row then draws its chevron. A fact about what the
   # row DOES, so it travels with the record, and the label stays its plain wording.
@@ -88,6 +92,7 @@ class CommandSpec
     @argumentToAction2 = opts.arg2
     @representsAWidget = opts.representsAWidget ? false
     @reflection = opts.reflection
+    @enablement = opts.enablement
     @opensSubmenu = opts.opensSubmenu ? false
     @kindTag = opts.kindTag
     @dimmed = opts.dimmed ? false

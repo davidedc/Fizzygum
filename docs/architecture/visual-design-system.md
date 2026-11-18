@@ -159,7 +159,9 @@ while its formula bar, toolbar and window keep theirs.
 Anything pressable has a border and rounded corners; anything that is not drops the border and changes
 shape (the clock: a round face, no border). A disabled control keeps its shape and loses contrast: no
 fill, a `chrome` outline, `disabledText` text — never a dashed outline or a grey fill. A disabled
-button (`SimpleButtonWdgt.setEnabled false`) still catches a press, and does nothing with it.
+button (`SimpleButtonWdgt.setEnabled false`) still catches a press, and does nothing with it. A disabled MENU
+ROW, which has no border, keeps its shape and loses contrast the same way: on its usual rest fill, everything it
+draws in one ink (§5, "Rows"), and its press caught and dropped.
 
 **The toggle** (`LabelledToggleWdgt`, a `SimpleButtonWdgt`) has a FIXED label and a look that says whether it
 is on: off, no fill inside a `line` border with `text2` text (hovered `desk`, pressed `chrome` inside a `frame`
@@ -207,7 +209,7 @@ pointer state (`GlassBoxBottomWdgt.holdsToolWithNothingToActOn`), and its glyph 
 (`disabledText`, the ink of a disabled button's label). Like a disabled button, it drops its hover and press look and
 refuses its press (the font tool opens no menu). Creators, paint tools and Templates never dim. The focus has ONE write (`WorldWdgt._setEditorFocusNoSettle`), and a text's style setters
 announce a change while it is the focus (`noteStyleChanged`); every toolbar hears both through its dataflow edge
-world → toolbar, so it follows in the same cycle with no timer ([`toolbars.md`](toolbars.md) §7, the refresh). A hidden active tool ticks its row in the `»` menu. It clips its tool to its rounded outline, so a press in a corner notch
+world → toolbar, so it follows in the same cycle with no timer ([`toolbars.md`](toolbars.md) §7, the refresh). A hidden active tool ticks its row in the `»` menu, and a hidden dimmed tool's row is disabled (§5, "Rows"). It clips its tool to its rounded outline, so a press in a corner notch
 falls through. Every glyph in a toolbar is `toolbarGlyph` (`ink`), a dimmed tool's `toolbarGlyphDimmed`; the overflow `»` is the drawn double chevron at
 `toolOverflowGlyphSize` (16) on the same state plate. The text toolbar's faces are B, I and `</>` typed in their
 faces' fonts, and the rest drawn as size-aware control glyphs on the » × − + weight (2 px in the 44 cell), ink only and
@@ -512,6 +514,10 @@ lifetime.
   width is a function of its rows, its title and its lifetime, never of the lifetime it had at its last add.
 - **Rows** (`MenuItemWdgt`): label 15 px `ink`, 10 px in from each side. A `desk` plate of radius 6
   over the whole row while hovered, `chrome` while pressed (`LabelButtonAppearance`), and no hairline.
+  A DISABLED row (its enablement does not hold: `MenuItemWdgt.isDisabled`, read as it paints and as it is
+  pressed) keeps its shape and loses contrast: its label, its picture (a raster as its silhouette, a typed face
+  re-inked), its tick and its chevron all in `menuRowDisabledText` (`disabledText`), no hover or press plate, its
+  rest fill, pinned grip, tooltip and wording kept. A tick stays, greyed: the state it reports still holds.
 - **Groups:** a `DividerWdgt` band between groups, 9 px with its own centred `chrome` rule.
 - **Entry field** (a prompt's, `StringFieldWdgt` + `StringFieldAppearance`): a borderless `textFieldFill` (`item`) well
   rounded at `textFieldCornerRadius` (6), read at paint; 18 tall, its text 5 px in and 2 px down, `fonts.prompt`; the

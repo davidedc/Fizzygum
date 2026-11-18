@@ -27,7 +27,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   # my MenuRowReflectionSpec when I am a VIEW of somebody else's value: whether I am TICKED is then
   # derived from that value, not fixed when I was built. undefined for an ordinary row.
   #   I SUBSCRIBE MYSELF to the source (see the constructor), because the reflection is mine and not
-  # my panel's: all of reflecting is re-reading `@rowReflection.isTicked()` on ME, through MY
+  # my panel's: all of reflecting is re-reading `@rowReflection.holds()` on ME, through MY
   # source and MY readerName. Subscribing the PANEL instead is the tempting shape and it is worse in
   # three ways — it wakes rows that reflect nothing, it needs its own dedup (several rows commonly
   # share one source: seven wallpapers, nine fonts), and it makes a row's liveness a property of
@@ -35,6 +35,12 @@ class MenuItemWdgt extends LabelButtonWdgt
   # carrying. One edge per reflecting row is at most nine, and wakes exactly the row whose value
   # moved.
   rowReflection: undefined
+
+  # my MenuRowReflectionSpec (its `enabledWhile` door) when my action can be REFUSED: I am enabled
+  # exactly while it holds, read LIVE (isDisabled) as I paint and as I am pressed, so no missed
+  # announcement can make me act wrongly; its announcement only repaints me. undefined for a row that
+  # is always enabled. Subscribed like my reflection, from its announcer (or its source).
+  rowEnablement: undefined
 
   # Do I OPEN A SUBMENU? My builder states it (addMenuItem's `opensSubmenu: true`, through
   # CommandSpec), because what my action does cannot be read off its name; I show it as a drawn
@@ -111,11 +117,12 @@ class MenuItemWdgt extends LabelButtonWdgt
     @minimumRowHeight = look.minimumHeight  if look.minimumHeight?
     @hoverColor = look.hoverFill  if look.hoverFill?
     @rowReflection = commandSpec.reflection
+    @rowEnablement = commandSpec.enablement  if commandSpec.enablement?
     @icon = commandSpec.icon
     @opensSubmenu = true  if commandSpec.opensSubmenu
     # a REFLECTING row is born showing the current value — no build-then-fix-up dance
     if @rowReflection?
-      @ticked = @rowReflection.isTicked()
+      @ticked = @rowReflection.holds()
       @_tickColumnReserved = true
     # ⚠ ONE object, so the parenthesised form: keys on the `super` line ending in a comma, with more
     # keys below, compile to TWO objects and the second is silently dropped.
@@ -144,7 +151,7 @@ class MenuItemWdgt extends LabelButtonWdgt
       representsAWidget: commandSpec.representsAWidget
     )
     @actionableAsThumbnail = true
-    @_subscribeToMyReflectedSource()
+    @_subscribeToWhatIShow()
 
   # MY LOOK, as one record my constructor reads before super: my label's font role and ink, my rest
   # fill, my two state fills and the plate they are painted as (its rounding -- absent: they cover
@@ -178,13 +185,16 @@ class MenuItemWdgt extends LabelButtonWdgt
       sideInset: theme.menuRowSideInset
       iconGap: theme.menuRowIconGap
 
-  # One edge source -> me, waking me whenever the value I show changes by ANY route (a gesture, a
-  # script, the loader, another menu). firesOnAnyChange because what I show is almost never the
-  # source's VALUE — a text's font, its soft wrap, a wire's delivery policy are none of them their
-  # owner's value — so markNonValueChange has to reach me too. I never read what is delivered; I
-  # re-read my own source through my reflection's readerName.
-  #   No dedup needed and none possible to need: I hold ONE reflection, so I make ONE edge. Several
-  # rows sharing a source (the seven wallpapers, the nine fonts) are several DISTINCT consumers.
+  # One edge per thing I show -> me: from my reflection's source (my tick) and from my enablement's
+  # announcer, or its source (my enablement), waking me whenever either changes by ANY route (a
+  # gesture, a script, the loader, another menu). firesOnAnyChange because what I show is almost
+  # never the source's VALUE — a text's font, its soft wrap, a wire's delivery policy, a tool's having
+  # something to act on are none of them their owner's value — so markNonValueChange has to reach me
+  # too. I never read what is delivered; I re-read my own records.
+  #   No dedup needed and none possible to need: one edge per record, each with its own action, and
+  # the engine keeps several records for one pair. Several rows sharing a source (the seven
+  # wallpapers, the nine fonts) are several DISTINCT consumers. Made at my construction, and again
+  # by a duplicate and a deserialized row, neither of which runs a constructor (the hooks below).
   #   Lifecycle needs nothing: Widget._destroyNoSettle calls removeAllEdgesOf, so a closed menu's
   # rows drop themselves from the producer's out-set as they are destroyed.
   #   ⚠ addEdge, NOT ensureWireEdges: that one MIRRORS a controller's wire list and drops any wire
@@ -192,9 +202,48 @@ class MenuItemWdgt extends LabelButtonWdgt
   #   ⚠ And firesOnAnyChange is what keeps me SAFE as well as what wakes me: a re-wired controller
   # drops its old wire through _removeOutgoingWireEdgesOf, which spares firesOnAnyChange records —
   # a blunter removal there would silently unsubscribe every open menu showing that controller.
-  _subscribeToMyReflectedSource: ->
-    return unless @rowReflection?.source?
-    world.dataflow.addEdge @rowReflection.source, @, action: "applyRowReflection", firesOnAnyChange: true
+  _subscribeToWhatIShow: ->
+    return unless world?.dataflow?
+    if @rowReflection?.source?
+      world.dataflow.addEdge @rowReflection.source, @, action: "applyRowReflection", firesOnAnyChange: true
+    if @rowEnablement?.source?
+      world.dataflow.addEdge (@rowEnablement.announcer ? @rowEnablement.source), @, action: "refreshRowEnablement", firesOnAnyChange: true
+    return
+
+  # the two notifications a row built without its constructor gets (Deserializer, Duplicator: both
+  # ask them through ?(), and no class above me answers either): the engine's edges are derived and
+  # never saved or copied, so I make mine again
+  _afterDeserialization: ->
+    @_subscribeToWhatIShow()
+
+  _reactToBeingCopied: ->
+    @_subscribeToWhatIShow()
+
+  # AM I DISABLED -- does my enablement not hold right now? Read LIVE, as I paint (my look, my label's
+  # ink, and my parts, which grey to menuRowDisabledText: MenuRowIndicatorWdgt and
+  # InertIconHolderWdgt._fillForMyState) and as I am pressed (activated), so my look and my refusal
+  # never disagree. false for a row with no enablement. PUBLIC: my parts and a test ask it.
+  isDisabled: ->
+    @rowEnablement? and not @rowEnablement.holds()
+
+  # A DISABLED row catches the press and does nothing with it (the SimpleButtonWdgt precedent): no
+  # action and no pop-up dismissal -- even an unpinned menu stays open. (The press itself still raises
+  # the menu, as any press on a window does: Widget.pressBegan.)
+  activated: ->
+    return if @isDisabled()
+    super
+
+  doubleActivated: ->
+    return if @isDisabled()
+    super
+
+  # MY LABEL'S INK, asked by my label as it paints (StringWdgt._textInk: my label holds no colour of
+  # its own): my disabled ink while I am disabled, else the ink I was built with (a spec's own
+  # colour, or my look's). Read at paint, so my enablement's announcement re-renders the label
+  # through its buffer key, and no ink is copied into a label a save or a copy would carry.
+  inkForChildText: (aText) ->
+    return undefined unless aText is @label
+    if @isDisabled() then WorldWdgt.theme.menuRowDisabledText else @labelColor
 
   # As a menu/list ROW I am the selectable UNIT (and I stretch FULL-WIDTH in a list), but a click lands on
   # my tight LABEL child. So the editor-focus selection frame must hug ME, not the label's text bounds
@@ -215,9 +264,9 @@ class MenuItemWdgt extends LabelButtonWdgt
   # fill: my hover plate while the pointer rests on me (ActivePointerWdgt.restsOn, never under a
   # finger), nothing otherwise -- read as I paint, so it is never kept. Out of my rest state (my list's
   # selection, or pressed) that state's own plate wins, hovered or not. A row with no hoverColor has
-  # no plate to show.
+  # no plate to show, and neither has a disabled row.
   _restPlateFill: ->
-    if @hoverColor? and world.hand.restsOn @ then @hoverColor else undefined
+    if @hoverColor? and world.hand.restsOn(@) and not @isDisabled() then @hoverColor else undefined
 
   # THE STATE MY LOOK SHOWS, read as I paint (LabelButtonAppearance, and a member row's kind tag
   # ink): the button's (ButtonWdgt._shownState) -- except as a LIST row, whose highlighted look is its
@@ -226,8 +275,10 @@ class MenuItemWdgt extends LabelButtonWdgt
   # goes, until the press ends), highlighted while my panel shows me as its list's selection
   # (CommandPanelWdgt.showsAsItsSelection), at rest otherwise. So however a press of mine ends -- a
   # click, a release somewhere else, a scroll, a lift, an abort -- the look cannot disagree with the
-  # list.
+  # list. A DISABLED row shows its rest state whatever the pointer does: no hover plate, no press
+  # plate (the dimmed tool cell's, and a disabled button's, rule).
   _shownState: ->
+    return "atRest"  if @isDisabled()
     return super()  unless @isListItem()
     return "pressed"  if world.hand.holdsPressOn @
     if @parent.showsAsItsSelection @ then "highlighted" else "atRest"
@@ -254,14 +305,14 @@ class MenuItemWdgt extends LabelButtonWdgt
   # its widest (CommandPanelWdgt, from each row's menuEntryPreferredWidth), and a row on its own keeps
   # the width it is given. Building the label sizes my height; _placeMyParts, which my _reLayoutSelf
   # runs, places it. The label renders my whole font: its family, size and weight, and the italic a
-  # list's format can ask for.
+  # list's format can ask for. It holds no colour: it paints in the ink I answer for it
+  # (inkForChildText), which my enablement can grey.
   _createLabel: ->
     @label = new TextWdgt @labelString,
       fontSize: @fontSize
       fontName: @fontStyle
       bold: @labelBold
       italic: @labelItalic
-    @label.setColor @labelColor
 
     # _addNoSettle (NOT add): _createLabel runs inside my arrange (_reLayoutSelf) or inside a relabel's
     # settle (LabelButtonWdgt._setLabelNoSettle), where a self-settle would re-enter the flush guard and
@@ -432,10 +483,18 @@ class MenuItemWdgt extends LabelButtonWdgt
   # caller runs inside a settle — the connector lane above joins the drain's.
   _applyRowReflectionNoSettle: ->
     return unless @rowReflection?
-    ticked = @rowReflection.isTicked()
+    ticked = @rowReflection.holds()
     return if ticked is @ticked
     @ticked = ticked
     @_placeMyParts()
+    @_changed()
+
+  # MY ENABLEMENT'S REACTIVE LANE, reached by the drain from my enablement edge's action like the one
+  # above: whether I am disabled is read live as I paint and as I am pressed (isDisabled), so all it
+  # takes is a REFRESH -- a repaint of me, my label and my parts, which read it as they paint. Nothing
+  # is applied and nothing moves, so no settle is joined (the tool cell's noteItemStateChanged has the
+  # same shape).
+  _refreshRowEnablementConnector: (ignored) ->
     @_changed()
 
   # As a menu entry, prefer the width of everything I show: my side insets, my tick column while it
