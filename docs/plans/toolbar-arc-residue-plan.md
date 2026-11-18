@@ -19,7 +19,7 @@ Status:
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | LANDED 2026-11-18 |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | LANDED 2026-11-18 |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | LANDED 2026-11-18 |
-| U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | not started |
+| U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | PARKED 2026-11-18: waits on U3 |
 | U8 | Close: this plan archived, or left open with what parked | not started |
 
 ---
@@ -587,6 +587,17 @@ Time box 4 h.
 needs the announcer example.
 
 Time box 3 h.
+
+**Parked 2026-11-18 (overnight loop), not started.** U7 needs U3, U5 and U6 closed. U3 is parked on an owner
+decision, so U7 waits on the same decision.
+- Why the order is not a formality: U7's test establishes the focus away from the paragraph, and U3 changes what a
+  menu press does to the focus.
+- Ready for it:
+  - U6 landed the mechanism U7 reuses: `MenuRowReflectionSpec.enabledWhile` with `announcedBy`, the disabled look
+    and the refusal;
+  - U5 landed the rule its rows reflect (`sitsInViewModeContent`).
+- What U7 would also prove: U6 cannot reach a disabled row's greyed tick or chevron (its rows are never ticked and
+  open no submenu). U7's "Soft wrap" row and the Fonts submenu row reach them, so its screenshots should show them.
 
 ## U8 — Close
 
