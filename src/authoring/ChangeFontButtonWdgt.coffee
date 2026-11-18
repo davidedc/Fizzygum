@@ -48,12 +48,6 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
       menu.popUp @_menuPopUpPoint(), world
 
-      # editor CHROME: applying a font must act on the focused text without
-      # stealing the focus pointer or ending the edit (§5.D D2a). The menu
-      # opts in at its ROOT — ancestry covers every item, so the former
-      # per-descendant stamping loop is gone.
-      menu.actsAsEditorChrome = true
-
       @fontSelectionMenuHolder.fontSelectionMenu = menu
 
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu): my items carry the font stack in arg1,

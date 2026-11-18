@@ -44,14 +44,6 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     hiddenCells = @parent?.cellsBehindTheOverflowChevron?() ? []
     return if hiddenCells.length is 0
     menu = new MenuWdgt @, target: @, title: "more tools"
-    # EDITOR CHROME, declared (Frame-model §5.D D2a, the ChangeFontButtonWdgt spelling): my rows
-    # ARE the strip's tools, and a strip's tools act ON the widget being edited -- which is why
-    # ToolbarWdgt declares the whole strip exempt, and why the overflow that stands in for part of
-    # that strip must say the same. The pointer honours the declaration by ANCESTRY, so the root
-    # menu answering covers every row, its labels and its icons; without it, opening the overflow
-    # would end the very edit its rows are about to act on. My own press is already covered: every
-    # icon button in the IconButtonWdgt family is chrome.
-    menu.actsAsEditorChrome = true
     for cell in hiddenCells
       tool = cell.glassBoxItem?() ? cell
       # The row names its tool by the tool's own word: the name it states as a tool in a panel

@@ -433,6 +433,12 @@ class WorldWdgt extends IconGridPanelWdgt
   # of widgets.
   editorFocusWdgt: undefined
 
+  # WHERE THE EDITOR FOCUS STOOD at the last look of the station that announces where it stands
+  # (_keepEditingOnScreenNoSettle): the focus with every widget above it, and whether the
+  # editing tools could act on it (editableEditorFocus). Kept only to tell when either moves.
+  _focusChainSeen: undefined
+  _focusEditableSeen: false
+
   # the world's input and text-editing state, all established in the constructor.
   #   @hand — the ONE ActivePointerWdgt: the pointer, and the carrier of whatever is being dragged.
   #   @keyboardEventsReceivers — widgets currently listening for keyboard input.
@@ -1876,11 +1882,17 @@ class WorldWdgt extends IconGridPanelWdgt
   # (ToolbarWdgt.hostWindowOf), so it is handed the focus only while the focus is in the window's
   # REACH -- its content or anything inside it (a band is not its host's content) -- and nothing
   # otherwise, wherever else the focus is. With no window (the tool works for the person: its
-  # toolbar floats, or it stands in none) the answer is the focus wherever it is. PUBLIC query; a mode
-  # flipping above the focus is announced like a new focus (noteEditModeChanged).
+  # toolbar floats, or it stands in none) the answer is the focus wherever it is.
+  #   A FOCUS ON NO SCREEN HANDS OVER NOTHING either: a paragraph filed to the bin, hidden, or standing
+  # in a collapsed window keeps the focus (a press in a menu never moves it, and putting a widget away
+  # does not clear it), but no tool acts on what the person cannot see; once it shows again, the
+  # tools act on it again. A widget the hand carries is on screen, so it still hands itself over.
+  #   PUBLIC query. Whatever moves its answer is announced like a new focus, so a tool's look follows
+  # it: the station below derives where the focus stands once per cycle.
   editableEditorFocus: (hostWindow) ->
     focus = @editorFocusWdgt
     return undefined if focus?.sitsInViewModeContent()
+    return undefined if focus?.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
     return focus unless hostWindow?
     return undefined unless focus? and hostWindow.contents?.isAncestorOf focus
     focus
@@ -1891,10 +1903,47 @@ class WorldWdgt extends IconGridPanelWdgt
   # hands over nothing, and neither does a focus outside the `hostWindow` a tool works for, when it
   # works for one (editableEditorFocus), so every tool of the family does nothing there and shows
   # inactive. PUBLIC query; its changes are the ones I announce (a new focus, noteStyleChanged,
-  # noteEditModeChanged).
+  # noteEditModeChanged, and where the focus stands: _keepEditingOnScreenNoSettle).
   editorStyleSubject: (hostWindow) ->
     focus = @editableEditorFocus hostWindow
     focus?.textStyleSubject?() ? focus
+
+  # EDITING FOLLOWS THE SCREEN: the station that keeps the two editing registers -- the caret and the
+  # editor focus -- true to what the person can see, run once per cycle by doOneCycle. Widgets leave
+  # the screen through generic tree and flag writes that know nothing of editing: a close to the bin,
+  # a hide, a collapse, a drag out of a window, a script's reparent. Hooking each of them would be a
+  # list no one could keep complete (only a widget's DEATH clears both registers at the event,
+  # Widget._destroyNoSettle), so I DERIVE instead, like the focused frame and the selection:
+  #   - AN EDIT ENDS when its text is on no screen (surelyNotShowingUp…: in the bin, hidden, in a
+  #     collapsed window). Its caret is no child of the text but of the text's container, so it would
+  #     stay blinking where the text was, and keys would still edit what the person cannot see. Ended
+  #     as a death ends it (_stopEditingNoSettle: stopped, not accepted); the focus stays, so the text
+  #     is selected again once it shows, and a click goes back to typing. A text the hand carries is
+  #     on screen, so its edit goes on.
+  #   - WHERE THE FOCUS STANDS IS ANNOUNCED. What the editing tools may act on (editableEditorFocus)
+  #     is a function of the focus, of every widget above it (which window's reach holds it, whose
+  #     content is in view mode) and of their flags (edit mode, visibility, collapse). A new focus is
+  #     announced by its one write, and a mode flip above it by the cores that write the mode
+  #     (noteEditModeChanged); for the rest, I read the focus with every widget above it, and whether
+  #     the tools may act on it, and when that differs from my last look (_focusChainSeen,
+  #     _focusEditableSeen) I announce it like a new focus. Every toolbar then re-reads
+  #     (ToolbarWdgt.noteToolStatesChanged), so a tool's LOOK follows its answer: a tool that refuses
+  #     its press never shows lit.
+  # Run just before the dataflow station, so the toolbars re-read in the cycle that moved the focus,
+  # ahead of layout and paint; the ended edit's caret leaves a layout for this cycle's flush, a
+  # deferral DECLARED as such (_deferredSettleDeclare), as the focused-frame station declares its own.
+  # One walk up from the focus; nothing without one.
+  _keepEditingOnScreenNoSettle: ->
+    if @caret?.target.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
+      @_deferredSettleDeclare => @_stopEditingNoSettle()
+    chain = @editorFocusWdgt?.allParentsBottomToTop() ? []
+    editable = @editableEditorFocus()?
+    seen = @_focusChainSeen ? []
+    return if editable is @_focusEditableSeen and chain.length is seen.length and chain.every (each, i) -> each is seen[i]
+    @_focusChainSeen = chain
+    @_focusEditableSeen = editable
+    @dataflow?.markNonValueChange @
+    return
 
   # The widget the editor-focus selection outline frames (§5.D D-3, decisions D18/D21), or undefined.
   # editorFocusWdgt is the sticky focus POINTER (the last content clicked/dropped), read first as the
@@ -1971,9 +2020,10 @@ class WorldWdgt extends IconGridPanelWdgt
     while focus.resolvesEditorSelectionToContent?()
       focus = focus.childrenNotHandlesNorCarets()?[0]
       return undefined unless focus?
-    # A menu/list ROW (MenuItemWdgt) is the selectable UNIT, and it is FULL-WIDTH in its list; but a click
-    # lands on its tight LABEL child (the deepest widget). Resolve the label up to the row so the selection
-    # frame hugs the whole entry, not the label's text bounds (owner: a tight-text frame is visual noise).
+    # A list ROW (MenuItemWdgt; a menu's rows are chrome and never selected) is the selectable UNIT, and
+    # it is FULL-WIDTH in its list; but a click lands on its tight LABEL child (the deepest widget).
+    # Resolve the label up to the row so the selection frame hugs the whole entry, not the label's text
+    # bounds (owner: a tight-text frame is visual noise).
     # A desktop icon is a unit the same way: a click on its caption's text, or on a glyph that takes the
     # pointer, selects the icon (WidgetHolderWithCaptionWdgt.absorbsDescendantEditorSelection).
     if focus.parent?.absorbsDescendantEditorSelection?()
@@ -2265,6 +2315,11 @@ class WorldWdgt extends IconGridPanelWdgt
     @progressFramePacedActions()
     
     @_runChildrensStepFunction()
+    # Keep editing true to the screen once an event, a step or a macro has put a widget away (a close,
+    # a hide, a collapse, a drag out of a window): an edit whose text left the screen ends, and where
+    # the editor focus stands is announced. HERE, after every event and step and just ahead of the
+    # dataflow station, so the toolbars re-read in this cycle.
+    @_keepEditingOnScreenNoSettle()
     # Drain the dataflow engine's stale pool (spec docs/specs/dataflow-engine-spec.md §4.1). Two
     # deliberately-parallel drain stations sit here: recalculateDataflow settles VALUES,
     # recalculateLayouts settles GEOMETRY. Placed AFTER stepping so this frame's time-source ticks
@@ -3128,6 +3183,11 @@ class WorldWdgt extends IconGridPanelWdgt
     # The station re-derives it from the restored desktop on the next cycle, and the frames a load
     # re-adds derive their look while nothing is focused, so the station's flip finds them all unfocused.
     @_focusedFrame = undefined
+    # where the editor focus stood at the station's last look holds bare refs of the same kind (the
+    # focus and every widget above it); cleared to the look of no focus, which the restored world
+    # starts from (_softResetWorld clears the focus itself).
+    @_focusChainSeen = undefined
+    @_focusEditableSeen = false
     # DANGLING APP WINDOWS. The app-window registry holds widgets that fullDestroyChildren above
     # just destroyed, so it would keep DEAD references into the next test (or, on the load path,
     # into the rest of the session). StorageSorter's furniture marking reads it unconditionally, so
@@ -3536,10 +3596,12 @@ class WorldWdgt extends IconGridPanelWdgt
     #  if !aStringWidgetOrTextWidget.parentThatIsA MenuWdgt
     #    @slide aStringWidgetOrTextWidget
   
-  # Editing can stop because of three reasons:
+  # Editing can stop because of four reasons:
   #   cancel (user hits ESC)
   #   accept (on string widget, user hits enter)
   #   user clicks/floatDrags another widget
+  #   the text leaves the screen: it dies (Widget._destroyNoSettle), or it is put away -- closed to the
+  #   bin, hidden, collapsed -- and the world's screen station ends the edit (_keepEditingOnScreenNoSettle)
   # Tearing the caret down re-fits the text it was editing, so stopEditing self-settles -- but ONLY
   # when there is a caret (no caret -> no geometry change -> no flush). The public method tears the
   # caret down via fullDestroy (which self-settles); _stopEditingNoSettle tears it down via the

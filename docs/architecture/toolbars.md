@@ -44,7 +44,9 @@ nothing: a docked toolbar never falls back to working for the person.
   `FrameGripWdgt._extentMyDragAsksOfMyTarget`). That is the person's gesture only, never a minimum: code can
   still force a window to any extent, and a window in view mode, whose bands are disengaged, has no floor.
 - **Chrome.** `ToolbarWdgt.excludedFromEditorFocusTracking` answers true: a press anywhere in a toolbar
-  neither takes nor clears the editor focus, which is what its property tools act on.
+  neither takes nor clears the editor focus, which is what its property tools act on. Every menu answers it
+  too (`MenuWdgt`, pinned or not), a toolbar's overflow menu and the Fonts menu among them, so a menu's rows
+  act on the selection without moving it. A prompt is no menu: the field a person types into takes the focus.
 
 The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet's tools), `PaintToolbarWdgt`,
 `SlidesToolbarWdgt`, `DashboardsToolbarWdgt`, `PatchProgrammingToolbarWdgt`, `PlotsToolbarWdgt`,
@@ -204,12 +206,16 @@ paint-agnostic; the logic lives on `ToolbarWdgt`, so a mixed bar transfers too.
 ONE query decides what every property tool is handed, in core (`WorldWdgt`):
 
 - `editableEditorFocus(hostWindow)`: undefined while the editor focus sits in view-mode content (the focus's own
-  `sitsInViewModeContent`), whatever the host; with no host, the focus wherever it is; with a host, the focus only
-  while `hostWindow.contents` is it or an ancestor of it.
+  `sitsInViewModeContent`), or is on no screen (`surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage`:
+  filed to the bin, hidden, in a collapsed window; a widget the hand carries is on screen), whatever the host;
+  with no host, the focus wherever it is; with a host, the focus only while `hostWindow.contents` is it or an
+  ancestor of it.
 - `editorStyleSubject(hostWindow)`: what that focus hands over, its `textStyleSubject` when it has one (a sheet
   hands over its selected cell's `SheetCellStyle`), else the focus itself.
 
-The editor focus itself stands: a click in view mode still sets it. Every reader of the subject goes through this
+The editor focus itself stands: a click in view mode still sets it, and putting the focus away (a close to the
+bin, a hide, a collapse) does not clear it, so once it shows again the tools act on it again. Every reader of the
+subject goes through this
 door: the family's `_styleSubject` (which passes `ToolbarWdgt.hostWindowOf @`), `AlignButtonWdgt`'s second
 subject, and `TextToolbarWdgt.currentFontName`, which the font menu's rows read to decide which is ticked.
 
@@ -268,7 +274,13 @@ What a tool SHOWS (active, dimmed) is read when its cell is painted; the refresh
 - **Two edges per toolbar**, made by `ToolbarWdgt._subscribeToWhatMyToolsShow` at build, after deserialization
   and after a copy (each guarded by `world.dataflow.hasEdge`, then one refresh):
   - `world → toolbar`: the editor focus moved (`WorldWdgt._setEditorFocusNoSettle`), its style moved
-    (`noteStyleChanged`), or the mode of the content holding it flipped (`noteEditModeChanged`);
+    (`noteStyleChanged`), the mode of the content holding it flipped (`noteEditModeChanged`), or where it stands
+    moved. That last one has no writer to tell it: a close to the bin, a hide, a collapse, a drag out of a window's
+    reach are generic writes that know nothing of the focus. So the world DERIVES it once per cycle, just before
+    the dataflow station (`WorldWdgt._keepEditingOnScreenNoSettle`): the focus with every widget above it, and
+    whether the door hands it over, compared with its last look. A change is announced like a new focus, so a
+    tool's look follows the door whatever moved it. The same station ends an edit whose text is on no screen, so
+    no caret is left behind and keys edit nothing the person cannot see;
   - `world.user → toolbar`: the person's hand or tool code moved (`User.armDrawingTool`, `overrideDrawingTool`,
     `replaceDrawingToolOverrides`).
 

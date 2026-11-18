@@ -567,11 +567,12 @@ mark after `add` + `setExtent` adds nothing.
   state colour at class level: a class-level declaration cannot read `Theme`, so the colour would sit
   outside the design system.
 - **Chrome opts out of editor focus.** A widget that is manipulation chrome rather than content —
-  handles, frame-bar buttons, toolbars, creator buttons — answers
+  handles, frame-bar buttons, toolbars, creator buttons, every menu (`MenuWdgt`, pinned or not) — answers
   `excludedFromEditorFocusTracking: -> true`, so clicking it neither steals the editor-focus pointer
-  nor draws the selection overlay around the chrome. A top-level window needs no opt-out: the one write
+  nor draws the selection overlay around the chrome. A prompt is no menu: the field a person types into
+  takes the focus. A top-level window needs no opt-out: the one write
   of the editor focus refuses it (focused, never selected), while everything inside it stays selectable.
-  A unit whose parts take the click (a menu row's label, a desktop icon's caption) answers
+  A unit whose parts take the click (a list row's label, a desktop icon's caption) answers
   `absorbsDescendantEditorSelection: -> true`, so a click on a part selects the unit.
 - **Two capability queries tell the hand's touch grammar about your widget**, both dispatched
   `?()` (nothing stubbed on `Widget`): `ownsDragsStartingOnMe: -> true` says a press starting on

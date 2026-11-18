@@ -51,8 +51,12 @@ const METHOD_CEILINGS = {
   Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 392 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
-  // intent-named notification, noteEditModeChanged
-  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 128 },
+  // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on
+  // the owner's request for the clean shape: _keepEditingOnScreenNoSettle, the once-per-cycle station that ends an
+  // edit whose text left the screen and announces where the editor focus stands, so a tool's look follows what it may
+  // act on whatever put the focus away (a close, a hide, a collapse, a drag out of a window), with no hook in those
+  // cores
+  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 129 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
   // raised 170 -> 171 on 2026-11-17 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
   // window is a holder of a paint tool and answers the person's pair (armedDrawingTool / armDrawingTool), offers its

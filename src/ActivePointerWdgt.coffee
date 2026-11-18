@@ -903,18 +903,17 @@ class ActivePointerWdgt extends Widget
     if world.caret?
 
       # editor CHROME keeps the caret alive (§5.D D2a): interacting with the
-      # editing apparatus (a text button, a font-menu item, a toolbar, the
-      # Console's run-selection — whose action READS the current selection) is
-      # not leaving the edit. ONE ancestry-walked capability covers them all,
-      # including a click that lands on a button's LABEL/icon face (the former
-      # self + hand-rolled parent-of check the field needed).
+      # editing apparatus (a text button, any menu's row -- the edited text's own
+      # "Run selection" READS the current selection --, a toolbar, the Console's
+      # run-selection) is not leaving the edit. ONE ancestry-walked capability
+      # covers them all, including a click that lands on a button's LABEL/icon
+      # face (the former self + hand-rolled parent-of check the field needed).
       if @_excludedFromEditorFocusTrackingByAncestry actionedWdgt
         return
 
       # There is a caret on the screen: depending on what the user clicked, we may need to close the
       # ongoing edit (delete the caret, un-select). Don't interrupt editing if the click is inside the
-      # most-recently-created popup/menu belonging to the edited text (e.g. its "Run selection" row
-      # reads the current selection).
+      # most-recently-created pop-up that is no menu (a menu is chrome, above): a prompt.
       if actionedWdgt isnt world.caret.target
         # user clicked on something other than what the
         # caret is attached to: ending an edit by acting elsewhere ACCEPTS it (caret.accept =

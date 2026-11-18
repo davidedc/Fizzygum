@@ -15,11 +15,11 @@ Status:
 |---|---|---|
 | U1 | Home and End leave the caret wrong in a multi-line text | LANDED 2026-11-17 |
 | U2 | A paint tool's miniature in a toolbar overflow menu's row draws as a stray stroke | LANDED 2026-11-18 |
-| U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | PARKED 2026-11-18: owner decision (§U3) |
+| U3 | Choosing a context-menu row takes the editor focus, and closing the menu clears it | LANDED 2026-11-18, on the owner's decision (§U3) |
 | U4 | A narrow Docs Maker's docked toolbar clips its overflow chevron | LANDED 2026-11-18 |
 | U5 | A sheet inside a view-mode document still takes typed entries; a drawing standing bare in a view-mode document still takes paint | LANDED 2026-11-18 |
 | U6 | A dimmed tool's row in a toolbar overflow menu does not look dimmed | LANDED 2026-11-18 |
-| U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | PARKED 2026-11-18: waits on U3 |
+| U7 | A text menu pinned in edit mode keeps its editing rows after a flip to view mode | OPEN: U3 landed, ready to run |
 | U8 | Close: this plan archived, or left open with what parked | DONE 2026-11-18: left open, U3 and U7 parked |
 
 ---
@@ -310,6 +310,53 @@ needs a mechanism this plan does not name.
     announces it. The plan rejected this as a close hook.
   - (c) Accept the stale look for these rows.
 - U7 needs U3, so it waits on this decision too.
+
+**Landed 2026-11-18, on the owner's decision.** The owner declined (c) and asked for the cleanest architecture; the
+measurements below found the problem larger than U3 and outside it, and one station answers all of it.
+- **Measured on the tree before U3** (`u3/probe/today-gaps.js`, `caret-gaps.js`), the same class with no menu
+  involved:
+  - collapsing the window holding the focused paragraph left the floating Bold active, and its press bolded the
+    hidden paragraph; typing went on editing it;
+  - dragging the focused paragraph out of its Docs Maker left the docked Bold painted lit while it refused (2534
+    stale pixels): the door's REACH input moves with no announcement either;
+  - with the caret in a paragraph, its own menu's Delete or Hide left the caret shown in the document and keys
+    editing the binned or hidden paragraph (the caret is a child of the text's container, not of the text).
+- **Why neither (a) nor (b).** Every one of these moves goes through a generic tree or flag write (a close, a hide,
+  a collapse, a reparent) that knows nothing of editing; hooking each is a list no one can keep complete. The
+  focused frame and the selection ring already solve the same shape by DERIVATION, once per cycle.
+- **Built:**
+  - the parked patch (every menu is chrome, the door asks `surelyNotShowingUp…`, the falsified comments trued up);
+  - `WorldWdgt._keepEditingOnScreenNoSettle`, run by `doOneCycle` after stepping and just before the dataflow
+    station: an edit whose text is on no screen ends (`_stopEditingNoSettle`, under `_deferredSettleDeclare`, as a
+    death ends it); then the focus with every widget above it, and whether the door hands it over, is compared with
+    the last look (`_focusChainSeen`, `_focusEditableSeen`) and a change is announced like a new focus;
+  - the teardown core clears the two memo fields; `WorldWdgt`'s method ceiling 128 -> 129 (dated reason in
+    `check-complexity-ratchets.js`);
+  - the caret half was the owner's choice, asked during the work ("include it").
+- `noteEditModeChanged` stays: U7 widens it to every flip for the pinned text menus' rows, whose subject is their
+  own text, not the focus. For the toolbars, a flip that changes the door is also seen by the station.
+- **Tests:** `SystemTest_macroMenuRowKeepsTheSelection` (the research's §4.5 steps, with Hide and Delete
+  screenshotted) and `SystemTest_macroEditingFollowsAParagraphOffScreen` (collapse, un-collapse, drag-out, Hide
+  with a caret). `macroViewModeTextRefusesFloatingBold` now holds the menu close to leaving the paragraph the focus;
+  `macroMouseDragScrollOfMenuRowsFiresNoRow`'s focus values now hold the chrome rule, its click-telling values are
+  the action and the menu staying open.
+- **Bite** (plants in `u3/`, both pointers, `u3/proofs.txt` and `proofs2.txt`): a menu that is no chrome, a prompt
+  that is chrome, the door blind to the screen, the station's announcement removed, and its edit-ending removed each
+  fail their test. The announcement's plant fails `macroMenuRowKeepsTheSelection` image_2/image_3 and
+  `macroEditingFollowsAParagraphOffScreen` image_1 on both pointers. Its drag-out shot (image_3) catches the
+  plant under the finger only: under the mouse something in the drag repaints the docked bar on its own (not
+  traced). That test takes each judged look before any press that would focus another window, because a window
+  gaining or losing the focus repaints its whole box, toolbar included, and hides a missing announcement.
+- Followers clean on both pointers; both tests pass at dpr 1 and 2 on both pointers.
+- **Pixels:** the presuite failed exactly the forecast's 14 tests (`u3/PREDICTED.md`), the finger suite its 12;
+  every diff is a selection ring that now persists after a menu press, or the ring gone from the dropped pinned menu
+  (measured per image: the changed pixels are the box's outline, the rotated and the clipped ring looked at;
+  `u3/diffpage`, `u3/diff-shapes.txt`). The station changed no shot of its own. The forecast's
+  `macroResizingScrollFrame…` image_3 did not change: its ringed paragraph is scrolled out of view there.
+- **Three byte-identity claims** compared a shot before a menu with one after it, and the ring the menu now keeps
+  broke them (`macroEditModeSlidingToggle` 0/2, `macroScrollPolicyNeverFlip` 2/5,
+  `macroSimpleTextScrollPanel…FromTheBottomOfContent` 2/5). None is about the selection, so each presses the bare
+  desktop before the later shot (it selects nothing) and keeps its claim; their other ring shots are recaptured.
 
 ## U4 — The resize grip stops where docked bars stay usable (report E, item 8)
 
@@ -616,7 +663,8 @@ decision, so U7 waits on the same decision.
   - §U7 waits on it.
 - BACKLOG's section for the archived toolbar plan points here for its two open items. This plan's own section
   holds the items filed on the way.
-- When U3's question is answered: run U3, then U7, then close this plan as above.
+- When U3's question is answered: run U3, then U7, then close this plan as above. (U3 landed 2026-11-18 on the
+  owner's decision; U7 is next.)
 
 ---
 

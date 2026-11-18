@@ -69,6 +69,12 @@ vocabulary below is the convention for all new code:
     that IS one, a nested item just carried out onto the desktop); the selection's one reading,
     `_widgetTheFocusSelects`, never answers one either. Focus is for the window you work IN, selection for
     the thing you work ON: everything inside a window, and a window nested as content, stays selectable.
+  - **Where the selection STANDS is derived too.** Putting a widget away (a close to the bin, a hide, a
+    collapse, a drag out of a window) leaves the selection pointing at it; what reads it goes through a door
+    that answers for what the person can see (`WorldWdgt.editableEditorFocus`), and the world compares the
+    door's inputs once per cycle and announces a change (`WorldWdgt._keepEditingOnScreenNoSettle`), ending an
+    edit whose text left the screen on the way. No close, hide or collapse core knows about editing, so every
+    way a widget leaves the screen is covered by construction, and it is selected again once it shows.
   - The bar roster follows the same derivation: transient wears its title alone (tap pins);
     a free-floating persistent frame wears close + collapse + title + an edit toggle (iff its
     payload affords editing); one whose host owns its membership drops close, since you leave

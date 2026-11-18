@@ -42,15 +42,13 @@ class MenuWdgt extends FrameWdgt
   isMenu: ->
     true
 
-  # Editor CHROME (Frame-model plan §5.D D2a): a menu acting ON the editor focus
-  # (the font-selection menu — its items apply a font to the focused text)
-  # opts in here so a click on any of its items neither steals the focus
-  # pointer nor ends the ongoing edit. Ancestry-honored, so the ROOT menu
-  # answering is enough — no per-descendant stamping (the ChangeFontButtonWdgt
-  # loop this replaced). Default undefined ⇒ ordinary menus are unaffected.
-  actsAsEditorChrome: false
+  # Every menu is editor CHROME (Frame-model plan §5.D D2a), pinned or not: its rows act ON things and
+  # are never content a person edits, so a press anywhere in a menu neither takes the editor focus nor
+  # clears it, and does not end the ongoing edit. The pointer honours this by ANCESTRY, so my answer
+  # covers my rows, their labels and icons, my dividers, my rows panel and its scroll bar. A prompt is no
+  # menu (PromptWdgt extends FrameWdgt), so the field a person types into there takes the focus.
   excludedFromEditorFocusTracking: ->
-    @actsAsEditorChrome
+    true
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
   # (P5 arg-object conversion): target / title / fontSize, each undefined when absent, and

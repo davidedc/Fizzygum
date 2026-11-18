@@ -171,14 +171,13 @@ class SheetFormulaBarWdgt extends Widget
 
   # my zoom button's action: the levels the sheet zooms to, each row ticked while it is the sheet's
   # zoom — a VIEW of the sheet (SimpleSpreadsheetWdgt.currentZoomFactor), so a pinned menu's tick
-  # follows a zoom made from another copy of it. EDITOR CHROME (the font menu's declaration, Frame-model
-  # §5.D D2a): its rows act on the sheet, which my button's press made the editor focus, so choosing a
-  # level must not take that focus away — the sheet keeps the keys.
+  # follows a zoom made from another copy of it. Its rows act on the sheet, which my button's press made
+  # the editor focus, and a menu is editor chrome (MenuWdgt.excludedFromEditorFocusTracking), so choosing
+  # a level leaves the sheet the focus — the sheet keeps the keys.
   openZoomMenu: ->
     sheet = @_sheetWidget
     return unless sheet?
     menu = new MenuWdgt @zoomButton, target: sheet, title: "Zoom"
-    menu.actsAsEditorChrome = true
     for level in sheet.ZOOM_LEVELS
       label = @_zoomLabel level
       menu.addMenuItem label, sheet, "setZoomFromMenu",
