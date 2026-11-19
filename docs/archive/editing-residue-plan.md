@@ -687,3 +687,114 @@ Time box 1 h.
 - [x] **The caret splits an emoji** — moves, deletes, clicks, selections, crops and the password mask count UTF-16 units, so 😀 is stepped into, half-deleted and masked as two stars (owner report; §U1) — reachable, medium. — CLOSED 2026-11-18 (overnight loop, U1; filed under `plans/editing-residue-plan.md`): `TextSlots`, one definition of a slot (between grapheme clusters), asked by every slot reader; `SystemTest_macroCaretStepsOverTheSmileyWhole`.
 - [x] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low. — CLOSED 2026-11-18 (overnight loop, U2; filed under `archive/toolbar-arc-residue-plan.md`): the column lives only in the caret's vertical run (`CaretWdgt._columnForVerticalMove`), which every other placement ends, never in the text; `SystemTest_macroUpAndDownLandUnderTheCaretAfterAnyMove`.
 - [x] **`eliminateInvisibleCharacter` strips only the first marker** — `String.replace` with a string pattern replaces one occurrence, so a text holding two U+2063 is measured with the second. — CLOSED 2026-11-18 (overnight loop, U1; filed under `archive/argument-holes-both-repos-plan.md`): it strips every one (`replaceAll`), and `_drawTextLine` strips them at the one line-draw seam; a password's mask pads with them.
+
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### A speech-bubble tool's overflow-row picture shows placeholder boxes
+
+- [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** (filed by the toolbar arc's review under
+      `archive/toolbar-arc-residue-plan.md`; moved to this section 2026-11-19 with the owner's ruling, and next in line).
+      THE BUG (§U10 "Landed"): a Slides or Dashboards bar's overflow row shows a 24 px picture of each hidden tool,
+      taken from a throwaway copy (`OverflowChevronButtonWdgt._miniatureOf` → `InertIconHolderWdgt._takePictureOf`) and
+      destroyed straight after. On a fresh SWCanvas page the bubble's italic text is typed before its glyph atlas
+      arrives, so the picture keeps placeholder boxes: the atlas-warm repaint goes to the copy's text, already
+      destroyed. Warm, the text still fits at no size and paints as a 9 px "ell" crop (the native page: a 5 px blur).
+      THE RULING (owner, 2026-11-19): the row pictures the bubble WITHOUT its words. At glyph size the words are
+      illegible on either backend, and a bubble with no text is the familiar speech-bubble icon. The general re-shoot
+      mechanism §U10 "Landed" designs ((1)–(3)) is NOT built.
+      THE SHAPE (proposed; settle the name at the unit): `_miniatureOf` asks the copy one optional question before
+      the holder takes its picture, e.g. `picture.prepareForGlyphPicture?()`, and `SpeechBubbleWdgt` answers by hiding
+      its `contentsWidget` on that copy. The fact lives on the tool, beside its `toolName`; neither the menu nor the
+      holder learns about bubbles. Only the copy changes: the bubble on the bar keeps its "hello". Hiding, not
+      destroying (`_reLayout` reads `@contentsWidget`) and not emptying (that runs the fitting search on "").
+      WHY IT HOLDS (read 2026-11-19): a cold glyph is recorded only at `fillText` (the wrapper in
+      `src/boot/extensions/SWCanvasElement-extensions.coffee`, and a cache hit on a poisoned entry), and a hidden child
+      never paints into `fullImage`, so the picture has nothing to go cold; measuring the hidden text during the settle
+      records nothing. The copy still has a child, so the holder takes the raster path, as today.
+      TEST: no test screenshots the bubble's row (`macroOverflowRowOfATypedLogoStaysLive` opens the same Slides
+      overflow menu, values only), so the predicted pixel set is EMPTY. The suite cannot see a cold atlas (atlases
+      are warm by then), so the new values test judges the warm picture: the bubble row is a raster with ink, equal
+      to a picture of a bubble whose text is hidden; the bar's own bubble still shows its text; a plant removing the
+      hook fails it (the warm "ell" crop differs). Follower clean, both pointers.
+      LEFT OPEN: the -1 px fitting item (this section, medium) stays filed on its own, as it reaches visible text in
+      11 tests; it no longer blocks this row. A later tool that types text from a child would show the same boxes:
+      it either drops its words at glyph size too, or that is when §U10's general mechanism is built.
+
+### `TextSlots` walks a text from its start to find the character at an offset
+
+- [ ] **`TextSlots` walks a text from its start to find the character at an offset** (filed 2026-11-19 by the owner
+      after the loop, from U1's workaround). TODAY: `TextSlots._characterAt` (`src/TextSlots.coffee`, behind
+      `slotAfter`, `slotAtOrBefore` and so `isSlot`, `slotBefore`, `slotAtOrAfter`) iterates the grapheme segments
+      from the text's start, because `Segments.prototype.containing` is wrong in WebKit before a surrogate pair (U1's
+      first gauntlet: WebKit 26.4's `containing(2)` on "ab😀 cd_2" answered the "b", three units long).
+      THE BUG is upstream and known: WebKit bug 324036, "Segments.prototype.containing(n) also includes the preceding
+      segment when code unit n starts a surrogate pair" (RESOLVED FIXED 2026-09-29, 322218@main, WebKit PR #74932;
+      listed in Safari Technology Preview 254, 2026-10-08; no stable Safari named as shipping it on 2026-11-19, and
+      the suite's Playwright WebKit 26.4 still has it). Cause: `containing(n)` asks ICU for the boundary preceding
+      `n + 1`; with `n` a lead surrogate, ICU snaps `n + 1` back to `n` and answers the boundary before it. Old Safari
+      keeps the bug after a fixed release, so a workaround stays until those versions are rare.
+      THE COST (measured 2026-11-19, a 13 KB text, offset near its end): walking 320 µs per call in WebKit 26.4 and
+      1,600 µs in V8 (Node 22), `containing` 3–5 µs; linear, so a 100 KB text costs ~15 ms per call in V8, several
+      calls per keystroke. Low today: a document holds a text per paragraph, a code pane one class member.
+      THE CHANGE (Bun's pre-upgrade workaround, oven-sh/bun PR #35001): at an emoji's LEAD surrogate, ask the same
+      character through its trail, which never trips the snap and answers the same on a fixed engine:
+      ```coffee
+      @_characterAt: (text, offset) ->
+        lead = text.charCodeAt offset
+        trail = text.charCodeAt offset + 1
+        offset += 1 if 0xD800 <= lead <= 0xDBFF and 0xDC00 <= trail <= 0xDFFF
+        (TextSlots._graphemes text).containing offset
+      ```
+      ⚠ The TRAIL check is required: a lone lead with no trail ("\uD83Dlone") is its own character, and the plain
+      lead check jumped to the "l" (measured). Probe, 2426 offsets over plain emoji, ZWJ families, flags, skin tones,
+      ☹️, a decomposed é, CRLF and lone surrogates: plain `containing` wrong at 209 in WebKit, 0 in V8; the change wrong
+      at 0 in both (`Fizzygum-tests/.scratch/containing-alternatives/probe.js`, gitignored; Playwright's Chromium is
+      not installed, so V8 was read in Node).
+      ALSO: `containing` goes back into `check-unresolved-sends.js`'s BUILTINS table, the in-file platform list (U1
+      added it, then removed it with the walk); the `TextSlots` header and `_characterAt`'s comment say why the +1 (bug 324036), and that plain
+      `containing` takes over once old Safari is rare. `slotsOf` and the word walk still iterate: they need every slot.
+      PROOF: `SystemTest_macroCaretStepsOverTheSmileyWhole` already bites on this (it failed both WebKit legs with
+      plain `containing`); plant the plain call back and see it fail under `--browser=webkit`, then the presuite and
+      the gauntlet's webkit and finger legs. Predicted pixel set EMPTY.
+
+### A text that fits at no size on SWCanvas is laid out for -1 px and painted at 9 px
+
+- [ ] **A text that fits at no size on SWCanvas is laid out for -1 px and painted at 9 px** (filed by U10 from
+      R4 §D2 / §D9 Q2; ruled by the owner 2026-11-19).
+      THE BUG: `StringWdgt.searchLargestFittingFont` looks for the largest size, from 0 up to 200, at which a text fits
+      its box; on SWCanvas it already caps the TOP at `SWCANVAS_MAX_FONT_SIZE` (96), so the size laid out is the size
+      painted. The BOTTOM is not capped. `normalizeFontForSWCanvas` (`src/boot/extensions/SWCanvasElement-extensions.coffee`)
+      raises every size under `SWCANVAS_MIN_FONT_SIZE` (9) to 9, for measuring and painting alike, so on SWCanvas "does
+      it fit at 0" asks "does it fit at 9"; a text too big at 9 makes the search answer -1. Layout then uses -1 as the
+      size (line pitch, caret, centring for a text of no height), while paint builds `italic -1px Arial`, whose `1px`
+      the adapter's regex reads without its sign and raises to 9: 9 px ink where no room was planned, cropped by the
+      box (the bubble's "ell"). The native page measures at any size, so its search finds a real small one (~5 px).
+      REACH (R4's census, `Fizzygum-tests/.scratch/overnight-editing-residue/research/R4-pictures-windows/census/`,
+      gitignored): 11 tests paint such text — plot tick labels in ~10x5 px boxes (`macroExamplesDoorsNameTheirWindows`,
+      `macroOneWindowAppsKeepTheirWindowOnTheShelf`, `macroPlotUncollapseKeepsRendering`, `macroSampleDashboardPlots`,
+      `macroSampleSlideEditViewToggle`, the three `macroStretch*` tests, some with a speech bubble too) and narrow
+      paragraphs (`macroSoftWrapping`, `macroTextWdgtShrinksToFitLongToken`, `macroTripleClickSelection`).
+      THE RULING (owner, 2026-11-19): SWCanvas supports sizes under 9 by drawing a rectangle per character. The
+      library already does: BitmapText.js scales the 9 px metrics (`InterpolatedFontMetrics`) and draws placeholder
+      rectangles for any size under its `MIN_RENDERABLE_SIZE` (9) — in the vendored bundle, `vendor/swcanvas/swcanvas.js`,
+      `forceInvalidAtlas = true; // Always use placeholders for sizes < 9`. Fizzygum's clamp is what throws it away.
+      Rejected on the way: a 9 px floor for the search (consistent, but SWCanvas would then never shrink below 9 where
+      native does); drawing nothing at -1 (blanks the 11 tests' visible text, R4 §D5).
+      THE SHAPE:
+      (1) `normalizeFontForSWCanvas` keeps its ceiling and drops its floor (sizes still snap to 0.5 px steps); the
+          header's "(>= 9)" and band wording, and the search's comment, follow.
+      (2) A draw under the minimum is SETTLED, not cold: BitmapText reports it NO_ATLAS (status 3), exactly as a
+          missing atlas, so the `fillText` wrapper would record it as a cold glyph and `swCanvasEnsureAtlasForFont`
+          would request a sub-9 atlas that never exists, re-recorded on every repaint. Below the minimum, record
+          nothing and request nothing (as PARTIAL_ATLAS already is not recorded). Later, upstream: BitmapText could
+          report "rectangles by design" with its own status.
+      (3) -1 never reaches a font string: where a box has no room even at size 0 (smaller than its own inset), the
+          search answers 0 and nothing is drawn.
+      TRADE-OFF (accepted): on the SWCanvas page any text under 9 px is rectangles, where native draws tiny real glyphs
+      (a 5 px smudge; 7-8 px nearly readable). Nothing in `src` sets a size under 9 (read 2026-11-19); a typed icon face
+      keeps its own size inside the band (`TypedFaceIconAppearance`), so icons do not change.
+      TEST: the 11 tests' shots change (rectangles at a small size instead of a cropped 9 px text): recapture under the
+      pixel policy, predicted from the census list above; the native page is unchanged. A new values test on the
+      SWCanvas page: a text in a box too small for 9 px fits at a size above 0 and under 9, its line pitch is that
+      size's, no cold glyph is recorded for it and the text settles (`world.anyTextDirty()` false); plants: the floor
+      put back (the size answers -1), the cold record kept (the text never settles).
