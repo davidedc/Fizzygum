@@ -46,7 +46,7 @@ class User
   drawingToolOverrides: undefined
 
   # THE KEYBOARD FAMILY I type on: "mac" (Cmd and Option) or "pc" (Ctrl), whose conventions every caret follows
-  # for line and document ends, word jumps, select-all and undo (CaretWdgt.chordVerbs). The page's
+  # for line and document ends, word jumps, select-all, undo and redo (CaretWdgt.chordVerbs). The page's
   # (keyboardFamilyOfThisPage), never saved with a world -- my record is an explicit one (Serializer._userRecord)
   # -- so a world saved on a Mac imposes no Cmd on a PC.
   keyboardFamily: undefined

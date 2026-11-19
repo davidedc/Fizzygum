@@ -110,7 +110,8 @@ class CaretWdgt extends BlinkerWdgt
   #     is held (Alt+Left on a PC is Left to me);
   #   - chordVerbs: each FAMILY's own chords (User.keyboardFamily), STRICT (owner ruling 2026-11-18): a Mac's
   #     Ctrl+A and Ctrl+Z, and a PC's Win+A and Win+Z, do nothing. A word jump to the right lands at the word's END
-  #     on a Mac, at the next word's START on a PC.
+  #     on a Mac, at the next word's START on a PC. Both redo with Shift and their undo chord; a PC also with
+  #     Ctrl+Y, Windows' own redo key.
   # The browser bridge asks verbFor too, to keep the browser's own default (Back on Cmd+Left, on a PC's Alt+Left;
   # the page's scroll on Home and End) off every key I act on while I am live.
   @keyVerbs:
@@ -138,6 +139,7 @@ class CaretWdgt extends BlinkerWdgt
       "Ctrl+ArrowRight": "goNextWordStart"
       "Ctrl+a": "selectAll"
       "Ctrl+z": "undo"
+      "Ctrl+y": "redo"
 
   # a chord as the tables spell it: its modifiers, then the key (a one-character key in lower case, so Shift+Cmd+Z
   # is "Meta+z" with Shift held); undefined when no Ctrl, Alt or Cmd is held
@@ -577,20 +579,26 @@ class CaretWdgt extends BlinkerWdgt
     world.stopEditing()
     target.escalateEvent 'cancel', undefined
 
-  # User presses CTRL-Z or CMD-Z, potentially with shift
+  # User presses Cmd+Z (a Mac) or Ctrl+Z (a PC); with Shift held, that redoes (redo)
   undo: (shiftKey) ->
+    return @redo() if shiftKey
     if !@target.undoHistory?
       return
 
-    if !shiftKey
-      if @target.undoHistory.length > 1
-        @target.popUndoState()
-        undoState = @target.undoHistory[@target.undoHistory.length - 1]
-        @bringTextAndCaretToState undoState
-    else
-      redoState = @target.popRedoState()
-      if redoState?
-        @bringTextAndCaretToState redoState
+    if @target.undoHistory.length > 1
+      @target.popUndoState()
+      undoState = @target.undoHistory[@target.undoHistory.length - 1]
+      @bringTextAndCaretToState undoState
+
+  # User presses Shift with the undo chord, or Ctrl+Y on a PC (chordVerbs): the last undone state comes back
+  # (Shift changes nothing)
+  redo: (shift) ->
+    if !@target.undoHistory?
+      return
+
+    redoState = @target.popRedoState()
+    if redoState?
+      @bringTextAndCaretToState redoState
 
   bringTextAndCaretToState: (state) ->
     # gotoSlot is the designed public one-settle caret-move entry; an undo/redo restore is a

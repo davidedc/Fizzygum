@@ -669,6 +669,8 @@ Time box 1 h.
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
+- [x] **No Ctrl+Y redo on a PC** — a PC's caret redoes only with Ctrl+Shift+Z; Windows' Ctrl+Y is not in `CaretWdgt.chordVerbs` (owner ruling 2026-11-19: add it; plan §U3) — reachable, low. — CLOSED 2026-11-19 (follow-ups loop, F3; filed under `archive/editing-residue-plan.md`): `CaretWdgt.chordVerbs.pc` maps `Ctrl+y` to a `redo` verb of its own, which undo with Shift held calls too; `SystemTest_macroCtrlYRedoesOnAPC`.
+
 - [x] **A text that fits at no size on SWCanvas is laid out for -1 px and painted at 9 px** (filed by U10 from
       R4 §D2 / §D9 Q2; ruled by the owner 2026-11-19).
       THE BUG: `StringWdgt.searchLargestFittingFont` looks for the largest size, from 0 up to 200, at which a text fits
