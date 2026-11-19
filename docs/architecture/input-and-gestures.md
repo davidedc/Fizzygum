@@ -467,10 +467,13 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   with neither held; a Mac's Option types without Ctrl. Synthetic keystrokes carry their key as their
   code (`MacroToolkit.syntheticEventsShortcutsAndSpecialKeys_InputEvents`), so a test of this rule
   queues `KeydownInputEvent`s with real codes.
-- The caret's keystroke handling and the browser bridge both read it: while a caret is live, every
-  key it acts on as a command has its browser default kept off, on the canvas and on the virtual
-  keyboard's input alike (`BrowserInputBridge._caretActsOnAsCommand`: Back on a Mac's Cmd+Left and a
-  PC's Alt+Left, the page's scroll on Home and End); typing is never prevented.
+- The caret's keystroke handling reads it, and so, through the caret, does the browser bridge: every key
+  a keyboard receiver acts on as a command has its browser default kept off, on the canvas and on the
+  virtual keyboard's input alike (`BrowserInputBridge._aKeyboardReceiverActsOnAsCommand` asks each
+  receiver's `actsOnKeyAsCommand`: the world's live caret's verbs through `verbFor`; a spreadsheet's
+  arrows while it is the focus in selection mode, which it moves on whatever modifier is held). That keeps off Back on a
+  Mac's Cmd+Left and a PC's Alt+Left, and the page's scroll on the arrows, Home and End; typing is never
+  prevented.
 - The test harness pins "mac" on every test's world (`WorldTestSupport._afterWorldResetNoSettle`), as
   it pins the screen's extent; a test exercises a PC by setting `world.user.keyboardFamily = "pc"`. That
   the prevention stops a headed browser's Back is a hand check: a headless browser has no accelerators.

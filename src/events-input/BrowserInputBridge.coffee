@@ -95,10 +95,10 @@ class BrowserInputBridge
       @world.inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
 
       # the browser's own default is kept off: Backspace (in several browsers the "back button"), Tab (so every
-      # browser hands it to us rather than moving the focus), and every key the caret acts on as a command
-      # (_caretActsOnAsCommand), as on my canvas. The key is read as the canvas's own keydown listener reads it, by
-      # `event.key`.
-      event.preventDefault() if event.key in ["Backspace", "Tab"] or @_caretActsOnAsCommand event
+      # browser hands it to us rather than moving the focus), and every key a keyboard receiver acts on as a command
+      # (_aKeyboardReceiverActsOnAsCommand), as on my canvas. The key is read as the canvas's own keydown listener
+      # reads it, by `event.key`.
+      event.preventDefault() if event.key in ["Backspace", "Tab"] or @_aKeyboardReceiverActsOnAsCommand event
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
@@ -214,7 +214,7 @@ class BrowserInputBridge
   #   keypress event (just the keydown comes), which is why the keydown processes the space (stopPropagation
   #   instead, or as well, did not work);
   # - Tab on my canvas: browsers do special things with it;
-  # - while a caret is live, every key it acts on as a COMMAND (_caretActsOnAsCommand).
+  # - every key a keyboard receiver acts on as a COMMAND (_aKeyboardReceiverActsOnAsCommand).
   _keydownDefaultIsPrevented: (event) ->
     if event.key == "Backspace"
       d = event.srcElement or event.target
@@ -222,14 +222,16 @@ class BrowserInputBridge
       inATextField = (tag == 'INPUT' and d.type.toUpperCase() in ['TEXT', 'PASSWORD', 'FILE', 'SEARCH', 'EMAIL', 'NUMBER', 'DATE']) or tag == 'TEXTAREA'
       return if inATextField then (d.readOnly or d.disabled) else true
     return true if event.target == @world.worldCanvas and event.key in [" ", "Tab"]
-    @_caretActsOnAsCommand event
+    @_aKeyboardReceiverActsOnAsCommand event
 
-  # whether a live caret acts on this key as a COMMAND, so that the browser's own default must stay off it, whichever
-  # of my two listeners (my canvas's, the virtual keyboard's input) it reaches: Cmd+Left is Back to a Mac browser,
-  # Alt+Left to a PC's, Home and End scroll the page. CaretWdgt.verbFor is the one definition of those keys, which
-  # the caret's own keystroke handling reads too; typing is never one of them.
-  _caretActsOnAsCommand: (event) ->
-    @world.caret? and (CaretWdgt.verbFor event.key, event.ctrlKey, event.altKey, event.metaKey, @world.user.keyboardFamily)?
+  # whether a keyboard receiver (world.keyboardEventsReceivers) acts on this key as a COMMAND, so that the browser's own
+  # default must stay off it, whichever of my two listeners (my canvas's, the virtual keyboard's input) it reaches:
+  # Cmd+Left is Back to a Mac browser, Alt+Left to a PC's, the arrows, Home and End scroll the page. Each receiver
+  # answers for itself (actsOnKeyAsCommand): a live caret through CaretWdgt.verbFor, the one definition its own
+  # keystroke handling reads too; a spreadsheet in selection mode for the arrows it moves on. Typing is never one.
+  _aKeyboardReceiverActsOnAsCommand: (event) ->
+    Array.from(@world.keyboardEventsReceivers).some (receiver) ->
+      receiver.actsOnKeyAsCommand?(event.key, event.ctrlKey, event.altKey, event.metaKey) is true
 
   _initKeyboardEventListeners: ->
     canvas = @world.worldCanvas

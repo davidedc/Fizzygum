@@ -713,7 +713,7 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # early-return-sanctioned: every key reaches every receiver, and a key that is not mine must
     # not open a settle.
-    return unless world.editorFocusWdgt is @ and not world.caret?
+    return unless @_keysAreMine()
     @_settleLayoutsAfter =>
       # a DANGLING edit — the caret was torn down by a path that fires no accept/cancel (a mid-edit
       # grab, a subtree teardown) — self-heals: commit what was typed, then handle this key normally
@@ -721,6 +721,27 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
       @_commitEditNoSettle() if @_editing
       @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
     return
+
+  # whether the keys are mine (processKeyDown, above): I am the editor focus and no caret is live
+  _keysAreMine: ->
+    world.editorFocusWdgt is @ and not world.caret?
+
+  # the arrows I move my selection on in SELECTION mode, whatever modifier is held, each as (dCol, dRow)
+  @arrowMoves:
+    "ArrowRight": [1, 0]
+    "ArrowLeft": [-1, 0]
+    "ArrowDown": [0, 1]
+    "ArrowUp": [0, -1]
+
+  # whether I act on this key as a COMMAND, asked of every keyboard receiver by the browser bridge so that the
+  # browser's own default stays off such a key (BrowserInputBridge._aKeyboardReceiverActsOnAsCommand): an arrow,
+  # while the keys are mine. I move my selection on it whatever modifier is held, so a Mac browser's Back on
+  # Cmd+Left, a PC's on Alt+Left and the page's scroll must stay off it. Tab, space and Backspace already are, on
+  # every page (BrowserInputBridge._keydownDefaultIsPrevented); my other keys have no default to keep off in the
+  # browsers the suite runs (Chrome, Safari). The arrows' "whatever modifier" is read in two places, here and in
+  # _processKeyWhileSelectingNoSettle: a rule on what a modified arrow does changes both.
+  actsOnKeyAsCommand: (key, ctrlKey, altKey, metaKey) ->
+    @_keysAreMine() and SimpleSpreadsheetWdgt.arrowMoves[key]?
 
   # the text widget the caret edits for this sheet: the formula bar's text when the edit is in the
   # bar, else the editing cell's editor (read-only)
@@ -740,11 +761,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # never its format); a printable key begins an edit seeded with that character (Excel-style
   # type-to-edit).
   _processKeyWhileSelectingNoSettle: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
+    arrowMove = SimpleSpreadsheetWdgt.arrowMoves[key]
+    return @_moveSelectionNoSettle arrowMove[0], arrowMove[1] if arrowMove?
     switch key
-      when "ArrowRight" then @_moveSelectionNoSettle 1, 0
-      when "ArrowLeft" then @_moveSelectionNoSettle -1, 0
-      when "ArrowDown" then @_moveSelectionNoSettle 0, 1
-      when "ArrowUp" then @_moveSelectionNoSettle 0, -1
       when "Tab" then @_moveSelectionNoSettle (if shiftKey then -1 else 1), 0
       when "Enter", "F2" then @_startEditNoSettle @_currentCellSource()
       when "Delete", "Backspace" then @_clearSelectedCellNoSettle()

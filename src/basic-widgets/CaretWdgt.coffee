@@ -115,8 +115,8 @@ class CaretWdgt extends BlinkerWdgt
   #     reach lands (a Mac: Option+Backspace and Option+Delete a word, Cmd+Backspace to the line's start; a PC:
   #     Ctrl+Backspace and Ctrl+Delete a word), one character where that move goes nowhere; a PC's Alt+Backspace
   #     stays Backspace, as its Alt+Left stays Left.
-  # The browser bridge asks verbFor too, to keep the browser's own default (Back on Cmd+Left, on a PC's Alt+Left;
-  # the page's scroll on Home and End) off every key I act on while I am live.
+  # The browser bridge asks me through verbFor too (actsOnKeyAsCommand), to keep the browser's own default (Back on
+  # Cmd+Left, on a PC's Alt+Left; the page's scroll on Home and End) off every key I act on while I am live.
   @keyVerbs:
     "ArrowLeft": "goLeft"
     "ArrowRight": "goRight"
@@ -161,6 +161,13 @@ class CaretWdgt extends BlinkerWdgt
   @verbFor: (key, ctrlKey, altKey, metaKey, family) ->
     CaretWdgt.chordVerbs[family]?[CaretWdgt.chordOf key, ctrlKey, altKey, metaKey] ?
       (CaretWdgt.keyVerbs[key] unless ctrlKey or metaKey)
+
+  # whether I act on this key as a COMMAND, asked of every keyboard receiver by the browser bridge so that the
+  # browser's own default stays off such a key (BrowserInputBridge._aKeyboardReceiverActsOnAsCommand): a key that has
+  # a verb for my person's keyboard family, while I am the world's live caret -- a copy of me, riding a copied
+  # container, joins the receivers too and claims nothing.
+  actsOnKeyAsCommand: (key, ctrlKey, altKey, metaKey) ->
+    @ is world.caret and (CaretWdgt.verbFor key, ctrlKey, altKey, metaKey, world.user.keyboardFamily)?
 
   # WHETHER A KEYSTROKE MAY TYPE, rather than be a chord (one the tables do not name does nothing): with neither Ctrl
   # nor Cmd held, or as AltGr on a PC. Windows reports AltGr as Ctrl+Alt, so on a PC a key that is one character
