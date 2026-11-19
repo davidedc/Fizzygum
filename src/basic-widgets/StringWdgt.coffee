@@ -500,9 +500,10 @@ class StringWdgt extends ControllerWdgt
     # Since we push a:
     #                  position, text
     #
-    # pair for each insert (see comment in "insert" for why)
+    # pair for each insert and each delete that deletes
+    # something (see comment in CaretWdgt's "insert" for why)
     # we want to actually forget the "trivial" positional
-    # changes when the user is just typing, so discard the
+    # changes when the user is just typing or deleting, so discard the
     # positional changes of one character (TextSlots: an emoji
     # is one character, two code units)
     if @undoHistory.length > 0

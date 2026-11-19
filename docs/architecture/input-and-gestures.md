@@ -456,7 +456,12 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   word's END on a Mac, at the next word's START on a PC (`TextSlots.wordEndAfter` / `wordStartAfter`; a
   word is TextSlots's); a delete chord deletes from the caret to where its family's move of the same
   reach lands (one character where that move goes nowhere). Both families redo with Shift and their undo
-  chord, a PC also with Ctrl+Y.
+  chord, a PC also with Ctrl+Y. Undo steps back over deleting as over typing: insert and the one delete
+  (`CaretWdgt._deleteSelectionOrCharacter`: Backspace, Delete, the delete chords, cut) each push an undo
+  state before and after the change, so an undone delete brings back what it took, selected if it took a
+  selection (a further undo then only drops that selection), and the caret where it stood, unless it had
+  moved by one character only since the last state, a move `StringWdgt.pushUndoState` merges as it
+  merges typing's; a delete of nothing pushes nothing.
 - ONE rule says whether a keystroke that is no verb may TYPE, `CaretWdgt.keystrokeMayType`, asked by
   the caret and by a spreadsheet's type-to-edit: with neither Ctrl nor Cmd held, or as AltGr on a PC.
   Windows reports AltGr as Ctrl+Alt, so a one-character key with Ctrl and Alt and no Win key types

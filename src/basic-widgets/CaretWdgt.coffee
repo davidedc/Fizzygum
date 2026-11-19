@@ -655,7 +655,8 @@ class CaretWdgt extends BlinkerWdgt
     # numbers and "-" and "." as input
     if not @target.isNumeric or not isNaN(parseFloat(key)) or key in ["-", "."]
       
-      # Pushed before AND after the change (not redundant): (1) before, so an insert that replaces a
+      # Pushed before AND after the change (not redundant), as a delete that deletes something pushes them
+      # too (_deleteSelectionOrCharacter; a delete of nothing pushes none): (1) before, so an insert that replaces a
       # selection saves state pre-selection-touch, letting undo return the user there; (2) before, so
       # undo lands on the position BEFORE an edit rather than jumping to the end of the prior edit,
       # matching real-editor undo semantics. In continuous typing this doesn't spam history:
@@ -686,20 +687,14 @@ class CaretWdgt extends BlinkerWdgt
       @target.pushUndoState? @slot
   
   deleteRight: ->
-    if @target.selection() isnt ""
-      @_gotoSlotNoSettle @target.firstSelectedSlot()
-      @target.deleteSelection()
-    else
+    @_deleteSelectionOrCharacter @slot < @target.text.length, =>
       text = @target.text
       @target.setText text.slice(0, @slot) + text.slice TextSlots.slotAfter text, @slot
 
   # Backspace deletes the character before me whole (TextSlots), and I step back over it: to where it began, or
   # to the start of the character its two neighbours joined into once it went (two flag halves)
   deleteLeft: ->
-    if @target.selection()
-      @_gotoSlotNoSettle @target.firstSelectedSlot()
-      @target.deleteSelection()
-    else
+    @_deleteSelectionOrCharacter @slot > 0, =>
       text = @target.text
       before = TextSlots.slotBefore text, @slot
       @target.setText text.slice(0, before) + text.slice @slot
@@ -710,6 +705,28 @@ class CaretWdgt extends BlinkerWdgt
     @_gotoSlotNoSettle @slot
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
+
+  # THE DELETE of Backspace and Delete, and so of the delete chords and of cut (processCut): it deletes the
+  # selection, else the character beside me, through the caller's deleteTheCharacter (aCharacterIsBesideMe says
+  # whether there is one: before me for Backspace, after me for Delete). Like insert, it pushes an undo state
+  # before the change and one after it, so undo brings back what it deleted, the caret where it stood (one
+  # character off after a move of just one since the last state, which the dedupe merges, as in typing) and what
+  # was selected selected again, and redo deletes it again. The state after is what the delete leaves: setText
+  # drops the selection, so deleteLeft's tail, which runs after it, moves no mark it records. A delete that
+  # deletes nothing pushes nothing: it would push a state that only moves the caret, and a push that is kept
+  # clears the redo history. An empty selection (its two marks met: a delete chord whose move goes nowhere) is
+  # cleared first, so no state records it as a selection.
+  _deleteSelectionOrCharacter: (aCharacterIsBesideMe, deleteTheCharacter) ->
+    @target.clearSelectionIfCollapsed()
+    hasSelection = @target.selection() isnt ""
+    return unless hasSelection or aCharacterIsBesideMe
+    @target.pushUndoState? @slot
+    if hasSelection
+      @_gotoSlotNoSettle @target.firstSelectedSlot()
+      @target.deleteSelection()
+    else
+      deleteTheCharacter()
+    @target.pushUndoState? @slot
 
   # THE DELETE CHORDS (chordVerbs): each deletes from me to where its family's move of the same reach lands (the
   # slot goWordStart, goHome, goWordEnd or goNextWordStart goes to) -- the span is selected, without moving me, and
