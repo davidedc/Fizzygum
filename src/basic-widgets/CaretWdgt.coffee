@@ -103,7 +103,7 @@ class CaretWdgt extends BlinkerWdgt
       @currentCaretFontSize = extent.y
       @_applyExtent extent
   
-  # THE KEYS I MOVE ON, the one definition of the keys I act on as COMMANDS (verbFor): each a key, or a chord spelled
+  # THE KEYS I ACT ON, the one definition of the keys I act on as COMMANDS (verbFor): each a key, or a chord spelled
   # as the macro toolkit spells one ("Meta+ArrowLeft"; Shift is left out, since every verb takes it), and the verb
   # it runs. Two tables:
   #   - keyVerbs: every keyboard family's plain keys, the arrows and Home and End, whatever modifier but Ctrl or Cmd
@@ -111,7 +111,10 @@ class CaretWdgt extends BlinkerWdgt
   #   - chordVerbs: each FAMILY's own chords (User.keyboardFamily), STRICT (owner ruling 2026-11-18): a Mac's
   #     Ctrl+A and Ctrl+Z, and a PC's Win+A and Win+Z, do nothing. A word jump to the right lands at the word's END
   #     on a Mac, at the next word's START on a PC. Both redo with Shift and their undo chord; a PC also with
-  #     Ctrl+Y, Windows' own redo key.
+  #     Ctrl+Y, Windows' own redo key. Each delete chord deletes from me to where its family's move of the same
+  #     reach lands (a Mac: Option+Backspace and Option+Delete a word, Cmd+Backspace to the line's start; a PC:
+  #     Ctrl+Backspace and Ctrl+Delete a word), one character where that move goes nowhere; a PC's Alt+Backspace
+  #     stays Backspace, as its Alt+Left stays Left.
   # The browser bridge asks verbFor too, to keep the browser's own default (Back on Cmd+Left, on a PC's Alt+Left;
   # the page's scroll on Home and End) off every key I act on while I am live.
   @keyVerbs:
@@ -130,6 +133,9 @@ class CaretWdgt extends BlinkerWdgt
       "Meta+ArrowDown": "goDocumentEnd"
       "Alt+ArrowLeft": "goWordStart"
       "Alt+ArrowRight": "goWordEnd"
+      "Alt+Backspace": "deleteToWordStart"
+      "Alt+Delete": "deleteToWordEnd"
+      "Meta+Backspace": "deleteToLineStart"
       "Meta+a": "selectAll"
       "Meta+z": "undo"
     pc:
@@ -137,6 +143,8 @@ class CaretWdgt extends BlinkerWdgt
       "Ctrl+End": "goDocumentEnd"
       "Ctrl+ArrowLeft": "goWordStart"
       "Ctrl+ArrowRight": "goNextWordStart"
+      "Ctrl+Backspace": "deleteToWordStart"
+      "Ctrl+Delete": "deleteToNextWordStart"
       "Ctrl+a": "selectAll"
       "Ctrl+z": "undo"
       "Ctrl+y": "redo"
@@ -672,3 +680,25 @@ class CaretWdgt extends BlinkerWdgt
     @_gotoSlotNoSettle @slot
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
+
+  # THE DELETE CHORDS (chordVerbs): each deletes from me to where its family's move of the same reach lands (the
+  # slot goWordStart, goHome, goWordEnd or goNextWordStart goes to) -- the span is selected, without moving me, and
+  # Backspace or Delete deletes the selection -- so a word or a line goes as the person's platform jumps over it.
+  # A selection already made is deleted instead, as Backspace and Delete delete one; where the move would go
+  # nowhere (Cmd+Backspace at a line's start) the key deletes one character, as Backspace or Delete does.
+  # (Shift changes nothing.)
+  deleteToWordStart: (shift) ->
+    @target.selectBetween @slot, (TextSlots.wordStartBefore @target.text, @slot) unless @target.selection()
+    @deleteLeft()
+
+  deleteToLineStart: (shift) ->
+    @target.selectBetween @slot, (@target.startOfLine @slot) unless @target.selection()
+    @deleteLeft()
+
+  deleteToWordEnd: (shift) ->
+    @target.selectBetween @slot, (TextSlots.wordEndAfter @target.text, @slot) unless @target.selection()
+    @deleteRight()
+
+  deleteToNextWordStart: (shift) ->
+    @target.selectBetween @slot, (TextSlots.wordStartAfter @target.text, @slot) unless @target.selection()
+    @deleteRight()

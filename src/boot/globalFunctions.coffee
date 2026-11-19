@@ -448,7 +448,7 @@ boot = ->
     window.FIZZYGUM_POINTER_KIND = bootQueryParams.get("pointer")
 
   # ?keys=mac|pc — the KEYBOARD FAMILY whose conventions a caret follows (CaretWdgt.chordVerbs): line and document
-  # ends, word jumps, select-all, undo and redo. Sibling of ?pointer above: the raw string is stashed here, and the person
+  # ends, word jumps, word and line deletes, select-all, undo and redo. Sibling of ?pointer above: the raw string is stashed here, and the person
   # who holds the family reads it (User.keyboardFamilyOfThisPage), falling back to the platform's own for an absent
   # or unknown value. The test harness pins "mac" on every test's world, as it pins the screen's extent.
   window.FIZZYGUM_KEYS = bootQueryParams?.get "keys"
