@@ -694,9 +694,10 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
 
   # a single character that should type INTO a cell (starts / extends an edit), an emoji included;
   # Arrow/Enter/etc. are key NAMES, several characters, so the caret's own test excludes them
-  # (TextSlots.isOneCharacter). Ctrl/Cmd chords are not text.
-  _isPrintable: (key, ctrlKey, metaKey) ->
-    key? and (TextSlots.isOneCharacter key) and not ctrlKey and not metaKey
+  # (TextSlots.isOneCharacter). Ctrl/Cmd chords are not text, a PC's AltGr is (the caret's own rule,
+  # CaretWdgt.keystrokeMayType).
+  _isPrintable: (key, code, ctrlKey, altKey, metaKey) ->
+    key? and (TextSlots.isOneCharacter key) and CaretWdgt.keystrokeMayType key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily
 
   # standard keyboard path (§1.17): the keys are mine while I am the EDITOR FOCUS — the thing the
   # user works on, which a click in me, or my window's opening, makes me (WorldWdgt.openFrameWith) —
@@ -748,7 +749,7 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
       when "Enter", "F2" then @_startEditNoSettle @_currentCellSource()
       when "Delete", "Backspace" then @_clearSelectedCellNoSettle()
       else
-        @_startEditNoSettle key if @_isPrintable key, ctrlKey, metaKey
+        @_startEditNoSettle key if @_isPrintable key, code, ctrlKey, altKey, metaKey
     return
 
   # THE one move of the selection: by (dCol, dRow), clamped to the logical sheet, the view

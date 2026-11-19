@@ -162,6 +162,29 @@ class CaretWdgt extends BlinkerWdgt
     CaretWdgt.chordVerbs[family]?[CaretWdgt.chordOf key, ctrlKey, altKey, metaKey] ?
       (CaretWdgt.keyVerbs[key] unless ctrlKey or metaKey)
 
+  # WHETHER A KEYSTROKE MAY TYPE, rather than be a chord (one the tables do not name does nothing): with neither Ctrl
+  # nor Cmd held, or as AltGr on a PC. Windows reports AltGr as Ctrl+Alt, so on a PC a key that is one character
+  # (TextSlots.isOneCharacter), pressed with Ctrl and Alt and no Win key, is AltGr's character unless it is the
+  # character the key's CODE names (_characterNamedByCode: the @ of AltGr+Q or the € of AltGr+E on a German layout,
+  # the ą of AltGr+A on a Polish one type; Ctrl+Alt+A on a US layout is a chord, typing nothing, as on Windows). A
+  # code names a key by its place on a US layout, so on another layout, or on a punctuation key, Ctrl+Alt on a key
+  # that has no AltGr character types that key's own character, where Windows types nothing. Elsewhere AltGr arrives
+  # with neither Ctrl nor Alt held (Linux reports it as the AltGraph state), and a Mac's Option types with no Ctrl
+  # held; its Ctrl chords do nothing (strict). Asked wherever a key may type: my keystrokes, and a spreadsheet's
+  # type-to-edit (SimpleSpreadsheetWdgt._isPrintable).
+  @keystrokeMayType: (key, code, ctrlKey, altKey, metaKey, family) ->
+    return false if metaKey
+    return true unless ctrlKey
+    family is "pc" and altKey and (TextSlots.isOneCharacter key) and key.toLowerCase() isnt CaretWdgt._characterNamedByCode code
+
+  # the character a key's code names, where the code names one whatever the layout's place for it: a letter or digit
+  # key by its US-layout letter or digit ("KeyQ" -> "q", "Digit7" -> "7"), a numpad digit ("Numpad7" -> "7"), the
+  # space bar (" "); undefined for any other key
+  @_characterNamedByCode: (code) ->
+    return " " if code is "Space"
+    match = /^(?:Key([A-Z])|Digit([0-9])|Numpad([0-9]))$/.exec code ? ""
+    (match[1] ? match[2] ? match[3]).toLowerCase() if match?
+
   # CaretWdgt event processing:
 
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
@@ -173,7 +196,7 @@ class CaretWdgt extends BlinkerWdgt
     verb = CaretWdgt.verbFor key, ctrlKey, altKey, metaKey, world.user.keyboardFamily
     if verb?
       @[verb] shiftKey
-    else unless ctrlKey or metaKey
+    else if CaretWdgt.keystrokeMayType key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily
       switch key
         when " "
           @insert " "

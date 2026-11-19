@@ -85,7 +85,7 @@ const RECORDED = {
   'ActivePointerWdgt#processPointerDown': 17,
   'ActivePointerWdgt#processPointerUp': 76,
   'CaretWdgt#_oneScrollCaretIntoViewPassNoSettle': 21,
-  'CaretWdgt#processKeyDown': 27,
+  'CaretWdgt#processKeyDown': 26,
   'Class#constructor': 61,
   'Class.endingInReturn': 16,
   'Class.rewriteSuperCalls': 25,

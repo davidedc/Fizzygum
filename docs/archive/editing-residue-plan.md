@@ -669,6 +669,8 @@ Time box 1 h.
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
+- [x] **AltGr typing does nothing on a PC** — Windows reports AltGr as Ctrl+Alt, and a caret drops every key with Ctrl held, so @ { € on German, French or Polish layouts type nothing (pre-existing; U3 review; plan §U3) — reachable, medium. — CLOSED 2026-11-19 (follow-ups loop, F6; filed under `archive/editing-residue-plan.md`): one rule says whether a keystroke may type, `CaretWdgt.keystrokeMayType`, asked by the caret and by a spreadsheet's type-to-edit (`SimpleSpreadsheetWdgt._isPrintable`): on a PC a one-character key with Ctrl and Alt and no Win key types unless it is the character its `code` names: a US-layout letter or digit, a numpad digit, space), so AltGr types and Ctrl+Alt+A on a US layout stays a chord; the remaining limit (a code names a US-layout place) is filed; `CaretWdgt#processKeyDown`'s complexity record fell 27 → 26; `SystemTest_macroAltGrTypesOnAPC`.
+
 - [x] **`TextSlots` walks a text from its start to find the character at an offset** (filed 2026-11-19 by the owner
       after the loop, from U1's workaround). TODAY: `TextSlots._characterAt` (`src/TextSlots.coffee`, behind
       `slotAfter`, `slotAtOrBefore` and so `isSlot`, `slotBefore`, `slotAtOrAfter`) iterates the grapheme segments

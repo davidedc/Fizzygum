@@ -404,7 +404,9 @@ class MacroToolkit
     altKey   = ("Alt" in parts)
     metaKey  = ("Meta" in parts) or ("Cmd" in parts)
     # the "code" is the physical key; a 1:1 key->code is fine for synthetic events
-    # (Shift uses "ShiftLeft" to match syntheticEventsStringKeys_InputEvents).
+    # (Shift uses "ShiftLeft" to match syntheticEventsStringKeys_InputEvents) -- except where a
+    # rule reads the code: CaretWdgt.keystrokeMayType tells a PC's AltGr character from a
+    # Ctrl+Alt chord by it, so a test of that queues KeydownInputEvents with real codes ("KeyA").
     code = if key == "Shift" then "ShiftLeft" else key
     @queueInputEvent new KeydownInputEvent key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime
     @queueInputEvent new KeyupInputEvent  key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime + millisecondsBetweenKeys

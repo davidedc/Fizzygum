@@ -448,11 +448,25 @@ A caret follows its person's KEYBOARD FAMILY, `User.keyboardFamily`: "mac" (Cmd 
 own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", every other machine
 "pc"). It is never saved with a world, so a world saved on a Mac imposes no Cmd on a PC.
 - ONE definition maps a key to a caret verb, `CaretWdgt.verbFor`: `chordVerbs[family]` first (a Mac's
-  Cmd+Left/Right line ends, Cmd+Up/Down text ends, Option+Left/Right word jumps, Cmd+A, Cmd+Z; a PC's
-  Ctrl+Home/End, Ctrl+Left/Right, Ctrl+A, Ctrl+Z), then `keyVerbs` (every family's arrows, Home and
-  End, with any modifier but Ctrl or Cmd: a PC's Alt+Left is Left). STRICT: a Mac's Ctrl chords and a
-  PC's Cmd chords do nothing. A word jump to the right lands at the word's END on a Mac, at the next
-  word's START on a PC (`TextSlots.wordEndAfter` / `wordStartAfter`; a word is TextSlots's).
+  Cmd+Left/Right line ends, Cmd+Up/Down text ends, Option+Left/Right word jumps, Option+Backspace and
+  Option+Delete word deletes, Cmd+Backspace to the line's start, Cmd+A, Cmd+Z; a PC's Ctrl+Home/End,
+  Ctrl+Left/Right, Ctrl+Backspace and Ctrl+Delete word deletes, Ctrl+A, Ctrl+Z, Ctrl+Y), then `keyVerbs`
+  (every family's arrows, Home and End, with any modifier but Ctrl or Cmd: a PC's Alt+Left is Left).
+  STRICT: a Mac's Ctrl chords and a PC's Cmd chords do nothing. A word jump to the right lands at the
+  word's END on a Mac, at the next word's START on a PC (`TextSlots.wordEndAfter` / `wordStartAfter`; a
+  word is TextSlots's); a delete chord deletes from the caret to where its family's move of the same
+  reach lands (one character where that move goes nowhere). Both families redo with Shift and their undo
+  chord, a PC also with Ctrl+Y.
+- ONE rule says whether a keystroke that is no verb may TYPE, `CaretWdgt.keystrokeMayType`, asked by
+  the caret and by a spreadsheet's type-to-edit: with neither Ctrl nor Cmd held, or as AltGr on a PC.
+  Windows reports AltGr as Ctrl+Alt, so a one-character key with Ctrl and Alt and no Win key types
+  unless it is the character its `code` names (`CaretWdgt._characterNamedByCode`: a key's US-layout
+  letter or digit, a numpad digit, space): AltGr+Q's @ types, Ctrl+Alt+A on a US layout is a chord. A
+  code names a US-layout place, so on another layout, or on a punctuation key, Ctrl+Alt on a key with
+  no AltGr character types that key's own character, where Windows types nothing. Linux reports AltGr
+  with neither held; a Mac's Option types without Ctrl. Synthetic keystrokes carry their key as their
+  code (`MacroToolkit.syntheticEventsShortcutsAndSpecialKeys_InputEvents`), so a test of this rule
+  queues `KeydownInputEvent`s with real codes.
 - The caret's keystroke handling and the browser bridge both read it: while a caret is live, every
   key it acts on as a command has its browser default kept off, on the canvas and on the virtual
   keyboard's input alike (`BrowserInputBridge._caretActsOnAsCommand`: Back on a Mac's Cmd+Left and a
