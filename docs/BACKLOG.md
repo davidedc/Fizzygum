@@ -97,7 +97,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
 ### `archive/editing-residue-plan.md` — the editing residue (✅ CLOSED 2026-11-19: U1–U12 landed, see its ledger; the items below were filed on the way)
-- [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — NEXT (owner ruling 2026-11-19): the row pictures the bubble without its words, hidden on the throwaway copy before the shot; §U10's general re-shoot mechanism is not built — reachable, low.
 - [ ] **`TextSlots` walks a text from its start to find the character at an offset** — linear (13 KB: 0.3 ms in WebKit, 1.6 ms in V8 per call), working around WebKit bug 324036 in `containing`; `containing(offset + 1)` at an emoji's lead is constant and passes both engines (§U1) — reachable, low.
 - [ ] **No Ctrl+Y redo on a PC** — a PC's caret redoes only with Ctrl+Shift+Z; Windows' Ctrl+Y is not in `CaretWdgt.chordVerbs` (owner ruling 2026-11-19: add it; plan §U3) — reachable, low.
 - [ ] **No delete-a-word or delete-to-the-line's-start chords** — a Mac's Option+Backspace deletes one character, Cmd+Backspace and a PC's Ctrl+Backspace delete nothing (owner ruling 2026-11-19: add them; plan §U3) — reachable, low.
@@ -294,7 +293,7 @@ The arc that closed the residue arc's five items (the image widget's back-buffer
 ### Save/restore-fidelity arc 2026-10-25 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)
 The arc that closed five save/restore and scroll items (a frame's placeholder exists only while shown; an element the page loads is derived from its holder's path, gate #30; a menu re-takes its width at a lifetime change; a viewport's frame covers its own box) measured these on the way and left them open:
 - [ ] **A demo `PointerWdgt` holds its `target` only through a field** — the inventory reads the target as ESCAPED, a single-widget save of a pointer is refused (`→ .target`), and a world snapshot captures it off-tree.
-- [ ] **The overflow (») menu's miniature of a text tool races the glyph atlas on SWCanvas pages** — the Slides toolbar's logo-with-text icon keeps placeholder boxes until the menu reopens; a `StringWdgt`'s, for good. → "The overflow menu's miniature of a text tool races the glyph atlas"
+- [ ] **The overflow (») menu's miniature of a text tool races the glyph atlas on SWCanvas pages** — a plain text widget pictured cold keeps placeholder boxes for good (no shipped toolbar reaches it now). → "The overflow menu's miniature of a text tool races the glyph atlas"
 - [ ] **On `index-sw.html` outside the harness, SWCanvas's `drawImage` of a `file://` image throws `SecurityError`** — an image widget cannot paint there; nothing shipped draws an `HTMLImageElement` today. → "SWCanvas drawImage of a file:// image throws SecurityError"
 
 ### SWCanvas correctness arc 2026-10-27 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)

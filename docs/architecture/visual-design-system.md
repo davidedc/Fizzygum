@@ -126,7 +126,8 @@ their advance and down by the draft's "line centred in a taller box" rule, `roun
 family names the literal family first and the generic last (`"Times New Roman", serif`): SWCanvas picks an atlas by the
 generic word, so a bare literal would type Arial. Shown as a menu row's picture, a typed face is worn live by the
 holder (`livePictureOn`, read off the face's declared `typesGlyphs`; the logo with its word declares it too), never
-photographed, so it is retyped when its atlas arrives.
+photographed, so it is retyped when its atlas arrives. A tool with words a glyph box cannot show leaves them out of
+that picture: the row asks the copy it photographs to `prepareForMenuRowPicture`, and a speech bubble hides its text.
 
 The families are the three the SWCanvas glyph atlases cover — **Arial** (sans), **Courier New** (mono,
 through `StringWdgt.monoFontStack`), **Times** (serif) — at normal or bold, normal or italic, sizes

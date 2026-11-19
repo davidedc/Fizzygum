@@ -44,6 +44,14 @@ class SpeechBubbleWdgt extends Widget
   _surfaceStroke: ->
     WorldWdgt.theme.speechBubbleStroke
 
+  # MY PICTURE IN A MENU ROW (a toolbar overflow row's, OverflowChevronButtonWdgt._miniatureOf) shows the bubble
+  # without its words: in a menu row's glyph box no size of them is legible on either backend, and a bubble with no
+  # words still reads as a speech bubble. Asked of the throwaway copy the row photographs, never of a bubble in use.
+  # The text is HIDDEN, neither destroyed (my _reLayout lays it out) nor emptied (its fit would then be searched for
+  # an empty string), and a hidden text paints nothing into the picture.
+  prepareForMenuRowPicture: ->
+    @contentsWidget.hide()
+
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->

@@ -82,6 +82,9 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # the row's tap the ROW's -- a live tool held on a row would take the tap itself. The copy stands in
   # no cell, so the picture is taken in the plain toolbar glyph ink; a row of a dimmed tool greys it
   # as it greys its label, while the row is disabled (InertIconHolderWdgt._fillForMyState).
+  #   A tool may leave out of its picture what a glyph box cannot show: the copy is asked to
+  # prepareForMenuRowPicture before the shot (a speech bubble hides its words), and a tool that has
+  # no such answer is pictured whole.
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
   # costs its row its picture (its copy's refusal is told, Widget.fullCopy).
   _miniatureOf: (tool) ->
@@ -90,11 +93,12 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
     # copy (an inform). The picture's constructor settles too, sizing a copy that has children
     # (InertIconHolderWdgt). I am reached ONLY
     # from actOnClick, an event-stream handler, so a settle here is legal and never mid-pass.
-    picture = tool.fullCopy?()
-    return undefined unless picture?
+    toolCopy = tool.fullCopy?()
+    return undefined unless toolCopy?
+    toolCopy.prepareForMenuRowPicture?()
     glyphBox = WorldWdgt.theme.menuRowGlyphSize
-    icon = new InertIconHolderWdgt picture, fitInto: new Point glyphBox, glyphBox
-    picture._fullDestroyNoSettle()
+    icon = new InertIconHolderWdgt toolCopy, fitInto: new Point glyphBox, glyphBox
+    toolCopy._fullDestroyNoSettle()
     icon
 
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu for the shape): dispatch fills the
