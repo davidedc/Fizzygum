@@ -56,22 +56,21 @@ class SimpleTextWdgt extends TextWdgt
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
-    # each key is the EXACT label of a row my chain built (TextWdgt / StringWdgt _addTextMenuEntries):
-    # a key that matches no row removes nothing, silently -- so in view mode, where my chain builds
-    # none of these rows (sitsInViewModeContent), every line below finds nothing. My connection
-    # block is my chain's too (StringWdgt appends it last), so I add none.
+    # each key is the label of a row my chain built (TextWdgt / StringWdgt _addTextMenuEntries), and a
+    # row has ONE label whatever my state (a state is a tick, never a label swap), so each key names its
+    # row however I am set. A key that matches no row removes nothing, silently -- so in view mode, where
+    # my chain builds none of these rows (sitsInViewModeContent), every line below finds nothing. My
+    # connection block is my chain's too (StringWdgt appends it last), so I add none.
     #   My chain's "Soft wrap" row (ticked while isSoftWrapping, acting through toggleSoftWrap) stays
     # only while I am my viewport's lone text, the one place a wrap is mine to choose: anywhere else
-    # the width I wrap at is my container's to give.
+    # the width I wrap at is my container's to give. My fitting, header line and vertical alignment rows
+    # go too.
     menu.removeMenuItem "Soft wrap" unless @_isMyViewportsLoneText()
 
-    menu.removeMenuItem "←☓→ Don't expand to fill"
     menu.removeMenuItem "←→ Expand to fill"
     menu.removeMenuItem "→← Shrink to fit"
-    menu.removeMenuItem "→⋯← Crop to fit"
 
     menu.removeMenuItem "Header line"
-    menu.removeMenuItem "No header line"
 
     menu.removeMenuItem "↑ Align top"
     menu.removeMenuItem "⍿ Align middle"

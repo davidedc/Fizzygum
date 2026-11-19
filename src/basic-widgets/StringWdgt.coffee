@@ -563,11 +563,14 @@ class StringWdgt extends ControllerWdgt
       @horizontalAlignment = newAlignment
       @_changed()
       world.noteStyleChanged @
+      # announced, so every alignment row showing it re-ticks (see the fitting toggles' comment)
+      world.dataflow?.markNonValueChange @
 
   setVerticalAlignment: (newAlignment) ->
     if @verticalAlignment != newAlignment
       @verticalAlignment = newAlignment
       @_changed()
+      world.dataflow?.markNonValueChange @
 
   alignLeft: ->
     @setHorizontalAlignment AlignmentSpecHorizontal.LEFT
@@ -1353,6 +1356,18 @@ class StringWdgt extends ControllerWdgt
   # (MenuRowReflectionSpec.readerName)
   currentFontName: -> @fontName
 
+  # ONE READER PER STATE my text menu's rows tick on (_addTextMenuEntries), each announced where it changes: the
+  # three rows of an alignment axis share their axis's reader, each ticked at its own value. A weight, slant,
+  # header line or mask never set answers false, not undefined, so a row's comparison to true holds.
+  drawsBold: -> !!@isBold
+  drawsItalic: -> !!@isItalic
+  drawsHeaderLine: -> !!@isHeaderLine
+  hidesCharacters: -> !!@isPassword
+  currentHorizontalAlignment: -> @horizontalAlignment
+  currentVerticalAlignment: -> @verticalAlignment
+  currentFittingWhenBoundsTooLarge: -> @fittingSpecWhenBoundsTooLarge
+  currentFittingWhenBoundsTooSmall: -> @fittingSpecWhenBoundsTooSmall
+
   # THE FONTS A FONTS MENU OFFERS, in menu order, each stack paired with the label it shows — ONE list
   # for every fonts menu (mine, and the text toolbar's font tool, ChangeFontButtonWdgt), so the
   # menus are built by iterating it rather than by hand-numbered rows.
@@ -1412,61 +1427,59 @@ class StringWdgt extends ControllerWdgt
 
     menu.addMenuItem "Font", @, "fontsMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "pick a font", enablement: editable
 
-    if @isBold
-      menu.addMenuItem "Normal weight", @, "toggleWeight", enablement: editable
-    else
-      menu.addMenuItem "Bold", @, "toggleWeight", enablement: editable
-
-    if @isItalic
-      menu.addMenuItem "Non-italic", @, "toggleItalic", enablement: editable
-    else
-      menu.addMenuItem "Italic", @, "toggleItalic", enablement: editable
-
-    if @isHeaderLine
-      menu.addMenuItem "No header line", @, "toggleHeaderLine", enablement: editable
-    else
-      menu.addMenuItem "Header line", @, "toggleHeaderLine", enablement: editable
-
-
-    if @isPassword
-      menu.addMenuItem "Show characters", @, "toggleIsPassword", enablement: editable
-    else
-      menu.addMenuItem "Hide characters", @, "toggleIsPassword", enablement: editable
+    # a STATE is drawn as a TICK, never typed into a label (owner ruling 2026-11-18): each row keeps ONE label
+    # whatever my state, and SHOWS the state through its reflection (MenuRowReflectionSpec.tickWhen over one reader
+    # per state), so a menu left open re-ticks as the state changes by any route
+    menu.addMenuItem "Bold", @, "toggleWeight",
+      reflection: MenuRowReflectionSpec.tickWhen @, "drawsBold", true, "Bold"
+      enablement: editable
+    menu.addMenuItem "Italic", @, "toggleItalic",
+      reflection: MenuRowReflectionSpec.tickWhen @, "drawsItalic", true, "Italic"
+      enablement: editable
+    menu.addMenuItem "Header line", @, "toggleHeaderLine",
+      reflection: MenuRowReflectionSpec.tickWhen @, "drawsHeaderLine", true, "Header line"
+      enablement: editable
+    menu.addMenuItem "Hide characters", @, "toggleIsPassword",
+      reflection: MenuRowReflectionSpec.tickWhen @, "hidesCharacters", true, "Hide characters"
+      enablement: editable
 
     @_addAlignmentAndFittingMenuEntries menu
 
   # my rows placing my text in my box -- alignment, then fitting -- the rest of my text rows
   # (_addTextMenuEntries), and so offered only where I may be edited, and enabled only while I may
-  # (_editingRowEnablement)
+  # (_editingRowEnablement). Every alignment is offered, the current one ticked: the three rows of an axis read
+  # that axis's ONE reader, each ticked at its own value.
   _addAlignmentAndFittingMenuEntries: (menu) ->
     editable = @_editingRowEnablement()
     menu.addLine()
-    if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
-      menu.addMenuItem "← Align left", @, "alignLeft", enablement: editable
-    if @horizontalAlignment != AlignmentSpecHorizontal.CENTER
-      menu.addMenuItem "∸ Align center", @, "alignCenter", enablement: editable
-    if @horizontalAlignment != AlignmentSpecHorizontal.RIGHT
-      menu.addMenuItem "→ Align right", @, "alignRight", enablement: editable
+    menu.addMenuItem "← Align left", @, "alignLeft",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentHorizontalAlignment", AlignmentSpecHorizontal.LEFT, "← Align left"
+      enablement: editable
+    menu.addMenuItem "∸ Align center", @, "alignCenter",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentHorizontalAlignment", AlignmentSpecHorizontal.CENTER, "∸ Align center"
+      enablement: editable
+    menu.addMenuItem "→ Align right", @, "alignRight",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentHorizontalAlignment", AlignmentSpecHorizontal.RIGHT, "→ Align right"
+      enablement: editable
 
     menu.addLine()
-    if @verticalAlignment != AlignmentSpecVertical.TOP
-      menu.addMenuItem "↑ Align top", @, "alignTop", enablement: editable
-    if @verticalAlignment != AlignmentSpecVertical.MIDDLE
-      menu.addMenuItem "⍿ Align middle", @, "alignMiddle", enablement: editable
-    if @verticalAlignment != AlignmentSpecVertical.BOTTOM
-      menu.addMenuItem "↓ Align bottom", @, "alignBottom", enablement: editable
+    menu.addMenuItem "↑ Align top", @, "alignTop",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentVerticalAlignment", AlignmentSpecVertical.TOP, "↑ Align top"
+      enablement: editable
+    menu.addMenuItem "⍿ Align middle", @, "alignMiddle",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentVerticalAlignment", AlignmentSpecVertical.MIDDLE, "⍿ Align middle"
+      enablement: editable
+    menu.addMenuItem "↓ Align bottom", @, "alignBottom",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentVerticalAlignment", AlignmentSpecVertical.BOTTOM, "↓ Align bottom"
+      enablement: editable
 
     menu.addLine()
-
-    if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-      menu.addMenuItem "←☓→ Don't expand to fill", @, "togglefittingSpecWhenBoundsTooLarge", enablement: editable
-    else
-      menu.addMenuItem "←→ Expand to fill", @, "togglefittingSpecWhenBoundsTooLarge", enablement: editable
-
-    if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      menu.addMenuItem "→← Shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall", enablement: editable
-    else
-      menu.addMenuItem "→⋯← Crop to fit", @, "togglefittingSpecWhenBoundsTooSmall", enablement: editable
+    menu.addMenuItem "←→ Expand to fill", @, "togglefittingSpecWhenBoundsTooLarge",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentFittingWhenBoundsTooLarge", FittingSpecTextInLargerBounds.SCALEUP, "←→ Expand to fill"
+      enablement: editable
+    menu.addMenuItem "→← Shrink to fit", @, "togglefittingSpecWhenBoundsTooSmall",
+      reflection: MenuRowReflectionSpec.tickWhen @, "currentFittingWhenBoundsTooSmall", FittingSpecTextInSmallerBounds.SCALEDOWN, "→← Shrink to fit"
+      enablement: editable
 
   # WHEN MY EDITING ROWS ACT: the enablement every menu row that edits me carries (my text rows, my
   # Fonts menu's, TextWdgt's "Soft wrap"): enabled exactly while I do not sit in content in view
@@ -1481,15 +1494,21 @@ class StringWdgt extends ControllerWdgt
     MenuRowReflectionSpec.enabledWhile @, "sitsInViewModeContent", false, announcedBy: world
 
 
+  # EVERY STATE MY MENU'S ROWS TICK ON is ANNOUNCED where it changes (world.dataflow.markNonValueChange, as
+  # _setFontNameNoSettle does: the state is not my VALUE, so it re-delivers nothing along a wire), so every row
+  # showing it re-ticks, whichever route changed it -- a menu's row, a toolbar's tool, a script. DARK when nobody
+  # watches.
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
     @_changed()
+    world.dataflow?.markNonValueChange @
     world.stopEditing()
 
   togglefittingSpecWhenBoundsTooLarge: ->
     world.stopEditing()
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @_changed()
+    world.dataflow?.markNonValueChange @
 
 
   # weight and slant are my style: see setHorizontalAlignment for who mirrors it. The toggle flips
@@ -1516,6 +1535,9 @@ class StringWdgt extends ControllerWdgt
     @fitBold = fitBold unless @fitBold is fitBold
     @_changed()
     @_reflowContainedTextThenInvalidateLayout()
+    # announced here, the one writer of my weight: a frame re-weighting its title reaches it too, sometimes inside a
+    # layout pass (DataflowEngine's header allows a non-value announcement there)
+    world.dataflow?.markNonValueChange @
     true
 
   toggleItalic: ->
@@ -1523,17 +1545,20 @@ class StringWdgt extends ControllerWdgt
       @isItalic = not @isItalic
       @_changed()
       world.noteStyleChanged @
+      world.dataflow?.markNonValueChange @
       @_reflowContainedTextThenInvalidateLayout()
 
   toggleHeaderLine: ->
     @isHeaderLine = not @isHeaderLine
     @_changed()
-  
+    world.dataflow?.markNonValueChange @
+
   toggleIsPassword: ->
     world.stopEditing()
     @_settleLayoutsAfter =>
       @isPassword = not @isPassword
       @_changed()
+      world.dataflow?.markNonValueChange @
       @_reflowContainedTextThenInvalidateLayout()
 
   _changed: ->
@@ -1618,8 +1643,11 @@ class StringWdgt extends ControllerWdgt
   # revisit-gate.js, baseline EMPTY) fails on.
   _sizeToTextAndDisableFittingInMyParentsArrangeNoSettle: ->
     @autoSizeBoxToText = true
+    # my fitting, which my menu's rows tick on, is announced where it changes (as every writer of it does)
+    fittingChanges = @fittingSpecWhenBoundsTooLarge isnt FittingSpecTextInLargerBounds.FLOAT or @fittingSpecWhenBoundsTooSmall isnt FittingSpecTextInSmallerBounds.SCALEDOWN
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    world.dataflow?.markNonValueChange @ if fittingChanges
     measuredWidth = @calculateTextWidth (@transformTextOneToOne @text), @originallySetFontSize
     widthOfText = Math.max (Math.ceil measuredWidth), 1
     heightOfText = @linePitch @originallySetFontSize

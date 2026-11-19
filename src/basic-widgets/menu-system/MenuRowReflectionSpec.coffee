@@ -2,7 +2,8 @@
 # value rather than a mark painted once at menu-build time: the row is TICKED exactly while that
 # value is the row's choice.
 #
-# A row that ticks itself (the current wallpaper, the current font) is showing state it does not
+# A row that ticks itself (the current wallpaper, the current font, a text's weight, slant, header
+# line, mask, alignment and fitting) is showing state it does not
 # own. Written by hand that is a redraw: each menu fixes up its OWN rows, at the moment it was
 # clicked, by walking `rowsPanel.children` by INDEX — so a second open copy of the same menu
 # disagrees, and so does one open across a change made by a script, the loader, or another menu.

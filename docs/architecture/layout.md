@@ -51,8 +51,10 @@ formula/connection that writes a widget's text feeds this frame's geometry settl
 
 ⚠ **The one narrow exception, and why it is not a hole.** A layout station may announce a **non-value** change
 (`markNonValueChange`), which wakes only the `firesOnAnyChange` edges — consumers that RE-READ the producer rather
-than receive a value. One caller makes it: `ViewportWdgt._reLayoutScrollbars` tells whatever tracks it that its
-scroll geometry settled, so any number of scrollbars follow it rather than the two it holds fields for. (A tool
+than receive a value. `ViewportWdgt._reLayoutScrollbars` makes it, telling whatever tracks it that its scroll
+geometry settled, so any number of scrollbars follow it rather than the two it holds fields for; and a text's
+style and placement writers make it when an arrange reaches them (a frame re-weighting its title, an axis
+aligning its labels), telling the menu rows that tick on that state. (A tool
 cell's announcement that its tool's active state may have moved, `GlassBoxBottomWdgt.noteItemStateChanged`, is
 raised from the dataflow station or from input, never from an arrange: a toolbar tells its cells whenever what
 its tools show may have moved — the editor focus, its style or mode, the person's hand, the holder it works for —

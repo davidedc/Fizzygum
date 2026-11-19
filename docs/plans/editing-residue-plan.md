@@ -15,8 +15,8 @@ Status:
 |---|---|---|
 | U1 | The caret steps over a character whole (emoji, the smiley) | CLOSED 2026-11-18 (§U1) |
 | U2 | The caret's remembered column is derived from its vertical run | CLOSED 2026-11-18 (§U2) |
-| U3 | Line ends, document ends and word jumps follow the keyboard's platform | LANDED 2026-11-18 (§U3) |
-| U4 | A text menu shows its state as ticks; every editing row tested | OPEN |
+| U3 | Line ends, document ends and word jumps follow the keyboard's platform | CLOSED 2026-11-18 (§U3) |
+| U4 | A text menu shows its state as ticks; every editing row tested | LANDED 2026-11-19 (§U4) |
 | U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | OPEN |
 | U6 | Folders, the bin and their links hold a fixed edit mode | OPEN |
 | U7 | View mode reaches every drop and the selection ring | OPEN |
@@ -275,7 +275,7 @@ is clean, six plants fail it under both pointers (the family ignored, Shift drop
 pin, a PC's word-right to the end, the bridge never preventing, the bridge ignoring whether a caret is live: the
 test reads the bridge's verdict on fake keydowns, an oracle); the presuite and the finger suite were green (the EMPTY
 prediction). Filed from the review: AltGr typing on a PC (pre-existing), a sheet's selection-mode Cmd+Left. Hand check for the owner: in a
-headed Chrome on a Mac, Cmd+Left in a text must not navigate Back. Commits: one per repo, each titled "Text: a
+headed Chrome on a Mac, Cmd+Left in a text must not navigate Back. Commits: Fizzygum `ef925031`, Fizzygum-tests `63a044f84`, each titled "Text: a
 caret's line, text and word jumps follow the keyboard family …".
 
 ## U4 — A text menu shows its state as ticks; every editing row tested (R2 §J, §L)
@@ -310,6 +310,20 @@ row's ACTION must not be fixed at build"); `MACRO-PATTERNS.md` (R2 §J4 names th
 header (the text's style and placement tick too). BACKLOG: the label-swap item closes here.
 
 Time box 3.5 h.
+
+**Landed 2026-11-19.** As R2 §J4: every label-swap pair is ONE row ticked by its state (`MenuRowReflectionSpec.tickWhen`
+over eight readers beside `currentFontName`: `drawsBold`, `drawsItalic`, `drawsHeaderLine`, `hidesCharacters`,
+`currentHorizontalAlignment`, `currentVerticalAlignment`, `currentFittingWhenBoundsTooLarge`,
+`currentFittingWhenBoundsTooSmall`), every alignment offered with the current one ticked, each `addMenuItem` literal
+with its `enablement`; every writer announces (`markNonValueChange`, only on a change), the weight in its one core
+`_setBoldNoSettle` (DataflowEngine's header names it as the second pass-time announcer); `SimpleTextWdgt` lost the
+three keys that matched nothing. Measured before the code: the forecast prelude (R2's `plantJ` + `plantAlias`) gave
+15 tests / 35 shots, mouse = finger; the presuite failed exactly those plus the new phase-B image_4. Evidence: the
+new `SystemTest_macroTextMenuShowsItsStateAsTicks` (one shot) and six plants (no reflection on Bold; the weight, the
+horizontal alignment, the header line unannounced; the bold reader reading the slant; the paragraph keeping Header
+line), the U7 test's phase B (a Slides Maker's text box; image_4) and three plants (each row group's enablement
+dropped), all failing under both pointers; followers clean; WebKit passes. Commits: one per repo, each titled
+"Menus: a text menu shows its state as ticks …".
 
 ## U5 — A pinned copy of the toolbar's Fonts menu greys with its tool (R2 §I)
 
@@ -520,6 +534,8 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A pinned text menu's label-swap rows keep the wording they were built with** — a pinned menu says "Bold" over a bold text, though its press still toggles (§U7 "Landed") — reachable, low. — CLOSED 2026-11-18 (overnight loop, U4; filed under `archive/toolbar-arc-residue-plan.md`): every label-swap pair is one row ticked by its state, every writer announces; `SystemTest_macroTextMenuShowsItsStateAsTicks`.
 
 - [x] **No keyboard way to a line's ends on a keyboard without Home and End** — `CaretWdgt._ctrl` / `cmd` handle only `a` and `z`, so Cmd+Left/Right (a MacBook has no Home or End key) and Ctrl+Home/End do nothing in a text (found by the U1 review, read from code) — reachable, low. — CLOSED 2026-11-18 (overnight loop, U3; filed under `archive/toolbar-arc-residue-plan.md`): a caret follows its person's keyboard family (`CaretWdgt.verbFor`), with line and text ends and word jumps on a Mac and on a PC; `SystemTest_macroCaretJumpsFollowTheKeyboardFamily`.
 

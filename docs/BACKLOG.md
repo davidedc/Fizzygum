@@ -111,7 +111,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **Other bare mode holders in view-mode content still take drops** — only a cell and a drawing's canvas ask the view mode around them, so a slide panel picked up into a Docs Maker, which is then flipped to view mode, still embeds a dropped widget (U5 review, read from code) — reachable, low.
 - [ ] **A copy of a pinned wire menu shows and drives a clone of the wire** — a wire row's source is its `WireSpec`, which a copy copies rather than shares, so the copy's "Fires per event" tick never follows the real wire and toggling it flips only the clone (U6 review, read from code) — reachable, low.
 - [ ] **A pinned copy of the toolbar's Fonts menu does not grey its rows while the font tool has nothing to act on** — they refuse silently and look enabled (§U7 "Landed") — reachable, low.
-- [ ] **A pinned text menu's label-swap rows keep the wording they were built with** — a pinned menu says "Bold" over a bold text, though its press still toggles (§U7 "Landed") — reachable, low.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"

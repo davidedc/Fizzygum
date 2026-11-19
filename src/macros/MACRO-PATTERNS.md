@@ -176,8 +176,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **The caret resizes with the auto-fit font (SCALEUP)** (`macroTextWdgtCaretResizing`): the forward sibling of the
   Undo entry above, and the SCALEUP counterpart of the SCALEDOWN shrink-to-fit entry below. A TextWdgt made via the
   demo menu EXPANDS its font to fill its bounds — the ctor overrides the inherited FLOAT default to SCALEUP
-  (`TextWdgt.coffee:52` vs `StringWdgt.coffee:73`; the `"←→ Expand to fill"` / `"←☓→ Don't expand to fill"` menu
-  pair is ONE toggle, `togglefittingSpecWhenBoundsTooLarge`, `StringWdgt.coffee:1001-1026`) — so whenever the text
+  (`TextWdgt.coffee:52` vs `StringWdgt.coffee:73`; the `"←→ Expand to fill"` menu
+  row, ticked while SCALEUP, is ONE toggle, `togglefittingSpecWhenBoundsTooLarge`) — so whenever the text
   fits at its set size, `_fitToExtent` returns `searchLargestFittingFont` (`StringWdgt.coffee:286`, a deterministic
   binary search bounded at 200px and, under SWCanvas, at the largest shipped atlas size so the painted glyphs and the
   arithmetic `fontHeight` agree). DELETE a chunk and the font auto-GROWS to re-fill the box; the caret follows because
@@ -207,7 +207,7 @@ assertion a recapture after a regression silently stores two different hashes an
   keystrokes). Bare `ArrowDown` = End (single-line) gives count-free end targeting. Also carries the caret-on-a-floated-
   line shot: `alignBottom()` + click → the caret stands ON the bottom-floated line. No new verb.
 - **"Hide characters" masks the RENDERING, not the text** (`macroStringWdgtHideCharactersMasksTextNotEditing`):
-  `toggleIsPassword` (`:1188`, the "Hide characters"/"Show characters" menu pair) flips a pure
+  `toggleIsPassword` (the "Hide characters" menu row, ticked while hidden) flips a pure
   draw-time transform — `transformTextOneToOne` (`:520-521`) renders every glyph as "*" while `@text` is untouched. The
   masked string still edits INLINE (the masked render equals the transformed text, so the deferral rule is satisfied);
   keyboard selection works on real slots; `copySelection_InputEvents` returns the REAL characters (`selection()` slices
@@ -245,8 +245,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Fill-mode SWITCHING mid-session, bold round-trip, paste-over-selection**
   (`macroTextWdgtFillModesWeightAndPasteOverSelection`): the residue laws of the retired endurance recording, in one
   9-shot fixture (a 320×360 editable TextWdgt, three short words — SCALEUP fits one giant word per line, so every
-  transition is unmistakable). (1) `txt.togglefittingSpecWhenBoundsTooLarge()` (the "←☓→ Don't expand to fill" item's
-  method, `StringWdgt.coffee:1024-1027`) flips SCALEUP→FLOAT with content in place: the auto-grown font SNAPS back to
+  transition is unmistakable). (1) `txt.togglefittingSpecWhenBoundsTooLarge()` (the "←→ Expand to fill" row's
+  method, ticked while SCALEUP) flips SCALEUP→FLOAT with content in place: the auto-grown font SNAPS back to
   the natural set size (the entries above assert each MODE; this asserts the live SWITCH). NB both fitting toggles call
   `world.stopEditing()` — the caret is gone after them, which is exactly what makes the next law shootable: (2)
   `txt.toggleWeight()` twice (bold → normal weight, `:1034-1036`) is a perfect round-trip — the pre-bold and post-normal

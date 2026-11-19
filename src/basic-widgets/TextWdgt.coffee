@@ -359,9 +359,13 @@ class TextWdgt extends StringWdgt
     # remember the box-hug, as StringWdgt's core does: a later setFontSize / setText re-hugs the text
     # instead of fitting the new size into the box sized for the old one
     @autoSizeBoxToText = true
+    # my soft wrap and fitting, which my menu's rows tick on, are announced where they change (as every writer
+    # of them does)
+    tickedStateChanges = @softWrap or @fittingSpecWhenBoundsTooLarge isnt FittingSpecTextInLargerBounds.FLOAT or @fittingSpecWhenBoundsTooSmall isnt FittingSpecTextInSmallerBounds.SCALEDOWN
     @softWrap = false
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    world.dataflow?.markNonValueChange @ if tickedStateChanges
     # softWrap == false → breakTextIntoLines uses an unbounded width, so lines
     # split only on hard "\n" and maxLineWidth is the natural text width.
     [lines, lineSlots, naturalWidth, naturalHeight] =
