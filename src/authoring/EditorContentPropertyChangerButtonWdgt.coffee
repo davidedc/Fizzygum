@@ -119,10 +119,12 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
     subject?[@verb]?
 
   # HAVE I SOMETHING TO ACT ON now -- a subject that offers my verb? A capability query, read by the
-  # cell I stand in for its look and for my ink (GlassBoxBottomWdgt.holdsToolWithNothingToActOn). It
-  # answers what a press on me would do: act (true), or be refused (false).
+  # cell I stand in for its look and for my ink (GlassBoxBottomWdgt.holdsToolWithNothingToActOn), and
+  # by the rows of a menu of mine for their enablement (the font tool's Fonts menu). It answers what a
+  # press on me would do: act (true), or be refused (false). Destroyed, I have nothing: a menu of mine
+  # left open past my window's end greys and refuses, rather than act for whoever holds the focus.
   hasSomethingToActOn: ->
-    @_subjectOfferingMyVerb()?
+    not @destroyed and @_subjectOfferingMyVerb()?
 
   # A PRESS ON ME -- a tap on the cell I stand in, or a toolbar overflow row standing for me
   # (OverflowChevronButtonWdgt.triggerToolFromMenu) -- and THE ONE REFUSAL of the family: I act on my

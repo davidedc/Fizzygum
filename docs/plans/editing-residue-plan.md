@@ -16,8 +16,8 @@ Status:
 | U1 | The caret steps over a character whole (emoji, the smiley) | CLOSED 2026-11-18 (§U1) |
 | U2 | The caret's remembered column is derived from its vertical run | CLOSED 2026-11-18 (§U2) |
 | U3 | Line ends, document ends and word jumps follow the keyboard's platform | CLOSED 2026-11-18 (§U3) |
-| U4 | A text menu shows its state as ticks; every editing row tested | LANDED 2026-11-19 (§U4) |
-| U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | OPEN |
+| U4 | A text menu shows its state as ticks; every editing row tested | CLOSED 2026-11-19 (§U4) |
+| U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | LANDED 2026-11-19 (§U5) |
 | U6 | Folders, the bin and their links hold a fixed edit mode | OPEN |
 | U7 | View mode reaches every drop and the selection ring | OPEN |
 | U8 | A mode flip repaints a hosted widget's grip | OPEN |
@@ -322,7 +322,7 @@ three keys that matched nothing. Measured before the code: the forecast prelude 
 new `SystemTest_macroTextMenuShowsItsStateAsTicks` (one shot) and six plants (no reflection on Bold; the weight, the
 horizontal alignment, the header line unannounced; the bold reader reading the slant; the paragraph keeping Header
 line), the U7 test's phase B (a Slides Maker's text box; image_4) and three plants (each row group's enablement
-dropped), all failing under both pointers; followers clean; WebKit passes. Commits: one per repo, each titled
+dropped), all failing under both pointers; followers clean; WebKit passes. Commits: Fizzygum `b0f447aa`, Fizzygum-tests `616b473da`, each titled
 "Menus: a text menu shows its state as ticks …".
 
 ## U5 — A pinned copy of the toolbar's Fonts menu greys with its tool (R2 §I)
@@ -335,6 +335,20 @@ re-announces in `ToolbarWdgt.noteToolStatesChanged`). No new method.
 menu clear of everything and its premises. **Predicted pixel set:** EMPTY (R2 §I7).
 
 Time box 1 h.
+
+**Landed 2026-11-19.** As R2 §I4: `ChangeFontButtonWdgt.actOn` builds ONE `MenuRowReflectionSpec.enabledWhile @,
+"hasSomethingToActOn", true, announcedBy: @fontSelectionMenuHolder` and hands it to every font row (one record for
+many rows, as `StringWdgt._editingRowEnablement`); no new method; the adapter's comment says the row refuses first and
+the style door stays as defence; `toolbars.md` §5.3 states the rule beside the overflow rows'. From the review (probed):
+a menu outliving its destroyed toolbar read enabled and acted for whoever held the focus, so a destroyed tool has
+nothing to act on (`EditorContentPropertyChangerButtonWdgt.hasSomethingToActOn`). Predicted EMPTY, met.
+Evidence: the new `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool` (one shot: every row greyed, none ticked
+— the toolbar mirrors no text while the focus is elsewhere, as R2 §I1 measured) and R2's three plants, each failing
+as R2 predicted under both pointers (no enablement and a constant one: the values; no announcer: image_1 alone),
+and a fourth for the destroyed tool (step 6); follower clean; WebKit passes. Filed: a copied font tool — a duplicated
+window's, with its Fonts menu pinned, or one dragged out of its bar — keeps the original toolbar as its menu holder, so
+it re-pops the original's menu, whose rows ask the original tool. Commits: one per repo, each titled "Menus: a pinned
+toolbar Fonts menu greys with its tool".
 
 ## U6 — Folders, the bin and their links hold a fixed edit mode (owner ruling; no research report)
 
@@ -534,6 +548,8 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A pinned copy of the toolbar's Fonts menu does not grey its rows while the font tool has nothing to act on** — they refuse silently and look enabled (§U7 "Landed") — reachable, low. — CLOSED 2026-11-19 (overnight loop, U5; filed under `archive/toolbar-arc-residue-plan.md`): each row's enablement asks the tool's `hasSomethingToActOn`, announced by its toolbar; `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool`.
 
 - [x] **A pinned text menu's label-swap rows keep the wording they were built with** — a pinned menu says "Bold" over a bold text, though its press still toggles (§U7 "Landed") — reachable, low. — CLOSED 2026-11-18 (overnight loop, U4; filed under `archive/toolbar-arc-residue-plan.md`): every label-swap pair is one row ticked by its state, every writer announces; `SystemTest_macroTextMenuShowsItsStateAsTicks`.
 

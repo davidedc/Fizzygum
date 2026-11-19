@@ -133,7 +133,8 @@ class ToolbarWdgt extends ViewportWdgt
   # nothing and stays at rest), the hidden ones too, so a cell my strip shows later is already right;
   # each cell passes the news on to what shows it through it (a toolbar overflow menu's row). And I
   # pass it on myself, so what shows my tools' subject THROUGH me re-reads it: the text bar's font
-  # menu's rows, ticked by TextToolbarWdgt.currentFontName. markNonValueChange: what moved is not my
+  # menu's rows, ticked by TextToolbarWdgt.currentFontName and enabled while the font tool has
+  # something to act on. markNonValueChange: what moved is not my
   # value (I have none to deliver).
   noteToolStatesChanged: ->
     for cell in @contents.childrenNotHandlesNorCarets()

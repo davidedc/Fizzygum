@@ -247,7 +247,11 @@ no cell (the detached copy an overflow row photographs) wears the plain ink. The
 row of a dimmed tool is DISABLED exactly while its cell dims the tool: its row carries the enablement
 `MenuRowReflectionSpec.enabledWhile cell, "holdsToolWithNothingToActOn", false`
 (`OverflowChevronButtonWdgt.actOnClick`), so it greys and refuses its tap, leaving the menu open, and it re-reads
-whenever the cell announces, as its tick does. The tool's own refusal stays behind it. A text's own menu follows
+whenever the cell announces, as its tick does. The tool's own refusal stays behind it. The font tool's Fonts menu
+follows its tool the same way: each row is enabled while the tool has something to act on
+(`MenuRowReflectionSpec.enabledWhile tool, "hasSomethingToActOn", true`, announced by the tool's toolbar,
+`ToolbarWdgt.noteToolStatesChanged`), so a pinned copy greys while the tool's cell dims; a destroyed tool has nothing
+to act on, so a copy left open past its window's end greys and refuses. A text's own menu follows
 the same rule as the tools in view mode: a menu built there leaves its editing rows out, and one built in edit mode
 and left open (pinned) across a flip to view mode greys them and they refuse, its Fonts menu's rows and "Soft wrap"
 included (`StringWdgt._editingRowEnablement`: enabled while the text does not sit in view-mode content, announced
@@ -295,7 +299,7 @@ What a tool SHOWS (active, dimmed) is read when its cell is painted; the refresh
   leaves (`noteDockedOn` / `noteUndockedFrom`).
 - **`ToolbarWdgt.noteToolStatesChanged`** tells every cell `noteItemStateChanged` (hidden ones too, so a cell the
   strip shows later is already right), then announces the toolbar itself (`markNonValueChange @`), which the text
-  bar's font menu rows re-read.
+  bar's font menu rows re-read: their ticks, and their enablement on the font tool's `hasSomethingToActOn`.
 - **`GlassBoxBottomWdgt.noteItemStateChanged`** repaints the cell, its tool's glyph with it, and announces the cell,
   so a pinned overflow row for that tool re-reads its tick (`holdsActiveTool`).
 - **Pointer state** is separate: the hand tells a tool `notePointerStateChanged`, and every tool family passes it to
@@ -332,7 +336,8 @@ SystemTests:
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;
 - reach of docked tools and the mixed bar's refresh: `SystemTest_macroDockedTextBarActsOnlyInItsWindow`,
   `SystemTest_macroDockedCreatorPlacesOnlyIntoItsHost`, `SystemTest_macroMixedToolbarKeepsEveryLookCurrent`;
-- dimming: `SystemTest_macroDimmedToolsWakeWithTheirSubject`, `SystemTest_macroDimmedToolCellStaysDarkUnderThePointer`.
+- dimming: `SystemTest_macroDimmedToolsWakeWithTheirSubject`, `SystemTest_macroDimmedToolCellStaysDarkUnderThePointer`,
+  `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool`.
 
 Macro authors: `src/macros/MACRO-PATTERNS.md` teaches that a tool acts on the focus only within the window its
 toolbar works for, and how to assert a dimmed tool.

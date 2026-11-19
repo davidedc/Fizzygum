@@ -39,18 +39,25 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
     else
       # the fonts every fonts menu offers (StringWdgt.fontStackMenuEntries), each row ticked while
       # it is the edited text's font — a VIEW of my toolbar's mirror, so the tick follows a new
-      # selection and a new font, in this menu and in any pinned copy
+      # selection and a new font, in this menu and in any pinned copy — and enabled while I have
+      # something to act on, which is what my cell dims by and a press on me refuses by: my toolbar
+      # announces whenever that may have moved (ToolbarWdgt.noteToolStatesChanged), so a pinned
+      # copy greys with me
       menu = new MenuWdgt @, target: @, title: "Fonts"
+      enabled = MenuRowReflectionSpec.enabledWhile @, "hasSomethingToActOn", true, announcedBy: @fontSelectionMenuHolder
       for [ fontStack, menuLabel ] in StringWdgt.fontStackMenuEntries()
         menu.addMenuItem menuLabel, @, "setFontNameFromMenu",
           arg1: fontStack
           reflection: MenuRowReflectionSpec.tickWhen @fontSelectionMenuHolder, "currentFontName", fontStack, menuLabel
+          enablement: enabled
 
       menu.popUp @_menuPopUpPoint(), world
 
       @fontSelectionMenuHolder.fontSelectionMenu = menu
 
   # THE MENU ADAPTER (see StringWdgt.setFontNameFromMenu): my items carry the font stack in arg1,
-  # which slot 3 of the dispatcher's fixed convention delivers here.
+  # which slot 3 of the dispatcher's fixed convention delivers here. A row refuses its press first,
+  # while I have nothing to act on (its enablement); the style door's `?` stays the defence for an
+  # action delivered by other means.
   setFontNameFromMenu: (ignored1, ignored2, theFontStack) ->
     @_styleSubject()?.setFontName? theFontStack

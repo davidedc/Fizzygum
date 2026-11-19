@@ -102,6 +102,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **No delete-a-word or delete-to-the-line's-start chords** — a Mac's Option+Backspace deletes one character, Cmd+Backspace and a PC's Ctrl+Backspace delete nothing (owner ruling: filed, not done; plan §U3) — reachable, low.
 - [ ] **AltGr typing does nothing on a PC** — Windows reports AltGr as Ctrl+Alt, and a caret drops every key with Ctrl held, so @ { € on German, French or Polish layouts type nothing (pre-existing; U3 review; plan §U3) — reachable, medium.
 - [ ] **A spreadsheet's selection mode lets Cmd+Left navigate Back** — the sheet moves its selection on arrows whatever modifier is held, but no caret is live, so the browser's default is not kept off and Cmd+Left can go Back (a headed hand check; U3 review; plan §U3) — reachable, medium.
+- [ ] **A copied font tool re-opens its original bar's Fonts menu** — a duplicated window's (with that menu pinned) or a tool dragged out of its bar keeps the original toolbar as its menu holder, so it re-pops the original's menu, whose rows ask the original tool (§U5 "Landed") — reachable, low.
 
 ### `archive/toolbar-arc-residue-plan.md` — the toolbar arc's residue (✅ CLOSED 2026-11-18: U1–U7 landed, see its ledger; living truth `architecture/toolbars.md`; the items below were filed on the way)
 - [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — its text is typed into the row's one-time raster while that size's glyphs are cold (at the glyph size it fits at no size, -1), so the boxes never resolve; true before U2's sizing too (boxes at 16 px); probe in the U2 scratch — reachable, low.
@@ -110,7 +111,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **A widget's base context menu still acts on view-mode content** — "Pick up" on a widget in a cell of a view-mode sheet empties the cell, "Color…" restyles past the tools' refusal (U5 review) — reachable, low; awaits the owner's ruling row by row (some rows stay active in view mode, some not).
 - [ ] **Other bare mode holders in view-mode content still take drops** — only a cell and a drawing's canvas ask the view mode around them, so a slide panel picked up into a Docs Maker, which is then flipped to view mode, still embeds a dropped widget (U5 review, read from code) — reachable, low.
 - [ ] **A copy of a pinned wire menu shows and drives a clone of the wire** — a wire row's source is its `WireSpec`, which a copy copies rather than shares, so the copy's "Fires per event" tick never follows the real wire and toggling it flips only the clone (U6 review, read from code) — reachable, low.
-- [ ] **A pinned copy of the toolbar's Fonts menu does not grey its rows while the font tool has nothing to act on** — they refuse silently and look enabled (§U7 "Landed") — reachable, low.
 
 ### `plans/affine-transforms-plan.md`
 Phase 4, residuals, claimsSpace, §7.7 and §7.8 landed; REMAINING = big §7.1-7.4 items, design-first, owner-gated. → "The backlog's note on this plan"
