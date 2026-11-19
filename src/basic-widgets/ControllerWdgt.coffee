@@ -112,8 +112,8 @@ class ControllerWdgt extends Widget
   # world severing the liveness edges into a widget it trashes (WorldWdgt).
   #   Both halves of a tracking wire go: the forward edge stops being derivable the moment the
   # record leaves the list (ensureWireEdges reconciles), but the reverse one is an edge OUT of the
-  # target that only I can revoke, so it is dropped explicitly. Then the record itself dies as a
-  # dataflow node, because its menu row subscribed to it.
+  # target that only I can revoke, so it is dropped explicitly. Then I announce myself, so a wire
+  # menu's rows, which tick by asking me about the wire, untick it.
   unwireFrom: (theTarget, action) ->
     wire = @_wireFor theTarget, action
     return unless wire?
@@ -121,7 +121,9 @@ class ControllerWdgt extends Widget
     delete @wires if @wires.length is 0
     world.dataflow.ensureWireEdges @, @wires
     world.dataflow.removeAnyChangeEdge theTarget, @ if wire.tracks
-    world.dataflow.removeAllEdgesOf wire
+    # a wire menu's rows tick by asking me about the wire (isWireFiringPerEvent, isWireTracking): told,
+    # a pinned one unticks the wire that is gone
+    world.dataflow.markNonValueChange @
     # the cut wire may have been what kept its target reachable — storage liveness
     # follows wires (graph-edges plan §4.3) — so mark the membership chokepoint.
     world.noteStorageMembershipMayHaveChanged()
@@ -232,6 +234,16 @@ class ControllerWdgt extends Widget
     for wire in @wires
       return wire if wire.describes theTarget, action
     return undefined
+
+  # Does THIS wire (its identity, the (target, action) pair) fire per event / also track its target?
+  # False for a wire I do not hold (one cut since the row was built). What the wire menu's rows tick
+  # by: they name the wire and ask me, never hold the record, so a copy of a pinned wire menu asks the
+  # real controller about the real wire (openWireMenu).
+  isWireFiringPerEvent: (theTarget, action) ->
+    (@_wireFor theTarget, action)?.isFiringPerEvent() ? false
+
+  isWireTracking: (theTarget, action) ->
+    (@_wireFor theTarget, action)?.isTracking() ? false
 
   # Do I drive this widget at all, by any of my wires? The membership question a container asks
   # about the chrome it holds — "is this scrollbar MINE, or one left pointing at another panel?"
@@ -377,16 +389,19 @@ class ControllerWdgt extends Widget
   #   Demotion revokes the reverse edge explicitly, exactly as unwireFrom does: the forward edge
   # is derived from the wire list and reconciles itself, but the re-reading one is an edge OUT of
   # the target that only I can revoke.
-  # ANNOUNCE on the WIRE so every open menu showing the row re-ticks (a wire is not a
-  # value-bearing node, so markNonValueChange is the only honest mark — see
-  # toggleFiresPerEventOfWire).
-  toggleTrackingOfWire: (ignored, ignored2, wire) ->
+  # Slots 3-4 name the wire (its (target, action) identity, as openWireMenu's rows carry it); a wire
+  # cut since the row was built is nothing to act on. ANNOUNCE on ME, the controller the rows ask
+  # (isWireTracking), so every open menu showing the row re-ticks, a copied one included
+  # (markNonValueChange: what moved is not my value).
+  toggleTrackingOfWire: (ignored, ignored2, theTarget, theAction) ->
+    wire = @_wireFor theTarget, theAction
+    return unless wire?
     if wire.tracks
       wire.tracks = false
       world.dataflow.removeAnyChangeEdge wire.target, @
     else
       @trackTarget wire.target, wire.action
-    world.dataflow.markNonValueChange wire
+    world.dataflow.markNonValueChange @
 
   # ---- the connection menu -------------------------------------------------------------
   # The shared "connect a target" block, appended identically by every subclass of mine that
@@ -515,24 +530,30 @@ class ControllerWdgt extends Widget
     return unless wire?
     description = (WireSpec.descriptionsOf @wires)[@wires.indexOf wire]
     menu = new MenuWdgt @, target: @, title: description
+    # ⭐ every row carries the wire's IDENTITY, the (target, action) pair, as my connection rows do
+    # (_addWireMenuEntries), never the record: a WireSpec is a part of me, and a copied menu would
+    # hold a clone of it -- ticking from the clone, toggling the clone, and (a tracking clone) cutting
+    # the real wire's back edge. Each row resolves the wire at its press, and ticks by asking ME about
+    # it (isWireFiringPerEvent, isWireTracking: the readerArguments name the wire), so two rows for two
+    # wires tick independently, and a copy of this menu drives the real wire.
+    wireNamed = [theTarget, theAction]
     label = "Fires per event"
     menu.addMenuItem label, @, "toggleFiresPerEventOfWire",
       toolTip: "deliver on every event (a synchronous mini-pass)\ninstead of once per cycle"
-      arg1: wire
-      # ⭐ the row's source is the WIRE ITSELF, not me: the policy is the wire's own state, and the
-      # dataflow node protocol is duck-typed, so a WireSpec can be a node with nothing but a reader
-      # (the trick §P5 played for Wallpaper). Two rows for two wires therefore tick independently.
-      reflection: MenuRowReflectionSpec.tickWhen wire, "isFiringPerEvent", true, label
+      arg1: theTarget
+      arg2: theAction
+      reflection: MenuRowReflectionSpec.tickWhen @, "isWireFiringPerEvent", true, label, readerArguments: wireNamed
     if @_canTrackWire wire
       followLabel = "Follows it too"
       menu.addMenuItem followLabel, @, "toggleTrackingOfWire",
         toolTip: "also FOLLOW this property,\nso the two stay in step\nhowever either one moves"
-        arg1: wire
-        # ticks off the WIRE, like the row above: tracking is a property of the relationship
-        reflection: MenuRowReflectionSpec.tickWhen wire, "isTracking", true, followLabel
+        arg1: theTarget
+        arg2: theAction
+        reflection: MenuRowReflectionSpec.tickWhen @, "isWireTracking", true, followLabel, readerArguments: wireNamed
     menu.addMenuItem "Disconnect", @, "disconnectWire",
       toolTip: "stop driving\n" + description
-      arg1: wire
+      arg1: theTarget
+      arg2: theAction
     menu.popUpAtHand()
 
   # ---- firesPerEvent: per-wire delivery policy (dataflow; spec §4/§8) ------------------
@@ -547,16 +568,19 @@ class ControllerWdgt extends Widget
   # called it: "a per-wire delivery policy". On the controller it could only ever have been one
   # policy for every wire — a fact stated once for relationships that do not share it.
   #
-  # Menu-dispatched: flip THIS wire's policy. A plain boolean flip: no layout and no tree mutation,
-  # hence no settle (check-layering-clean); nothing visual changes. Then re-declare, because the
-  # policy rides the edge record and the index must not disagree with the wire. ANNOUNCE it on the
-  # WIRE so every open menu showing that row re-ticks; markNonValueChange, NOT markStale, and now
-  # trivially so — a wire is not a value-bearing node at all, so there is nothing it could
-  # re-deliver.
-  toggleFiresPerEventOfWire: (ignored, ignored2, wire) ->
+  # Menu-dispatched (slots 3-4 name the wire, as openWireMenu's rows carry it; a wire cut since the
+  # row was built is nothing to act on): flip THIS wire's policy. A plain boolean flip: no layout and
+  # no tree mutation, hence no settle (check-layering-clean); nothing visual changes. Then re-declare,
+  # because the policy rides the edge record and the index must not disagree with the wire. ANNOUNCE it
+  # on ME, the controller the rows ask (isWireFiringPerEvent), so every open menu showing that row
+  # re-ticks, a copied one included; markNonValueChange, NOT markStale: what moved is not my value, so
+  # nothing must be re-delivered.
+  toggleFiresPerEventOfWire: (ignored, ignored2, theTarget, theAction) ->
+    wire = @_wireFor theTarget, theAction
+    return unless wire?
     wire.firesPerEvent = not wire.firesPerEvent
     world.dataflow.ensureWireEdges @, @wires
-    world.dataflow.markNonValueChange wire
+    world.dataflow.markNonValueChange @
 
   # Menu-dispatched: cut this wire. The un-wire gesture G2 named as missing.
   #   ⭐ A TWO-WAY relationship ends in BOTH directions, because that is the relationship the row
@@ -567,9 +591,10 @@ class ControllerWdgt extends Widget
   #   The reciprocal call is unconditional and needs no guard: unwireFrom returns at once when
   # there is no such record, so a one-way wire simply loses its one half. It also cannot recur —
   # it is unwireFrom being called, not disconnectWire.
-  disconnectWire: (ignored, ignored2, wire) ->
-    theTarget = wire.target
+  # Slots 3-4 name the wire, as openWireMenu's rows carry it; one cut since is nothing to act on.
+  disconnectWire: (ignored, ignored2, theTarget, theAction) ->
+    return unless (@_wireFor theTarget, theAction)?
     myPin = @principalPin()
-    @unwireFrom theTarget, wire.action
+    @unwireFrom theTarget, theAction
     theTarget.unwireFrom? @, myPin.setterName if myPin?.setterName?
 

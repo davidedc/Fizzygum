@@ -289,8 +289,8 @@ class DataflowEngine
 
   # The node-death entry: remove this node as BOTH producer and consumer, and forget any pooled
   # staleness / cached value for it. A dead node left in the index is a leak AND a ghost
-  # recompute. Callers: cell delete/re-commit (2c), socket unmount (4), un-wiring + fullDestroy
-  # (6b).
+  # recompute. Callers: cell delete/re-commit (2c), socket unmount (4), a widget's death
+  # (fullDestroy, 6b).
   removeAllEdgesOf: (node) ->
     outSet = @edgesFrom.get node
     if outSet?
@@ -315,7 +315,7 @@ class DataflowEngine
   # delivers into, silently (measured: the dead-target-wire spike). A dead relationship must
   # leave the MODEL, not just the index, so death severs it at the owning end: every producer
   # the reverse index knows un-wires the dying target with full unwireFrom hygiene (list
-  # record, tracking reverse edge, the wire record's own node death, membership chokepoint).
+  # record, tracking reverse edge, the controller's announcement, membership chokepoint).
   # ⚠ The reverse index is derived LAZILY (a restored controller declares its edges on first
   # fire), so a producer that never fired since load is invisible here — the fire-time
   # self-heal (ControllerWdgt._pruneWiresOntoDestroyedTargets) is the same invariant's other

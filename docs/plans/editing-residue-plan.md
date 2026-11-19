@@ -22,8 +22,8 @@ Status:
 | U7 | View mode reaches every drop and the selection ring | CLOSED 2026-11-19 (§U7) |
 | U8 | A mode flip repaints a hosted widget's grip | CLOSED 2026-11-19 (§U8) |
 | U9 | A person's grip drag keeps a window's title strip whole | CLOSED 2026-11-19 (§U9) |
-| U10 | The logo tool's overflow row is pictured live | LANDED 2026-11-19 (§U10) |
-| U11 | A copy of a pinned wire menu drives the real wire | OPEN |
+| U10 | The logo tool's overflow row is pictured live | CLOSED 2026-11-19 (§U10) |
+| U11 | A copy of a pinned wire menu drives the real wire | LANDED 2026-11-19 (§U11) |
 | U12 | The U3 off-screen test judges the drag-out look under both pointers | OPEN |
 | U13 | Close: this plan archived, or left open with what parked | OPEN |
 
@@ -547,8 +547,8 @@ re-shoots it at its next paint (the warm-up's repaint, now recorded against it),
 settled, and destroys it in `_destroyNoSettle`; (3) a serialization-transient field, and `_miniatureOf` no longer
 destroying the copy. Traps measured: the warm-up callback runs before `doRefresh` empties the record, so a re-shoot
 inside the callback has its re-record wiped (it must be paint-time); a context-level tag does not work, since the text
-types into its own back-buffer canvas, not the picture's context. Commits: one per repo, each
-titled "Icons: the logo tool's overflow row is pictured live …".
+types into its own back-buffer canvas, not the picture's context. Commits: Fizzygum `acaa1099`, Fizzygum-tests `1930fbcf3`,
+each titled "Icons: the logo tool's overflow row is pictured live …".
 
 ## U11 — A copy of a pinned wire menu drives the real wire (R2 §H)
 
@@ -563,6 +563,21 @@ tracking-back-link case. **Predicted pixel set.** EMPTY.
 `Widget`, which is at its ceiling); a pinned wire menu's rows after Disconnect stay, unticked, doing nothing (R2 §Q5).
 
 Time box 2 h.
+
+**Landed 2026-11-19.** As R2 §H4: `MenuRowReflectionSpec` gains `readerArguments` (own only when given; `holds` asks the
+reader with them, `? []` since a splat of undefined throws) and `tickWhen` an `opts`; `ControllerWdgt` answers
+`isWireFiringPerEvent` / `isWireTracking (theTarget, action)`; `openWireMenu`'s rows carry `arg1: theTarget, arg2: theAction`
+and tick by asking the controller; the three verbs resolve the wire at the press (`return unless wire?`) and announce
+the controller; `unwireFrom` announces it too, and its `removeAllEdgesOf wire` is gone (no edge starts at a wire).
+`widget-authoring-guidelines.md` §10 gains the general rule: a row names an outside widget's part by the widget plus a
+name, never by holding the part. Evidence: R2's `SystemTest_macroCopiedWireMenuDrivesTheRealWire` (values; its step 7
+first ticks "Fires per event" again so the cut wire's announcement can be seen, which R2's design could not) and five
+plants (the record held again, the toggles announcing no controller, `holds` without arguments, `unwireFrom`
+unannounced, a copied row not re-subscribing), each failing under both pointers; follower clean; WebKit passes. Filed:
+the copied "Layout in stack" menu (R2 §H3) and the rows left after Disconnect (R2 §Q5); from the review, a controller
+that is also a sink (a tracking slider) delivers its value when announced non-value — the drain's sink branch has no
+valueless exemption — which the promotion's announcement now reaches too, harmlessly into the panel. Commits: one per
+repo, each titled "Menus: a copy of a pinned wire menu drives the real wire …".
 
 ## U12 — The U3 off-screen test judges the drag-out look under both pointers (R4 §K)
 
@@ -638,6 +653,8 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A copy of a pinned wire menu shows and drives a clone of the wire** — a wire row's source is its `WireSpec`, which a copy copies rather than shares, so the copy's "Fires per event" tick never follows the real wire and toggling it flips only the clone (U6 review, read from code) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U11; filed under `archive/toolbar-arc-residue-plan.md`): the wire menu's rows name the wire by its (target, action) identity and tick by asking the controller (`MenuRowReflectionSpec.readerArguments`); `SystemTest_macroCopiedWireMenuDrivesTheRealWire`.
 
 - [x] **A narrow window's own title strip clips its edit toggle** — below ~175 px wide a window's strip shows close and collapse only and its pencil is laid past its edge (a Docs Maker at its grip floor, 125, shows no pencil; measured by the U4 research); not a docked bar, so U4's floor leaves it — reachable, low. — CLOSED 2026-11-19 (overnight loop, U9; filed under `archive/toolbar-arc-residue-plan.md`): a strip carrying a title floors the grip at every piece of its roster (`FrameBarWdgt.shortestStripKeepingEveryPiece`, folded into `FrameWdgt.smallestExtentKeepingMyControlsUsable`); `SystemTest_macroGripKeepsTheTitleStripWhole`.
 

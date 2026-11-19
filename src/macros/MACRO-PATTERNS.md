@@ -1694,6 +1694,9 @@ assertion a recapture after a regression silently stores two different hashes an
   one item further down. A wire only DRIVES; this makes the controller follow the pin it drives as well, so a slider wired onto
   a `ViewportWdgt`'s `scroll y` becomes a scrollbar for it. Navigate exactly as for "Fires per event" — the wire row by its
   target widget, then the `"Follows it too"` row — and click it again to demote.
+  ⭐ **A copy of a pinned wire menu drives the REAL wire** (`macroCopiedWireMenuDrivesTheRealWire`): the rows name the wire by
+  its (target, action) identity and tick by asking the controller (`ControllerWdgt.isWireFiringPerEvent`, `isWireTracking`),
+  so a "Duplicate" of the pinned menu (its own menu, through the hierarchy menu) toggles and unticks with the original.
   ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerWdgt._canTrackWire`): the pin must be readable
   AND declare `announces` on its `PinSpec`, the controller must be able to render that pin (`SliderWdgt._canReflectPin` wants a
   `SliderRange`, which today only a scroll frame answers), and it must not already be following another wire. So a macro that

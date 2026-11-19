@@ -19,12 +19,16 @@
 # ⚠ `readerName` is a METHOD NAME on `source`, not a function — the same late binding a wire's
 # `@action` uses, and for the same reasons: it survives serialization and duplication, where a
 # closure would not. The source needs no `pins()` and need not even be a Widget (`Wallpaper` is a
-# plain collaborator, and a wire row's source is its `WireSpec` record), which is the whole point —
-# this reflects a VALUE, and the dataflow node protocol is duck-typed.
+# plain collaborator), which is the whole point — this reflects a VALUE, and the dataflow node
+# protocol is duck-typed. A source holding several things answers for one of them by the
+# `readerArguments` that name it (a wire row's source is its CONTROLLER, asked about the wire its
+# (target, action) pair names): a row never holds a part of an outside widget, so a copied row still
+# asks the real one.
 #
 # CONSTRUCTOR SHAPE (docs/architecture/constructor-and-parameter-conventions.md): `source` and
 # `readerName` are the identity — WHOSE state and HOW to read it — so they stay positional; the
-# value, the label and the announcer ride `opts`. Callers use the two doors below.
+# value, the label, the announcer and the reader's arguments ride `opts`. Callers use the two doors
+# below.
 #
 # TWO SLOTS, ONE RECORD SHAPE: a row's TICK (`tickWhen`, CommandSpec.reflection) and its ENABLEMENT
 # (`enabledWhile`, CommandSpec.enablement) are each one of these -- one condition on somebody's
@@ -46,17 +50,25 @@ class MenuRowReflectionSpec
   # who announces a change of the value, when that is not `source` itself: the producer the row
   # subscribes to (MenuItemWdgt._subscribeToWhatIShow); undefined means the source
   announcer: undefined
+  # what the reader is asked WITH, when it answers for one of several things the source holds (a
+  # controller's wire, named by its (target, action) pair: ControllerWdgt.isWireFiringPerEvent); own
+  # only when given. A widget and a string, never a part of the source: a copied row then still asks
+  # the source about the same thing, rather than holding a cloned part of it.
+  readerArguments: undefined
 
   constructor: (@source, @readerName, opts = {}) ->
     @whenValue = opts.whenValue
     @label = opts.label
     @announcer = opts.announcedBy  if opts.announcedBy?
+    @readerArguments = opts.readerArguments if opts.readerArguments?
 
-  # THE TICK'S DOOR: one row per choice, ticked while that choice is the current one, saying theLabel.
-  @tickWhen: (source, readerName, theValue, theLabel) ->
+  # THE TICK'S DOOR: one row per choice, ticked while that choice is the current one, saying theLabel;
+  # opts.readerArguments, when the source's reader answers for one of several things it holds.
+  @tickWhen: (source, readerName, theValue, theLabel, opts = {}) ->
     new MenuRowReflectionSpec source, readerName,
       whenValue: theValue
       label: theLabel
+      readerArguments: opts.readerArguments
 
   # THE ENABLEMENT'S DOOR: the row is ENABLED exactly while `source[readerName]()` is theValue, and
   # disabled (greyed, refusing its press) otherwise. `opts.announcedBy` names who announces the value
@@ -68,4 +80,5 @@ class MenuRowReflectionSpec
 
   # does the condition hold RIGHT NOW -- for a tick, the row is ticked; for an enablement, enabled
   holds: ->
-    @source[@readerName]() is @whenValue
+    # `? []`: a splat of undefined throws
+    @source[@readerName]((@readerArguments ? [])...) is @whenValue

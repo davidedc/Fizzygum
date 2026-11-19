@@ -24,10 +24,10 @@
 # duplication where a closure would not. The engine dispatches it by name
 # (DataflowEngine._applyWireValue).
 #
-# IT IS ALSO A DATAFLOW NODE, in the duck-typed sense the engine means (src/dataflow/CLAUDE.md): its
-# "Fires per event" menu row is a MenuRowReflectionSpec whose source is the wire itself, so flipping
-# the policy anywhere re-ticks every open menu showing it. That needs nothing but a reader method and
-# a markNonValueChange — the same zero-engine-change trick §P5 played for Wallpaper.
+# A MENU NEVER HOLDS ME: my wire menu's rows name me by my identity, the (target, action) pair, and
+# tick by asking my controller about me (ControllerWdgt.isWireFiringPerEvent, isWireTracking), which
+# announces a change of my policies. A record held by a row would be cloned with a copied menu, and
+# the copy would tick from, and act on, the clone.
 #
 # CONSTRUCTOR SHAPE (docs/architecture/constructor-and-parameter-conventions.md): `target` and
 # `action` are the identity — a wire without either is not a wire, and every call site passes both —
@@ -65,12 +65,12 @@ class WireSpec
     action: @action
     firesPerEvent: @firesPerEvent
 
-  # what my "Fires per event" menu row reads to decide whether it is ticked
-  # (MenuRowReflectionSpec.readerName — the row's source is this wire)
+  # whether I fire per event: what my "Fires per event" menu row ticks by, through my controller
+  # (ControllerWdgt.isWireFiringPerEvent)
   isFiringPerEvent: -> @firesPerEvent
 
   # the same, for my "Follows it too" row: whether I also carry values BACK
-  # (ControllerWdgt.toggleTrackingOfWire)
+  # (ControllerWdgt.isWireTracking, toggleTrackingOfWire)
   isTracking: -> @tracks
 
   # How a menu names me: my target by its row name — as given, when the menu listing me has told it

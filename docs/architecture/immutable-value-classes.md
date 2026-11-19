@@ -142,8 +142,8 @@ of one colour is one colour, held one way.
 **Immutable by declaration (no shortcut machinery — small or cold):** `Point3D` (every op
 returns a fresh instance), `TextEditingState` (undo snapshot), `CommandSpec` (SHALLOWLY
 immutable — its `target`/`action`/`icon` fields reference live widgets), `MenuRowReflectionSpec`
-(SHALLOWLY immutable — `source` is a live object and `readerName` a METHOD NAME resolved late
-against it), `PinSpec` (SHALLOWLY
+(SHALLOWLY immutable — `source` is a live object, `readerName` a METHOD NAME resolved late
+against it, and its optional `readerArguments` widget references and strings), `PinSpec` (SHALLOWLY
 immutable — inert strings, but they are METHOD NAMES resolved late against a live widget),
 `SliderRange` (a TRANSIENT: derived on demand by `sliderRangeForPin`, applied, and dropped —
 never stored, so nothing serializes or duplicates it, and it deliberately has no `equals`

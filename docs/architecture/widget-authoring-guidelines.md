@@ -714,6 +714,12 @@ mark after `add` + `setExtent` adds nothing.
   row by its label (`SimpleTextWdgt`'s removals) names it however the state is set. A text's own menu is the
   model: one reader per state (`StringWdgt.drawsBold`, `currentHorizontalAlignment`, …), each announced where it
   changes, the rows of one choice sharing their reader and each ticked at its own value.
+- **A row names an outside widget's PART by the widget plus a name, never by holding the part.** [convention] A
+  menu is a widget a person can copy, and a copy deep-copies every non-widget object its rows hold that is not kept
+  by reference (`keptByReferenceOnDeepCopy`: a `Point`, a `Color`, …): a row holding a controller's `WireSpec` would
+  tick from, and act on, a clone of it. So the wire menu's rows carry the wire's identity, its (target, action) pair,
+  resolve it at the press (`ControllerWdgt._wireFor`) and tick by asking the controller about it
+  (`MenuRowReflectionSpec`'s `readerArguments`), as the connection rows name their wire.
 - **A row whose action can be REFUSED must DECLARE when it is enabled.** [convention] Pass an
   `enablement:` — `MenuRowReflectionSpec.enabledWhile source, "readerName", theValue`, the second door of the
   same record: the row is enabled exactly while `source[readerName]()` is `theValue`, and otherwise greys and

@@ -75,7 +75,8 @@ Landed so far:
   row (ticked while the policy is on — a drawn tick, the label stays plain) in the menu the shared
   connection menu's row for EACH live wire opens
   (`ControllerWdgt._addTargetConnectionMenuEntries` → `openWireMenu` → `toggleFiresPerEventOfWire`, which flips the
-  flag on the WIRE and announces it with `markNonValueChange`), offered by every controller —
+  flag on the wire its row names by its (target, action) identity and announces the CONTROLLER with
+  `markNonValueChange`: the rows tick by asking the controller, `isWireFiringPerEvent`), offered by every controller —
   SliderWdgt, StringWdgt, the patch nodes, … — once a target is wired. 6a is DARK: **nothing reads
   the flag yet** — legacy `_fireConnection` delivery still runs, pixels unchanged. Phase 6b's
   engine delivery (behind `world.dataflowWiresEnabled`) reads it when it declares the edge, letting
