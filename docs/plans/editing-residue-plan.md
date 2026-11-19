@@ -21,8 +21,8 @@ Status:
 | U6 | Folders, the bin and their links hold a fixed edit mode | CLOSED 2026-11-19 (§U6) |
 | U7 | View mode reaches every drop and the selection ring | CLOSED 2026-11-19 (§U7) |
 | U8 | A mode flip repaints a hosted widget's grip | CLOSED 2026-11-19 (§U8) |
-| U9 | A person's grip drag keeps a window's title strip whole | LANDED 2026-11-19 (§U9) |
-| U10 | The logo tool's overflow row is pictured live | OPEN |
+| U9 | A person's grip drag keeps a window's title strip whole | CLOSED 2026-11-19 (§U9) |
+| U10 | The logo tool's overflow row is pictured live | LANDED 2026-11-19 (§U10) |
 | U11 | A copy of a pinned wire menu drives the real wire | OPEN |
 | U12 | The U3 off-screen test judges the drag-out look under both pointers | OPEN |
 | U13 | Close: this plan archived, or left open with what parked | OPEN |
@@ -513,8 +513,8 @@ clean; WebKit passes. One slip of the loop's own rule: two comment edits (MacroT
 string-replace script, not the Edit tool; their diffs are exactly the intended comment lines. From the review: on every
 window whose strip carries a title the strip's cross term equals the bands' (`_chromeHeight`), so no test can bite the
 bands' cross term any more; it binds only on an untitled host wearing a band, which no test builds. Filed (R4 §E9 Q1): a
-floating toolbar's strip, at the width it is born at, offers close only. Commits: one per repo,
-each titled "Windows: a person's grip drag keeps a window's title strip whole …".
+floating toolbar's strip, at the width it is born at, offers close only. Commits: Fizzygum `445998cb`, Fizzygum-tests
+`b1051b6e4`, each titled "Windows: a person's grip drag keeps a window's title strip whole …".
 
 ## U10 — The logo tool's overflow row is pictured live (R4 §D-i)
 
@@ -529,6 +529,26 @@ holder's call is unchanged. Warm, the live picture is byte-identical to the rast
 would need.
 
 Time box 1.5 h.
+
+**Landed 2026-11-19.** As R4 §D4 D-i: `IconAppearance` declares `typesGlyphs: false` and carries `livePictureOn` (moved up
+from `TypedFaceIconAppearance`, answering none unless the face types glyphs); `TypedFaceIconAppearance` and
+`FizzygumLogoWithTextIconAppearance` declare `typesGlyphs: true`; the holder's call is unchanged and its header names
+both faces. Evidence: the new `SystemTest_macroOverflowRowOfATypedLogoStaysLive` (values: the logo row live, its image
+equal to a logo's own at that size and not blank, the heart row a raster; the atlas warm-up itself cannot be measured
+from a macro, and the stated notification repaints any holder, so the review had that assertion removed) and three plants
+(the logo declaring no glyphs, no live picture, every face live), each failing under both pointers; under the first two
+the image comparison fails too, the row's raster being taken cold — the bug itself; dpr 2 and WebKit pass; follower
+clean. Filed: the speech-bubble row's line in BACKLOG now points here, and R4's Q2, a text that fits at no size on
+SWCanvas is laid out for -1 px and painted at 9 px (medium). WHAT A FIX FOR THE BUBBLE NEEDS (R4 §D4 D-ii, kept here
+because the research notes are not committed): (1) a picture's cold draws attributed to the HOLDER, not to the copy's
+text -- a world field set by `Widget.fullImage` (`opts.coldGlyphsOwner`), read by the SWCanvas recorder where it reads
+`world.paintingWidget`; (2) the holder TAKES the widget it pictures, keeps it while `world.anyTextDirty()` after the shot,
+re-shoots it at its next paint (the warm-up's repaint, now recorded against it), releases it once a shot leaves the text
+settled, and destroys it in `_destroyNoSettle`; (3) a serialization-transient field, and `_miniatureOf` no longer
+destroying the copy. Traps measured: the warm-up callback runs before `doRefresh` empties the record, so a re-shoot
+inside the callback has its re-record wiped (it must be paint-time); a context-level tag does not work, since the text
+types into its own back-buffer canvas, not the picture's context. Commits: one per repo, each
+titled "Icons: the logo tool's overflow row is pictured live …".
 
 ## U11 — A copy of a pinned wire menu drives the real wire (R2 §H)
 

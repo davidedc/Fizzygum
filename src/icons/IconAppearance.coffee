@@ -8,13 +8,19 @@ class IconAppearance extends Appearance
   # that the actual code paints on.
   specificationSize: new Point 200, 200
 
+  # Does my art TYPE glyphs (a letter, a word) from the glyph atlases? A declared fact of the face: a
+  # face that types one cannot be kept as pixels taken once (livePictureOn, below). The typed faces
+  # (TypedFaceIconAppearance: the text tools' B, I and </>, the sheet's decimals) and the logo with its
+  # word do.
+  typesGlyphs: false
+
   # Icon fill color: the explicit ownColorInsteadOfWidgetColor if set, otherwise the ink the
   # host widget's STATE shows, for a widget whose ink is a function of its state (an icon
   # button's glyph by its pointer state, IconButtonWdgt._fillForMyState; a toolbar property
   # tool's by whether it has something to act on,
   # EditorContentPropertyChangerButtonWdgt._fillForMyState), read as I paint, otherwise the
   # host widget's color. The one precedence: my paint reads it as a string
-  # (_iconColorString), a live picture of me takes it as a colour (TypedFaceIconAppearance).
+  # (_iconColorString), a live picture of me takes it as a colour (livePictureOn).
   _iconColor: ->
     @ownColorInsteadOfWidgetColor ? @widget._fillForMyState?() ? @widget.color
 
@@ -23,6 +29,21 @@ class IconAppearance extends Appearance
   # _-tier: internal paint helper, only ever @-self-called from paintFunctions.
   _iconColorString: ->
     @_iconColor().toString()
+
+  # A PICTURE OF MY FACE THAT STAYS LIVE, for a widget that shows what my widget looks like
+  # (InertIconHolderWdgt: a toolbar overflow menu's row picture), when my face types glyphs
+  # (typesGlyphs); for any other face, none (the holder keeps a raster). The picture is my own kind of
+  # face, worn by that widget, with no colour of its own: the ink my face shows as the picture is taken
+  # (_iconColor) becomes the HOLDER's colour, so a face that paints in its icon ink (a typed face) paints
+  # in the holder's ink by the one icon-ink precedence -- the ink its state asks for when it asks one
+  # (its row disabled), else that colour; a face that paints its own fixed colours (the logo with its
+  # word) keeps them. A raster taken once cannot be that picture: a face typed while its atlas is still loading
+  # is typed in placeholder boxes, and only a face that is typed again when the atlas lands -- the
+  # holder's own, recorded as the holder's cold draw -- shows the glyph.
+  livePictureOn: (aWidget) ->
+    return undefined unless @typesGlyphs
+    aWidget.setColor @_iconColor()
+    new @constructor aWidget
 
   # The system-wide icon outline colour, as a string (the theme's iconOutline role; Color.toString
   # computes the string once per Color and keeps it, so every paint after the first reads a field).

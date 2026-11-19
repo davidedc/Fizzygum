@@ -125,7 +125,8 @@ the role's × s / `toolThumbnailSize`, snapped to 0.5 and kept within the atlase
 their advance and down by the draft's "line centred in a taller box" rule, `round((h − (A + D)) / 2) + A`. A face's
 family names the literal family first and the generic last (`"Times New Roman", serif`): SWCanvas picks an atlas by the
 generic word, so a bare literal would type Arial. Shown as a menu row's picture, a typed face is worn live by the
-holder (`livePictureOn`), never photographed, so it is retyped when its atlas arrives.
+holder (`livePictureOn`, read off the face's declared `typesGlyphs`; the logo with its word declares it too), never
+photographed, so it is retyped when its atlas arrives.
 
 The families are the three the SWCanvas glyph atlases cover — **Arial** (sans), **Courier New** (mono,
 through `StringWdgt.monoFontStack`), **Times** (serif) — at normal or bold, normal or italic, sizes

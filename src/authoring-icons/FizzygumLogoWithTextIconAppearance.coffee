@@ -3,6 +3,10 @@ class FizzygumLogoWithTextIconAppearance extends IconAppearance
   preferredSize: new Point 100, 100
   specificationSize: new Point 100, 100
 
+  # my art TYPES the word "Fizzygum" from the glyph atlases (paintFunction, below), so a picture of me
+  # stays live rather than a raster taken once (IconAppearance.livePictureOn)
+  typesGlyphs: true
+
   # TODO this should be a composition of the existing logo
   # and the text, we are duplicating the logo data instead...
   paintFunction: (context) ->

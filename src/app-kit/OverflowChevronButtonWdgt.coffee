@@ -78,7 +78,7 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   # means resizing it, and the tool on the strip must not move. A copy comes back a detached root
   # (Duplicator), so neither its resize nor its destruction reaches the strip. It exists for one
   # shot and is destroyed straight after: what the row keeps is a picture (InertIconHolderWdgt: pixels, or
-  # for a typed face a live copy of the face's appearance, never the tool), which is also what keeps
+  # for a face that types glyphs a live copy of the face's appearance, never the tool), which is also what keeps
   # the row's tap the ROW's -- a live tool held on a row would take the tap itself. The copy stands in
   # no cell, so the picture is taken in the plain toolbar glyph ink; a row of a dimmed tool greys it
   # as it greys its label, while the row is disabled (InertIconHolderWdgt._fillForMyState).

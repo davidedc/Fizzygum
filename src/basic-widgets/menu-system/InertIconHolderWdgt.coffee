@@ -3,8 +3,9 @@
 # I am a picture in the literal sense: I hold a raster, not the widget it was taken from, and I have
 # no children at all.
 #
-# ONE KIND OF FACE CANNOT BE KEPT AS PIXELS: a face TYPED from the glyph atlases (a text tool's B,
-# I or </>, TypedFaceIconAppearance) types placeholder boxes while its atlas is still loading, and a
+# ONE KIND OF FACE CANNOT BE KEPT AS PIXELS: a face that TYPES from the glyph atlases (a text tool's
+# B, I or </>, TypedFaceIconAppearance, or the logo with its word, FizzygumLogoWithTextIconAppearance;
+# its appearance declares typesGlyphs) types placeholder boxes while its atlas is still loading, and a
 # raster shot then would keep the boxes for good -- the widget shot is a throwaway copy, so the
 # atlas-warm repaint (which repaints the widgets that drew cold glyphs) never reaches the shot. Such
 # a face hands me a live copy of itself instead (its appearance's livePictureOn), which I wear in
