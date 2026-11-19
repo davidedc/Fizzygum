@@ -346,9 +346,10 @@ engine's own `Map`/`Set` handlers. A cell record's derived fields are dropped on
 (`@serializationTransients`) and left out of a copy (`@copyTransients`, the Duplicator's Note 5): the
 copied sheet recommits every cell and the next drain recomputes them, as a loaded one does. **Keys follow the editor
 focus:** every sheet joins `world.keyboardEventsReceivers` when built (a copy or a restore through the
-membership it carries), and `processKeyDown` acts only while that sheet is `world.editorFocusWdgt`
-and no caret is live — so of several sheets only the focused one acts (a duplicate never edits in
-lockstep), and a sheet worked on earlier never takes keys typed into another text. **A sheet in view-mode
+membership it carries), and `processKeyDown` acts only while that sheet is `world.editorFocusWdgt`,
+shows on a screen and no caret is live (`_keysAreMine`) — so of several sheets only the focused one acts (a
+duplicate never edits in lockstep), a sheet worked on earlier never takes keys typed into another text, and a
+focused sheet put away (its window collapsed or closed) stays the focus but clears and edits nothing unseen. **A sheet in view-mode
 content takes no entry** (`Widget.sitsInViewModeContent`: a sheet nested in a document whose window shows the
 eye; a sheet in its own window has no view mode): `_startEditNoSettle`, `_commitEditNoSettle` (an edit open
 across the flip ends without writing), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop and drag-out doors

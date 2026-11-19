@@ -67,7 +67,8 @@
 #     editing stays the deferred CodePromptWdgt path (spec §9.1).
 #
 # Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers, which
-# I join when built, + processKeyDown, which acts while I am the editor focus); never a DOM listener.
+# I join when built, + processKeyDown, which acts while I am the editor focus, show and no caret is
+# live); never a DOM listener.
 # While I sit in view-mode content (sitsInViewModeContent: nested in a document whose window shows the
 # eye) I take no entry -- my edit start, commit and clear, and my cells' drop and drag-out, refuse --
 # and the arrows, Tab, the wheel and the zoom still act.
@@ -202,8 +203,8 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     # _reindexCellsNoSettle then adopts through the same two calls — no double grid).
     @_buildChromeNoSettle()
     @_reconcileViewportNoSettle()
-    # I hear the keyboard from the start and act on it while I am the editor focus (processKeyDown).
-    # A copy and a restore are receivers
+    # I hear the keyboard from the start and act on it while I am the editor focus, show and no
+    # caret is live (processKeyDown). A copy and a restore are receivers
     # through the membership they carry (Widget's copy hook, the serializer's marker).
     world.keyboardEventsReceivers.add @
     return
@@ -701,15 +702,15 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
 
   # standard keyboard path (§1.17): the keys are mine while I am the EDITOR FOCUS — the thing the
   # user works on, which a click in me, or my window's opening, makes me (WorldWdgt.openFrameWith) —
-  # and no caret is live. A live caret owns every key, whether it edits me (in a cell or the formula
-  # bar: Enter / Escape / Tab come back through the accept / cancel / nextTab handlers holding the
-  # editor) or any other text; and once the user works on something else, keys reach me and I let
-  # them pass. So of several sheets, only the focused one acts (a duplicate carries its original's
-  # membership and never edits in lockstep), and a sheet clicked earlier never takes the keys typed
-  # into another text. In SELECTION mode I drive the grid keys (arrows / Tab / Enter / F2 / Delete /
-  # type-to-edit). PUBLIC event entry: it opens the ONE settle; the mode handler + edit lifecycle
-  # below are NoSettle cores (mount/teardown of the overlay editor mutate the tree, so they run
-  # inside this settle — the layering discipline).
+  # I show on a screen, and no caret is live. A live caret owns every key, whether it edits me (in a
+  # cell or the formula bar: Enter / Escape / Tab come back through the accept / cancel / nextTab
+  # handlers holding the editor) or any other text; and once the user works on something else, keys
+  # reach me and I let them pass. So of several sheets, only the focused one acts (a duplicate
+  # carries its original's membership and never edits in lockstep), and a sheet clicked earlier
+  # never takes the keys typed into another text. In SELECTION mode I drive the grid keys (arrows /
+  # Tab / Enter / F2 / Delete / type-to-edit). PUBLIC event entry: it opens the ONE settle; the
+  # mode handler + edit lifecycle below are NoSettle cores (mount/teardown of the overlay editor
+  # mutate the tree, so they run inside this settle — the layering discipline).
   processKeyDown: (key, code, shiftKey, ctrlKey, altKey, metaKey) ->
     # early-return-sanctioned: every key reaches every receiver, and a key that is not mine must
     # not open a settle.
@@ -722,9 +723,13 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
       @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
     return
 
-  # whether the keys are mine (processKeyDown, above): I am the editor focus and no caret is live
+  # whether the keys are mine (processKeyDown, above; actsOnKeyAsCommand, below): I am the editor focus, I show on
+  # a screen, and no caret is live. Put away (my window collapsed or closed into storage, or I am hidden) I stay
+  # the focus, so I am selected again once I show (WorldWdgt._keepEditingOnScreenNoSettle), but a key would act on
+  # cells the person cannot see: it passes me, as it passes a sheet that is not the focus.
   _keysAreMine: ->
-    world.editorFocusWdgt is @ and not world.caret?
+    world.editorFocusWdgt is @ and not world.caret? and
+      not @surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
 
   # the arrows I move my selection on in SELECTION mode, whatever modifier is held, each as (dCol, dRow)
   @arrowMoves:

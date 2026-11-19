@@ -71,7 +71,9 @@ vocabulary below is the convention for all new code:
     the thing you work ON: everything inside a window, and a window nested as content, stays selectable.
   - **Where the selection STANDS is derived too.** Putting a widget away (a close to the bin, a hide, a
     collapse, a drag out of a window) leaves the selection pointing at it; what reads it goes through a door
-    that answers for what the person can see (`WorldWdgt.editableEditorFocus`), and the world compares the
+    that answers for what the person can see (`WorldWdgt.editableEditorFocus`; a sheet's keys ask the same
+    showing question themselves, `SimpleSpreadsheetWdgt._keysAreMine`, since its arrows still act in view
+    mode), and the world compares the
     door's inputs once per cycle and announces a change (`WorldWdgt._keepEditingOnScreenNoSettle`), ending an
     edit whose text left the screen on the way. No close, hide or collapse core knows about editing, so every
     way a widget leaves the screen is covered by construction, and it is selected again once it shows.
