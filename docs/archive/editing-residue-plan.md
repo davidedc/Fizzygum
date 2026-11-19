@@ -669,6 +669,45 @@ Time box 1 h.
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
+- [x] **`TextSlots` walks a text from its start to find the character at an offset** (filed 2026-11-19 by the owner
+      after the loop, from U1's workaround). TODAY: `TextSlots._characterAt` (`src/TextSlots.coffee`, behind
+      `slotAfter`, `slotAtOrBefore` and so `isSlot`, `slotBefore`, `slotAtOrAfter`) iterates the grapheme segments
+      from the text's start, because `Segments.prototype.containing` is wrong in WebKit before a surrogate pair (U1's
+      first gauntlet: WebKit 26.4's `containing(2)` on "ab😀 cd_2" answered the "b", three units long).
+      THE BUG is upstream and known: WebKit bug 324036, "Segments.prototype.containing(n) also includes the preceding
+      segment when code unit n starts a surrogate pair" (RESOLVED FIXED 2026-09-29, 322218@main, WebKit PR #74932;
+      listed in Safari Technology Preview 254, 2026-10-08; no stable Safari named as shipping it on 2026-11-19, and
+      the suite's Playwright WebKit 26.4 still has it). Cause: `containing(n)` asks ICU for the boundary preceding
+      `n + 1`; with `n` a lead surrogate, ICU snaps `n + 1` back to `n` and answers the boundary before it. Old Safari
+      keeps the bug after a fixed release, so a workaround stays until those versions are rare.
+      THE COST (measured 2026-11-19, a 13 KB text, offset near its end): walking 320 µs per call in WebKit 26.4 and
+      1,600 µs in V8 (Node 22), `containing` 3–5 µs; linear, so a 100 KB text costs ~15 ms per call in V8, several
+      calls per keystroke. Low today: a document holds a text per paragraph, a code pane one class member.
+      THE CHANGE (Bun's pre-upgrade workaround, oven-sh/bun PR #35001): at an emoji's LEAD surrogate, ask the same
+      character through its trail, which never trips the snap and answers the same on a fixed engine:
+      ```coffee
+      @_characterAt: (text, offset) ->
+        lead = text.charCodeAt offset
+        trail = text.charCodeAt offset + 1
+        offset += 1 if 0xD800 <= lead <= 0xDBFF and 0xDC00 <= trail <= 0xDFFF
+        (TextSlots._graphemes text).containing offset
+      ```
+      ⚠ The TRAIL check is required: a lone lead with no trail ("\uD83Dlone") is its own character, and the plain
+      lead check jumped to the "l" (measured). Probe, 2426 offsets over plain emoji, ZWJ families, flags, skin tones,
+      ☹️, a decomposed é, CRLF and lone surrogates: plain `containing` wrong at 209 in WebKit, 0 in V8; the change wrong
+      at 0 in both (`Fizzygum-tests/.scratch/containing-alternatives/probe.js`, gitignored; Playwright's Chromium is
+      not installed, so V8 was read in Node).
+      ALSO: `containing` goes back into `check-unresolved-sends.js`'s BUILTINS table, the in-file platform list (U1
+      added it, then removed it with the walk); the `TextSlots` header and `_characterAt`'s comment say why the +1 (bug 324036), and that plain
+      `containing` takes over once old Safari is rare. `slotsOf` and the word walk still iterate: they need every slot.
+      PROOF: `SystemTest_macroCaretStepsOverTheSmileyWhole` already bites on this (it failed both WebKit legs with
+      plain `containing`); plant the plain call back and see it fail under `--browser=webkit`, then the presuite and
+      the gauntlet's webkit and finger legs. Predicted pixel set EMPTY. — CLOSED 2026-11-19 (follow-ups loop, F5; filed under
+      `archive/editing-residue-plan.md`): `TextSlots._characterAt` asks `containing`, through a pair's second half at its
+      first (only a whole pair); the BUILTINS entry proved unneeded (a paren-less send, `characters.containing offset`, is
+      one the gate does not read, as `segment text` already is); `SystemTest_macroCaretStepsOverTheSmileyWhole` gains a
+      lone-first-half check; plain `containing` fails it under WebKit, a step with no trail check fails the new check.
+
 - [x] **No delete-a-word or delete-to-the-line's-start chords** — a Mac's Option+Backspace deletes one character, Cmd+Backspace and a PC's Ctrl+Backspace delete nothing (owner ruling 2026-11-19: add them; plan §U3) — reachable, low. — CLOSED 2026-11-19 (follow-ups loop, F4; filed under `archive/editing-residue-plan.md`): each delete chord deletes from the caret to where its family's move of the same reach lands — that span is selected without moving the caret, and Backspace or Delete deletes the selection; one character where the move goes nowhere (`CaretWdgt.deleteToWordStart`, `deleteToWordEnd`, `deleteToNextWordStart`, `deleteToLineStart`): a Mac's Option+Backspace, Option+Delete and Cmd+Backspace, a PC's Ctrl+Backspace and Ctrl+Delete; `SystemTest_macroDeleteChordsFollowTheKeyboardFamily`.
 
 - [x] **No Ctrl+Y redo on a PC** — a PC's caret redoes only with Ctrl+Shift+Z; Windows' Ctrl+Y is not in `CaretWdgt.chordVerbs` (owner ruling 2026-11-19: add it; plan §U3) — reachable, low. — CLOSED 2026-11-19 (follow-ups loop, F3; filed under `archive/editing-residue-plan.md`): `CaretWdgt.chordVerbs.pc` maps `Ctrl+y` to a `redo` verb of its own, which undo with Shift held calls too; `SystemTest_macroCtrlYRedoesOnAPC`.
@@ -772,42 +811,3 @@ Time box 1 h.
 - [x] **The caret splits an emoji** — moves, deletes, clicks, selections, crops and the password mask count UTF-16 units, so 😀 is stepped into, half-deleted and masked as two stars (owner report; §U1) — reachable, medium. — CLOSED 2026-11-18 (overnight loop, U1; filed under `plans/editing-residue-plan.md`): `TextSlots`, one definition of a slot (between grapheme clusters), asked by every slot reader; `SystemTest_macroCaretStepsOverTheSmileyWhole`.
 - [x] **A caret's remembered column is not set by every caret move** — Home, End, Left and Right set it; a double- or triple-click, a delete of a selection and Up/Down collapsing a selection do not, so the next Up or Down lands under a stale slot (found by the U1 review, read from code) — reachable, low. — CLOSED 2026-11-18 (overnight loop, U2; filed under `archive/toolbar-arc-residue-plan.md`): the column lives only in the caret's vertical run (`CaretWdgt._columnForVerticalMove`), which every other placement ends, never in the text; `SystemTest_macroUpAndDownLandUnderTheCaretAfterAnyMove`.
 - [x] **`eliminateInvisibleCharacter` strips only the first marker** — `String.replace` with a string pattern replaces one occurrence, so a text holding two U+2063 is measured with the second. — CLOSED 2026-11-18 (overnight loop, U1; filed under `archive/argument-holes-both-repos-plan.md`): it strips every one (`replaceAll`), and `_drawTextLine` strips them at the one line-draw seam; a password's mask pads with them.
-
-## BACKLOG detail (open items, moved from docs/BACKLOG.md)
-
-### `TextSlots` walks a text from its start to find the character at an offset
-
-- [ ] **`TextSlots` walks a text from its start to find the character at an offset** (filed 2026-11-19 by the owner
-      after the loop, from U1's workaround). TODAY: `TextSlots._characterAt` (`src/TextSlots.coffee`, behind
-      `slotAfter`, `slotAtOrBefore` and so `isSlot`, `slotBefore`, `slotAtOrAfter`) iterates the grapheme segments
-      from the text's start, because `Segments.prototype.containing` is wrong in WebKit before a surrogate pair (U1's
-      first gauntlet: WebKit 26.4's `containing(2)` on "ab😀 cd_2" answered the "b", three units long).
-      THE BUG is upstream and known: WebKit bug 324036, "Segments.prototype.containing(n) also includes the preceding
-      segment when code unit n starts a surrogate pair" (RESOLVED FIXED 2026-09-29, 322218@main, WebKit PR #74932;
-      listed in Safari Technology Preview 254, 2026-10-08; no stable Safari named as shipping it on 2026-11-19, and
-      the suite's Playwright WebKit 26.4 still has it). Cause: `containing(n)` asks ICU for the boundary preceding
-      `n + 1`; with `n` a lead surrogate, ICU snaps `n + 1` back to `n` and answers the boundary before it. Old Safari
-      keeps the bug after a fixed release, so a workaround stays until those versions are rare.
-      THE COST (measured 2026-11-19, a 13 KB text, offset near its end): walking 320 µs per call in WebKit 26.4 and
-      1,600 µs in V8 (Node 22), `containing` 3–5 µs; linear, so a 100 KB text costs ~15 ms per call in V8, several
-      calls per keystroke. Low today: a document holds a text per paragraph, a code pane one class member.
-      THE CHANGE (Bun's pre-upgrade workaround, oven-sh/bun PR #35001): at an emoji's LEAD surrogate, ask the same
-      character through its trail, which never trips the snap and answers the same on a fixed engine:
-      ```coffee
-      @_characterAt: (text, offset) ->
-        lead = text.charCodeAt offset
-        trail = text.charCodeAt offset + 1
-        offset += 1 if 0xD800 <= lead <= 0xDBFF and 0xDC00 <= trail <= 0xDFFF
-        (TextSlots._graphemes text).containing offset
-      ```
-      ⚠ The TRAIL check is required: a lone lead with no trail ("\uD83Dlone") is its own character, and the plain
-      lead check jumped to the "l" (measured). Probe, 2426 offsets over plain emoji, ZWJ families, flags, skin tones,
-      ☹️, a decomposed é, CRLF and lone surrogates: plain `containing` wrong at 209 in WebKit, 0 in V8; the change wrong
-      at 0 in both (`Fizzygum-tests/.scratch/containing-alternatives/probe.js`, gitignored; Playwright's Chromium is
-      not installed, so V8 was read in Node).
-      ALSO: `containing` goes back into `check-unresolved-sends.js`'s BUILTINS table, the in-file platform list (U1
-      added it, then removed it with the walk); the `TextSlots` header and `_characterAt`'s comment say why the +1 (bug 324036), and that plain
-      `containing` takes over once old Safari is rare. `slotsOf` and the word walk still iterate: they need every slot.
-      PROOF: `SystemTest_macroCaretStepsOverTheSmileyWhole` already bites on this (it failed both WebKit legs with
-      plain `containing`); plant the plain call back and see it fail under `--browser=webkit`, then the presuite and
-      the gauntlet's webkit and finger legs. Predicted pixel set EMPTY.

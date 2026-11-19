@@ -97,7 +97,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
 ### `archive/editing-residue-plan.md` — the editing residue (✅ CLOSED 2026-11-19: U1–U12 landed, see its ledger; the items below were filed on the way)
-- [ ] **`TextSlots` walks a text from its start to find the character at an offset** — linear (13 KB: 0.3 ms in WebKit, 1.6 ms in V8 per call), working around WebKit bug 324036 in `containing`; `containing(offset + 1)` at an emoji's lead is constant and passes both engines (§U1) — reachable, low.
 - [ ] **On a non-Latin keyboard layout a PC's Ctrl chords do nothing** — the chord tables match the key's character (`event.key`), so on a Cyrillic or Greek layout Ctrl+Z, Ctrl+A and Ctrl+Y find no verb, where Windows apps go by the key's position (F3 review, read from code; plan §U3) — reachable, medium.
 - [ ] **A delete pushes no undo state** — only typing does, so undo after Backspace, Delete or a delete chord goes back to before the last typing, and a word or line deleted right after a click cannot be undone at all (F4 review, read from code; plan §U3) — reachable, medium.
 - [ ] **AltGr typing does nothing on a PC** — Windows reports AltGr as Ctrl+Alt, and a caret drops every key with Ctrl held, so @ { € on German, French or Polish layouts type nothing (pre-existing; U3 review; plan §U3) — reachable, medium.

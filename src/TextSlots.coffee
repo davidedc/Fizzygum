@@ -11,10 +11,13 @@
 # platform's emoji, one glyph too).
 #   Grapheme segmentation, walked from the text's start, answers the same in the two engines the suite runs (Chrome
 # and WebKit, measured on ASCII, surrogate pairs, emoji selectors, ZWJ sequences, flags, skin tones, combining marks,
-# CRLF and Hangul). Two things the platform offers do NOT, so neither is used: the segments' own `containing(offset)`
-# (WebKit's answers the character BEFORE a surrogate pair for the offset just before the pair: in "ab😀", the "b",
-# three units long), so the character at an offset is found by walking (_characterAt); and WORD segmentation
-# (WebKit's keeps "foo.bar" one word, Chrome's makes it two), so a word is defined here, over these characters.
+# CRLF and Hangul). The segments' own `containing(offset)` does too, but for one kind of offset: WebKit before its
+# fix (bug 324036, in Safari Technology Preview 254) answers the character BEFORE a surrogate pair for the offset of
+# the pair's first half when that pair starts a character after another one (in "ab😀", the "b", three units long).
+# So the character at an offset is asked of `containing` through the pair's second half there, which answers the
+# same in every engine that follows the spec (measured: V8 and WebKit 26.4) (_characterAt). WORD segmentation
+# does not agree (WebKit keeps "foo.bar" one word, Chrome makes it two), so a word is defined here, over these
+# characters.
 #   Class-side members only, as Utils has: there is no instance of me.
 
 class TextSlots
@@ -56,12 +59,18 @@ class TextSlots
     return text.length if offset >= text.length
     (TextSlots._characterAt text, offset).index
 
-  # the character holding the code unit at `offset` (0 <= offset < the text's length), as its segment: walked from
-  # the text's start up to the offset (see the header: WebKit's `containing` answers wrongly before a surrogate pair)
+  # the character holding the code unit at `offset` (0 <= offset < the text's length), as its segment. Asked of
+  # `containing` (hundreds of times cheaper than walking the characters from the text's start, measured on a 13 KB
+  # text, though still reading the text once), through the second half of a surrogate pair when the offset is its
+  # first: the same character, and it keeps clear of the offsets an unfixed WebKit answers wrongly (the header). Only
+  # a WHOLE pair: a lone first half, with no second half after it, is a character of its own. Once a WebKit without
+  # the fix is rare, plain `containing offset` is enough.
   @_characterAt: (text, offset) ->
-    for each from TextSlots._graphemes text
-      return each if each.index + each.segment.length > offset
-    undefined
+    lead = text.charCodeAt offset
+    trail = text.charCodeAt offset + 1
+    offset += 1 if 0xD800 <= lead <= 0xDBFF and 0xDC00 <= trail <= 0xDFFF
+    segments = TextSlots._graphemes text
+    segments.containing offset
 
   # the offset itself where it is a slot, else the END of the character it falls in: where a caret stands after
   # text it typed, which can join the character that follows it into one (two flag halves, a joiner and an emoji)
