@@ -40,9 +40,11 @@ nothing: a docked toolbar never falls back to working for the person.
   (`GlassBoxBottomWdgt.thumbnailClickReceiver`, `triggerToolFromMenu`), so a row and a tap obey one dispatch
   contract. A docked bar's chevron stays usable under a person's grip: a drag of a window's resize grip stops at
   the smallest extent at which every docked bar keeps its one-slot run (`ToolbarWdgt.shortestDockedRun`) and
-  stays inside the window (`FrameWdgt.smallestExtentKeepingMyBandsUsable`, asked by
-  `FrameGripWdgt._extentMyDragAsksOfMyTarget`). That is the person's gesture only, never a minimum: code can
-  still force a window to any extent, and a window in view mode, whose bands are disengaged, has no floor.
+  stays inside the window, and at which a strip carrying a title keeps close, collapse and its edit toggle whole
+  (`FrameBarWdgt.shortestStripKeepingEveryPiece`): ONE floor, `FrameWdgt.smallestExtentKeepingMyControlsUsable`,
+  asked by `FrameGripWdgt._extentMyDragAsksOfMyTarget`. A strip with no title (a toolbar window's, along its short
+  side) is not floored. That is the person's gesture only, never a minimum: code can still force a window to any
+  extent; in view mode the bands are disengaged and ask no floor, while the strip still does.
 - **Chrome.** `ToolbarWdgt.excludedFromEditorFocusTracking` answers true: a press anywhere in a toolbar
   neither takes nor clears the editor focus, which is what its property tools act on. Every menu answers it
   too (`MenuWdgt`, pinned or not), a toolbar's overflow menu and the Fonts menu among them, so a menu's rows

@@ -764,6 +764,16 @@ class FrameBarWdgt extends Widget
     @collapseUncollapseSwitchButton?.setToggleState FrameBarWdgt.COLLAPSE_GLYPH
     @frame.uncollapseButtonInBarPressed()
 
+  # THE SHORTEST THIS STRIP CAN BE AND KEEP EVERY PIECE OF ITS ROSTER (close, collapse, its edit toggle):
+  # the inverse of _pieceNamesThatFit's room test for the whole roster, the title aside (it gives itself up
+  # first, by the graded roster). Shorter by one pixel, the first piece of PIECE_DROP_ORDER on the roster
+  # goes (the edit toggle, or collapse on a strip without one). A pure
+  # read of the roster my frame's spec names, so it does not depend on when it is asked. What my frame's
+  # grip floor reads for a strip carrying a title (FrameWdgt.smallestExtentKeepingMyControlsUsable).
+  shortestStripKeepingEveryPiece: ->
+    spec = @frame._barSpec()
+    2 * spec.padding + @_lengthOfPieces (pieceName for pieceName in spec.pieces when pieceName isnt "title"), spec
+
   # THE SHORTEST THIS STRIP CAN BE AND KEEP `aLength` OF ITS TRAILING END FREE, for something standing
   # there that is none of my pieces (a collapsed frame's grip). My arrange leads my pieces from the
   # strip's start (past my padding), so the tight case is that run of pieces with the length free

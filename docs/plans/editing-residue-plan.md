@@ -20,8 +20,8 @@ Status:
 | U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | CLOSED 2026-11-19 (§U5) |
 | U6 | Folders, the bin and their links hold a fixed edit mode | CLOSED 2026-11-19 (§U6) |
 | U7 | View mode reaches every drop and the selection ring | CLOSED 2026-11-19 (§U7) |
-| U8 | A mode flip repaints a hosted widget's grip | LANDED 2026-11-19 (§U8) |
-| U9 | A person's grip drag keeps a window's title strip whole | OPEN |
+| U8 | A mode flip repaints a hosted widget's grip | CLOSED 2026-11-19 (§U8) |
+| U9 | A person's grip drag keeps a window's title strip whole | LANDED 2026-11-19 (§U9) |
 | U10 | The logo tool's overflow row is pictured live | OPEN |
 | U11 | A copy of a pinned wire menu drives the real wire | OPEN |
 | U12 | The U3 off-screen test judges the drag-out look under both pointers | OPEN |
@@ -476,7 +476,8 @@ measurement; follower clean; WebKit passes; the boot smoke (flips on orphans and
 passes. From the review: the test also counts the grip's painted rows (24 in edit mode, none in view mode; the plant
 leaves 24 stale) and re-asserts after each flip that nothing else repaints the button; and a page picked out of a Generic
 panel stays its container's `@contents`, so the window's toggle flips it where it stands, beyond the repaint (probed;
-filed). Commits: one per repo, each titled "View mode: a mode flip repaints a hosted widget's grip …".
+filed). Commits: Fizzygum `5887cf90`, Fizzygum-tests `895f2938c`, each titled "View mode: a mode flip repaints a hosted widget's grip
+…".
 
 ## U9 — A person's grip drag keeps a window's title strip whole (R4 §E)
 
@@ -498,6 +499,22 @@ reason: append "renamed …"); `toolbars.md` §1. BACKLOG: the strip item closes
 **Needs:** U6 CLOSED or PARKED (folder windows' strips).
 
 Time box 2.5 h.
+
+**Landed 2026-11-19.** As R4 §E4, titled strips only (§1): `FrameBarWdgt.shortestStripKeepingEveryPiece` (the roster's
+pieces end to end inside the frame border, the title aside); `FrameWdgt.smallestExtentKeepingMyBandsUsable` RENAMED
+`smallestExtentKeepingMyControlsUsable`, its first line flooring a strip that carries a title (`showsText`) along it at
+that length and across it at the chrome; `FrameGripWdgt` asks the new name; prose renamed in the five places R4 lists,
+the ratchet's dated reason appended. `FrameWdgt`'s method count stays 173. Since U6 a folder window carries no pencil,
+so its strip floors it at close and collapse (90). Evidence: R4's `SystemTest_macroGripKeepsTheTitleStripWhole` and four
+plants (no strip term, the floor 1 px short, no cross term, every strip floored), failing 12, 11, 3 and 1 assertions
+under both pointers, R4's numbers; the R4 revision of `SystemTest_macroGripStopsWhereDockedBarsStayUsable` (the band's run
+judged on a Sheets Maker, view mode on the height) passes, and U4's three plants still fail it (17, 7, 3); followers
+clean; WebKit passes. One slip of the loop's own rule: two comment edits (MacroToolkit, ToolbarWdgt) went through a
+string-replace script, not the Edit tool; their diffs are exactly the intended comment lines. From the review: on every
+window whose strip carries a title the strip's cross term equals the bands' (`_chromeHeight`), so no test can bite the
+bands' cross term any more; it binds only on an untitled host wearing a band, which no test builds. Filed (R4 §E9 Q1): a
+floating toolbar's strip, at the width it is born at, offers close only. Commits: one per repo,
+each titled "Windows: a person's grip drag keeps a window's title strip whole …".
 
 ## U10 — The logo tool's overflow row is pictured live (R4 §D-i)
 
@@ -601,6 +618,8 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A narrow window's own title strip clips its edit toggle** — below ~175 px wide a window's strip shows close and collapse only and its pencil is laid past its edge (a Docs Maker at its grip floor, 125, shows no pencil; measured by the U4 research); not a docked bar, so U4's floor leaves it — reachable, low. — CLOSED 2026-11-19 (overnight loop, U9; filed under `archive/toolbar-arc-residue-plan.md`): a strip carrying a title floors the grip at every piece of its roster (`FrameBarWdgt.shortestStripKeepingEveryPiece`, folded into `FrameWdgt.smallestExtentKeepingMyControlsUsable`); `SystemTest_macroGripKeepsTheTitleStripWhole`.
 
 - [x] **Other bare mode holders in view-mode content still take drops** — only a cell and a drawing's canvas ask the view mode around them, so a slide panel picked up into a Docs Maker, which is then flipped to view mode, still embeds a dropped widget (U5 review, read from code) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U7; filed under `archive/toolbar-arc-residue-plan.md`): one door, `Widget.wantsDropOfChild` = drops on and not `sitsInViewModeContent`; `SystemTest_macroViewModeContentTakesNoDrop`.
 - [x] **The selection ring frames a drawing's paint surface after a click in view mode** — the ring asks the clicked glass's own edit flag, which no mode flip writes, so a view-mode Drawings Maker, or a bare drawing in a view-mode document, rings its surface (research C §3.3, U5) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U7; filed under `archive/toolbar-arc-residue-plan.md`): `WorldWdgt._widgetBeingEdited` asks `sitsInViewModeContent` first; `SystemTest_macroViewModeContentShowsNoSelectionRing`.

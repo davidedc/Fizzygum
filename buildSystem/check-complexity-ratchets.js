@@ -63,7 +63,9 @@ const METHOD_CEILINGS = {
   // docked payloads (dockedPayloads) and the window whose edge slot it occupies (dockHost) as generic queries, so a
   // toolbar can ask whom it works for; the paintingOverlay chain and _dockedToolbar went. Raised 171 -> 172 on
   // 2026-11-18, owner-granted for the toolbar residue's U4 (owner ruling #8): smallestExtentKeepingMyBandsUsable, the
-  // extent a person's grip drag stops at so every docked bar's overflow chevron stays usable, derived from the bands.
+  // extent a person's grip drag stops at so every docked bar's overflow chevron stays usable, derived from the bands
+  // (renamed smallestExtentKeepingMyControlsUsable on 2026-11-19 for the editing residue's U9, when the titled strip's
+  // floor joined it: the same count, one question).
   // Raised 172 -> 173 on 2026-11-18, owner-granted for the toolbar residue's U5: offersEditToggle, the ONE definition
   // of a window's pencil, which its strip reads and which bounds view mode's downward inheritance
   FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 173 },

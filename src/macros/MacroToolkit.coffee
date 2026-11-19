@@ -1701,9 +1701,9 @@ class MacroToolkit
   # grip's centre bakes in. The delta is in the frame's own plane, carried to the screen through any
   # island or scrolled pane like every aim. The frame's layout keeps the last word on a dimension it
   # does not size freely: a content that dictates its own height (wrapping text) takes the width and
-  # sets the height itself, a minimum extent stands, and a window wearing docked bars stops at the
-  # smallest extent they stay usable at (FrameWdgt.smallestExtentKeepingMyBandsUsable, the grip's own
-  # floor). Verifies that the press lands on the grip.
+  # sets the height itself, a minimum extent stands, and a window stops at the smallest extent its titled
+  # strip's pieces and its docked bars stay usable at (FrameWdgt.smallestExtentKeepingMyControlsUsable,
+  # the grip's own floor). Verifies that the press lands on the grip.
   resizeWindowBy_InputEvents: (frame, extentDelta, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     resizer = frame.resizer
     @_aimingAt resizer, "resizeWindowBy", =>
@@ -1711,7 +1711,8 @@ class MacroToolkit
       @_dragChromeFromTo_InputEvents pressPoint, dropPoint, milliseconds, startTime
 
   # RESIZE A FRAME BY ITS OWN GRIP to exactly `extent`: resizeWindowBy_InputEvents by the difference
-  # from the extent it has now, so a resize round trip lands back on the extent it started from.
+  # from the extent it has now, so a resize round trip lands back on the extent it started from (from an
+  # extent at or above the frame's grip floor: below it, the drag's first pixel takes the frame up to it).
   resizeWindowTo_InputEvents: (frame, extent, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @resizeWindowBy_InputEvents frame, (extent.subtract frame.extent()), milliseconds, startTime
 

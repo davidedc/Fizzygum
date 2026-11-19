@@ -23,8 +23,11 @@
 #     (FrameWdgt.barsOwnWidth), leaving the width the window comes back at alone, and stops at the
 #     narrowest bar that keeps it (FrameWdgt.shortestBarKeepingMyGrip). A press that does not travel is
 #     a tap on the bar, which expands the frame (ruling C17), so the grip takes nothing from the bar's tap;
-#   - on an expanded frame that wears docked bars, a drag stops at the smallest extent at which every
-#     bar's overflow chevron stays whole and inside the frame (FrameWdgt.smallestExtentKeepingMyBandsUsable).
+#   - on an expanded frame, a drag stops at the smallest extent at which its strip, when it carries a
+#     title, keeps every piece of its roster whole (close, collapse, and its edit toggle where it has
+#     one), and every docked bar's overflow chevron stays whole and inside the frame
+#     (FrameWdgt.smallestExtentKeepingMyControlsUsable). A strip with no title (a toolbar window's) asks
+#     no floor.
 #     This is the PERSON's gesture only: code can still force a frame to any extent.
 # A halo's handles, a naked inspector's resizer and the demo handles stay plain HandleWdgts, on a plate
 # that casts the desktop shadow (HandleAppearance, HandleWdgt._castMyShadow).
@@ -93,14 +96,15 @@ class FrameGripWdgt extends HandleWdgt
   # On a collapsed bar a drag stops at the narrowest width that keeps me on it. The pointer can overshoot
   # that and come back: the drag re-derives from the pointer each time, so I rejoin it where it rejoins
   # me. (The height is the frame's to refuse: FrameWdgt._noteAWidthAskedOfMyBar.) An expanded frame takes
-  # what the pointer asks, down to the smallest extent its docked bars stay usable at
-  # (FrameWdgt.smallestExtentKeepingMyBandsUsable): a frame wearing no band takes it all. A frame made
-  # smaller than that by code is taken up to it at my drag's first pixel; nothing remembers the extent
-  # it had when the press began. Attached to a widget that is no frame ("Attach"), I ask no floor.
+  # what the pointer asks, down to the smallest extent its controls stay usable at -- its titled strip's
+  # pieces whole, its docked bars' chevrons usable (FrameWdgt.smallestExtentKeepingMyControlsUsable): a
+  # frame asking neither takes it all. A frame made smaller than that by code is taken up to it at my
+  # drag's first pixel; nothing remembers the extent it had when the press began. Attached to a widget
+  # that is no frame ("Attach"), I ask no floor.
   _extentMyDragAsksOfMyTarget: (anExtent) ->
     if @_standsOnACollapsedBar()
       return new Point (Math.max anExtent.x, @target.shortestBarKeepingMyGrip()), anExtent.y
-    floor = @target.smallestExtentKeepingMyBandsUsable?()
+    floor = @target.smallestExtentKeepingMyControlsUsable?()
     return anExtent unless floor?
     anExtent.max floor
 

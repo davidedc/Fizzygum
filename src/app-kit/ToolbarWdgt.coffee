@@ -72,7 +72,7 @@ class ToolbarWdgt extends ViewportWdgt
   # THE SHORTEST RUN I STAY USABLE AT, DOCKED: the twin of dockThickness along the band's run -- my
   # grid's one-slot run, where my overflow chevron stands whole (ToolPanelWdgt.shortestUsableRun).
   # The host whose edge slot I occupy asks it of each docked payload, as a capability, so a payload
-  # that is no toolbar answers nothing (FrameWdgt.smallestExtentKeepingMyBandsUsable). Pure, like
+  # that is no toolbar answers nothing (FrameWdgt.smallestExtentKeepingMyControlsUsable). Pure, like
   # dockThickness.
   shortestDockedRun: ->
     @contents.shortestUsableRun()
