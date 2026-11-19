@@ -669,6 +669,56 @@ Time box 1 h.
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
+- [x] **A text that fits at no size on SWCanvas is laid out for -1 px and painted at 9 px** (filed by U10 from
+      R4 §D2 / §D9 Q2; ruled by the owner 2026-11-19).
+      THE BUG: `StringWdgt.searchLargestFittingFont` looks for the largest size, from 0 up to 200, at which a text fits
+      its box; on SWCanvas it already caps the TOP at `SWCANVAS_MAX_FONT_SIZE` (96), so the size laid out is the size
+      painted. The BOTTOM is not capped. `normalizeFontForSWCanvas` (`src/boot/extensions/SWCanvasElement-extensions.coffee`)
+      raises every size under `SWCANVAS_MIN_FONT_SIZE` (9) to 9, for measuring and painting alike, so on SWCanvas "does
+      it fit at 0" asks "does it fit at 9"; a text too big at 9 makes the search answer -1. Layout then uses -1 as the
+      size (line pitch, caret, centring for a text of no height), while paint builds `italic -1px Arial`, whose `1px`
+      the adapter's regex reads without its sign and raises to 9: 9 px ink where no room was planned, cropped by the
+      box (the bubble's "ell"). The native page measures at any size, so its search finds a real small one (~5 px).
+      REACH (R4's census, `Fizzygum-tests/.scratch/overnight-editing-residue/research/R4-pictures-windows/census/`,
+      gitignored): 11 tests paint such text — plot tick labels in ~10x5 px boxes (`macroExamplesDoorsNameTheirWindows`,
+      `macroOneWindowAppsKeepTheirWindowOnTheShelf`, `macroPlotUncollapseKeepsRendering`, `macroSampleDashboardPlots`,
+      `macroSampleSlideEditViewToggle`, the three `macroStretch*` tests, some with a speech bubble too) and narrow
+      paragraphs (`macroSoftWrapping`, `macroTextWdgtShrinksToFitLongToken`, `macroTripleClickSelection`).
+      THE RULING (owner, 2026-11-19): SWCanvas supports sizes under 9 by drawing a rectangle per character. The
+      library already does: BitmapText.js scales the 9 px metrics (`InterpolatedFontMetrics`) and draws placeholder
+      rectangles for any size under its `MIN_RENDERABLE_SIZE` (9) — in the vendored bundle, `vendor/swcanvas/swcanvas.js`,
+      `forceInvalidAtlas = true; // Always use placeholders for sizes < 9`. Fizzygum's clamp is what throws it away.
+      Rejected on the way: a 9 px floor for the search (consistent, but SWCanvas would then never shrink below 9 where
+      native does); drawing nothing at -1 (blanks the 11 tests' visible text, R4 §D5).
+      THE SHAPE:
+      (1) `normalizeFontForSWCanvas` keeps its ceiling and drops its floor (sizes still snap to 0.5 px steps); the
+          header's "(>= 9)" and band wording, and the search's comment, follow.
+      (2) A draw under the minimum is SETTLED, not cold: BitmapText reports it NO_ATLAS (status 3), exactly as a
+          missing atlas, so the `fillText` wrapper would record it as a cold glyph and `swCanvasEnsureAtlasForFont`
+          would request a sub-9 atlas that never exists, re-recorded on every repaint. Below the minimum, record
+          nothing and request nothing (as PARTIAL_ATLAS already is not recorded). Later, upstream: BitmapText could
+          report "rectangles by design" with its own status.
+      (3) -1 never reaches a font string: where a box has no room even at size 0 (smaller than its own inset), the
+          search answers 0 and nothing is drawn.
+      TRADE-OFF (accepted): on the SWCanvas page any text under 9 px is rectangles, where native draws tiny real glyphs
+      (a 5 px smudge; 7-8 px nearly readable). Nothing in `src` sets a size under 9 (read 2026-11-19); a typed icon face
+      keeps its own size inside the band (`TypedFaceIconAppearance`), so icons do not change.
+      TEST: the 11 tests' shots change (rectangles at a small size instead of a cropped 9 px text): recapture under the
+      pixel policy, predicted from the census list above; the native page is unchanged. A new values test on the
+      SWCanvas page: a text in a box too small for 9 px fits at a size above 0 and under 9, its line pitch is that
+      size's, no cold glyph is recorded for it and the text settles (`world.anyTextDirty()` false); plants: the floor
+      put back (the size answers -1), the cold record kept (the text never settles). — CLOSED 2026-11-19 (follow-ups loop, F2; filed under
+      `archive/editing-residue-plan.md`): `normalizeFontForSWCanvas` keeps a size under 9 (its ceiling kept), so BitmapText
+      measures it by the 9 px metrics scaled and draws rectangles; `swCanvasBelowTheAtlases` keeps such a draw out of the
+      cold-glyph record and the atlas request; `searchLargestFittingFont` answers 0, never -1 (on the native page a text
+      that fits at no size now draws nothing, where an invalid `-1px` font drew a sliver in a stale font). Found on the
+      way and fixed: BitmapText's scaled metrics dropped the pixel density, so at dpr 2 the rectangles were half-size
+      (BitmapText.js `6b3c52c`, SWCanvas `3d9a301`, which `vendor/swcanvas.pin` now names); with the 9 px floor gone the
+      boot probe's minimum font height is 0 on SWCanvas, so a text fitted at 0 has a line pitch of 0, and
+      `TextWdgt.slotAt`'s row walk, which never ended then, stops past the last line. The owner saw the readable-but-cropped
+      cases (a slide's link URL, narrow paragraphs) turn to rectangles and kept the ruling. Nine of the census's 11 tests
+      recaptured (the other two shoot no such text); `SystemTest_macroTinyFittedTextIsDrawnAtItsFittedSize`.
+
 - [x] **A speech-bubble tool's overflow-row picture shows placeholder boxes** (filed by the toolbar arc's review under
       `archive/toolbar-arc-residue-plan.md`; moved to this section 2026-11-19 with the owner's ruling, and next in line).
       THE BUG (§U10 "Landed"): a Slides or Dashboards bar's overflow row shows a 24 px picture of each hidden tool,
@@ -757,45 +807,3 @@ Time box 1 h.
       PROOF: `SystemTest_macroCaretStepsOverTheSmileyWhole` already bites on this (it failed both WebKit legs with
       plain `containing`); plant the plain call back and see it fail under `--browser=webkit`, then the presuite and
       the gauntlet's webkit and finger legs. Predicted pixel set EMPTY.
-
-### A text that fits at no size on SWCanvas is laid out for -1 px and painted at 9 px
-
-- [ ] **A text that fits at no size on SWCanvas is laid out for -1 px and painted at 9 px** (filed by U10 from
-      R4 §D2 / §D9 Q2; ruled by the owner 2026-11-19).
-      THE BUG: `StringWdgt.searchLargestFittingFont` looks for the largest size, from 0 up to 200, at which a text fits
-      its box; on SWCanvas it already caps the TOP at `SWCANVAS_MAX_FONT_SIZE` (96), so the size laid out is the size
-      painted. The BOTTOM is not capped. `normalizeFontForSWCanvas` (`src/boot/extensions/SWCanvasElement-extensions.coffee`)
-      raises every size under `SWCANVAS_MIN_FONT_SIZE` (9) to 9, for measuring and painting alike, so on SWCanvas "does
-      it fit at 0" asks "does it fit at 9"; a text too big at 9 makes the search answer -1. Layout then uses -1 as the
-      size (line pitch, caret, centring for a text of no height), while paint builds `italic -1px Arial`, whose `1px`
-      the adapter's regex reads without its sign and raises to 9: 9 px ink where no room was planned, cropped by the
-      box (the bubble's "ell"). The native page measures at any size, so its search finds a real small one (~5 px).
-      REACH (R4's census, `Fizzygum-tests/.scratch/overnight-editing-residue/research/R4-pictures-windows/census/`,
-      gitignored): 11 tests paint such text — plot tick labels in ~10x5 px boxes (`macroExamplesDoorsNameTheirWindows`,
-      `macroOneWindowAppsKeepTheirWindowOnTheShelf`, `macroPlotUncollapseKeepsRendering`, `macroSampleDashboardPlots`,
-      `macroSampleSlideEditViewToggle`, the three `macroStretch*` tests, some with a speech bubble too) and narrow
-      paragraphs (`macroSoftWrapping`, `macroTextWdgtShrinksToFitLongToken`, `macroTripleClickSelection`).
-      THE RULING (owner, 2026-11-19): SWCanvas supports sizes under 9 by drawing a rectangle per character. The
-      library already does: BitmapText.js scales the 9 px metrics (`InterpolatedFontMetrics`) and draws placeholder
-      rectangles for any size under its `MIN_RENDERABLE_SIZE` (9) — in the vendored bundle, `vendor/swcanvas/swcanvas.js`,
-      `forceInvalidAtlas = true; // Always use placeholders for sizes < 9`. Fizzygum's clamp is what throws it away.
-      Rejected on the way: a 9 px floor for the search (consistent, but SWCanvas would then never shrink below 9 where
-      native does); drawing nothing at -1 (blanks the 11 tests' visible text, R4 §D5).
-      THE SHAPE:
-      (1) `normalizeFontForSWCanvas` keeps its ceiling and drops its floor (sizes still snap to 0.5 px steps); the
-          header's "(>= 9)" and band wording, and the search's comment, follow.
-      (2) A draw under the minimum is SETTLED, not cold: BitmapText reports it NO_ATLAS (status 3), exactly as a
-          missing atlas, so the `fillText` wrapper would record it as a cold glyph and `swCanvasEnsureAtlasForFont`
-          would request a sub-9 atlas that never exists, re-recorded on every repaint. Below the minimum, record
-          nothing and request nothing (as PARTIAL_ATLAS already is not recorded). Later, upstream: BitmapText could
-          report "rectangles by design" with its own status.
-      (3) -1 never reaches a font string: where a box has no room even at size 0 (smaller than its own inset), the
-          search answers 0 and nothing is drawn.
-      TRADE-OFF (accepted): on the SWCanvas page any text under 9 px is rectangles, where native draws tiny real glyphs
-      (a 5 px smudge; 7-8 px nearly readable). Nothing in `src` sets a size under 9 (read 2026-11-19); a typed icon face
-      keeps its own size inside the band (`TypedFaceIconAppearance`), so icons do not change.
-      TEST: the 11 tests' shots change (rectangles at a small size instead of a cropped 9 px text): recapture under the
-      pixel policy, predicted from the census list above; the native page is unchanged. A new values test on the
-      SWCanvas page: a text in a box too small for 9 px fits at a size above 0 and under 9, its line pitch is that
-      size's, no cold glyph is recorded for it and the text settles (`world.anyTextDirty()` false); plants: the floor
-      put back (the size answers -1), the cold record kept (the text never settles).

@@ -64,8 +64,9 @@ class TypedFaceIconAppearance extends IconAppearance
 
   # The size my face is typed at in a box `side` px square: the role's size scaled from a tool cell's
   # side to `side`, snapped to the atlases' half-pixel steps and clamped to the sizes they carry.
-  # SWCanvas would snap and clamp it itself; the native canvas would not, and the two backends must
-  # type the same face.
+  # SWCanvas would snap it and clamp its top itself, and would draw a size under the atlases as
+  # rectangles; the native canvas would do neither, and the two backends must type the same face, in
+  # real glyphs.
   _faceFontSizeIn: (side, role) ->
     size = Math.round(role.size * side / WorldWdgt.theme.toolThumbnailSize * 2) / 2
     Math.min window.SWCANVAS_MAX_FONT_SIZE, Math.max window.SWCANVAS_MIN_FONT_SIZE, size

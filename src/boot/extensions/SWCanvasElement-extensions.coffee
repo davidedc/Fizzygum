@@ -13,23 +13,28 @@
 # SWCanvas ships bitmap atlases for only Arial / Times / Courier, and its font
 # parser throws on the comma-separated stacks Fizzygum uses (e.g.
 # "12px Arial, sans-serif"). So map each stack onto one of the three shipped
-# families by its generic terminator, and snap the size to the nearest shipped
-# 0.5px step (>= 9). This MUST be applied identically to measure and render
+# families by its generic terminator, and snap the size to the nearest 0.5px
+# step (at most MAX, below). This MUST be applied identically to measure and render
 # (it is — both go through the context's `font` setter, which we override below)
 # so SWCanvas-measure and SWCanvas-render stay self-consistent.
 # The shipped family names are exactly "Arial", "Times New Roman", "Courier New"
 # (NOT "Times" / "Courier" — those have no metrics/atlases and measureText would
 # return null, which is fatal during boot).
-# The size range SWCanvas can actually render: it ships bitmap atlases for a
-# fixed band of sizes (see vendor-swcanvas-fonts.sh), so any requested size is
-# clamped into [MIN, MAX]. MAX matters beyond rendering: a size above it draws
-# NO bigger than MAX, so auto-fitting text (StringWdgt's font-size search)
-# must not pick a size larger than MAX — otherwise the chosen size, and the
-# caret/line height derived from it, run away above what is actually painted
-# (the "giant caret, normal-size text" bug). Both are exposed on window, on
-# either backend: that search reads the cap, and a typed icon face
-# (TypedFaceIconAppearance) keeps its size inside the band, so the native canvas
-# types the size SWCanvas does -- both from this one source of truth.
+# The sizes SWCanvas TYPES: it ships bitmap atlases for the band [MIN, MAX]
+# (see vendor-swcanvas-fonts.sh).
+#   - A size above MAX is clamped to MAX: it would draw NO bigger, so auto-fitting
+#     text (StringWdgt's font-size search) must not pick one — otherwise the chosen
+#     size, and the caret/line height derived from it, run away above what is
+#     actually painted (the "giant caret, normal-size text" bug).
+#   - A size under MIN is kept: SWCanvas's text library (BitmapText) measures it by
+#     the MIN metrics scaled down and draws one rectangle per character, too small
+#     to read anyway — the same size measured and painted, so a text that fits only
+#     under MIN is laid out for what is drawn. Such a draw is FINAL, never a cold
+#     glyph waiting for an atlas: none exists under MIN (swCanvasBelowTheAtlases).
+# Both are exposed on window, on either backend: the search reads the cap, and a
+# typed icon face (TypedFaceIconAppearance) keeps its size inside the band, so it
+# types real glyphs, and the native canvas types the size SWCanvas does -- both
+# from this one source of truth.
 SWCANVAS_MIN_FONT_SIZE = 9
 SWCANVAS_MAX_FONT_SIZE = 96
 window.SWCANVAS_MIN_FONT_SIZE = SWCANVAS_MIN_FONT_SIZE
@@ -53,7 +58,6 @@ normalizeFontForSWCanvas = (cssFont) ->
   size = parseFloat match[2]
   family = mapFontStackToSWCanvasFamily match[3].trim()
   snapped = Math.round(size * 2) / 2
-  snapped = SWCANVAS_MIN_FONT_SIZE if snapped < SWCANVAS_MIN_FONT_SIZE
   snapped = SWCANVAS_MAX_FONT_SIZE if snapped > SWCANVAS_MAX_FONT_SIZE
   styleWeight = ""
   styleWeight += "bold " if /\bbold\b/.test prefix
@@ -89,7 +93,9 @@ swCanvasMissingAtlases = {}       # idString -> true (warn once per missing atla
 # world. Only NO_ATLAS (code 3) is recorded: a pending/possible load will cure it.
 # PARTIAL_ATLAS (code 4 — chars missing from a LOADED atlas, e.g. the menu arrow
 # glyph at 12px) is deliberately NOT recorded: no load will change it, and
-# recording it would keep the pending set non-empty forever. Cache entries SET
+# recording it would keep the pending set non-empty forever. For the same reason
+# neither is a NO_ATLAS draw of a font under the atlases (swCanvasBelowTheAtlases):
+# its rectangles are final. Cache entries SET
 # into the immutable-back-buffer cache while the cold window is open are suspected
 # poisoned (they may embed placeholder pixels, and entries are shared content-keyed
 # across widgets, so a kept entry would re-blit placeholders on the next hit) and
@@ -230,8 +236,14 @@ swCanvasLogMissingAtlas = (idString) ->
   swCanvasMissingAtlases[idString] = true
   console.warn "Fizzygum/SWCanvas: no atlas for '#{idString}' (not vendored?) — text stays as placeholders"
 
+# A font under the atlases' band (the header: SWCANVAS_MIN_FONT_SIZE): its text draws as rectangles by design, so a
+# draw of it is final. SWCanvas reports such a draw as it reports a missing atlas (NO_ATLAS), yet no load will ever
+# change it, so it is neither recorded as a cold glyph nor sent for an atlas.
+swCanvasBelowTheAtlases = (coreFont) ->
+  coreFont?.fontSize? and coreFont.fontSize < SWCANVAS_MIN_FONT_SIZE
+
 swCanvasEnsureAtlasForFont = (coreFont, density) ->
-  return unless coreFont? and coreFont.fontFamily? and window.SWCanvas?
+  return unless coreFont? and coreFont.fontFamily? and window.SWCanvas? and not swCanvasBelowTheAtlases coreFont
   raw = window.SWCanvas.fonts._raw
   return unless raw?.FontProperties? and raw?.BitmapText?
   FontProperties = raw.FontProperties
@@ -309,8 +321,9 @@ installSWCanvasExtensions = ->
         # cold-glyph attribution block above) so the warm-up refresh can
         # repaint exactly the affected widgets. Calibration probes rasterise
         # into throwaway canvases (pixels never reach the screen) and are
-        # flagged out of the recording.
-        if result?.status?.code == 3 and not @isFizzygumCalibrationProbe
+        # flagged out of the recording, and so is a font under the atlases,
+        # whose rectangles are final (swCanvasBelowTheAtlases).
+        if result?.status?.code == 3 and not @isFizzygumCalibrationProbe and not swCanvasBelowTheAtlases @_core?._font
           swCanvasRecordColdGlyphDraw()
         swCanvasEnsureAtlasForFont @_core?._font, @_core?._textPixelDensity
       catch err

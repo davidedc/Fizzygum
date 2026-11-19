@@ -132,7 +132,9 @@ that picture: the row asks the copy it photographs to `prepareForMenuRowPicture`
 The families are the three the SWCanvas glyph atlases cover — **Arial** (sans), **Courier New** (mono,
 through `StringWdgt.monoFontStack`), **Times** (serif) — at normal or bold, normal or italic, sizes
 9–96. A design weight maps onto them: **600 → bold, 500 → regular**. There is no letter-spacing.
-Both backends use the same families.
+Both backends use the same families. On SWCanvas a size above 96 draws at 96, and a size under 9 (only a
+shrink-to-fit text in a box too small for 9 px gets one: every role is larger) draws one rectangle per character,
+measured by the 9 px metrics scaled down, so such a text is laid out for what is drawn.
 
 ## 4. Rules
 

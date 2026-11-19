@@ -650,7 +650,10 @@ class StringWdgt extends ControllerWdgt
     # expensive.
     PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity = 0
 
-    # minimum font size that we are gonna examine
+    # minimum font size that we are gonna examine. No backend needs a floor here: SWCanvas
+    # measures and draws a size under its smallest atlas the same way (as rectangles, see
+    # SWCanvasElement-extensions), so a text that fits only that small is laid out for what
+    # is drawn.
     start = 0
     # maximum font size that we are gonna examine. Normally 200, but under a
     # backend that can only render up to a fixed size (SWCanvas clamps to its
@@ -665,8 +668,11 @@ class StringWdgt extends ControllerWdgt
     stop  = Math.round maxExaminedFontSize * Math.pow 10,
             PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
     
+    # A text that does not fit even at 0 (its box narrower than its inset, or shorter than its
+    # lines at the smallest line height the backend floors a font at: StringWdgt.fontHeight) is
+    # drawn at 0, which draws nothing. Never a negative size, which no canvas reads as one.
     if !@doesTextFitInExtent textToFit, start
-      return -1
+      return 0
 
 
     if @doesTextFitInExtent textToFit, stop

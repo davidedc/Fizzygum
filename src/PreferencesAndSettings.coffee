@@ -7,12 +7,14 @@
 
 class PreferencesAndSettings
 
-  # The ONE probe per PAGE. getMinimumFontHeight rasterises a glyph and reads the pixels back,
-  # and that read's answer depends on how warm the SWCanvas glyph atlas is (DETERMINISM.md §3g):
-  # a cold-atlas probe at boot and a warm re-probe later answer DIFFERENT numbers. So the probe
-  # runs exactly once per page -- lazily (?=) at the first construction, which IS boot, on a cold
-  # atlas -- and every PreferencesAndSettings built afterwards reads that boot measurement here
-  # instead of measuring again.
+  # The ONE probe per PAGE. getMinimumFontHeight rasterises a glyph and reads the pixels back, so
+  # it runs exactly once per page -- lazily (?=) at the first construction, which IS boot -- and
+  # every PreferencesAndSettings built afterwards reads that boot measurement here instead of
+  # measuring again: a world's text must not lay out differently from the next world's because a
+  # backend answered a re-probe differently (DETERMINISM.md §3g: a probe that typed glyphs from a
+  # cold atlas once answered differently warm). On SWCanvas the 1 px probe is under the glyph
+  # atlases, drawn as a rectangle too thin to ink, and answers 0: SWCanvas draws every size, so
+  # nothing floors a font height there.
   @probedMinimumFontHeight: undefined
 
   # I am a per-world singleton reached as the STATIC WorldWdgt.preferencesAndSettings: what makes me
@@ -25,7 +27,7 @@ class PreferencesAndSettings
   # WorldWdgt.preferencesAndSettings ("preferences") and re-binds on restore -- no marker here.
 
   # the smallest font height this browser renders (the probe above): StringWdgt.fontHeight
-  # floors the size it measures at it.
+  # floors the size it measures at it (0 on SWCanvas, which floors nothing).
   minimumFontHeight: undefined
 
   # (a drag threshold: see its assignment in the constructor)
@@ -117,8 +119,9 @@ class PreferencesAndSettings
     canvas = HTMLCanvasElement.createOfPhysicalDimensions new Point size, size
     ctx = canvas.getContext "2d", willReadFrequently: true
     # a THROWAWAY calibration rasterisation: its pixels never reach the screen, so the
-    # SWCanvas cold-glyph recorder must not count its (possibly placeholder) draw
-    # (SWCanvasElement-extensions' surgical atlas-warm attribution reads this flag)
+    # SWCanvas cold-glyph recorder must not count its draw, whatever its size
+    # (SWCanvasElement-extensions' surgical atlas-warm attribution reads this flag; at 1 px the
+    # draw is under the atlases too, which that recorder also leaves out)
     ctx.isFizzygumCalibrationProbe = true
     ctx.font = "1px serif"
     maxX = Math.ceil ctx.measureText(str).width

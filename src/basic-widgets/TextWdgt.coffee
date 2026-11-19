@@ -578,8 +578,10 @@ class TextWdgt extends StringWdgt
 
     row = 0
 
-    # rows are whole line boxes, so a point between two lines' ink picks the line whose box it is in
-    while aPoint.y - @top() > textVerticalPosition + row * @linePitch @fittingFontSize
+    # rows are whole line boxes, so a point between two lines' ink picks the line whose box it is in. The walk
+    # stops one row past the last line (slotAtRow answers the text's end there), which also ends it for a text
+    # fitted at size 0, whose line pitch is 0 and whose rows all stand at one height.
+    while row <= @wrappedLines.length and aPoint.y - @top() > textVerticalPosition + row * @linePitch @fittingFontSize
       row += 1
     row = Math.max row, 1
 
