@@ -67,7 +67,9 @@ class LabelButtonAppearance extends Appearance
   # A short bar down my left edge, drawn only when my container has declared me a payload it
   # hands out (ButtonWdgt.isDetachablePayloadOfMyParent — the SAME declaration the grab reads,
   # so the mark and the behaviour cannot disagree). Today that means a command row in a PINNED
-  # menu: pin a menu and its rows visibly become things you can pull off it.
+  # menu: pin a menu and its rows visibly become things you can pull off it. A payload hosted in a
+  # sheet cell is one too, while its sheet sits in no view-mode content: a mode flip repaints the
+  # flipped holder whole, with what stands in it (Widget's two mode cores), so the grip follows the flip.
   #   DRAWN, not a character in the label. A glyph would have to exist in the bitmap-font atlas
   # (many do not, and an absent one renders as a black box), and — the heavier reason — the
   # label STRING is an identity: menus are driven, swept and tested by matching it, so decorating

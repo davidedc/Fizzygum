@@ -5380,6 +5380,10 @@ class Widget extends TreeNode
     # the global one: a widget can flip while detached (a toolbar locks itself as it is built) or
     # while the world it stands in is being built, and a root that is no world answers nothing (?).
     @root().noteEditModeChanged?()
+    # ... and I repaint whole: a look inside me may read my mode (a hosted payload's grip asks its cell,
+    # which asks the view mode around it: LabelButtonAppearance._paintLiftableGrip), and a flip moves
+    # nothing that would repaint it
+    @_fullChanged()
 
     if @contents?
       whereToAct = @contents
@@ -5421,8 +5425,9 @@ class Widget extends TreeNode
     if !@dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = false
-    # (told as in the enable core above)
+    # (told, and repainted whole, as in the enable core above)
     @root().noteEditModeChanged?()
+    @_fullChanged()
 
     if @contents?
       whereToAct = @contents

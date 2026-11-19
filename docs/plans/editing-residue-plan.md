@@ -19,8 +19,8 @@ Status:
 | U4 | A text menu shows its state as ticks; every editing row tested | CLOSED 2026-11-19 (§U4) |
 | U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | CLOSED 2026-11-19 (§U5) |
 | U6 | Folders, the bin and their links hold a fixed edit mode | CLOSED 2026-11-19 (§U6) |
-| U7 | View mode reaches every drop and the selection ring | LANDED 2026-11-19 (§U7) |
-| U8 | A mode flip repaints a hosted widget's grip | OPEN |
+| U7 | View mode reaches every drop and the selection ring | CLOSED 2026-11-19 (§U7) |
+| U8 | A mode flip repaints a hosted widget's grip | LANDED 2026-11-19 (§U8) |
 | U9 | A person's grip drag keeps a window's title strip whole | OPEN |
 | U10 | The logo tool's overflow row is pictured live | OPEN |
 | U11 | A copy of a pinned wire menu drives the real wire | OPEN |
@@ -449,8 +449,8 @@ predicate, a reluctant ancestor), `src/spreadsheet/CLAUDE.md` (the accept gate).
 longer asks a container's flag, so a focus inside a bin window nested in a view-mode document (the bin's fixed mode bounds
 the view mode) is ringed where it was not — consistent with `editableEditorFocus`, and unmeasured by R3's census, which
 predates U6; filed: a widget lifts out of view-mode content but cannot be dropped back (the flip locks only direct
-children), and "Edit layout" offers drop slots there. Commits: one per repo, each titled "View mode: content in view
-mode takes no drop and shows no selection ring …".
+children), and "Edit layout" offers drop slots there. Commits: Fizzygum `d6fed5bf`, Fizzygum-tests `45a5a8878`, each titled "View
+mode: content in view mode takes no drop and shows no selection ring …".
 
 ## U8 — A mode flip repaints a hosted widget's grip (R3 §M)
 
@@ -465,6 +465,18 @@ complexity past the ceiling, R3 §M).
 **Predicted pixel set.** EMPTY.
 
 Time box 1.5 h.
+
+**Landed 2026-11-19.** As R3 §M.4: both of Widget's mode cores (`_enableDragsDropsAndEditingNoSettle`,
+`_disableDragsDropsAndEditingNoSettle`) call `@_fullChanged()` right after announcing the flip, unconditionally (no
+ratchet moved: a call is no branch); the grip's comment (`LabelButtonAppearance._paintLiftableGrip`) says a hosted
+payload's grip follows the flip that way. Evidence: R3's `SystemTest_macroViewModeFlipRepaintsAHostedGrip` (values and
+the incremental-vs-full repaint oracle of `macroHiddenShadowChildLeavesNoBand`) and R3's plant (the flip's repaint
+removed), which fails the two after-the-flip comparisons only, 44 stale pixels each, under both pointers — R3's
+measurement; follower clean; WebKit passes; the boot smoke (flips on orphans and during construction now push damage)
+passes. From the review: the test also counts the grip's painted rows (24 in edit mode, none in view mode; the plant
+leaves 24 stale) and re-asserts after each flip that nothing else repaints the button; and a page picked out of a Generic
+panel stays its container's `@contents`, so the window's toggle flips it where it stands, beyond the repaint (probed;
+filed). Commits: one per repo, each titled "View mode: a mode flip repaints a hosted widget's grip …".
 
 ## U9 — A person's grip drag keeps a window's title strip whole (R4 §E)
 
