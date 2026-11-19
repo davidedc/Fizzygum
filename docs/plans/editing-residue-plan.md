@@ -23,8 +23,8 @@ Status:
 | U8 | A mode flip repaints a hosted widget's grip | CLOSED 2026-11-19 (§U8) |
 | U9 | A person's grip drag keeps a window's title strip whole | CLOSED 2026-11-19 (§U9) |
 | U10 | The logo tool's overflow row is pictured live | CLOSED 2026-11-19 (§U10) |
-| U11 | A copy of a pinned wire menu drives the real wire | LANDED 2026-11-19 (§U11) |
-| U12 | The U3 off-screen test judges the drag-out look under both pointers | OPEN |
+| U11 | A copy of a pinned wire menu drives the real wire | CLOSED 2026-11-19 (§U11) |
+| U12 | The U3 off-screen test judges the drag-out look under both pointers | LANDED 2026-11-19 (§U12) |
 | U13 | Close: this plan archived, or left open with what parked | OPEN |
 
 ---
@@ -576,8 +576,8 @@ plants (the record held again, the toggles announcing no controller, `holds` wit
 unannounced, a copied row not re-subscribing), each failing under both pointers; follower clean; WebKit passes. Filed:
 the copied "Layout in stack" menu (R2 §H3) and the rows left after Disconnect (R2 §Q5); from the review, a controller
 that is also a sink (a tracking slider) delivers its value when announced non-value — the drain's sink branch has no
-valueless exemption — which the promotion's announcement now reaches too, harmlessly into the panel. Commits: one per
-repo, each titled "Menus: a copy of a pinned wire menu drives the real wire …".
+valueless exemption — which the promotion's announcement now reaches too, harmlessly into the panel. Commits: Fizzygum `83db0258`,
+Fizzygum-tests `b56124278`, each titled "Menus: a copy of a pinned wire menu drives the real wire …".
 
 ## U12 — The U3 off-screen test judges the drag-out look under both pointers (R4 §K)
 
@@ -588,6 +588,17 @@ the references still match (R4 §K). Update the archived plan's U3 note only thr
 docs are not edited).
 
 **Predicted pixel set.** EMPTY. Time box 1 h.
+
+**Landed 2026-11-19.** As R4 §K4: `SystemTest_macroEditingFollowsAParagraphOffScreen`'s step 4 walks the pointer onto the
+paragraph as a step of its own before the drag, with a mouse-only premise that it rests there and R4's comment on why
+(a mouse walking from the title strip crosses the docked bar's scroll band, whose hover repaints the whole bar; folded into
+the drag's gesture, that repaint landed in the pickup's cycle and painted the docked Bold dim whether or not the world
+announced it). This note stands for the archived toolbar-residue plan's U3, whose "Its drag-out shot (image_3) catches the
+plant under the finger only" now holds under both pointers. Evidence: unplanted, the test passes at dpr 1 and 2 under both pointers; under that plan's
+`u3/plant-d-no-announcement.js`, image_3 fails in all four (image_1 as before); follower clean; WebKit passes. Filed
+from the review: no shot judges the un-collapse's announcement (image_2 follows the floating Bold's own press, which
+repaints both bars). Commits: Fizzygum "Plan: the off-screen test judges the drag-out look under both pointers", and
+Fizzygum-tests "Tests: the off-screen test judges the drag-out look under both pointers".
 
 ## U13 — Close
 
