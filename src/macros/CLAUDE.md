@@ -53,7 +53,7 @@ synthesises the real input events. Resilient to layout change.
    the macro calls `world.automator.player.compareScreenshots` in-flow (the `takeScreenshot_InputEvents_Macro`
    verb); `AutomatorLoader.loadImagesOfTest` preloads the references whose names it extracts from the source.
 
-The one registered macro test (the regression anchor) is `Fizzygum-tests/tests/SystemTest_macroAnalogClockInspectEdit/`.
+The registered example (the regression anchor) is `Fizzygum-tests/tests/SystemTest_macroAnalogClockInspectEdit/`.
 
 ## The layers
 
@@ -330,8 +330,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 - **L3 verb** — append a `macroSubroutines.add Macro.fromString """ …Macro = -> … """` block to
   `standardMacroSubroutines`. A generator SOURCE string: it may `yield` a sentinel, call toolkit helpers as `@…`, and
   call other verbs by bare name (the engine rewrites those into `yield from`).
-- Document the new verb's **doc-comment in `MacroToolkit.coffee`**; add the SKILL's digest-kind→verb mapping row only
-  if it's a migration target. Reuse existing primitives — most "new" behaviours are pure composition (see MACRO-PATTERNS.md).
+- Document the new verb's **doc-comment in `MacroToolkit.coffee`**. Reuse existing primitives — most "new" behaviours are pure composition (see MACRO-PATTERNS.md).
 
 ## Authoring gotchas (fixture + menu)
 
@@ -366,16 +365,15 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   of where its row leads either: a row that opens a submenu states it (`opensSubmenu: true`) and DRAWS a chevron, so a
   test reads the row's `opensSubmenu`, never a typed arrow. `findTopWidgetByClassNameOrClass` and `instanceof`, by
   contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
-- **Menu items / magnets are now in the modern button family** — the deprecated `TriggerMorph` was deleted and replaced by
-  a clean base **`LabelButtonWdgt`** (a flat label-bearing button) on the modern family: `Widget → ButtonWdgt` (was
-  `EmptyButtonMorph`) `→ LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
+- **Menu items and magnets are label buttons** — their base is **`LabelButtonWdgt`** (a flat label-bearing button):
+  `Widget → ButtonWdgt → LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
   `target`/`action`/`trigger` machinery and the pointer look `_shownState` reads off the hand from `ButtonWdgt` but paints its own
   state fill from fields its builder sets (`LabelButtonAppearance`): menu rows a `desk` hover / `chrome` press plate of radius 6
   on a paper box, plain list rows a 40 px `desk` hover plate (a flag of their own: their highlighted state is their
   selection) and an `accentTint` plate while selected, on no fill, and a member row (the Object Inspector's list,
   `MemberRowWdgt`) a 40 px `accentTint` plate while selected; a magnet wears the button look (its own `MagnetAppearance`), its `label` a cropping
   `StringWdgt`.
-  `MenuItemMorph`→`MenuItemWdgt` (BATCH 4 — the button-family rename), so use `instanceof MenuItemWdgt`, and reach a
+  Use `instanceof MenuItemWdgt`, and reach a
   menu item's own menu through its hierarchy menu by the ITEM (`@moveToRowOfTopMenuStandingForAndClick_InputEvents
   item`; its row reads "Menu item", or 'Menu item "Demo"' beside another). For a STANDALONE button fixture use
   `SimpleButtonWdgt` (the design's button: radius 6, its look derived from the theme by state, its one-line
@@ -469,10 +467,10 @@ are in **`MACRO-PATTERNS.md`**.
   determinism check — it reuses the existing references unchanged (SWCanvas + the build's deterministic-trig
   shim make pixels V8≡JSC identical); capture stays chrome-only. See `../../../Fizzygum-tests/CLAUDE.md`.
 - (Re)capture SWCanvas references: `node scripts/capture-macro-test-references.js <name> [--clean] [--dprs=1,2]`.
-  Run that FULL flow (no `--no-build`). A verify `FAIL - no screenshots like this one` is almost always a
-  stale/missing-reference artifact of a hand-rolled `--clean --no-build`, NOT nondeterminism — SWCanvas + the
-  event queue are deterministic and matching is on the raw-pixel `dataHash` (the filename's `automatorV<M>_<m>_<r>`
-  token groups references that must agree; it plays no part in matching). The script rebuilds to drop cleaned
-  refs before capture and to publish before verify.
+  The flow runs no build: the world reads the tests through the `js/tests` link, so a cleaned reference is
+  gone at once and a captured one is live at once. A verify `FAIL - no screenshots like this one` is therefore a
+  real disagreement about the pixels, to root-cause — SWCanvas + the event queue are deterministic and matching
+  is on the raw-pixel `dataHash` (the filename's `automatorV<M>_<m>_<r>` token groups references that must
+  agree; it plays no part in matching).
 - In a browser: open the built `worldWithSystemTestHarness.html`, then
   `world.automator.loader.loadAndRunSingleTestFromName('SystemTest_<name>')`.

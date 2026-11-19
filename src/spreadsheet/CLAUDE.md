@@ -106,8 +106,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   Persistent `{@sheet, @address, @source, @widgetEntry}`; derived `{@compiledFn, @boundNames,
   @value, @errorFlag}` in `@serializationTransients` and `@copyTransients` (left out of a save
   and of a copy, rebuilt on load/duplicate by recommitting). Node protocol: `dataflowRecompute` (entry-first — F4 below — else run the
-  formula, cache `@value`) / `dataflowValue` (what refs pull). Reactive reference EDGES +
-  error propagation arrive in 2c.
+  formula, cache `@value`) / `dataflowValue` (what refs pull).
 - `FormulaCompiler.coffee` (2b) — stateless (class methods): `commit(cell, source)` scans the
   source (comments/strings stripped) for the identifiers to bind — cell refs (`A1`), helper
   names, and the time bindings `seconds`/`frame` (5, `@TIME_SOURCES` — binding → its source, the one table the scan, the edges and `SheetCellRecord`'s resolver read) — builds the
@@ -115,8 +114,8 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   `@compiledFn`; a compile failure yields a `#SYNTAX` `SheetError`. `commit` also declares the
   reactive edges: cell refs (with a cycle check) and time-source edges (`seconds`/`frame` → the
   world time singletons, no cycle check).
-- `SheetError.coffee` (2b) — a failed computation IS the cell's value (`#SYNTAX` now; `#ERR`/
-  `#LOOP` in 2c). `{@kind, @message}`, `toString -> "#" + @kind`.
+- `SheetError.coffee` (2b) — a failed computation IS the cell's value (`#SYNTAX`, `#ERR`,
+  `#LOOP`). `{@kind, @message}`, `toString -> "#" + @kind`.
 - `FormulaHelpers.coffee` (3) — the optional free-function veneer (`mix A1, B1`) over the value
   classes' method algebra (spec §9.5). Static methods only; each own-property name is a bindable
   helper (the compiler's scan + `SheetCellRecord._resolveBoundName` already resolve it).
@@ -141,8 +140,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   interactive value-widget is wired via `wireValueWidget` so its firings hit the cell's
   `cellInput` → `markStale` on the cell). Serializes its `@address` + hosted widget (so a
   slider's dragged position rides the tree); the address→cell index, back-ref and editor are
-  transient. In Phase 4 this was `CellSocketWdgt`, one per RICH cell; Phase 8 GENERALISED it
-  to one-per-VISIBLE-cell; F5 completed the view story (edges + ring + editor in the cell).
+  transient.
 
 ## The evaluation flow (2b)
 
@@ -201,15 +199,11 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   branch-2 presenter is pure display with no interactive state to keep, so the sheet disposes the
   old widget and calls `cellPresenter()` again — which keeps the sheet value-class-agnostic (no
   per-class "update this widget from that value" protocol). A churn-skip (`_presentedValuesEqual`,
-  the engine's `equals?`-or-identity rule; the value lives on the socket as `presentedValue`) means a
+  the engine's `equals?`-or-identity rule; the value lives on the cell widget as `presentedValue`) means a
   cell whose value is unchanged keeps its widget and rebuilds nothing. Interactive value-widgets that
   must preserve state are the widget-VALUED branch (Phase 4), which is RETAINED, never rebuilt.
 
-## Widget-valued cells & their cell widget (4; the `CellSocketWdgt` became `CellWdgt` in 8)
-
-*(This Phase-4 section describes the per-cell host it introduced as the "socket"; Phase 8 renamed that
-class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell — read "socket" below as
-"the cell's `CellWdgt`".)*
+## Widget-valued cells & their cell widget (4)
 
 - **Branch 1 — a cell value that IS a Widget** (`new SliderWdgt`) mounts that widget LIVE in its
   `CellWdgt` (branch 1 of classify→present; presenters, branch 2, mount in the cell too).
@@ -223,7 +217,7 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   the class matches, discarding the throwaway. This is not an optimisation — it is what lets a
   widget-valued cell be marked stale by its OWN widget's interaction (a drag) without the recompute
   resetting the widget being dragged, and it is the SAME rule that (a) survives save/load and (b)
-  Phase 8's scroll-virtualisation will reuse. The widget is (re)built only on first mount or a class
+  the viewport's scroll reuses. The widget is (re)built only on first mount or a class
   change.
 - **Interactivity IN (spec §9.3 Scenario A).** The cell wires an interactive value-widget
   (`wireValueWidget` → `widget.wireTo? this, "cellInput"` — the two-operand wire verb, not the menu
@@ -245,9 +239,7 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   widget's own `@wires` list — so a restored slider is still live. (Pinned by the serialization rig's `sliderRetain` check: drag→77, save, load,
   assert 77 survived — and its `grid` check: 84 cells materialised both ways, rich cells host.)
 - **v1 limitation (documented).** The retain check re-CONSTRUCTS a throwaway widget each recompute (to
-  read its class) — a minor v1 cost. (Phase 8 RESOLVED the old "freefloating sockets left behind when
-  the sheet moves" limitation: the whole grid is freefloating and float-follows the sheet, so cells
-  move with it.)
+  read its class) — a minor v1 cost.
 
 ## Widget-entry cells — drop a desktop widget INTO a cell (F4)
 
@@ -307,7 +299,7 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   the count of cycles COMPLETED before this one. Formulas NEVER read the wall clock — all time enters
   through the sources (mockable → deterministic, spec §10).
 - **Ticks repaint, never re-layout** (spec §9.7). A tick recompute goes `_cacheValue` → `_changed()`
-  (paint) + the socket reconcile; a scalar takes the text branch (dispose socket, no widget) — there
+  (paint) + the cell reconcile; a scalar takes the text branch (the cell's scalar `StringWdgt` child) — there
   is NO `_invalidateLayout` on the tick path. Cost is linear in the affected subgraph
   (`world.dataflow.lastDrainRecomputeCount`). A `frame` cell defeats the drain's empty-pool early
   return every cycle by design (it IS per-frame); a `seconds` cell only re-propagates when the
@@ -422,15 +414,6 @@ time, so a saved or duplicated sheet wears the current look.
 
 ## Phase 8 decisions / deviations (recorded also in the plan)
 
-- **Data cells only (owner-confirmed scope at the time — SUPERSEDED by F5, 2026-07-17).** Phase
-  8 widgetised one `CellWdgt` per visible DATA cell and left headers/gridlines painted; F5
-  (plan §3-F) took the anticipated "purely additive later step": headers are
-  `SheetHeaderCellWdgt`s, the gridline chrome migrated into the widgets, the sheet paints
-  nothing.
-- **Byte-identical, zero recaptures.** The widgetisation preserved the exact paint offsets (scalar
-  text at cell-local `(4, h−6)`) and the 2px host inset, so the grid renders pixel-for-pixel as the
-  old painted grid — the whole suite (dpr1/dpr2/webkit) + both serialization legs stayed green with NO
-  reference change. The architecture changed; the pixels did not. (The plan had budgeted for recaptures.)
 - **Full viewport materialised at construction; deserialize/duplicate adopt the snapshot's cells.**
   The constructor builds the chrome (`_buildChromeNoSettle`) + all 6×14 viewport `CellWdgt`s
   (`_reconcileViewportNoSettle`; freefloating + absolute — they float-follow the sheet; F1 split
@@ -522,10 +505,6 @@ time, so a saved or duplicated sheet wears the current look.
 
 ## Phase 2a decisions / deviations (recorded also in the plan)
 
-- **Direct-paint, no `ViewportWdgt` yet.** The spec hosts the grid in a `ViewportWdgt`;
-  v1 paints a fixed viewport that fits the window and defers scroll until the model exceeds it.
-  The paint + hit-test math transplant into a scroll-child unchanged; sockets (2b/4) are
-  unaffected. (F1 later made "no `ViewportWdgt`" permanent — see the F1 section above.)
 - **Text in Arial** (`Theme.fonts.spreadsheetCell`, 16 px at 100% since the UX arc). SWCanvas ships
   bitmap atlases for Arial/Times/Courier only (`src/boot/extensions/SWCanvasElement-extensions.coffee`),
   so Arial is the deterministic choice.
@@ -538,20 +517,6 @@ time, so a saved or duplicated sheet wears the current look.
 
 ## Phase 2b decisions / deviations (recorded also in the plan)
 
-- **Buffer-driven overlay editor, NO caret** (deviation from "reuse the caret") —
-  **SUPERSEDED by the standard-caret arc (2026-07-24; see the editing model below).** The 2b
-  rationale was that no `accept`/`cancel` handlers existed (only `CaretWdgt` escalated them,
-  to nobody — and, it turned out, the escalation fired AFTER the caret's own destroy
-  unparented it, so it could never deliver) and that a live caret blinks under a screenshot
-  (in fact the caret is pinned ALWAYS-VISIBLE while a test plays —
-  which is why carets appear deterministically in committed references). So 2b's sheet
-  drove a private edit buffer as sole keyboard receiver, latterly with a steady
-  end-of-text-bar affordance. The standard-caret arc deleted the buffer, the bar
-  (`showsEndOfTextBar` died with its only consumer), and the sheet's editing-mode key
-  handling — the caret's accept/cancel escalations (fixed to fire from the TARGET) now
-  carry Enter/Escape to the cell. The overlay is the
-  first live child widget = the socket precursor (Phase 4 generalises "mount a live widget at a
-  cell rect").
 - **The editing model (standard-caret arc, 2026-07-24 —
   `docs/archive/spreadsheet-standard-caret-editing-plan.md`):** the editing cell's overlay
   `StringWdgt` is EDITABLE (`isEditable`, `alwaysEditsInline` — an over-long text stays
@@ -579,22 +544,15 @@ time, so a saved or duplicated sheet wears the current look.
   `_setTextNoSettle` / `_fullDestroyNoSettle` / `_apply*` (satisfies `check-layering.js`).
 - **Evaluation through the engine** (not eager in `commit`): commit compiles + `markStale`; the
   drain computes the value. This is what makes the spreadsheet the engine's first live client.
-- **`SheetError` defined in 2b** (minimal — the `#SYNTAX` path needs it); 2c grows its use
-  (`#ERR`/`#LOOP` + propagation).
-- **`FormulaHelpers` deferred to Phase 3** (the veneer is only useful once value-class operations
-  exist to delegate to, spec §9.5). The compiler's helper-binding scan already runs, guarded by
-  `if FormulaHelpers?`, so it lights up when the class arrives — no 2b change needed.
-- **No overflow clipping / centring** of painted values in v1 (values are short); a later polish
-  alongside `measureText`-based centring.
 
 ## Determinism (the suite is byte-exact — see ../../../Fizzygum-tests/DETERMINISM.md)
 
 The paint is a pure function of `{selection, geometry}` — no wall-clock, no frame count, no
-intermediate-layout dependence. Keep it that way (nothing time-based lives here until time
-sources arrive in Phase 5, and those enter only through the engine).
+intermediate-layout dependence. Keep it that way (time enters only through the engine's time
+sources).
 
 ## Verifying (umbrella `fg`)
 
-`fg build` (0 violations / `done!!!`) + `fg suite` (dpr1). New behaviour ⇒ new
+`fg presuite`. New behaviour ⇒ new
 `SystemTest_macro*` tests in the sibling repo (author per `../macros/CLAUDE.md` +
 `../macros/MACRO-PATTERNS.md`); recaptures are WebKit-verified.
