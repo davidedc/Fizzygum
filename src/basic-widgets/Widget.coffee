@@ -4485,6 +4485,15 @@ class Widget extends TreeNode
     # when the grabbed widget is its sole content — the Phase-1 whole-figure grab, no jump — or extract +
     # re-wrap a genuine sub-part). This is what lets you pick a SUB-widget OUT of an island. (Non-float
     # drags — sliders/handles — are unaffected: findFirstLooseWidget checks nonFloatDragging FIRST.)
+    #
+    # Content in view mode gives up nothing: the drop door's mirror (wantsDropOfChild asks the holder I
+    # would land in, I ask the holder I would leave, sitsInViewModeContent), so the hand climbs as from a
+    # child the flip locked and takes the content as a whole. The HOLDER is asked, not I, so a widget
+    # that answers edit mode itself (a folder link standing in that content) is held too; folders, the
+    # bin and their links bound the walk (alwaysInEditMode), so what they hold still lifts out. An
+    # editable text standing there opens its edit at the click, not at the press (StringWdgt.pressBegan
+    # reads this door).
+    return true if @parent?.sitsInViewModeContent()
     if @parent?
 
       if @parent == world
@@ -4508,7 +4517,8 @@ class Widget extends TreeNode
       # non-panel HOST whose child is a payload, not a part. First client: the spreadsheet
       # widget-entry cell (F4) — its hosted payload must float-drag back out exactly as it
       # would out of a panel, and without this the grab climbs to the window and the payload
-      # is ungrabbable. No other class defines the query, so everywhere else this is inert.
+      # is ungrabbable. A window's docked bands and a pinned pop-up's command rows are payloads
+      # too (FrameWdgt, CommandPanelWdgt); everywhere else the query is inert.
       if @parent.wantsDetachOfChild? @
         return false
       return true
@@ -5380,8 +5390,8 @@ class Widget extends TreeNode
     # the global one: a widget can flip while detached (a toolbar locks itself as it is built) or
     # while the world it stands in is being built, and a root that is no world answers nothing (?).
     @root().noteEditModeChanged?()
-    # ... and I repaint whole: a look inside me may read my mode (a hosted payload's grip asks its cell,
-    # which asks the view mode around it: LabelButtonAppearance._paintLiftableGrip), and a flip moves
+    # ... and I repaint whole: a look inside me may read my mode (a payload button's grip asks the view
+    # mode around it, then its holder: LabelButtonAppearance._paintLiftableGrip), and a flip moves
     # nothing that would repaint it
     @_fullChanged()
 

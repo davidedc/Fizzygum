@@ -232,6 +232,10 @@ class ButtonWdgt extends Widget
   #   Deliberately narrower than rejectDrags. Resting on the desktop also makes me draggable,
   # but it does not make me a payload of anything, and it needs no grip: everything loose on a
   # desktop is draggable, so marking it would say nothing.
+  #   In content in view mode nothing is handed out, whatever my container declares: the grab
+  # door (Widget.grabsToParentWhenDragged) asks the holder I would leave that question before
+  # wantsDetachOfChild, and so do I, so the drag, its cancellation and the grip read one answer.
   isDetachablePayloadOfMyParent: ->
+    return false if @parent?.sitsInViewModeContent()
     (@parent?.wantsDetachOfChild? @) ? false
 

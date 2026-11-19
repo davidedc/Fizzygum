@@ -89,6 +89,9 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
   # distinction and the serializer already turns on it. You cannot take a part off something
   # mid-gesture; you can take a part off furniture. So the deliberate act is the pinning, which
   # already exists and already means "this menu stays", and extraction costs no new gesture.
+  # Pinned is the whole of MY condition: a pop-up standing in content in view mode hands nothing
+  # out whatever I answer, since the grab door (Widget.grabsToParentWhenDragged) and
+  # ButtonWdgt.isDetachablePayloadOfMyParent ask the view mode first.
   #   A COMMAND row only — a divider is punctuation. Carrying an `action` is what separates
   # them, and it is the fact that MATTERS rather than a proxy for the row's class: what
   # survives extraction is a button that still does something. (A prompt's row of buttons

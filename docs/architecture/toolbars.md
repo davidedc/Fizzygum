@@ -96,8 +96,16 @@ wears its own bar.
 into a window in view mode places nothing there (its content does not take placed widgets). It takes no drop
 either: ONE door, `Widget.wantsDropOfChild`, answers "my drops are on and I sit in no view-mode content", and every
 receiver's own answer goes through it (a viewport, a sheet's cell), so the hand's two drop climbs and a viewport's
-edge auto-scroll all ask it. And the editor-focus outline never frames it (`WorldWdgt._widgetBeingEdited` asks
-`sitsInViewModeContent` first).
+edge auto-scroll all ask it. No drag takes anything out of it, by the mirror door: `Widget.grabsToParentWhenDragged` asks the holder
+a widget would LEAVE the drop door's question (`@parent.sitsInViewModeContent()`), so a drag that would lift a widget
+out of view-mode content, at any depth, climbs instead, as from an item the flip locked (the flip locks only the
+content's own items), and takes the content as a whole; drags that lift nothing out (a slider's thumb, a handle, a
+grip) keep their own answers, and a drag on a button there is cancelled, as on any button in content: it is no
+payload, whatever its holder declares (`ButtonWdgt.isDetachablePayloadOfMyParent` asks the view-mode question
+first), so no lift grip is drawn on it. (The base context menu's rows, "Pick up" among them, await the owner's
+row-by-row ruling: BACKLOG.) A widget that answers edit mode itself (a folder link)
+is held by its holder's answer too, while what a folder holds still lifts out. And the editor-focus outline never
+frames it (`WorldWdgt._widgetBeingEdited` asks `sitsInViewModeContent` first).
 
 **Which content is in view mode** (`Widget.sitsInViewModeContent`): view mode is inherited DOWNWARD, bounded by
 windows.

@@ -277,9 +277,9 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   grabbable out of a cell — `Widget.grabsToParentWhenDragged`'s generic solid-with-parent
   branch climbs the grab to the window when the parent is a plain Widget, so the plan's
   "slider-only" risk framing was falsified): `wantsDetachOfChild(aWdgt)` — a
-  `wantsDropOfChild`-style opt-in query the solid-with-parent branch now consults; only
-  `CellWdgt` defines it (true exactly for its `hostedWidget` — the editor and any other child
-  stay solid), so it is inert everywhere else. And the same investigation exposed a LATENT F5
+  `wantsDropOfChild`-style opt-in query the solid-with-parent branch consults; `CellWdgt`
+  defines it (true exactly for its `hostedWidget` — the editor and any other child stay solid),
+  as do a window for its docked bands and a pinned pop-up's panel for its rows. And the same investigation exposed a LATENT F5
   hole, closed here: the panel move had silently made every CELL float-draggable out of the
   grid (`isLockingToPanels` defaults false and panel children are loose) — `CellWdgt` now
   locks to panels (grid chrome is never rippable), restoring the pre-F5 solidity.
@@ -352,8 +352,9 @@ duplicate never edits in lockstep), a sheet worked on earlier never takes keys t
 focused sheet put away (its window collapsed or closed) stays the focus but clears and edits nothing unseen. **A sheet in view-mode
 content takes no entry** (`Widget.sitsInViewModeContent`: a sheet nested in a document whose window shows the
 eye; a sheet in its own window has no view mode): `_startEditNoSettle`, `_commitEditNoSettle` (an edit open
-across the flip ends without writing), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop and drag-out doors
-each ask it, while the arrows, Tab, the wheel and the zoom still act.
+across the flip ends without writing), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop door each ask it,
+and no drag takes anything out of a cell there, since the grab door (`Widget.grabsToParentWhenDragged`) and a button's
+`isDetachablePayloadOfMyParent` ask it of every holder first; the arrows, Tab, the wheel and the zoom still act.
 
 ## Design north star (spec §9, F5, and the UX arc `docs/archive/spreadsheet-ux-plan.md`)
 

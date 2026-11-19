@@ -1409,7 +1409,9 @@ class FrameWdgt extends ClippingWdgt
   # in one of my slots is a payload I HOLD, not a part of me, so a drag on its grip lifts THE BAND
   # out instead of moving me -- the same parent-side opt-in the spreadsheet's widget-entry cell
   # uses (Widget.grabsToParentWhenDragged asks its parent this). Everything else about me stays
-  # solid under a drag: my bar, my pieces, my resizer.
+  # solid under a drag: my bar, my pieces, my resizer. While I stand in content in view mode the
+  # band stays docked whatever I answer: the grab door asks first whether I sit in view-mode
+  # content, and a drag on the band takes that content as a whole.
   wantsDetachOfChild: (aWdgt) ->
     @_isMyDockedFrame aWdgt
 

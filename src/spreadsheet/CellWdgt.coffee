@@ -239,10 +239,12 @@ class CellWdgt extends Widget
   # grabbable out of a cell (the generic solid-with-parent rule climbs the grab to the window;
   # the plan's "slider-only" risk framing was falsified — the blocker was class-independent).
   # The overlay editor and any other child stay solid with the cell. A loose PRESENTER is
-  # fine: grabbing a swatch out just makes the next reconcile rebuild the derived presenter. In
-  # view-mode content nothing comes out: taking the entry out would empty the cell.
+  # fine: grabbing a swatch out just makes the next reconcile rebuild the derived presenter.
+  # View-mode content gives nothing out through the two doors that ask before me (the grab door,
+  # Widget.grabsToParentWhenDragged, and ButtonWdgt.isDetachablePayloadOfMyParent), so there I
+  # keep my entry.
   wantsDetachOfChild: (aWdgt) ->
-    aWdgt is @hostedWidget and not @sitsInViewModeContent()
+    aWdgt is @hostedWidget
 
   # The drop's recipient hook (runs inside ActivePointerWdgt.drop's single settle — all NoSettle
   # cores here, the cores-call-cores discipline its block comment requires). The dropped widget

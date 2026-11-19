@@ -1749,7 +1749,9 @@ class MacroToolkit
   # the bar itself is never what a press meets (FrameBarWdgt.catchesPointerAt), and a button piece is
   # a control whose own gesture is a tap. A point counts only when the grab a press there starts lifts
   # THIS frame (findRootForGrab), so a frame inside another, or docked in a host's band, is taken by
-  # its own strip and never by its holder's.
+  # its own strip and never by its holder's -- outside content in view mode: a frame standing in such
+  # content gives itself up to no grab (Widget.grabsToParentWhenDragged), a press on its strip takes
+  # hold of the content's window, and no point of its strip counts.
   #   `preferred`, when given, is KEPT whenever it counts, so an aim that already works never moves.
   # Otherwise, in order: the title's centre, while the title SHOWS (_titleShowsOn) and a press there
   # meets it; the strip background's centre; the first of 32 points along the background's centre
@@ -1781,7 +1783,7 @@ class MacroToolkit
         else
           new Point background.left() + Math.round((step + 0.5) * background.width() / 32), background.center().y)
         return { point: candidate, piece: background }  if (@_stripPieceAPressGrabsBy frame, candidate) is background
-    throw new Error "no point of #{frame}'s title strip takes hold of it — its title does not show, and its strip background is absent or covered at every sampled point"
+    throw new Error "no point of #{frame}'s title strip takes hold of it — its title does not show, and its strip background is absent or covered at every sampled point, or the frame stands in view-mode content"
 
   # WHICH STRIP PIECE a press at this screen point takes hold of `frame` by: the title or the strip
   # background — the one the press meets, or the one holding what it meets — provided the grab that
