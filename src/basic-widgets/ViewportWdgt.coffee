@@ -288,7 +288,8 @@ class ViewportWdgt extends ClippingWdgt
     # folder-window machinery) — capability via ?(), instead of `@contents instanceof FolderPanelWdgt`
     # (type-test-elimination ε)
     return false if @contents?.vetoesViewportDrops?()
-    return @_acceptsDrops
+    # the base door: my drops on, and no view-mode content around me (Widget.wantsDropOfChild)
+    super(aWdgt)
 
   colloquialName: ->
     # the CONTENTS names the construct ("folder"/"toolbar") — capability via ?(), was two

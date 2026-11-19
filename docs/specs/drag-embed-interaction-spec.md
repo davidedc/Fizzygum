@@ -85,7 +85,7 @@ how much the destination has to lose.
 | Self drop-gate: `wantsToBeDropped()` → `@internal`; base default true | `FrameWdgt.coffee:256` · `Widget.coffee:2910` |
 | Drop routing: if `!wantsToBeDropped()` → target forced to `world`, else climb | `ActivePointerWdgt.drop`, `ActivePointerWdgt.coffee:247-287` |
 | Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild`; the climb STARTS at what the hit widget names for points on its own body (`dropReceiverForPointsOnMyBody`: a page window's gutter and a letterboxed Stretchable page's margin name the page's receiver), and a payload released there is moved inside that receiver | `ActivePointerWdgt.dropTargetFor`, `_dropClimbStart`, `_moveGutterDropInsideTarget`, `topWdgtUnderPointer` |
-| Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) | `Widget.coffee:2904-2917` |
+| Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) and not `sitsInViewModeContent` (content in view mode takes no drop; every override that can take a drop asks through `super`) | `Widget.coffee:2904-2917` |
 | Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameBarWdgt` → `FrameWdgt.editButtonInBarPressed` → the content's base `Widget.editButtonPressedFromFrameBar` (the fused editor middle layer dissolved — Frame-model §5.B/§5.D) |
 | Edit-off cascades a drops-lock into the citizen's container + hides the docked toolbar | `StretchableWidgetContainerWdgt._disableDragsDropsAndEditingNoSettle` → `FrameWdgt.showViewModeInBar` (toolbar-slot collapse) |
 | Pencil state shown by color only | `FrameWdgt.makePencilYellow/makePencilClear` `:536-548` |
@@ -203,7 +203,9 @@ offering a band under the pointer wins outright and the climb below never runs f
   1. **The world is never a "candidate"** for embed UX. If the climb reaches `world`, there is no candidate: no
      highlight, no dwell, release lands on the desktop (today's behavior, untouched).
   2. The climb also records the innermost **reluctant** widget it passed (for the lock cue + §8 pill). If an
-     acceptor exists BELOW a reluctant ancestor, the acceptor wins and the reluctant ancestor is ignored.
+     acceptor exists BELOW a reluctant ancestor, the acceptor wins and the reluctant ancestor is ignored -- which,
+     with view mode inherited downward, happens only across a window with its own pencil (or a fixed edit mode: a
+     folder, the bin): below a holder in view mode, nothing else accepts.
 - **Per-candidate dwell; candidate change = full reset.** The charge accumulator, armed state, and all visuals
   belong to the current candidate. When the resolved candidate changes (deeper container entered, target left,
   view/edit differs), charge drops to zero and arming restarts. No depth-scaled timings, no dwell-to-descend,

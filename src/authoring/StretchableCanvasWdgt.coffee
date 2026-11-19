@@ -188,12 +188,6 @@ class StretchableCanvasWdgt extends CanvasWdgt
   # it (CreatorWdgt.activated).
   stampsDroppedWidgets: -> true
 
-  # A drop is paint, so I take none while my drawing sits in view-mode content
-  # (sitsInViewModeContent: a bare drawing in a document whose window shows the eye), as my paint
-  # surface lays none (CanvasGlassTopWdgt._sourceOfToolInReach).
-  wantsDropOfChild: (aWdgt) ->
-    super(aWdgt) and not @sitsInViewModeContent()
-
   # Runs inside the drop's single settle: re-home the dropped widget through the non-settling add core.
   _reactToChildDropped: (droppedWidget) ->
     @_paintImage droppedWidget.position(), droppedWidget.fullImage(forceShadow: true)

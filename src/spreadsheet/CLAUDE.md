@@ -283,7 +283,8 @@ class `CellSocketWdgt` → `CellWdgt` and generalised it to every visible cell �
   hole, closed here: the panel move had silently made every CELL float-draggable out of the
   grid (`isLockingToPanels` defaults false and panel children are loose) — `CellWdgt` now
   locks to panels (grid chrome is never rippable), restoring the pre-F5 solidity.
-- **Accept gate:** `CellWdgt.wantsDropOfChild` accepts plain payloads and refuses
+- **Accept gate:** `CellWdgt.wantsDropOfChild` asks the base door (`Widget.wantsDropOfChild`: a
+  cell takes drops by class, `_acceptsDrops`, except in view-mode content) and then refuses
   window-class payloads (`requiresDeliberateEmbedding` — a cell is no place for a window; the
   refused drop falls through to the desktop). The restore path needs NO special-casing: a
   blank source commits to nothing and the recompute's entry-first branch re-presents the

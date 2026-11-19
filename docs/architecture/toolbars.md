@@ -91,7 +91,11 @@ wears its own bar.
 
 **Content in view mode refuses restyling**, whatever toolbar asks: it hands a property tool nothing
 (`WorldWdgt.editableEditorFocus`, §5.1), and a drawing in view mode carries no tool (§4.2). A creator's click
-into a window in view mode places nothing there (its content does not take placed widgets).
+into a window in view mode places nothing there (its content does not take placed widgets). It takes no drop
+either: ONE door, `Widget.wantsDropOfChild`, answers "my drops are on and I sit in no view-mode content", and every
+receiver's own answer goes through it (a viewport, a sheet's cell), so the hand's two drop climbs and a viewport's
+edge auto-scroll all ask it. And the editor-focus outline never frames it (`WorldWdgt._widgetBeingEdited` asks
+`sitsInViewModeContent` first).
 
 **Which content is in view mode** (`Widget.sitsInViewModeContent`): view mode is inherited DOWNWARD, bounded by
 windows.
@@ -102,12 +106,13 @@ windows.
   `FolderShortcutWdgt` and `BinOpenerWdgt`: taking widgets and giving them up is their job). Such a widget answers
   false itself, and a window holding one, itself or in its content, answers edit mode for its content as a window
   with its own toggle does; its chrome (a title, a link's caption) follows the content around it. So a folder window
-  nested in a view-mode document, its panel, and a folder or bin link standing in one answer edit mode. A folder
+  nested in a view-mode document, its panel, and a folder or bin link standing in one answer edit mode and keep
+  taking drops. A folder
   window offers no pencil (`offersEditToggle`), and a declared widget asked to disable its editing stays on
   (`Widget._disableDragsDropsAndEditingNoSettle`, `FrameWdgt`'s).
 - Any other mode holder in view mode makes everything in it view-only, whatever a holder nearer the widget says.
   So a bare drawing in a view-mode document refuses paint, although its own canvas, a holder by class, keeps its
-  flag on: its surface carries no tool and its canvas stamps no drop (`StretchableCanvasWdgt.wantsDropOfChild`).
+  flag on: its surface carries no tool and its canvas stamps no drop.
 - A sheet in a view-mode document takes no entry. Every door to a cell asks: an edit start, a commit (an edit
   open across the flip ends without writing), a clear, a drop into a cell, a drag out of one. The arrows still
   move its selection.

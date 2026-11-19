@@ -18,8 +18,8 @@ Status:
 | U3 | Line ends, document ends and word jumps follow the keyboard's platform | CLOSED 2026-11-18 (§U3) |
 | U4 | A text menu shows its state as ticks; every editing row tested | CLOSED 2026-11-19 (§U4) |
 | U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | CLOSED 2026-11-19 (§U5) |
-| U6 | Folders, the bin and their links hold a fixed edit mode | LANDED 2026-11-19 (§U6) |
-| U7 | View mode reaches every drop and the selection ring | OPEN |
+| U6 | Folders, the bin and their links hold a fixed edit mode | CLOSED 2026-11-19 (§U6) |
+| U7 | View mode reaches every drop and the selection ring | LANDED 2026-11-19 (§U7) |
 | U8 | A mode flip repaints a hosted widget's grip | OPEN |
 | U9 | A person's grip drag keeps a window's title strip whole | OPEN |
 | U10 | The logo tool's overflow row is pictured live | OPEN |
@@ -409,8 +409,8 @@ strip loses its pencil); met. Evidence: the new `SystemTest_macroFoldersAndTheBi
 plants, one per reader and one for the chrome bound, each failing under both pointers; follower clean; WebKit passes.
 Docs: `toolbars.md` §3, `widget-authoring-guidelines.md` §9. Filed (found by the first gauntlet's capstone leg, when the
 test opened the bin's window by a press on a bin link's tile): that press places the new window with `_applyBounds`
-outside a settle, a careless end-of-cycle push; the test builds the bin's window from code instead. Commits: one per
-repo, each titled "Folders: folders, the bin and their links stay in edit mode".
+outside a settle, a careless end-of-cycle push; the test builds the bin's window from code instead. Commits: Fizzygum
+`9c5d1076`, Fizzygum-tests `4eb27a35b`, each titled "Folders: folders, the bin and their links stay in edit mode …".
 
 ## U7 — View mode reaches every drop and the selection ring (R3 §G, then §F)
 
@@ -433,6 +433,24 @@ finger suite confirm it on the real change.
 **Needs:** U6 CLOSED or PARKED (its fallback above).
 
 Time box 2.5 h.
+
+**Landed 2026-11-19.** As R3 §G.4 and §F.4. G: `Widget.wantsDropOfChild` answers `@_acceptsDrops and not
+@sitsInViewModeContent()`; `ViewportWdgt` and `CellWdgt` ask through `super(aWdgt)` (`CellWdgt` declares
+`_acceptsDrops: true`); `StretchableCanvasWdgt`'s override is deleted; links take drops through U6's fixed mode, so no
+`DesktopLinkWdgt` override. F: `WorldWdgt._widgetBeingEdited` returns undefined for view-mode content before anything
+else, and its walk's mode test is gone. No ratchet moved. Evidence: R3's two tests, `SystemTest_macroViewModeContentTakesNoDrop`
+and `SystemTest_macroViewModeContentShowsNoSelectionRing` (values only), each with a premise that its targets show whole
+(the first runs missed: a rectangle left at its default place, a part clipped by the page), and R3's plants, each failing
+exactly as R3 predicted under both pointers: the door opened (G steps 3 and 4, and the toolbar residue's two drop tests,
+so their deleted conjuncts are carried by the base), the links' fixed mode removed (rewritten for U6's declaration: G
+step 6 only), the shipped ring (F steps 2, 3, 5, 6), view mode through every window (F step 7 only); followers clean;
+WebKit passes. Docs: `toolbars.md` §3, `visual-design-system.md` (the selection outline), the drag-embed spec (the accept
+predicate, a reluctant ancestor), `src/spreadsheet/CLAUDE.md` (the accept gate). From the review: the ring's walk no
+longer asks a container's flag, so a focus inside a bin window nested in a view-mode document (the bin's fixed mode bounds
+the view mode) is ringed where it was not — consistent with `editableEditorFocus`, and unmeasured by R3's census, which
+predates U6; filed: a widget lifts out of view-mode content but cannot be dropped back (the flip locks only direct
+children), and "Edit layout" offers drop slots there. Commits: one per repo, each titled "View mode: content in view
+mode takes no drop and shows no selection ring …".
 
 ## U8 — A mode flip repaints a hosted widget's grip (R3 §M)
 
@@ -571,6 +589,9 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **Other bare mode holders in view-mode content still take drops** — only a cell and a drawing's canvas ask the view mode around them, so a slide panel picked up into a Docs Maker, which is then flipped to view mode, still embeds a dropped widget (U5 review, read from code) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U7; filed under `archive/toolbar-arc-residue-plan.md`): one door, `Widget.wantsDropOfChild` = drops on and not `sitsInViewModeContent`; `SystemTest_macroViewModeContentTakesNoDrop`.
+- [x] **The selection ring frames a drawing's paint surface after a click in view mode** — the ring asks the clicked glass's own edit flag, which no mode flip writes, so a view-mode Drawings Maker, or a bare drawing in a view-mode document, rings its surface (research C §3.3, U5) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U7; filed under `archive/toolbar-arc-residue-plan.md`): `WorldWdgt._widgetBeingEdited` asks `sitsInViewModeContent` first; `SystemTest_macroViewModeContentShowsNoSelectionRing`.
 
 - [x] **A folder window offers a pencil, and in view mode refuses every drop** — folders and the bin are always in edit mode by the owner's ruling, and links to them keep taking drops in view-mode content (§U6) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U6; filed under `plans/editing-residue-plan.md`): `alwaysInEditMode` on FolderWindowWdgt, BinWdgt and DesktopLinkWdgt, read by `offersEditToggle`, `sitsInViewModeContent` and the disable cores; `SystemTest_macroFoldersAndTheBinStayInEditMode`.
 

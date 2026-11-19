@@ -1955,9 +1955,11 @@ class WorldWdgt extends IconGridPanelWdgt
   #               (isInEditMode: a window answers its content's mode), when the focus leaf IS the panel.
   #   SELECTED  — (D21) a widget SELECTED inside an editable container that is in edit mode, e.g. a clock
   #     ITEM      or image dropped into a document: it has no "edit mode" of its own, but ops (alignment,
-  #               …) target it, so it shows the same outline. Its nearest editing-amenities ANCESTOR
-  #               (excluding the world) must be in edit mode — a bare selection on the desktop is NOT
-  #               framed (the world is an editable panel but is not an "editor" holding selected items).
+  #               …) target it, so it shows the same outline. It must have an editing-amenities ANCESTOR
+  #               (excluding the world) — a bare selection on the desktop is NOT framed (the world is an
+  #               editable panel but is not an "editor" holding selected items).
+  # NEVER content in VIEW mode (Widget.sitsInViewModeContent, the question every editing door asks): the
+  # outline frames what an op may act on, and in view mode none may.
   # NEVER a desktop icon: an icon shows its selection in its own look, not in the ring (the SELECTED
   # ICON, isSelectedIcon), so a holder in a folder window or a document -- an item of an editable
   # container in edit mode, which the walk below would otherwise frame -- wears no ring.
@@ -1968,12 +1970,18 @@ class WorldWdgt extends IconGridPanelWdgt
     # a focus that EXPLICITLY opts out of editing amenities shows its own selection (a spreadsheet,
     # focused as a whole, rings its selected cell) — no outline round it, whatever its containers say
     return undefined if focus.providesAmenitiesForEditing is false
+    # content in VIEW mode is selected for no editing: the one question every editing door asks
+    # (Widget.sitsInViewModeContent), so the outline never frames what the tools refuse -- however
+    # near a holder that keeps its own flag on (a drawing's canvas, a bare slide panel) stands
+    return undefined if focus.sitsInViewModeContent()
     if focus.providesAmenitiesForEditing and focus.isInEditMode()
       return focus
-    # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container that is in edit mode.
+    # SELECTED ITEM (D21): frame focus when it sits inside an EDITABLE container (the early return above
+    # has already refused view-mode content, so the container's own flag is not asked: the focus is in
+    # edit mode, by the mode around it or by a fixed one between, a folder or the bin, that bounds it).
     # Walk to the nearest container that has an OPINION on editing amenities, stopping BEFORE the world
     # (a desktop selection is not "in an editor"):
-    #   amenities === true  → frame focus, but only if its edit toggle is on (view mode ⇒ no indicator).
+    #   amenities === true  → frame focus.
     #   amenities === false → STOP, no frame: a container that EXPLICITLY opts out manages its own
     #                         selection UI (a spreadsheet's cell grid draws its own cell highlight), so a
     #                         second outline would just be clutter.
@@ -1981,7 +1989,7 @@ class WorldWdgt extends IconGridPanelWdgt
     container = focus.parent
     while container? and container isnt @
       if container.providesAmenitiesForEditing is true
-        return (if container.isInEditMode() then focus else undefined)
+        return focus
       if container.providesAmenitiesForEditing is false
         return undefined
       container = container.parent

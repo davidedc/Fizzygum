@@ -773,9 +773,9 @@ class Widget extends TreeNode
   # came through its content exactly as a window with its own toggle does. Chrome is no part of that:
   # a nested folder window's title and a link's caption follow the content around them. PUBLIC query
   # of me about myself.
-  #   The selection ring's walk (WorldWdgt._widgetBeingEdited) STOPS at an ancestor answering false
-  # instead, because such a container draws its own selection: that walk asks who paints the ring,
-  # this one whether the content may be edited.
+  #   The selection ring (WorldWdgt._widgetBeingEdited) asks this first, so it never frames view-mode
+  # content; its own walk then asks who paints the ring, and STOPS at an ancestor answering false
+  # instead, because such a container draws its own selection.
   sitsInViewModeContent: ->
     return false if @alwaysInEditMode
     cameThrough = @
@@ -4731,8 +4731,15 @@ class Widget extends TreeNode
     # first-ever drop this coincides with what the seed's drain would fill.)
     @_rememberFractionalSituationInHoldingPanel()
     
+  # Do I take `aWdgt`? While my drops are on (@_acceptsDrops, which a mode flip writes on the holder it
+  # flips) and I sit in no view-mode content (sitsInViewModeContent: a holder nested in a view-mode
+  # document keeps its own flag on, and content in view mode takes no drop). Every override that can
+  # take a drop asks through super (a viewport, a sheet's cell; a sheet's cells panel never takes one),
+  # so this one door reaches every receiver: the hand's two drop climbs (ActivePointerWdgt) and a
+  # viewport's edge auto-scroll. A folder, the bin and the links to them
+  # hold a fixed edit mode (alwaysInEditMode), so they keep taking drops in view-mode content.
   wantsDropOfChild: (aWdgt) ->
-    return @_acceptsDrops
+    @_acceptsDrops and not @sitsInViewModeContent()
 
   # the SELF drop gate (public, pure, positive — layering/naming convention §3): the base default is
   # "yes, droppable"; BinOpenerWdgt overrides to refuse (the old FrameWdgt internal/external override

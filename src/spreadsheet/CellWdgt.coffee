@@ -52,6 +52,9 @@ class CellWdgt extends Widget
   # default — never an own property, so nothing serializes.
   isLockingToPanels: true
 
+  # I take drops by class: a widget dropped on me is an entry (wantsDropOfChild narrows it)
+  _acceptsDrops: true
+
   # which cell (col/row via the model); stable across save/load
   address: undefined
   # the mounted value/presenter widget (this cell's rich child), or undefined
@@ -223,12 +226,12 @@ class CellWdgt extends Widget
   # the innermost acceptor; the climb passes the payload's _dropPolicyProxy, which answers by
   # its real class): PLAIN payloads embed instantly (the drag-embed payload-class rule), WINDOW
   # payloads are refused — a 68x20 cell is no place for a window, and the cells panel + sheet
-  # above refuse too, so a window drop falls through to the desktop. An override, not
-  # enableDrops(): the boolean flag can't discriminate payloads. A cell in view-mode content
-  # (sitsInViewModeContent: its sheet in a document in view mode) takes no drop: a dropped widget is
-  # an entry, and content in view mode takes none.
+  # above refuse too, so a window drop falls through to the desktop. The base door answers the rest
+  # (Widget.wantsDropOfChild: I take drops by class, _acceptsDrops, and a cell in view-mode content
+  # -- its sheet in a document in view mode -- takes none: a dropped widget is an entry); my own
+  # conjunct adds only what the boolean flag cannot say, the payload's class.
   wantsDropOfChild: (aWdgt) ->
-    not aWdgt.requiresDeliberateEmbedding() and not @sitsInViewModeContent()
+    super(aWdgt) and not aWdgt.requiresDeliberateEmbedding()
 
   # The drag-out enabler (the parent-side opt-in Widget.grabsToParentWhenDragged consults in
   # its solid-with-parent branch — the wantsDropOfChild-style query family): ONLY my hosted
