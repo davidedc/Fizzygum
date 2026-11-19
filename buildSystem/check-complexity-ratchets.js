@@ -141,6 +141,9 @@ const RECORDED = {
   'ViewportWdgt#_positionAndResizeChildren': 23,
   'ViewportWdgt#_reLayoutScrollbars': 26,
   'ViewportWdgt#takeStrokeScrollFrom': 92,
+  // recorded 2026-11-19 at 16 (was at the ceiling, 15), owner-granted for the editing residue's U6: a mode held fixed
+  // (alwaysInEditMode: a folder, the bin, their links) stays on in the core that writes it off, whoever asks
+  'Widget#_disableDragsDropsAndEditingNoSettle': 16,
   'Widget#_destroyNoSettle': 18,
   'Widget#_getRecursiveStackDim': 22,
   'Widget#_insertAddersSuchThat': 18,

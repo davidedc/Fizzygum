@@ -767,15 +767,23 @@ class Widget extends TreeNode
   # command panel) holds no mode and is passed over: a sheet in a document in view mode sits in
   # view-mode content, a sheet in its own window sits in none. My ROOT is never asked: the root (on
   # screen, the world) holds no mode for what stands on it, so a text on the desktop is never in view
-  # mode. PUBLIC query of me about myself.
+  # mode. A mode held FIXED (alwaysInEditMode: a folder window, the bin, the links to them) is always
+  # edit mode: such a widget answers false itself, and a window holding one -- itself (a folder window)
+  # or in its content (the bin's window) -- answers edit mode for its content, bounding the walk that
+  # came through its content exactly as a window with its own toggle does. Chrome is no part of that:
+  # a nested folder window's title and a link's caption follow the content around them. PUBLIC query
+  # of me about myself.
   #   The selection ring's walk (WorldWdgt._widgetBeingEdited) STOPS at an ancestor answering false
   # instead, because such a container draws its own selection: that walk asks who paints the ring,
   # this one whether the content may be edited.
   sitsInViewModeContent: ->
+    return false if @alwaysInEditMode
     cameThrough = @
     holder = @parent
     while holder?.parent?
-      return not holder.isInEditMode() if holder.contents is cameThrough and holder.offersEditToggle?()
+      if holder.contents is cameThrough
+        return false if holder.alwaysInEditMode or cameThrough.alwaysInEditMode
+        return not holder.isInEditMode() if holder.offersEditToggle?()
       return true if holder.providesAmenitiesForEditing is true and not holder.isInEditMode()
       cameThrough = holder
       holder = holder.parent
@@ -5399,6 +5407,10 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_disableDragsDropsAndEditingNoSettle()
 
   _disableDragsDropsAndEditingNoSettle: ->
+    # a mode held FIXED stays on when I am asked to give it up (a script's "Disable editing"): a
+    # folder, the bin and the links to them (alwaysInEditMode) take widgets and give them up by their
+    # job, so my flag stays true and I answer edit mode by it (isInEditMode)
+    return if @alwaysInEditMode
     if !@dragsDropsAndEditingEnabled
       return
     @dragsDropsAndEditingEnabled = false

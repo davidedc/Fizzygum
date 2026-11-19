@@ -574,6 +574,12 @@ mark after `add` + `setExtent` adds nothing.
   of the editor focus refuses it (focused, never selected), while everything inside it stays selectable.
   A unit whose parts take the click (a list row's label, a desktop icon's caption) answers
   `absorbsDescendantEditorSelection: -> true`, so a click on a part selects the unit.
+- **A widget whose JOB is taking widgets and giving them up holds a FIXED edit mode.** [owner ruling] An edit
+  mode holder (`providesAmenitiesForEditing`) offers a pencil and can be turned to view mode; a folder, the bin and
+  the links to them cannot, since taking drops is what they are for. Declare `alwaysInEditMode: true` on the class
+  (`FolderWindowWdgt`, `BinWdgt`, `FolderShortcutWdgt`, `BinOpenerWdgt`), never a toggle hidden or an override of
+  each mode reader:
+  `FrameWdgt.offersEditToggle`, `Widget.sitsInViewModeContent` and the disable cores read it (`toolbars.md` §3).
 - **Two capability queries tell the hand's touch grammar about your widget**, both dispatched
   `?()` (nothing stubbed on `Widget`): `ownsDragsStartingOnMe: -> true` says a press starting on
   you is YOUR own drag gesture (a bar, a handle, a slider's thumb) — a finger needs no hold before

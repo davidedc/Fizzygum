@@ -242,12 +242,14 @@ class FrameWdgt extends ClippingWdgt
     titleStyle: "windowBar"
 
   # Do I offer my own edit toggle -- the pencil in my strip? When my payload, or I, hold an edit mode
-  # (providesAmenitiesForEditing) and I am not a docked band (a band's strip is a grip: editing what
-  # it holds is not a band gesture). What my window strip's "edit" piece reads (_barSpec; a transient
-  # pop-up wears its own strip, with no such piece, and holds no mode anyway), and what makes me a
-  # mode BOUNDARY: a window with its own toggle answers alone for its content's view mode, whatever
-  # stands around it (Widget.sitsInViewModeContent). PUBLIC query.
+  # (providesAmenitiesForEditing) that can be switched -- not one held FIXED (alwaysInEditMode: a
+  # folder window) -- and I am not a docked band (a band's strip is a grip: editing
+  # what it holds is not a band gesture). What my window strip's "edit" piece reads (_barSpec; a
+  # transient pop-up wears its own strip, with no such piece, and holds no mode anyway), and what makes
+  # me a mode BOUNDARY: a window with its own toggle answers alone for its content's view mode,
+  # whatever stands around it (Widget.sitsInViewModeContent). PUBLIC query.
   offersEditToggle: ->
+    return false if @alwaysInEditMode
     !@_myEdgeDockSpec()? and !!(@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
 
   # The height my window title takes in my strip: the title piece's own line height (a fitted
@@ -2501,6 +2503,9 @@ class FrameWdgt extends ClippingWdgt
     @showEditModeInBar()
 
   _disableDragsDropsAndEditingNoSettle: ->
+    # a mode held fixed (alwaysInEditMode) stays on when I am asked to give it up (Widget's core says
+    # the same)
+    return if @alwaysInEditMode
     @contents?._disableDragsDropsAndEditingNoSettle()
     # public-call-sanctioned: showViewModeInBar is the window-bar mode PROTOCOL, driven
     # cross-object by content widgets (`@parent?.showViewModeInBar?()`), so it stays public — and

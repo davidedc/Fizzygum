@@ -17,8 +17,8 @@ Status:
 | U2 | The caret's remembered column is derived from its vertical run | CLOSED 2026-11-18 (§U2) |
 | U3 | Line ends, document ends and word jumps follow the keyboard's platform | CLOSED 2026-11-18 (§U3) |
 | U4 | A text menu shows its state as ticks; every editing row tested | CLOSED 2026-11-19 (§U4) |
-| U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | LANDED 2026-11-19 (§U5) |
-| U6 | Folders, the bin and their links hold a fixed edit mode | OPEN |
+| U5 | A pinned copy of the toolbar's Fonts menu greys with its tool | CLOSED 2026-11-19 (§U5) |
+| U6 | Folders, the bin and their links hold a fixed edit mode | LANDED 2026-11-19 (§U6) |
 | U7 | View mode reaches every drop and the selection ring | OPEN |
 | U8 | A mode flip repaints a hosted widget's grip | OPEN |
 | U9 | A person's grip drag keeps a window's title strip whole | OPEN |
@@ -347,8 +347,8 @@ Evidence: the new `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool` (one 
 as R2 predicted under both pointers (no enablement and a constant one: the values; no announcer: image_1 alone),
 and a fourth for the destroyed tool (step 6); follower clean; WebKit passes. Filed: a copied font tool — a duplicated
 window's, with its Fonts menu pinned, or one dragged out of its bar — keeps the original toolbar as its menu holder, so
-it re-pops the original's menu, whose rows ask the original tool. Commits: one per repo, each titled "Menus: a pinned
-toolbar Fonts menu greys with its tool".
+it re-pops the original's menu, whose rows ask the original tool. Commits: Fizzygum `087bf41c`, Fizzygum-tests `f6002e371`,
+each titled "Menus: a pinned toolbar Fonts menu greys with its tool".
 
 ## U6 — Folders, the bin and their links hold a fixed edit mode (owner ruling; no research report)
 
@@ -388,6 +388,29 @@ forecast prelude like `research/d-forecast.js` of the prior loop that lists, at 
 (the declaration, beside `providesAmenitiesForEditing`).
 
 Time box 3 h.
+
+**Landed 2026-11-19.** Measured first: a folder window's CONTENT is a `ViewportWdgt` holding the `FolderPanelWdgt`
+(`FolderWindowWdgt`'s constructor), so the readers that ask a window or its content (the pencil, the walk) cannot see a
+declaration on the panel; the folder IS the window class. Declared `alwaysInEditMode: true` (the plan's name) on
+`FolderWindowWdgt` (the Examples folder inherits it), `BinWdgt` (the bin window's content), `FolderShortcutWdgt` and
+`BinOpenerWdgt` — the links TO folders and the bin, as ruled: `DesktopLinkWdgt` would also have covered app launchers
+and document and script shortcuts, which take no drops (the review). `ShelfWdgt` (off-tree, never shown) and the
+desktop (the root, never asked) declare nothing. Readers: `FrameWdgt.offersEditToggle` (a folder window offers no
+pencil); `Widget.sitsInViewModeContent` (a declared widget answers false; a window holding a fixed mode, itself or in
+its content, answers edit mode for its content, bounding only the walk that came through its content, as a window with
+its own toggle does — so its chrome, a title or a link's caption, follows the content around it: the review's catch);
+the disable cores (`Widget._disableDragsDropsAndEditingNoSettle`, `FrameWdgt`'s) refuse for a declared widget.
+`isInEditMode` needs no reader: the cores keep a declared widget's flag on. No "Enable/Disable editing" row needs a
+guard: only StretchableWidgetContainerWdgt, StretchablePanelWdgt and VerticalStackViewportWdgt offer it. The ONE ratchet
+raise of the unit: `Widget#_disableDragsDropsAndEditingNoSettle` recorded at 16 (was at the ceiling, 15), the guard
+belonging in the core that writes the mode. Pixels: forecast with a prelude (`u6/forecast-fixed-mode.js`), 2 tests / 2
+shots, mouse = finger (`DesktopShortcutIcons_image_1`, `ExamplesDoorsNameTheirWindows_image_0`: the folder window's
+strip loses its pencil); met. Evidence: the new `SystemTest_macroFoldersAndTheBinStayInEditMode` (one shot) and its
+plants, one per reader and one for the chrome bound, each failing under both pointers; follower clean; WebKit passes.
+Docs: `toolbars.md` §3, `widget-authoring-guidelines.md` §9. Filed (found by the first gauntlet's capstone leg, when the
+test opened the bin's window by a press on a bin link's tile): that press places the new window with `_applyBounds`
+outside a settle, a careless end-of-cycle push; the test builds the bin's window from code instead. Commits: one per
+repo, each titled "Folders: folders, the bin and their links stay in edit mode".
 
 ## U7 — View mode reaches every drop and the selection ring (R3 §G, then §F)
 
@@ -548,6 +571,8 @@ Time box 1 h.
 - Research: `Fizzygum-tests/.scratch/overnight-editing-residue/research/` (R1–R4, owner-folder).
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] **A folder window offers a pencil, and in view mode refuses every drop** — folders and the bin are always in edit mode by the owner's ruling, and links to them keep taking drops in view-mode content (§U6) — reachable, low. — CLOSED 2026-11-19 (overnight loop, U6; filed under `plans/editing-residue-plan.md`): `alwaysInEditMode` on FolderWindowWdgt, BinWdgt and DesktopLinkWdgt, read by `offersEditToggle`, `sitsInViewModeContent` and the disable cores; `SystemTest_macroFoldersAndTheBinStayInEditMode`.
 
 - [x] **A pinned copy of the toolbar's Fonts menu does not grey its rows while the font tool has nothing to act on** — they refuse silently and look enabled (§U7 "Landed") — reachable, low. — CLOSED 2026-11-19 (overnight loop, U5; filed under `archive/toolbar-arc-residue-plan.md`): each row's enablement asks the tool's `hasSomethingToActOn`, announced by its toolbar; `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool`.
 

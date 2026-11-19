@@ -97,12 +97,12 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
 ### `plans/editing-residue-plan.md` — the editing residue, fixed in one unattended loop (U1–U12; the residue items below are its units too)
-- [ ] **A folder window offers a pencil, and in view mode refuses every drop** — folders and the bin are always in edit mode by the owner's ruling, and links to them keep taking drops in view-mode content (§U6) — reachable, low.
 - [ ] **No Ctrl+Y redo on a PC** — a PC's caret redoes only with Ctrl+Shift+Z; Windows' Ctrl+Y is not in `CaretWdgt.chordVerbs` (owner ruling: filed, not done; plan §U3) — reachable, low.
 - [ ] **No delete-a-word or delete-to-the-line's-start chords** — a Mac's Option+Backspace deletes one character, Cmd+Backspace and a PC's Ctrl+Backspace delete nothing (owner ruling: filed, not done; plan §U3) — reachable, low.
 - [ ] **AltGr typing does nothing on a PC** — Windows reports AltGr as Ctrl+Alt, and a caret drops every key with Ctrl held, so @ { € on German, French or Polish layouts type nothing (pre-existing; U3 review; plan §U3) — reachable, medium.
 - [ ] **A spreadsheet's selection mode lets Cmd+Left navigate Back** — the sheet moves its selection on arrows whatever modifier is held, but no caret is live, so the browser's default is not kept off and Cmd+Left can go Back (a headed hand check; U3 review; plan §U3) — reachable, medium.
 - [ ] **A copied font tool re-opens its original bar's Fonts menu** — a duplicated window's (with that menu pinned) or a tool dragged out of its bar keeps the original toolbar as its menu holder, so it re-pops the original's menu, whose rows ask the original tool (§U5 "Landed") — reachable, low.
+- [ ] **A press on a bin link's tile leaves the bin window's layout to the end-of-cycle flush** — `BinOpenerWdgt._activateMyTile` places the new window with `_applyBounds` outside a settle: the capstone gate's careless push (§U6 "Landed") — reachable, low.
 
 ### `archive/toolbar-arc-residue-plan.md` — the toolbar arc's residue (✅ CLOSED 2026-11-18: U1–U7 landed, see its ledger; living truth `architecture/toolbars.md`; the items below were filed on the way)
 - [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — its text is typed into the row's one-time raster while that size's glyphs are cold (at the glyph size it fits at no size, -1), so the boxes never resolve; true before U2's sizing too (boxes at 16 px); probe in the U2 scratch — reachable, low.

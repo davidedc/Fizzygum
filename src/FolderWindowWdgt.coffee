@@ -4,6 +4,14 @@ class FolderWindowWdgt extends FrameWdgt
   # desktop; the constructor takes it and defaults it to false
   internal: undefined
 
+  # I HOLD A FIXED EDIT MODE: taking widgets and giving them up is a folder's job, so I am always in
+  # edit mode -- no pencil in my strip (FrameWdgt.offersEditToggle), a script's disable of me leaves me
+  # on (FrameWdgt._disableDragsDropsAndEditingNoSettle), and view mode around me does not reach my
+  # content (Widget.sitsInViewModeContent; my chrome, my title, follows the content around me).
+  # Declared by the window, which IS the folder: my panel stands in my content's viewport, where the
+  # readers asking a window or its content would not see it.
+  alwaysInEditMode: true
+
   constructor: (@closeButton, @contents, @internal = false) ->
     @contents = new ViewportWdgt new FolderPanelWdgt
     super @contents, closeButton: @closeButton

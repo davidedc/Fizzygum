@@ -11,6 +11,11 @@ class BinWdgt extends Widget
   # the main pane's inset from my top and sides; it always runs down to my footer band.
   externalPadding: 0
 
+  # I HOLD A FIXED EDIT MODE, as a folder does (FolderWindowWdgt.alwaysInEditMode): taking what is
+  # thrown away and giving it back is my job, so a script's disable of me leaves me on, and view mode
+  # around the window I am the content of does not reach me or my pane (Widget.sitsInViewModeContent).
+  alwaysInEditMode: true
+
   constructor: ->
     super()
     # a naked (chrome-less) bin — WidgetFactory.underTheCarpet builds one — must

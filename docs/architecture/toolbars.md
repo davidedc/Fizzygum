@@ -98,6 +98,13 @@ windows.
 - A window that offers its own edit toggle (`FrameWdgt.offersEditToggle`, the one definition its strip's pencil
   reads) answers alone for its content, by its mode. So an edit-mode Maker nested in a view-mode document stays
   editable.
+- A mode held FIXED is always edit mode (`alwaysInEditMode`, declared by `FolderWindowWdgt`, `BinWdgt`,
+  `FolderShortcutWdgt` and `BinOpenerWdgt`: taking widgets and giving them up is their job). Such a widget answers
+  false itself, and a window holding one, itself or in its content, answers edit mode for its content as a window
+  with its own toggle does; its chrome (a title, a link's caption) follows the content around it. So a folder window
+  nested in a view-mode document, its panel, and a folder or bin link standing in one answer edit mode. A folder
+  window offers no pencil (`offersEditToggle`), and a declared widget asked to disable its editing stays on
+  (`Widget._disableDragsDropsAndEditingNoSettle`, `FrameWdgt`'s).
 - Any other mode holder in view mode makes everything in it view-only, whatever a holder nearer the widget says.
   So a bare drawing in a view-mode document refuses paint, although its own canvas, a holder by class, keeps its
   flag on: its surface carries no tool and its canvas stamps no drop (`StretchableCanvasWdgt.wantsDropOfChild`).

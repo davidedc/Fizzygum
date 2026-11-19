@@ -5,6 +5,12 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   target: undefined
 
   _acceptsDrops: true
+
+  # I HOLD A FIXED EDIT MODE, as the bin I open does (BinWdgt.alwaysInEditMode): a drop on me is my use
+  # -- I throw it away and leave the content I stand in as it was -- so I answer edit mode in view-mode
+  # content (Widget.sitsInViewModeContent), and a script's disable of me leaves me on. My caption is no
+  # part of that: it follows the content around me.
+  alwaysInEditMode: true
   # my carrier-owned corner knob — the layoutSpec MenusHelper hands my parent at
   # add() time (the pattern LayoutSpec.coffee names, alongside HandleWdgt.cornerSpec)
   cornerSpec: undefined
