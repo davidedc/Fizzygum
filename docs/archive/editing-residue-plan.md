@@ -1,5 +1,9 @@
 # The editing residue — text slots, keys, menus, view mode and windows, fixed in one unattended loop
 
+**✅ CLOSED 2026-11-19 (archived): U1–U12 landed in one unattended overnight loop, each closed by a green `fg gauntlet`;
+each unit's Landed paragraph names its commits (the last: Fizzygum `47386c96`, Fizzygum-tests `065c46838`). Items filed on
+the way: BACKLOG, this plan's section.**
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 AUTHORED 2026-11-18 against Fizzygum master `4f2f4b6f` and Fizzygum-tests master `9cf50d778` (409 SystemTests,
 build FRESH). Executed by an UNATTENDED loop whose process (the per-unit cycle, the grants, the park and stop rules,
@@ -24,8 +28,8 @@ Status:
 | U9 | A person's grip drag keeps a window's title strip whole | CLOSED 2026-11-19 (§U9) |
 | U10 | The logo tool's overflow row is pictured live | CLOSED 2026-11-19 (§U10) |
 | U11 | A copy of a pinned wire menu drives the real wire | CLOSED 2026-11-19 (§U11) |
-| U12 | The U3 off-screen test judges the drag-out look under both pointers | LANDED 2026-11-19 (§U12) |
-| U13 | Close: this plan archived, or left open with what parked | OPEN |
+| U12 | The U3 off-screen test judges the drag-out look under both pointers | CLOSED 2026-11-19 (§U12) |
+| U13 | Close: this plan archived, or left open with what parked | CLOSED 2026-11-19 (archived) |
 
 ---
 
@@ -597,8 +601,8 @@ announced it). This note stands for the archived toolbar-residue plan's U3, whos
 plant under the finger only" now holds under both pointers. Evidence: unplanted, the test passes at dpr 1 and 2 under both pointers; under that plan's
 `u3/plant-d-no-announcement.js`, image_3 fails in all four (image_1 as before); follower clean; WebKit passes. Filed
 from the review: no shot judges the un-collapse's announcement (image_2 follows the floating Bold's own press, which
-repaints both bars). Commits: Fizzygum "Plan: the off-screen test judges the drag-out look under both pointers", and
-Fizzygum-tests "Tests: the off-screen test judges the drag-out look under both pointers".
+repaints both bars). Commits: Fizzygum `47386c96` "Plan: the off-screen test judges the drag-out look under both
+pointers", and Fizzygum-tests `065c46838` "Tests: the off-screen test judges the drag-out look under both pointers".
 
 ## U13 — Close
 

@@ -96,7 +96,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
 - [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
-### `plans/editing-residue-plan.md` — the editing residue, fixed in one unattended loop (U1–U12; the residue items below are its units too)
+### `archive/editing-residue-plan.md` — the editing residue (✅ CLOSED 2026-11-19: U1–U12 landed, see its ledger; the items below were filed on the way)
 - [ ] **No Ctrl+Y redo on a PC** — a PC's caret redoes only with Ctrl+Shift+Z; Windows' Ctrl+Y is not in `CaretWdgt.chordVerbs` (owner ruling: filed, not done; plan §U3) — reachable, low.
 - [ ] **No delete-a-word or delete-to-the-line's-start chords** — a Mac's Option+Backspace deletes one character, Cmd+Backspace and a PC's Ctrl+Backspace delete nothing (owner ruling: filed, not done; plan §U3) — reachable, low.
 - [ ] **AltGr typing does nothing on a PC** — Windows reports AltGr as Ctrl+Alt, and a caret drops every key with Ctrl held, so @ { € on German, French or Polish layouts type nothing (pre-existing; U3 review; plan §U3) — reachable, medium.
@@ -114,7 +114,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **No shot judges the announcement at a Docs Maker's un-collapse** — `macroEditingFollowsAParagraphOffScreen`'s image_2 follows the floating Bold's own press, which repaints both bars, so a missed un-collapse announcement passes (§U12 "Landed", review) — reachable, low.
 
 ### `archive/toolbar-arc-residue-plan.md` — the toolbar arc's residue (✅ CLOSED 2026-11-18: U1–U7 landed, see its ledger; living truth `architecture/toolbars.md`; the items below were filed on the way)
-- [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — its text is typed cold into a raster of a throwaway copy, and a tool with children has no live picture; at glyph size it also fits at no size (`plans/editing-residue-plan.md` §U10 "Landed": what a fix needs; an owner question) — reachable, low.
+- [ ] **A speech-bubble tool's overflow-row picture shows placeholder boxes** — its text is typed cold into a raster of a throwaway copy, and a tool with children has no live face; at glyph size it also fits at no size (`archive/editing-residue-plan.md` §U10 "Landed": what a fix needs; an owner question) — reachable, low.
 - [ ] **A widget's base context menu still acts on view-mode content** — "Pick up" on a widget in a cell of a view-mode sheet empties the cell, "Color…" restyles past the tools' refusal (U5 review) — reachable, low; awaits the owner's ruling row by row (some rows stay active in view mode, some not).
 
 ### `plans/affine-transforms-plan.md`
