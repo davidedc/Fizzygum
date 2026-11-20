@@ -122,14 +122,15 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
     WorldWdgt.theme.documentItemSpacing
 
   # MY CARET SCROLL MARGIN (ViewportWdgt._caretScrollMargin, read by scrollCaretIntoView): a caret I
-  # bring into view comes to stand the theme's item spacing past my padded interior's edge, whatever
-  # my inset is. It is my SCROLL padding (CSS scroll-padding), a scrolling policy apart from my
-  # layout inset (CSS padding): where my inset yields to a window's page gutter (_itemInset, 0 at a
-  # gutter of the whole spacing) a caret scrolled into view still keeps some of its neighbouring
-  # lines in sight instead of landing flush with my edge; bare on the desk it equals my inset, as
-  # for any viewport. Read from the theme at every follow and kept nowhere.
+  # bring into view comes to stand the theme's item spacing past the edge of the box my plane shows
+  # through (my box less my plane margin), whatever my inset is. It is my SCROLL padding (CSS
+  # scroll-padding), a scrolling policy apart from my layout inset (CSS padding): where my inset
+  # yields to a window's page gutter (_itemInset, 0 at a gutter of the whole spacing) a caret
+  # scrolled into view still keeps some of its neighbouring lines in sight instead of landing flush
+  # with my edge; bare on the desk it equals my inset, as for any viewport. Read from the theme at
+  # every follow and kept nowhere.
   _caretScrollMargin: ->
-    @padding + WorldWdgt.theme.documentItemSpacing
+    @planeMargin + WorldWdgt.theme.documentItemSpacing
 
   # THE ITEM SHAPE a text standing on my page wears, asked through my plane (the stack:
   # VerticalStackPanelWdgt.itemShapeOfContainedText) by the text itself, at every measure, paint and

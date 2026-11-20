@@ -1481,12 +1481,11 @@ class Widget extends TreeNode
     if !firstClipping?
       firstClipping = world
     upstream = firstClipping.SLOWclipThrough()
-    # translation edge — kept in lockstep with clipThrough above
-    if firstClipping.scrollTranslationOfChild?
+    # the plane edge — kept in lockstep with clipThrough below
+    if firstClipping.clipIntoPlaneOfChild?
       edgeChild = @
       edgeChild = edgeChild.parent while edgeChild.parent? and edgeChild.parent != firstClipping
-      if (translation = firstClipping.scrollTranslationOfChild edgeChild)?
-        upstream = upstream.translateBy translation.neg()
+      upstream = firstClipping.clipIntoPlaneOfChild upstream, edgeChild
     if @clipsAtRectangularBounds
       @boundingBox().intersect upstream
     else
@@ -1661,17 +1660,17 @@ class Widget extends TreeNode
       if !firstParentClippingAtBounds?
         firstParentClippingAtBounds = world
       firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
-      # translation edge (paint-time scroll, plan §3.2): the upstream clip lives in the clipping
-      # parent's plane; when that parent scroll-translates the subtree I reach it through, the
-      # clip must be expressed in MY plane (screen box B constrains plane points p with
-      # p + t ∈ B ⇔ p ∈ B − t). The edge is the clipping parent's DIRECT child on my ancestor
-      # chain (a non-clipping plane — a stack — can sit between me and the clipping viewport),
-      # so climb to it before asking. Absent provider / zero translation: same object through.
-      if firstParentClippingAtBounds.scrollTranslationOfChild?
+      # the plane edge (paint-time scroll, plan §3.2): the upstream clip lives in the clipping
+      # parent's plane. A parent that shows the subtree I reach it through in a plane of its own (a
+      # viewport: its contents, inside its plane box and through its scroll translation) answers
+      # that clip as it reaches that subtree, in the subtree's plane (ViewportWdgt.clipIntoPlaneOfChild).
+      # The edge is the clipping parent's DIRECT child on my ancestor chain (a non-clipping widget
+      # can sit between me and it), so climb to it before asking. A parent that answers nothing, or
+      # a child it shows in place: same object through.
+      if firstParentClippingAtBounds.clipIntoPlaneOfChild?
         edgeChild = @
         edgeChild = edgeChild.parent while edgeChild.parent? and edgeChild.parent != firstParentClippingAtBounds
-        if (translation = firstParentClippingAtBounds.scrollTranslationOfChild edgeChild)?
-          firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBoundsClipThroughBounds.translateBy translation.neg()
+        firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipIntoPlaneOfChild firstParentClippingAtBoundsClipThroughBounds, edgeChild
       @checkClipThroughCache = WorldWdgt.geometryVersion
       if @clipsAtRectangularBounds
         @cachedClipThrough = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds

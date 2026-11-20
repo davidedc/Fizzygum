@@ -13,15 +13,16 @@ A scrolling container decomposes into three responsibilities, each with an hones
 
 1. **The viewport** — `ViewportWdgt extends ClippingWdgt` (NOT a panel: its children are chrome, not
    content). An invisible-in-effect composite: its color/alpha MIMIC the plane's, so its own
-   painted rect always lies under the plane, indistinguishable (only the pop-up pair pins a
-   true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It clips at its
-   bounds, as every `ClippingWdgt` does, and owns three pieces of chrome: the contents
+   painted rect lies under the plane, indistinguishable, wherever the plane shows (only the pop-up
+   pair pins a true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It
+   clips at its bounds, as every `ClippingWdgt` does, and owns three pieces of chrome: the contents
    panel and two `SliderWdgt` bars. `add` redirects any non-chrome child into the contents
    (chrome self-identifies via `attachesToViewportDirectly?()`). Scrolling never moves the
    plane: the offset is STORED TRUTH — two integer scalars `scrollOffsetX/Y`, frame-relative
    (the visible window's plane rect is `contents.position() + offset .. + my extent`) —
    applied as a paint-time translation around the contents recursion
-   (`_scrollTranslation`; dormant, same-object/stock-path, at zero) and carried identically
+   (`_scrollTranslation`; dormant, same-object/stock-path, at zero and with no plane margin) and
+   carried identically
    by the screen↔plane walks for input, hit-testing, damage and clipping. For loose content
    the plane's committed frame is the padded content ∪ the visible window ∪ the viewport's
    own box — the window at rest (`_positionAndResizeChildren`) — so the vacant strip between
@@ -38,6 +39,30 @@ A scrolling container decomposes into three responsibilities, each with an hones
    refusing `'never'` at its own gate) writes offsets directly and deliberately UN-clamped:
    the arrange's window merge then grows the frame and the tail clamp normalizes, so the
    follow's margin overshoot sticks — the one licensed bypass of the cores' clamp.
+
+   **The plane margin.** A viewport's `planeMargin` (0 unless it is given one as it is built) is a fixed
+   margin, in whole pixels, between its edge and the box its plane shows through (`_planeBox`: its
+   box inset by the margin, its box itself at 0). The plane is cropped there wherever a walk knows
+   where it shows: the two paint bodies paint the contents child inside the damage ∩ the plane
+   box, and the clip-through edge asks the viewport one question per child edge
+   (`clipIntoPlaneOfChild`: crop to the plane box, then express in the child's plane), which
+   hit-testing, damage and every visible-box query read. So in the margin the viewport's own rect
+   is what shows, a resident scrolled under it is neither painted nor hit, and the pointer there
+   meets the viewport itself. What stands in the margin: the viewport's fill and border; its thin
+   bars, which run along the plane box's side (their end inset is the margin where that is the
+   larger, and a bar shows only while that run holds a thumb); and a drop's hand-off: a payload
+   released in the margin goes to the plane, moved inside the plane box
+   (`dropReceiverForPointsOnMyBody`, the hand's protocol for points on a widget's own body; where a
+   bar stands fat over the margin the release meets the bar, as on any viewport). The viewport
+   repaints its margin when its plane is recoloured or faded, since the plane's own repaint stops
+   at the plane box. The
+   plane's frame still counts the margin as padding around its content
+   (`_positionAndResizeChildren`), so the scroll range, the clamps and the caret follow are a
+   marginless viewport's: at both ends of a scroll the content rests at the margin's inner edge.
+   The margin is MAPPING state, as the offset is (the `geometryVersion`-keyed clip caches fold it
+   in): it is given to a viewport as it is built. It is not named `padding`: a handle reads that
+   name off whatever it is attached to (`HandleWdgt._cornerInsetFrom`), and a handle on a viewport
+   sits by the viewport's corner whatever its margin.
 2. **The plane** — the panel the viewport clips and scrolls, the coordinate surface content
    actually lives on. Plane-ness is a ROLE, not a class: the default `ScrolledPaneWdgt`, a
    `FolderPanelWdgt`, a `ToolPanelWdgt` or a vertical stack all play it. Every topology
@@ -115,8 +140,9 @@ painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); 
 or the content no longer overflowing, reverts to thin or hidden. A bar also stays hidden, however
 much the content overflows, when its frame has no room for its thumb
 (`ViewportWdgt._barFrameHasRoomForThumb`: the frame a press meets, at full thickness and the run's
-whole length, must be at least as long as the thumb a press meets is wide; the shorter frame the
-thin look is drawn in is not the one asked). Under a resizer (a naked inspector's), a viewport
+whole length, less the plane margin at both ends for a bar the viewport presents, must be at least
+as long as the thumb a press meets is wide; the shorter frame the thin look is drawn in is not the
+one asked). Under a resizer (a naked inspector's), a viewport
 shorter than the corner reserve has a frame whose length is not even positive, and the bar would be
 a 1px sliver no pointer can work. The pane still scrolls, since scrollability is asked of overflow.
 
@@ -131,7 +157,8 @@ LINE at the viewport's edge, and short of its side's ends.
   indicator lies 1 px in: a window's pane then shows one pixel of paper between its thumb and its
   window's border, which runs just past that edge.
 - Along its axis it stops `scrollIndicatorEndInset` (3 px) short of each end of its run
-  (`_indicatorEndInsetFor`), the run being its side less the corner reserve below.
+  (`_indicatorEndInsetFor`), or the viewport's plane margin where that is the larger, the run being
+  its side less the corner reserve below.
 - The FAT look is none of this: flush with the edge, full thickness, the run's whole length. It is
   the frame every press meets, so no aim, hover band or hit area moves with the thin look.
 - A bar picked up off its viewport is a plain slider: it keeps the thickness it left with and its
@@ -363,8 +390,9 @@ generic viewport is "viewport"; composites take their contents' name
   translation, for its contents only — so a plane's residents keep integer plane-local `@bounds`
   while their screen positions are derived, the same two-vocabulary law the islands introduced.
   `scrollTranslationOfChild(child)` stays the viewport's answer for the callers that need the
-  translation vector itself (the clip-through translation edge, `cornerRadiiFollowingMyOutline`,
-  `FrameWdgt._visibleBoxOnMyPage`, its own `add`). ⚠ One rule this imposes on INPUT handlers:
+  translation vector itself (`cornerRadiiFollowingMyOutline`, `FrameWdgt._visibleBoxOnMyPage`, its
+  own `add`); the clip-through edge asks `clipIntoPlaneOfChild`, which crops to the plane box and
+  then translates. ⚠ One rule this imposes on INPUT handlers:
   `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
   is still plane-local to the SENDER — a pos-consuming GESTURE handler (`activated`,
   `doubleActivated`, the ones that still climb by escalation) on a plane's ancestor must

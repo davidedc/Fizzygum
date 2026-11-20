@@ -1,6 +1,7 @@
 # The scrolling VIEWPORT — invisible in EFFECT, not by abstention: my color/alpha MIMIC the
-# plane's (see _buildViewportChromeNoSettle), so my own painted rect always lies under the
-# plane, indistinguishable. I own three pieces of chrome: the contents panel (the PLANE its
+# plane's (see _buildViewportChromeNoSettle), so my own painted rect lies under the plane,
+# indistinguishable, and shows as the plane's own surround in the margin I may keep around it
+# (planeMargin). I own three pieces of chrome: the contents panel (the PLANE its
 # content lives on — PINNED: scrolling never moves it; the stored scrollOffsetX/Y applies as
 # a paint-time translation, see _writeScrollOffset/_scrollTranslation) and two SliderWdgt
 # bars. NOT a PanelWdgt: a
@@ -13,7 +14,7 @@ class ViewportWdgt extends ClippingWdgt
   # As a ClippingWdgt I clip my chrome (and through it the scrolled content) at my bounds, as
   # PanelWdgt and FrameWdgt do. Clipping also decides hit-testing together with the
   # RectangularAppearance the constructor sets: opaque inside my bounds, even though my own rect
-  # is always painted UNDER the plane — occluded, not skipped.
+  # is painted UNDER the plane — occluded, not skipped — wherever the plane shows.
 
   # the panel facts I genuinely mean, restated off PanelWdgt:
   # around-the-content padding a caller can add via setContents (reads: the arrange,
@@ -26,7 +27,18 @@ class ViewportWdgt extends ClippingWdgt
   providesAmenitiesForEditing: true
 
   hasVelocity: true
-  padding: 0 # around the scrollable area
+  # MY PLANE MARGIN: a fixed distance, in whole pixels, between my edge and the box my plane shows
+  # through (_planeBox). My own fill and border and my indicators stand in it; my plane is cropped at
+  # its inner edge wherever a walk knows where my plane shows: my two paint bodies, and the
+  # clip-through edge (clipIntoPlaneOfChild) that hit-testing, damage and every visible-box query
+  # read. My plane still counts it as padding around its content (_positionAndResizeChildren), so my
+  # scroll range, my clamps and my caret follow are a marginless viewport's: at both ends of a scroll
+  # the content rests at the margin's inner edge. It is MAPPING state, as my scroll offset is (the
+  # version-keyed clip caches fold it in, see _writeScrollOffset): it is given to me as I am built,
+  # before I am shown, and nothing writes it on a live viewport. It is not called `padding`: a handle
+  # reads that name off whatever it is attached to, to know how far in from the corner it sits
+  # (HandleWdgt._cornerInsetFrom), and a handle on me sits by my corner whatever my margin.
+  planeMargin: 0
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
 
@@ -144,21 +156,26 @@ class ViewportWdgt extends ClippingWdgt
 
   # ── the plane's up-relays (scroll-frame role plan P3) ─────────────────────────────────────
   # My paint values MIMIC my contents' (I DO paint every repaint, at alpha 1 once
-  # _buildViewportChromeNoSettle adopts the contents' own — but always UNDER the plane, so no
-  # pixel of mine is ever visible; menus and readers still see my fields), and the plane keeps
-  # them true by notifying me when it is recolored directly. Bare field writes: there is
-  # nothing of me to invalidate — my own paint is always fully occluded, and the plane's own
-  # super covers every visible recoloured pixel. Guarded on a real value: Widget.setColor
-  # returns undefined on a no-change call, and writing that through would clobber the mimic.
+  # _buildViewportChromeNoSettle adopts the contents' own — UNDER the plane wherever it shows,
+  # where no pixel of mine is visible, and as what shows in the margin I may keep around it;
+  # menus and readers see my fields either way), and the plane keeps them true by notifying me
+  # when it is recolored directly. With no margin the write is all there is to do: my own paint
+  # is fully occluded, and the plane's own super covers every visible recoloured pixel. While I
+  # keep a margin (planeMargin) I repaint as well: my rect is what shows there, and the plane's
+  # own repaint is cropped to the box it shows through (_planeBox), so it never reaches the
+  # margin. Guarded on a real value: Widget.setColor returns undefined on a no-change call, and
+  # writing that through would clobber the mimic.
   _reactToChildColorChanged: (child, aColor) ->
     return unless child is @contents and aColor?
     return if @color?.equals aColor
     @color = aColor
+    @_changed() if @planeMargin > 0
 
   _reactToChildAlphaChanged: (child, alpha) ->
     return unless child is @contents and alpha?
     unless @alpha == alpha
       @alpha = alpha
+      @_changed() if @planeMargin > 0
 
   # ── MY LOOK, read as I am painted ─────────────────────────────────────────────────────────
   # No fill or stroke colour of my own until one is set on me (or, as the mimic, on my plane):
@@ -190,8 +207,9 @@ class ViewportWdgt extends ClippingWdgt
     @paneStrokeRole = roles.stroke
     @_fullChanged() unless @isOrphan()
 
-  # What I paint myself, always under my plane: my plane's fill (the MIMIC -- a plane wearing a role
-  # of its own, a folder's panel, answers it; a default plane answers my pane's), else my pane's.
+  # What I paint myself, under my plane wherever it shows and, in my margin, as what shows: my
+  # plane's fill (the MIMIC -- a plane wearing a role of its own, a folder's panel, answers it; a
+  # default plane answers my pane's), else my pane's.
   _surfaceFill: ->
     @contents?._surfaceFill?() ? @_paneFill()
 
@@ -225,13 +243,14 @@ class ViewportWdgt extends ClippingWdgt
     ) ->
     # seed alpha 0 here; _buildViewportChromeNoSettle immediately overwrites it with the
     # contents' own (which defaults to 1) — my own values just MIMIC the plane's, and my
-    # painted rect ends up fully occluded under the plane and bars, not skipped
+    # painted rect ends up occluded under the plane wherever it shows, not skipped (in my
+    # margin it is what shows)
     @alpha = 0
     super()
     # the appearance also decides hit-testing: an appearance-bearing widget answers opaque
     # inside its tight bounds. It DOES paint every repaint (once the mimic adopts the
-    # contents' alpha, typically 1) -- just always fully occluded under the plane and bars,
-    # in the look my hooks answer (MY LOOK, above)
+    # contents' alpha, typically 1) -- occluded under the plane wherever it shows, and what
+    # shows in my margin -- in the look my hooks answer (MY LOOK, above)
     @appearance = new RectangularAppearance @
     @_buildViewportChrome()
 
@@ -253,10 +272,10 @@ class ViewportWdgt extends ClippingWdgt
     # redundant whole-world relayout (and would throw if we are built during a layout pass).
     @_addNoSettle @contents
 
-    # the Viewport paints every repaint just like any RectangularAppearance widget, but always
-    # fully occluded under its own contents+bars -- so what matters is that its values MIMIC
-    # the contained Panel's: its own colour, when it holds one (else none, and my look's hooks
-    # answer for both of us)
+    # the Viewport paints every repaint just like any RectangularAppearance widget, occluded
+    # under its own contents wherever they show and showing only in its margin -- so what
+    # matters is that its values MIMIC the contained Panel's: its own colour, when it holds one
+    # (else none, and my look's hooks answer for both of us)
     @color = @contents.color
     @alpha = @contents.alpha
 
@@ -290,6 +309,23 @@ class ViewportWdgt extends ClippingWdgt
     return false if @contents?.vetoesViewportDrops?()
     # the base door: my drops on, and no view-mode content around me (Widget.wantsDropOfChild)
     super(aWdgt)
+
+  # WHO RECEIVES A DROP ON MY BODY -- on a point of me that none of my children covers: my margin
+  # (planeMargin), where my plane is cropped away and my thin indicators let the pointer through.
+  # That room is my plane's, as a window's page gutter is its page's
+  # (FrameWdgt.dropReceiverForPointsOnMyBody), so a payload released there goes to my plane by my
+  # plane's own drop rules, moved first inside the box it shows through
+  # (ActivePointerWdgt._moveGutterDropInsideTarget). With no margin, nobody. PUBLIC: the hand asks it,
+  # through ?(), of the top widget under the pointer (ActivePointerWdgt._dropClimbStart,
+  # _targetReachedThroughAGutter); its dock offer and a press never ask it.
+  #   THE LIMIT: it covers my body, so not the side of my margin a bar of mine stands FAT over. A
+  # carry with no button held sends hover moves, which fatten my bars within a bar's width of my
+  # right and bottom edges (hoverMoved), and a fat bar covers my margin on its side: the release
+  # then meets the bar and not my body, as on any viewport. The bar names nobody, the climb from
+  # it reaches me, and a payload I take is mine to take as released: my add hands it to my plane
+  # where it was let go, moved nowhere. A carry under a held button keeps my bars thin.
+  dropReceiverForPointsOnMyBody: ->
+    if @planeMargin > 0 then @contents else undefined
 
   colloquialName: ->
     # the CONTENTS names the construct ("folder"/"toolbar") — capability via ?(), was two
@@ -335,6 +371,13 @@ class ViewportWdgt extends ClippingWdgt
   _scrollTranslation: ->
     new Point @left() - (@contents.left() + @scrollOffsetX), @top() - (@contents.top() + @scrollOffsetY)
 
+  # THE BOX MY PLANE SHOWS THROUGH: my box less my margin on every side (planeMargin), and my box
+  # itself (the same object) while I keep none, so every walk that crops to it is then the stock
+  # walk. The ONE home of that box for the walks that crop: my paint crops my plane to it, and the
+  # clip-through edge crops to it (clipIntoPlaneOfChild).
+  _planeBox: ->
+    @boundingBox().insetBy @planeMargin
+
   # THE PLANE-MAPPING PROTOCOL, my half (TransformFrameWdgt answers it too, for its content).
   # Widget's screen↔plane walks — mapRectToScreen, screenPointToMyPlane, localPointToScreen,
   # screenBounds, and the iterator they share, _enclosingMappedPlaneRoot — ask every ancestor
@@ -368,35 +411,53 @@ class ViewportWdgt extends ClippingWdgt
   mapClipFromChildPlane: (clipSoFar) ->
     clipSoFar?.translateBy @_scrollTranslation()
 
-  # The translation itself, for the walks that need the vector rather than a mapping (the
-  # clipThrough translation edge, cornerRadiiFollowingMyOutline, FrameWdgt._visibleBoxOnMyPage,
-  # my own add): t when I map the child's plane, else undefined.
+  # The translation itself, for the walks that need the vector rather than a mapping
+  # (cornerRadiiFollowingMyOutline, FrameWdgt._visibleBoxOnMyPage, my own add, and my clip-through
+  # answer below): t when I map the child's plane, else undefined.
   scrollTranslationOfChild: (child) ->
     if @mapsPlaneOfChild child then @_scrollTranslation() else undefined
 
+  # THE CLIP ONE OF MY CHILDREN SHOWS THROUGH, IN THAT CHILD'S OWN PLANE. `clipSoFar` is the clip that
+  # reaches me, in my plane. My contents show inside my plane box and through my scroll translation,
+  # so theirs is that clip cropped to the box, then expressed in their plane (a screen box B
+  # constrains plane points p with p + t in B, so p in B - t). My bars and whatever else stands on me
+  # directly show in place, uncropped. With no margin and no translation the same object goes
+  # through. PUBLIC: Widget's clipThrough and its uncached twin ask it, when I am their first clipping
+  # ancestor, for my direct child on their chain -- per child edge, as scrollTranslationOfChild is.
+  clipIntoPlaneOfChild: (clipSoFar, child) ->
+    return clipSoFar unless child is @contents
+    cropped = if @planeMargin is 0 then clipSoFar else clipSoFar.intersect @_planeBox()
+    translation = @scrollTranslationOfChild child
+    if translation? then cropped.translateBy translation.neg() else cropped
+
   # The paint-time scroll (plan §3.3), intercepted at the same content-recursion point the
   # island composites at: self (the mimic rect) and the BAR children paint in place; the
-  # CONTENTS subtree paints through the scroll translation — the shadow-pass two-step (cull
-  # rect moved opposite the paint, ctx translated with it; both integer × dpr, so the CTM
-  # composition is FP-exact). Culling needs nothing more: each descendant intersects the
+  # CONTENTS subtree paints inside my plane box (_planeBox: the damage is cropped to it, so with a
+  # margin my own rect is what shows there) and through the scroll translation — the shadow-pass
+  # two-step (cull rect moved opposite the paint, ctx translated with it; both integer × dpr, so
+  # the CTM composition is FP-exact). Culling needs nothing more: each descendant intersects the
   # descending rect with its own plane-local bounds, so scrolled-out content prunes exactly
-  # as clipped-out content does. Zero translation takes the stock clipping path — dormancy —
-  # ClippingWdgt's body, through `super`.
+  # as clipped-out content does, and so does content under my margin (a cull that the crop leaves
+  # empty paints nothing). Zero translation and no margin take the stock clipping path —
+  # dormancy — ClippingWdgt's body, through `super`. The crop here and the clip-through edge's
+  # (clipIntoPlaneOfChild) are two readers of the one box and must agree: a resident records the
+  # area it painted from the clip-through walk (_recordDrawnAreaForNextDamageRects).
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     t = @_scrollTranslation()
-    if t.x is 0 and t.y is 0
+    if t.x is 0 and t.y is 0 and @planeMargin is 0
       return super aContext, clippingRectangle, appliedShadow
     damagedPartOfFrame = @boundingBox().intersect clippingRectangle
     if !damagedPartOfFrame.isEmpty()
       if aContext == world.worldCanvasContext
         @_recordDrawnAreaForNextDamageRects()
       @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
-      translatedCull = damagedPartOfFrame.translateBy t.neg()
+      # my plane shows inside my plane box, through my translation; every other child in place
+      planeCull = (damagedPartOfFrame.intersect @_planeBox()).translateBy t.neg()
       @children.forEach (child) =>
         if child is @contents
           aContext.save()
           aContext.translate t.x * ceilPixelRatio, t.y * ceilPixelRatio
-          child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, translatedCull, appliedShadow
+          child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, planeCull, appliedShadow
           aContext.restore()
         else
           child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
@@ -404,15 +465,15 @@ class ViewportWdgt extends ClippingWdgt
   # The SHADOW-pass twin of the interception above (paint-time scroll review F3): ClippingWdgt's
   # own-shadow entry enumerates children itself — bypassing the content pass — so without this
   # a viewport wearing its OWN shadow, painting translucent (alpha != 1, the one case whose
-  # silhouette depends on the children), while scrolled, would silhouette the UNTRANSLATED
-  # content. Same two-step around the contents child, same dormant delegation to ClippingWdgt's
-  # body through `super`.
+  # silhouette depends on the children), while scrolled or keeping a margin, would silhouette the
+  # UNTRANSLATED, UNCROPPED content. Same crop and two-step around the contents child, same dormant
+  # delegation to ClippingWdgt's body through `super`.
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     t = @_scrollTranslation()
-    if t.x is 0 and t.y is 0
+    if t.x is 0 and t.y is 0 and @planeMargin is 0
       return super aContext, clippingRectangle, appliedShadow
     # from here: ClippingWdgt's JustShadow body (kept in lockstep with it), with the contents
-    # child painted through the scroll translation
+    # child painted inside my plane box and through the scroll translation
     clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       damagedPartOfFrame = @boundingBox().intersect clippingRectangle
@@ -422,12 +483,12 @@ class ViewportWdgt extends ClippingWdgt
         @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
         # opaque short-circuit as in ClippingWdgt's: a fully opaque box's silhouette IS its box
         if @alpha != 1
-          shadowTranslatedCull = damagedPartOfFrame.translateBy t.neg()
+          shadowPlaneCull = (damagedPartOfFrame.intersect @_planeBox()).translateBy t.neg()
           @children.forEach (child) =>
             if child is @contents
               aContext.save()
               aContext.translate t.x * ceilPixelRatio, t.y * ceilPixelRatio
-              child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, shadowTranslatedCull, appliedShadow
+              child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, shadowPlaneCull, appliedShadow
               aContext.restore()
             else
               child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
@@ -516,15 +577,16 @@ class ViewportWdgt extends ClippingWdgt
     aColor = super aColor
     # keep in sync the color of the content.
     # Note that the container Viewport
-    # paints every repaint too (mimicking this color) but is always occluded underneath it.
+    # paints every repaint too (mimicking this color): occluded underneath the content wherever
+    # that shows, and what shows in its margin.
     @contents.setColor aColor
     return aColor
 
   setAlphaScaled: (alpha) ->
     alpha = super
-    # update the alpha of the Viewport - note that I paint it every repaint too (always
-    # occluded under the contents), so keep updating it so its value mimics the
-    # contained Panel's
+    # update the alpha of the Viewport - note that I paint it every repaint too (occluded
+    # under the contents wherever they show, and what shows in my margin), so keep updating
+    # it so its value mimics the contained Panel's
     @contents.setAlphaScaled alpha
     return alpha
 
@@ -570,14 +632,15 @@ class ViewportWdgt extends ClippingWdgt
     if @appearance?.outlineIsStroked?() is true then clearance + 1 else clearance
 
   # How far a bar of mine stops short of each end of its run (_barFrameAt): a THIN indicator I
-  # present, by the theme's end inset. A fat one keeps its whole run (its frame is the one a press
-  # meets), and so does a bar picked up off me, whose look is its own and whose length follows my
-  # side (_barIsMineToPresent).
+  # present, by the theme's end inset, and by my margin where that is the larger (planeMargin), so
+  # a thin bar runs along the side of the box my plane shows through and never past its ends. A
+  # fat one keeps its whole run (its frame is the one a press meets), and so does a bar picked up
+  # off me, whose look is its own and whose length follows my side (_barIsMineToPresent).
   _indicatorEndInsetFor: (bar) ->
     if @_pointerInScrollBand or not @_barIsMineToPresent bar
       0
     else
-      WorldWdgt.theme.scrollIndicatorEndInset
+      Math.max WorldWdgt.theme.scrollIndicatorEndInset, @planeMargin
 
   # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
   # the only one there can be — the look is settled in the same pass that decided which bars show
@@ -683,14 +746,14 @@ class ViewportWdgt extends ClippingWdgt
   # other bar takes its thickness where it crosses; with neither, the corner is free and the bar
   # runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the passes
   # that read this are still laying out: the other bar by the overflow its showing derives from, the
-  # resizer by climbing the corner chain (_resizerOverMyCorner).
+  # resizer by climbing the corner chain (_resizerOverMyCorner). My margin is no part of the reserve:
+  # a thin bar gives it up at both ends of its run (_indicatorEndInsetFor), and a fat one keeps the
+  # run a press meets, so the two fat bars meet at my corner.
   _cornerReserveFor: (bar) ->
     resizer = @_resizerOverMyCorner()
-    reserve =
-      if resizer? then Math.max @scrollBarsThickness, resizer.cornerFootprint()
-      else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
-      else 0
-    if reserve > 0 then reserve + 2 * @padding else 0
+    if resizer? then Math.max @scrollBarsThickness, resizer.cornerFootprint()
+    else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
+    else 0
 
   # Does my OTHER bar cross my bottom-right corner? Whenever it is mine to place and its axis overflows
   # under a policy that shows bars: the facts its showing derives from, read here WITHOUT its
@@ -752,10 +815,16 @@ class ViewportWdgt extends ClippingWdgt
   # viewport shorter than the corner reserve _barFrameAt leaves, the frame's length is not even
   # positive. Such a bar is not shown: it would be a sliver no pointer can work. The overflow it
   # would stand for still scrolls, since every scroll gesture asks isScrollableNow, never a bar.
+  #   For a bar I PRESENT the room is measured along the box my plane shows through: that frame's
+  # run less my margin at both ends (planeMargin) must hold the thumb. A thin bar runs along that
+  # box (_indicatorEndInsetFor), so a viewport with a margin and too short for this would hand its
+  # thin bar a run shorter than a thumb, or a negative one. A bar picked up off me
+  # (_barIsMineToPresent) runs my side's whole length, as its end inset says, and is judged on that
+  # whole run. With no margin every bar is.
   _barFrameHasRoomForThumb: (bar) ->
     frame = @_barFrameAt bar, @scrollBarsThickness
     length = if bar is @vBar then frame.height() else frame.width()
-    length >= @scrollBarsThickness - bar.trackThumbInset
+    length - (if @_barIsMineToPresent bar then 2 * @planeMargin else 0) >= @scrollBarsThickness - bar.trackThumbInset
 
   _reLayoutScrollbars: ->
     # §4.2 Stage 3 (structural arrange): the bars below apply their geometry via the NON-notifying
@@ -930,7 +999,7 @@ class ViewportWdgt extends ClippingWdgt
     # fresh content: any prior scroll state is meaningless
     @_writeScrollOffset 0, 0
 
-    aWdgt._applyMoveTo @position().add @padding + @extraPadding
+    aWdgt._applyMoveTo @position().add @planeMargin + @extraPadding
 
     @add aWdgt
 
@@ -1020,7 +1089,7 @@ class ViewportWdgt extends ClippingWdgt
     # if the viewport has isTextLineWrapping set, it means that you don't want the text widget
     # to extend indefinitely as you are typing. Rather, the width will be constrained and the
     # text will wrap.
-    padding = Math.floor @extraPadding + @padding
+    padding = Math.floor @extraPadding + @planeMargin
     totalPadding = 2*padding
 
     # The scrolled-content CONTRACT (scroll-frame role plan P5): the plane DECLARES its sizing
@@ -1567,13 +1636,13 @@ class ViewportWdgt extends ClippingWdgt
     return if @scrollPolicy is 'never'
     # layout-apply-sanctioned: scroll-input (caret-into-view), determinism-exempt (residuals-audit fam 1)
     @_positionAndResizeChildren()
-    # the visible window's padded interior, expressed in the caret's plane
-    # (frame origin + offset)
-    ft = @contents.top() + @scrollOffsetY + @padding
-    fb = @contents.top() + @scrollOffsetY + @height() - @padding
-    fl = @contents.left() + @scrollOffsetX + @padding
-    fr = @contents.left() + @scrollOffsetX + @width() - @padding
-    # how far past that interior's edge the caret comes to stand, on either axis
+    # the box my plane shows through (the visible window less my margin, _planeBox), expressed
+    # in the caret's plane (frame origin + offset)
+    ft = @contents.top() + @scrollOffsetY + @planeMargin
+    fb = @contents.top() + @scrollOffsetY + @height() - @planeMargin
+    fl = @contents.left() + @scrollOffsetX + @planeMargin
+    fr = @contents.left() + @scrollOffsetX + @width() - @planeMargin
+    # how far past that box's edge the caret comes to stand, on either axis
     marginAroundCaret = @_caretScrollMargin()
     # DIRECT, deliberately UN-clamped offset writes (the follow's one licence — the movement
     # cores clamp to the content frame, but a caret at the very end of the content needs the
@@ -1592,14 +1661,15 @@ class ViewportWdgt extends ClippingWdgt
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
-  # MY CARET SCROLL MARGIN: how far past my padded interior's edge a caret I bring into view comes
-  # to stand (scrollCaretIntoView, on both axes), so some of what surrounds it shows too. It is a
-  # SCROLLING policy (CSS scroll-padding), apart from my layout inset (CSS padding), though by
-  # default it equals that inset: my padding plus the extra padding a caller set around my content
-  # (setContents). A viewport whose inset can yield to room someone else keeps around it answers its
-  # own (DocumentViewportWdgt). Read at every follow and kept nowhere.
+  # MY CARET SCROLL MARGIN: how far past the edge of the box my plane shows through (_planeBox) a
+  # caret I bring into view comes to stand (scrollCaretIntoView, on both axes), so some of what
+  # surrounds it shows too. It is a SCROLLING policy (CSS scroll-padding), apart from my layout
+  # inset (CSS padding), though by default it equals that inset: my plane margin plus the extra
+  # padding a caller set around my content (setContents). A viewport whose inset can yield to room
+  # someone else keeps around it answers its own (DocumentViewportWdgt). Read at every follow and
+  # kept nowhere.
   _caretScrollMargin: ->
-    @padding + (@extraPadding ? 0)
+    @planeMargin + (@extraPadding ? 0)
 
   # ViewportWdgt events.
   scrolledBy: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->

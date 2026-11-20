@@ -119,10 +119,10 @@ class ClippingWdgt extends Widget
 
 
   # ⚠ LOCKSTEP: ViewportWdgt overrides BOTH this method and _fullPaintIntoAreaOrBlitFromBackBufferJustShadow
-  # below with hand-copied bodies that add the scroll translation around the contents child
-  # (the zero-offset path reaches these bodies through `super`). FrameWdgt does the same for
-  # its rounded child clip (the clip-off path reaches them through `super`). An edit to either body
-  # here must be mirrored in both.
+  # below with hand-copied bodies that paint the contents child inside the viewport's plane box and
+  # through its scroll translation (a viewport that neither translates nor keeps a margin reaches
+  # these bodies through `super`). FrameWdgt does the same for its rounded child clip (the clip-off
+  # path reaches them through `super`). An edit to either body here must be mirrored in both.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
 
     # a PanelWdgt has the special property that all of its children

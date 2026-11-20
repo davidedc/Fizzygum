@@ -158,7 +158,7 @@ const RECORDED = {
   'Widget#_insertAddersSuchThat': 18,
   'Widget#_reLayout': 19,
   'Widget#_resolvePickOutFigureNoSettle': 21,
-  'Widget#clipThrough': 20,
+  'Widget#clipThrough': 17,
   'Widget#cornerRadiiFollowingMyOutline': 17,
   'Widget#subWidgetsMergedPreferredBounds': 16,
   'Widget.functionLiteralReading': 25,

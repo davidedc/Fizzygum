@@ -222,12 +222,12 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 
 ### `plans/scroll-indicators-plan.md` — one placement rule for a scroll indicator, the document's margin, and the spreadsheet's own
-AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1 and U1b (added on the owner's word) are closed (the plan's ledger).
-- [ ] U2: a viewport's `padding` ("around the scrollable area") is read in six places and crops nothing; it is to be a margin the plane shows inside. A mechanism, dormant until U3.
+AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b (added on the owner's word) and U2 are closed (the plan's ledger).
 - [ ] U3: a document's scroll indicator lies 11 px from its window's edge, over its items' right edge; the document is to keep its 8 px as its viewport's margin, and a viewport is to paint its plane's selection ring.
 - [ ] U4: the scroll-indicator presentation lives in `ViewportWdgt` alone; it is to move to a base class both scrollers extend, pixel-neutral.
 - [ ] U5: the spreadsheet's view origin has no pins, so no slider can drive or follow it; it is to get a "scroll column" and a "scroll row" pin.
 - [ ] U6: the spreadsheet scrolls and shows no scroll indicator; it is to present the two bars every viewport shows.
+- [ ] A payload released over a scrolled viewport's FAT bar (a carry with no button held: the "Pick up" row, then a click) lands in the plane displaced by the scroll offset: `ViewportWdgt.add` forwards it unmapped. Seen through U2's plant 4 (236 px off). Reachable, low. Detail: the plan's §U2.
 - [ ] A Maker whose payload leaves it (the "Pick up" row; by reading "Destroy" too, any Maker kind) shrinks to its fresh payload: a Docs Maker goes 600×400 to 68×211 (measured), though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Reachable, medium. Detail: the plan's §U1b.
 
 ### `plans/single-file-save-plan.md`

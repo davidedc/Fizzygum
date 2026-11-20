@@ -84,7 +84,7 @@ how much the destination has to lose.
 |---|---|
 | Self drop-gate: `wantsToBeDropped()` → `@internal`; base default true | `FrameWdgt.coffee:256` · `Widget.coffee:2910` |
 | Drop routing: if `!wantsToBeDropped()` → target forced to `world`, else climb | `ActivePointerWdgt.drop`, `ActivePointerWdgt.coffee:247-287` |
-| Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild`; the climb STARTS at what the hit widget names for points on its own body (`dropReceiverForPointsOnMyBody`: a page window's gutter and a letterboxed Stretchable page's margin name the page's receiver), and a payload released there is moved inside that receiver | `ActivePointerWdgt.dropTargetFor`, `_dropClimbStart`, `_moveGutterDropInsideTarget`, `topWdgtUnderPointer` |
+| Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild`; the climb STARTS at what the hit widget names for points on its own body (`dropReceiverForPointsOnMyBody`: a page window's gutter and a letterboxed Stretchable page's margin name the page's receiver, and a viewport keeping a plane margin names its plane), and a payload released there is moved inside that receiver | `ActivePointerWdgt.dropTargetFor`, `_dropClimbStart`, `_moveGutterDropInsideTarget`, `topWdgtUnderPointer` |
 | Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) and not `sitsInViewModeContent` (content in view mode takes no drop; every override that can take a drop asks through `super`) | `Widget.wantsDropOfChild` |
 | Grab mirror: content in view mode gives nothing up — a widget whose holder sits in view-mode content grabs to its parent, so a drag that would lift it out climbs and takes the content as a whole (non-float drags keep their own answers; folders, the bin and their links bound the walk); a button there is no detachable payload | `Widget.grabsToParentWhenDragged` (`@parent?.sitsInViewModeContent()`), `ButtonWdgt.isDetachablePayloadOfMyParent` |
 | Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameBarWdgt` → `FrameWdgt.editButtonInBarPressed` → the content's base `Widget.editButtonPressedFromFrameBar` (the fused editor middle layer dissolved — Frame-model §5.B/§5.D) |
@@ -199,7 +199,8 @@ offering a band under the pointer wins outright and the climb below never runs f
   destination — predictable, matches every OS; the highlight communicates it.
 - **Candidate = the innermost receptive widget on the parent-climb from the hit** (decision 3, uniform at all
   depths; the climb starts where `dropTargetFor`'s does, `ActivePointerWdgt._dropClimbStart` — over a page
-  window's gutter, at the page's receiver — while the dock offer is consulted first, from the hit itself):
+  window's gutter at the page's receiver, over a viewport's plane margin at its plane — while the dock offer
+  is consulted first, from the hit itself):
   climb until `wantsDropOfChild(payload)` is true, exactly as `dropTargetFor` — with TWO additions:
   1. **The world is never a "candidate"** for embed UX. If the climb reaches `world`, there is no candidate: no
      highlight, no dwell, release lands on the desktop (today's behavior, untouched).

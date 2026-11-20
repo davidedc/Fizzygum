@@ -372,9 +372,10 @@ class ActivePointerWdgt extends Widget
   # preview and the outcome start at the same widget): the top widget under the pointer -- unless
   # that widget hands the points of its own body to a widget inside it that receives drops there
   # (dropReceiverForPointsOnMyBody, asked through ?()): a window keeping a gutter around its PAGE
-  # names the page's receiver for that gutter, and a letterboxed stretchable page names its content
-  # for its own margin, so a payload released in the gutter or the margin goes to the page's
-  # receiver, by that receiver's own drop rules. The top widget is under the pointer exactly where
+  # names the page's receiver for that gutter, a letterboxed stretchable page names its content
+  # for its own margin, and a viewport keeping a margin around its plane names the plane for that
+  # margin, so a payload released in the gutter or the margin goes to the page's receiver, or to
+  # the plane, by that receiver's own drop rules. The top widget is under the pointer exactly where
   # none of its children is, so the hand-off covers its own body alone. The dock offer
   # (_dockBandUnderPointerFor) climbs from the top widget itself, so a host's edge bands stay ahead
   # of the hand-off; and a press never asks this (the grab resolves its own root), so a press-drag
@@ -386,25 +387,26 @@ class ActivePointerWdgt extends Widget
   # Did the climb that resolved `target` start at the receiver the top widget under the pointer
   # names for its own body (_dropClimbStart) and stop BELOW that widget? Then the release fell on
   # that widget's own body beside the receiver -- a window's gutter beside its page, a letterboxed
-  # page's margin beside its content -- and `target` is the receiver or a widget between it and the
-  # top widget: a destination the release did not lie over. A target at or above the top widget
-  # (the receiver refused the payload and the climb went on past it -- past the window, the page, a
-  # dock band's host, to the world) is the one a climb from the top widget itself would reach, so
-  # it is not.
+  # page's margin beside its content, a viewport's margin beside its plane -- and `target` is the
+  # receiver or a widget between it and the top widget: a destination the release did not lie
+  # over. A target at or above the top widget (the receiver refused the payload and the climb went
+  # on past it -- past the window, the page, a dock band's host, to the world) is the one a climb
+  # from the top widget itself would reach, so it is not.
   _targetReachedThroughAGutter: (target) ->
     top = @topWdgtUnderPointer()
     return false unless top.dropReceiverForPointsOnMyBody?()?
     target isnt top and top.isAncestorOf target
 
   # A payload released BESIDE the widget it goes to -- in a window's gutter, in a letterboxed page's
-  # margin (_targetReachedThroughAGutter) -- lands INSIDE it: moved by the least offset that brings
-  # its box inside `target`'s visible box (clippedThroughBounds), and a box larger than that on an
-  # axis aligned to its top/left edge (the one clamp home, _clampedPositionWithin). Released beside
-  # the receiver, its box can lie partly or wholly outside it, and a receiver that keeps what it is
-  # given where it is given it (a slide's panel places it, a drawing's canvas stamps it) would keep
-  # it, or stamp it, out of sight. The payload's box and `target`'s must be in one plane: drop calls
-  # me once the payload's box is in `target`'s plane (re-expressed there when that plane is mapped).
-  # When nothing of `target` shows, there is no box to keep it inside.
+  # margin, in a viewport's margin (_targetReachedThroughAGutter) -- lands INSIDE it: moved by the
+  # least offset that brings its box inside `target`'s visible box (clippedThroughBounds), and a
+  # box larger than that on an axis aligned to its top/left edge (the one clamp home,
+  # _clampedPositionWithin). Released beside the receiver, its box can lie partly or wholly outside
+  # it, and a receiver that keeps what it is given where it is given it (a slide's panel places it,
+  # a drawing's canvas stamps it) would keep it, or stamp it, out of sight. The payload's box and
+  # `target`'s must be in one plane: drop calls me once the payload's box is in `target`'s plane
+  # (re-expressed there when that plane is mapped). When nothing of `target` shows, there is no box
+  # to keep it inside.
   _moveGutterDropInsideTarget: (wdgtToDrop, target) ->
     visibleBox = target.clippedThroughBounds()
     return if visibleBox.isEmpty()
@@ -435,9 +437,10 @@ class ActivePointerWdgt extends Widget
 
   # Resolve the candidates on the parent-climb from the climb start (spec §5; _dropClimbStart: the
   # cursor hit, or the receiver the hit names for its own body -- a page's, when the cursor is in its
-  # window's gutter or its letterbox margin): the innermost widget that wantsDropOfChild wins (world
-  # is never a candidate); else the innermost view-mode editing-amenity widget is the reluctant cue.
-  # Same climb dropTargetFor uses, from the same start, so preview and outcome cannot disagree.
+  # window's gutter or its letterbox margin; a viewport's plane, when the cursor is in the
+  # viewport's margin): the innermost widget that wantsDropOfChild wins (world is never a
+  # candidate); else the innermost view-mode editing-amenity widget is the reluctant cue. Same
+  # climb dropTargetFor uses, from the same start, so preview and outcome cannot disagree.
   resolveDragEmbedCandidates: (payload) ->
     # §6 4D-2b: match candidates by the payload's real class (see dropTargetFor) so the dwell preview and the
     # drop outcome agree for a tilted window too.
@@ -802,10 +805,10 @@ class ActivePointerWdgt extends Widget
         virtualCentre = target.screenPointToMyPlane payloadVisualCentre
         wdgtToDrop._applyMoveTo virtualCentre.subtract wdgtToDrop.extent().floorDivideBy 2
 
-      # a payload released in a window's gutter or a letterboxed page's margin goes inside the
-      # widget it lands in, its box and target's both in target's plane here (the re-expression
-      # above); a release over that widget itself keeps its placement. NoSettle mutator -- the
-      # target.add below carries the settle.
+      # a payload released in a window's gutter, a letterboxed page's margin or a viewport's
+      # margin goes inside the widget it lands in, its box and target's both in target's plane
+      # here (the re-expression above); a release over that widget itself keeps its placement.
+      # NoSettle mutator -- the target.add below carries the settle.
       @_moveGutterDropInsideTarget wdgtToDrop, target if releasedInAGutter
 
       # Affine transforms §7.13: positionInPlane is consumed by the stack/menu panels

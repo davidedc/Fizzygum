@@ -17,7 +17,7 @@ Status:
 |---|---|---|
 | U1 | A thin indicator stands clear of the line at its viewport's edge, and short of its side's ends | CLOSED 2026-11-20 (§U1) |
 | U1b | A pane picked up off its window leaves at its own size: the window's hook runs inside the pick-up's settle (`Widget.pickUp`; added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U1b) |
-| U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant) | open (§U2) |
+| U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant; the field is `planeMargin`) | CLOSED 2026-11-20 (§U2) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | open (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
@@ -545,6 +545,58 @@ it, that the plane still includes it as padding so no scroll arithmetic changes)
 
 **If parked:** U3 parks with it.
 
+**Landed 2026-11-20.** The viewport's field is `planeMargin` (see "Ruled here"), and `_planeBox` is its one home
+(`@boundingBox().insetBy @planeMargin`, the same object at 0). Both paint bodies paint the contents child inside
+the damage ∩ the plane box and take the stock path only at zero translation AND no margin. The clip-through edge
+asks `ViewportWdgt.clipIntoPlaneOfChild (clipSoFar, child)` (crop to the plane box, then translate; the same
+object through for another child, and for the contents with no margin and no translation), from both
+`Widget.clipThrough` and `Widget.SLOWclipThrough`: `Widget` gained no method, and `clipThrough`'s recorded
+complexity FELL from 20 to 17 (record lowered). `dropReceiverForPointsOnMyBody` names the plane while a margin is
+kept. What research corrected in the fix as written above:
+- step 4 cannot live in `_barFrameAt`: the two on-arrival readers ask it for the fat, whole-run frame and pass no
+  end inset. The margin is folded into the thin end inset (`_indicatorEndInsetFor`: the larger of the theme's end
+  inset and the margin), and `_cornerReserveFor` lost its `+ 2 * padding` term (pixel-neutral: it has never been
+  non-zero; kept, it would open a 28 px corner hole at a margin of 8);
+- §2.3 missed a reader that ACTS on the field: `HandleWdgt._cornerInsetFrom` reads `target.padding` off whatever a
+  handle is attached to;
+- a change of the margin on a LIVE viewport needs the clip caches broken (they are keyed by
+  `WorldWdgt.geometryVersion`; precedent `_writeScrollOffset`). Nothing writes the field on a live viewport in this
+  unit, and a method with no reader fails the dead-method gate, so the write door lands with its first caller in
+  U3;
+- the cache oracle compares the two twins by VALUE and is armed only in the gauntlet's `settle` leg;
+  `scrollTranslationOfChild` keeps three readers (`cornerRadiiFollowingMyOutline`, `FrameWdgt._visibleBoxOnMyPage`,
+  the viewport's own `add`);
+- no fifth walk needs the crop: every hit, damage, visible-box, highlight and drop-clamp walk reads
+  `clippedThroughBounds`. `scrollCaretIntoView` holds an agreeing copy of the plane box; `TransformFrameWdgt
+  ._ancestorScreenClip` skips the edge step (unreachable while every plane clips).
+Ruled here:
+- **The field is renamed for what it is, `planeMargin`.** A handle seats itself by its target's `padding`, so a
+  viewport whose margin kept that name would move a bare document's four halo handles from 2 px to 8 px in once U3
+  gives it a margin: a look P1 does not picture. A handle reads no `padding` on a viewport and sits 2 px in, as
+  before. (`Widget.setPadding` and its pin write `paddingTop/Bottom/Left/Right`, another family: one more reason not
+  to share the word.) Every reader of the viewport's own field moved; no other class's `padding` did.
+- **A bar needs room along the plane box** (`_barFrameHasRoomForThumb`: the pressed frame's run less the margin at
+  both ends must hold the thumb a press meets). Without it a short viewport with a margin hands its thin bar a run
+  shorter than a thumb, or a negative one. Identical at margin 0.
+- **The margin's pointer behaviour with a mouse is the page's empty background's** (step 6, measured by reading the
+  grab path and by the test's hit read): a press-drag there moves the window, or the bare viewport. Where a bar
+  shows, the fat bar covers that side's margin. The click, the finger and the overlays are U3's, ruled by the owner.
+Evidence: `SystemTest_macroViewportMarginCropsItsPlane` (a plain viewport given a margin of 8 as it is built: the
+content rests at the margin's inner edge at both ends of the scroll; a resident's shown box stops at the plane box;
+the pointer over the margin meets the viewport; a payload dropped in the margin lands in the plane, moved inside;
+the thin bar runs along the plane box and the pressed frame stays whole; a 24 px tall viewport shows no bar and a
+26 px one does; a viewport with no margin names no receiver; two shots) with five plants, one per door, each
+biting under both pointers (the paint crop fails the two shots alone: no value sees paint). Predicted pixel set
+EMPTY, met: the presuite and the finger suite changed no reference.
+From the unit's review, for a viewport that KEEPS a margin: the two mimic relays repaint the viewport while it
+keeps one (in a margin its own rect shows, and the plane's repaint stops at the plane box: a third shot and a
+plant); only a bar the viewport presents gives up the margin in the room test; the deleted corner-reserve term
+has its own leg and plant. Left unwitnessed: the shadow twin's crop line (no translucent, shadowed viewport keeps a
+margin in the suite). The hand-off does not cover the side where a bar stands fat (a carry with no button held
+fattens it): the release meets the bar. Filed on the way (this plan's BACKLOG section): a payload released over a
+scrolled viewport's fat bar lands displaced by the scroll offset (`ViewportWdgt.add` forwards it to the plane
+unmapped; a defect of the product before this unit, seen through this unit's plant 4).
+
 ---
 
 ### U3 — The document keeps its margin itself; a viewport paints its plane's selection ring
@@ -833,6 +885,7 @@ stop at its commit, which you propose and do not make."
 
 - [x] U1: a thin scroll indicator stands 2 px inside its viewport's edge whatever is there, and touches both ends of its side; it is to stand 1 px clear of the line at that edge and 3 px short of each end. — CLOSED 2026-11-20 (scroll-indicators loop, U1): the inset across is derived (the theme's clearance, plus the border where the viewport's appearance strokes one: `outlineIsStroked`), the end inset comes off both ends of the run of a thin bar the viewport presents, and the bars follow a re-parenting; `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
 - [x] U1b: `Widget.pickUp` runs its parent's `_beforeChildPickedUp` outside any settle, so a window whose content is picked up (the "Pick up" row) rebuilds its payload as a careless end-of-cycle push and no test can take a pane out of its window; it is to settle both its callbacks. — CLOSED 2026-11-20 (scroll-indicators loop, U1b): `pickUp` opens a settle round the before-hook, as `grab` does round `_beforeBeingGrabbed`; a Docs Maker's document no longer comes away 66 px taller; `SystemTest_macroPanePickedUpOffItsWindowKeepsItsSize`, and the way out restored in `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
+- [x] U2: a viewport's `padding` ("around the scrollable area") is read in six places and crops nothing; it is to be a margin the plane shows inside. A mechanism, dormant until U3. — CLOSED 2026-11-20 (scroll-indicators loop, U2): the field is `planeMargin`; the plane is cropped to `_planeBox` in both paint bodies and at the clip-through edge (`clipIntoPlaneOfChild`), the thin bars run along the plane box, a drop in the margin goes to the plane; dormant (nothing gives a viewport a margin); `SystemTest_macroViewportMarginCropsItsPlane`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
