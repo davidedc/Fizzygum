@@ -47,8 +47,12 @@ const ROOTS = sourceRoots(ARGV, 'complexity-ratchets');
 // lowered whenever a class holds fewer
 const METHOD_CEILINGS = {
   // raised 391 -> 392 on 2026-11-16, owner-approved (the right shape over the count): sitsInViewModeContent, the one
-  // question "do I sit in content in view mode", asked by the world's editable focus and by a text's own menu
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 392 },
+  // question "do I sit in content in view mode", asked by the world's editable focus and by a text's own menu.
+  // Raised 392 -> 393 on 2026-11-20 for the editing residue's follow-ups (loop 3, H4b), the owner's grant of one dated
+  // raise and the right shape over the count: actOnLayoutKnobFromMenu, the one door through which a layout spec's
+  // menu rows name the widget's knob by reader (a row names an outside widget's PART by the widget plus a name), so a
+  // copied pinned "Layout in stack" or "Layout in row" menu drives the real spec, not a clone
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 393 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
   // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on

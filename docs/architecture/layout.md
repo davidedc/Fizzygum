@@ -394,7 +394,9 @@ spec-less then activate via `_setLayoutSpec`; detach the spec before `_fullDestr
 add/teardown invalidate fires mid-pass. `showAdders`/`removeAdders` are canonical self-settling
 wrappers. A DIVISION CELL's knobs are menu-reachable: its spec's "Layout in row"/"Layout in
 column" submenu (desired/max size prompts, cross-alignment entries — the settle-on-element setter
-family on `DivisionStackLayoutSpec`, `element` bound at `_ensureDivisionBox`; the VSLS idiom), the
+family on `DivisionStackLayoutSpec`, `element` bound at `_ensureDivisionBox`; the VSLS idiom; every row,
+like the "Layout in stack" submenu's, targets the cell and names its box by reader through
+`Widget.actOnLayoutKnobFromMenu`, so a copied pinned submenu drives the cell's real box), the
 chrome excluded by the `isLayoutChrome` capability. A border layout is COMPOSITION, not an engine: a
 'y' division stack whose middle cell is an 'x' row, dividers at the seams
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).

@@ -725,7 +725,11 @@ mark after `add` + `setExtent` adds nothing.
   by reference (`keptByReferenceOnDeepCopy`: a `Point`, a `Color`, …): a row holding a controller's `WireSpec` would
   tick from, and act on, a clone of it. So the wire menu's rows carry the wire's identity, its (target, action) pair,
   resolve it at the press (`ControllerWdgt._wireFor`) and tick by asking the controller about it
-  (`MenuRowReflectionSpec`'s `readerArguments`), as the connection rows name their wire.
+  (`MenuRowReflectionSpec`'s `readerArguments`), as the connection rows name their wire. The layout specs' menus
+  name a widget's knob the same way: every row targets the widget and carries the knob's reader and a verb
+  (`contentStackSpec` or `divisionBox`, then `setAlignmentToRight`, `growPopout`, …), which
+  `Widget.actOnLayoutKnobFromMenu` resolves at the press, so a copied pinned "Layout in stack" or "Layout in row"
+  submenu drives the real spec.
 - **A row whose action can be REFUSED must DECLARE when it is enabled.** [convention] Pass an
   `enablement:` — `MenuRowReflectionSpec.enabledWhile source, "readerName", theValue`, the second door of the
   same record: the row is enabled exactly while `source[readerName]()` is `theValue`, and otherwise greys and

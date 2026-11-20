@@ -5836,6 +5836,17 @@ class Widget extends TreeNode
     else
       @_contentStackSpec
 
+  # THE LAYOUT MENUS' DOOR. Menu-dispatched (slot 1 is the row, slot 2 the dispatcher's subject): a row of
+  # a layout spec's menu ("Layout in stack", "Layout in row", and every row of the submenus they open)
+  # targets ME and names my KNOB by its reader (contentStackSpec, divisionBox) and the verb to send it,
+  # never holding the spec itself. A menu is a widget a person can copy, and a copy deep-copies a spec its
+  # rows hold, so a copied row would act on a clone while I re-lay out with the real one
+  # (widget-authoring-guidelines.md §10); a copy shares ME instead, and the knob is read here at the
+  # press. The verb gets the two slots the spec's menu verbs read: the row (a prompt opener titles its
+  # prompt from the row's menu) and me (a submenu opener opens its submenu about me).
+  actOnLayoutKnobFromMenu: (menuItem, ignored, knobReader, verb) ->
+    @[knobReader]()?[verb] menuItem, @
+
   # The bare layout-enqueue ATOM: put me into the recalculateLayouts until-loop and mark my layout invalid, WITHOUT
   # climbing to ancestors and WITHOUT the flow-rule throw / careless-push audit that _invalidateLayout wraps around it
   # for the climbing content-widget case. This is the ONE primitive under all three enqueue paths: _invalidateLayout

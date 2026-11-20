@@ -84,17 +84,22 @@ class VerticalStackLayoutSpec extends LayoutSpec
     return Math.min width, availableWidthInStack
 
 
+  # My menu's rows name me by my ELEMENT and its reader, contentStackSpec, never by holding me: a menu
+  # is a widget a person can copy, and a copied row holding me would act on a clone of me while my
+  # element re-lays out with me (Widget.actOnLayoutKnobFromMenu, the door every row goes through). The
+  # reader answers the knob my element keeps at the PRESS -- me, while it keeps me; a window that mounts
+  # my element gives it a frame-content knob, and a row pressed after that acts on that one.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
-    menu.addMenuItem "Layout in stack", @, "vertStackMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
+    menu.addMenuItem "Layout in stack", @element, "actOnLayoutKnobFromMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "", arg1: "contentStackSpec", arg2: "vertStackMenu"
 
   vertStackMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "Base width…", @, "desiredWidthPopout", toolTip: ""
-    menu.addMenuItem "Elasticity…", @, "growPopout", toolTip: ""
-    menu.addMenuItem "Align left", @, "setAlignmentToLeft"  if @alignment isnt "left"
-    menu.addMenuItem "Align right", @, "setAlignmentToRight"  if @alignment isnt "right"
-    menu.addMenuItem "Align center", @, "setAlignmentToCenter"  if @alignment isnt "center"
+    menu.addMenuItem "Base width…", targetWidget, "actOnLayoutKnobFromMenu", toolTip: "", arg1: "contentStackSpec", arg2: "desiredWidthPopout"
+    menu.addMenuItem "Elasticity…", targetWidget, "actOnLayoutKnobFromMenu", toolTip: "", arg1: "contentStackSpec", arg2: "growPopout"
+    menu.addMenuItem "Align left", targetWidget, "actOnLayoutKnobFromMenu", arg1: "contentStackSpec", arg2: "setAlignmentToLeft"  if @alignment isnt "left"
+    menu.addMenuItem "Align right", targetWidget, "actOnLayoutKnobFromMenu", arg1: "contentStackSpec", arg2: "setAlignmentToRight"  if @alignment isnt "right"
+    menu.addMenuItem "Align center", targetWidget, "actOnLayoutKnobFromMenu", arg1: "contentStackSpec", arg2: "setAlignmentToCenter"  if @alignment isnt "center"
     menu.popUpAtHand()
 
   # The spec's layout setters below (align / elasticity / base-width) are DISCRETE public mutations -- driven

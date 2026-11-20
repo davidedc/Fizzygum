@@ -68,20 +68,25 @@ class DivisionStackLayoutSpec extends LayoutSpec
 
   # The division cell's DIRECT-MANIPULATION surface, dispatched from the widget's menu gate
   # (Widget.addWidgetSpecificMenuEntries — an active division element that is not layout
-  # chrome). Mirrors VerticalStackLayoutSpec's "Layout in stack" submenu.
+  # chrome). Mirrors VerticalStackLayoutSpec's "Layout in stack" submenu, and names me the same
+  # way: every row targets my ELEMENT, the widget whose box I am, and names me by its reader,
+  # divisionBox, never holding me (a copied row would hold a clone of me — see
+  # Widget.actOnLayoutKnobFromMenu). The element, not the widget whose menu this is: a sugar
+  # island wrapping a cell rides my slot without a box of its own, and its own divisionBox would
+  # make it one.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     menu.addLine()
     menuLabel = if @axis == 'y' then "Layout in column" else "Layout in row"
-    menu.addMenuItem menuLabel, @, "divisionCellMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
+    menu.addMenuItem menuLabel, @element, "actOnLayoutKnobFromMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: "", arg1: "divisionBox", arg2: "divisionCellMenu"
 
   divisionCellMenu: (widgetOpeningThePopUp,targetWidget)->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
-    menu.addMenuItem "Desired size…", @, "desiredMainDimPopout", toolTip: ""
-    menu.addMenuItem "Max size…", @, "maxMainDimPopout", toolTip: ""
-    menu.addMenuItem "Cross: stretch", @, "setCrossAlignToStretch"  if @crossAlign isnt "stretch"
-    menu.addMenuItem "Cross: start", @, "setCrossAlignToStart"  if @crossAlign isnt "start"
-    menu.addMenuItem "Cross: center", @, "setCrossAlignToCenter"  if @crossAlign isnt "center"
-    menu.addMenuItem "Cross: end", @, "setCrossAlignToEnd"  if @crossAlign isnt "end"
+    menu.addMenuItem "Desired size…", targetWidget, "actOnLayoutKnobFromMenu", toolTip: "", arg1: "divisionBox", arg2: "desiredMainDimPopout"
+    menu.addMenuItem "Max size…", targetWidget, "actOnLayoutKnobFromMenu", toolTip: "", arg1: "divisionBox", arg2: "maxMainDimPopout"
+    menu.addMenuItem "Cross: stretch", targetWidget, "actOnLayoutKnobFromMenu", arg1: "divisionBox", arg2: "setCrossAlignToStretch"  if @crossAlign isnt "stretch"
+    menu.addMenuItem "Cross: start", targetWidget, "actOnLayoutKnobFromMenu", arg1: "divisionBox", arg2: "setCrossAlignToStart"  if @crossAlign isnt "start"
+    menu.addMenuItem "Cross: center", targetWidget, "actOnLayoutKnobFromMenu", arg1: "divisionBox", arg2: "setCrossAlignToCenter"  if @crossAlign isnt "center"
+    menu.addMenuItem "Cross: end", targetWidget, "actOnLayoutKnobFromMenu", arg1: "divisionBox", arg2: "setCrossAlignToEnd"  if @crossAlign isnt "end"
     menu.popUpAtHand()
 
   # The setters below are DISCRETE public mutations (menu entries / prompts / an app
