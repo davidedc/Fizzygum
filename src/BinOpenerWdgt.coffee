@@ -52,11 +52,11 @@ class BinOpenerWdgt extends DesktopLinkWdgt
 
     if @target.isOrphan()
       # nosettle-sanctioned: this hook runs a click at event time, off any settle (the dispatcher's
-      # activated hands it here), so the bin's public, self-settling unCollapse settles once, here
+      # activated hands it here), so the public, self-settling calls below settle here: the bin's
+      # unCollapse, and the world's one fresh-window door (WorldWdgt.openFrameWith), which wraps the bin
+      # in a window, sizes and places it while it is still detached, and then adds it
       @target.unCollapse()
-      windowedBinWdgt = new FrameWdgt @target
-      world.add windowedBinWdgt
-      windowedBinWdgt._applyBounds (new Point 140, 90), new Point 460, 400
+      world.openFrameWith @target, (new Point 460, 400), (new Point 140, 90)
     else
       # if the bin is not an orphan, then it's
       # visible somewhere and it's in a window

@@ -317,7 +317,8 @@ header cells); the engine's edges are NOT serialized or deep-copied. On **restor
 (`_afterDeserialization`) and **duplicate** (`_reactToBeingCopied`) the sheet calls
 `_recommitAllCells` — first `_reindexCellsNoSettle` (rescue the `CellWdgt`s out of the
 snapshot's chrome, DESTROY the derived chrome — panel, header cells — plus any stray such as
-a mid-edit overlay editor riding a cell, re-attach the cells' back-ref and re-index them,
+what a mid-edit save carries under a cell (the overlay editor, the caret beside it, the hidden scalar
+text; the caret's re-registered memberships go with it), re-attach the cells' back-ref and re-index them,
 then `_buildChromeNoSettle` to rebuild the chrome + re-home the cells into the fresh panel,
 and `_reconcileViewportNoSettle` to re-establish the viewport invariant for the RESTORED view
 origin — visible cells re-placed at their slots, an off-viewport HIDDEN rich cell keeping its
