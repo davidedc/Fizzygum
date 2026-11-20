@@ -750,8 +750,9 @@ class Widget extends TreeNode
 
   # Do I sit in content in VIEW mode -- content whose editing is off, which refuses editing whatever
   # asks: the editing tools (WorldWdgt.editableEditorFocus), a text's own menu, which then offers
-  # none of its editing rows (StringWdgt._addTextMenuEntries), a sheet's entries and a drawing's
-  # paint? View mode is INHERITED DOWNWARD, bounded by windows:
+  # none of its editing rows (StringWdgt._addTextMenuEntries), a text's typing, which it then takes
+  # only as an input its author declares (StringWdgt.isTextEntryField), a sheet's entries and a
+  # drawing's paint? View mode is INHERITED DOWNWARD, bounded by windows:
   #   - a WINDOW that offers its own edit toggle (FrameWdgt.offersEditToggle) answers alone for its
   #     content, by its mode: what stands around that window does not reach in, so an edit-mode
   #     Maker nested in a view-mode document stays editable;
@@ -5411,6 +5412,9 @@ class Widget extends TreeNode
 
     childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets whereToAct
 
+    # THE EDIT-MODE GRANT: every text item of what I flip is made editable, a label built without it
+    # included. Taking it back is no flip's business: in view mode a text refuses typing by asking
+    # where it stands (StringWdgt.isTextEntryField), so the flip to view mode writes nothing on it.
     if childrenNotHandlesNorCarets?
       for each in childrenNotHandlesNorCarets
         each._unlockFromPanels()
@@ -5459,10 +5463,15 @@ class Widget extends TreeNode
       for each in childrenNotHandlesNorCarets
         each.lockToPanels()
         each.blendInWithPanelColor?()
-        if each.isEditable?
-          each.isEditable = false
-          if world.caret?.target == each
-            world._stopEditingNoSettle()
+
+    # AN EDIT OPEN INSIDE WHAT I FLIPPED ends here, at any depth, when its text takes no typing in view
+    # mode. I write nothing on the text: it refuses typing by asking where it stands
+    # (StringWdgt.isTextEntryField), so an input its author declares live (takesTypingInViewMode) keeps
+    # its edit, and an edit outside what I flipped is not mine to end. isAncestorOf answers yes for the
+    # widget itself too, so an edit of whereToAct itself is asked the same question.
+    caret = world.caret
+    if caret? and whereToAct.isAncestorOf(caret.target) and not caret.target.isTextEntryField()
+      world._stopEditingNoSettle()
 
 
   # ---------------------------------------------------------------------
@@ -5598,12 +5607,12 @@ class Widget extends TreeNode
   # Widget entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->
-    # an entry field is any editable StringWdgt-family widget. isTextEntryField (on StringWdgt,
-    # inherited by SimpleTextWdgt et al.) replaces the `instanceof StringWdgt or instanceof
-    # SimpleTextWdgt` test -- whose second clause was already redundant, since
-    # SimpleTextWdgt is-a StringWdgt. (type-test-elimination campaign)
+    # an entry field is a text that takes a person's typing here, now (StringWdgt.isTextEntryField:
+    # editable, and in no view-mode content unless declared an input), so Tab never lands in a text
+    # a click could not edit. The door lives on the StringWdgt family; any other widget lacks it, and
+    # ?() answers it no.
     @collectAllChildrenBottomToTopSuchThat (each) ->
-      each.isEditable and each.isTextEntryField?()
+      each.isTextEntryField?()
   
   
   nextEntryField: (current) ->

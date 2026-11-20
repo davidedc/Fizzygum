@@ -130,9 +130,11 @@ class StringFieldWdgt extends PanelWdgt
   pins: -> super().concat [ new PinSpec "value", "string", get: "getValue" ]
   principalPinLabel: "value"
 
+  # a click on my well edits my text while it takes typing, asked of the text's own door
+  # (StringWdgt.isTextEntryField: my isEditable, given to it as I build it, and where it stands)
   activated: (pos)->
     @bringToForeground()
-    if @isEditable
+    if @text?.isTextEntryField()
       @text.edit()
     else
       @escalateEvent 'activated', pos

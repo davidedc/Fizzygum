@@ -14,7 +14,7 @@
 #     border of the box its viewport presents (ViewportWdgt._paneFill, _surfaceStroke), so the two
 #     wear one look -- a list's, a text area's, the one a builder dressed the viewport in;
 #   - its membership changes are relayed to the viewport's HOLDER (the bin listens);
-#   - a click on its empty part forwards the caret to a lone editable text child.
+#   - a click on its empty part forwards the caret to a lone text child that takes typing.
 # (The color/alpha up-relays that keep the viewport's mimic paint values true are NOT here —
 # they live on PanelWdgt, because every panel-family plane deserves them, not just the
 # default one; the stack declares its own pair.)
@@ -85,8 +85,10 @@ class ScrolledPaneWdgt extends PanelWdgt
   activated: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     super
 
-    # when you click on an "empty" part of the pane and it holds one piece of text, pass the
-    # click on to the text so the caret lands at its end.
+    # when you click on an "empty" part of the pane and it holds one piece of text that takes typing,
+    # pass the click on to the text so the caret lands at its end. The text is asked the one door it
+    # asks itself (StringWdgt.isTextEntryField): a text that refuses typing escalates a click to me,
+    # its pane, so a text forwarded a click it refuses would hand it straight back, and back again.
     # TODO the focusing and placing of the caret at the end of
     # the text should happen via API rather than via spoofing
     # a mouse event?
@@ -97,5 +99,5 @@ class ScrolledPaneWdgt extends PanelWdgt
         m != world.caret
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
-          (m instanceof SimpleTextWdgt) and m.isEditable
+          (m instanceof SimpleTextWdgt) and m.isTextEntryField()
         item?.activated item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey

@@ -580,6 +580,10 @@ mark after `add` + `setExtent` adds nothing.
   (`FolderWindowWdgt`, `BinWdgt`, `FolderShortcutWdgt`, `BinOpenerWdgt`), never a toggle hidden or an override of
   each mode reader:
   `FrameWdgt.offersEditToggle`, `Widget.sitsInViewModeContent` and the disable cores read it (`toolbars.md` §3).
+- **A text that must take typing in view mode is DECLARED an input** (`takesTypingInViewMode = true`, written by
+  its app, as the °C↔°F converter writes it on its two number fields). Every other text in view-mode content
+  refuses typing through its one door, `StringWdgt.isTextEntryField`: never write `isEditable` back on after a
+  flip, and never read `isEditable` to decide whether an edit starts (`toolbars.md` §3).
 - **Two capability queries tell the hand's touch grammar about your widget**, both dispatched
   `?()` (nothing stubbed on `Widget`): `ownsDragsStartingOnMe: -> true` says a press starting on
   you is YOUR own drag gesture (a bar, a handle, a slider's thumb) — a finger needs no hold before

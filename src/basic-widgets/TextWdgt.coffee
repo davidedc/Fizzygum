@@ -729,9 +729,9 @@ class TextWdgt extends StringWdgt
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps
-  # above or under). Just like normal editors.
+  # above or under). Just like normal editors. Only while I take typing (isTextEntryField).
   tripleActivated: ->
-    if @isEditable
+    if @isTextEntryField()
       [row, column] = @slotRowAndColumn world.caret?.slot
       slotBeginOfLine = @slotAtRow row + 1, 0
       slotsInRow = @wrappedLineSlots[row + 1]

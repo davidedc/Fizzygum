@@ -90,6 +90,10 @@ class StringWdgt extends ControllerWdgt
   isItalic: undefined
   isHeaderLine: undefined
   isEditable: false
+  # AN INPUT MY AUTHOR DECLARES LIVE IN VIEW MODE: true keeps me taking typing in content in view
+  # mode, where every other text refuses it (isTextEntryField) -- a fixed answer to the mode question,
+  # as alwaysInEditMode answers it for a folder. My author writes it; no mode flip writes it.
+  takesTypingInViewMode: false
   # may the user drag-select my text? (see enableSelecting). A serializable MODE
   # consumed by the prototype pressBegan/hoverMoved/pressMoved handlers -- NOT a pair of
   # instance-assigned handler functions, which selection long was: an own function
@@ -1811,10 +1815,19 @@ class StringWdgt extends ControllerWdgt
   enterKeyAccepts: ->
     true
 
-  # I am an editable text entry field -- used by Widget.allEntryFields for Tab navigation.
-  # True for the whole StringWdgt family (replaces an `instanceof StringWdgt`). (type-test-elimination campaign)
+  # DO I TAKE A PERSON'S TYPING HERE, NOW? The one door every edit start a person makes on me asks -- a
+  # click (activated), a press (pressBegan), a double or a triple click, a click on the empty part of the
+  # pane I stand alone in (ScrolledPaneWdgt.activated), a press on the plate I stand on as a desktop
+  # icon's caption (WidgetHolderWithCaptionWdgt._pressIsOnMyPlate) -- and Tab, which goes to the next
+  # text answering yes (Widget.allEntryFields). The starts a program makes call edit() themselves: a
+  # prompt's field, a sheet mounting its cell editor, the hand-off to the pop-out editor, and Tab's own
+  # switch once this door has picked the field. Yes iff my author made me editable (isEditable) and I
+  # sit in no view-mode content (sitsInViewModeContent: view mode locks editing, at any depth), unless my author
+  # declared me an input that view mode leaves live (takesTypingInViewMode: the °C↔°F converter's two
+  # number fields). The view-mode half is asked of where I stand, never written on me by a flip; a
+  # widget outside the StringWdgt family has no such method, so the Tab walk asks it through ?().
   isTextEntryField: ->
-    true
+    @isEditable and (@takesTypingInViewMode or not @sitsInViewModeContent())
 
   # StringWdgt editing:
   # thin-wrap-exempt: edit BRANCHES (inline world.edit when the text fits, else editPopout) and returns a fit
@@ -1934,13 +1947,13 @@ class StringWdgt extends ControllerWdgt
     if @startMark == @endMark
       @clearSelection()
 
-  # An EDITABLE string selects the WORD around the caret (TextSlots.wordAround: letters, digits
-  # and underscores); a non-editable one escalates (the same else-escalate activated has always
-  # had), so a double-click on a passive label reaches the first ancestor that wants it — e.g. a
-  # spreadsheet cell's scalar-text child escalating to the CellWdgt, which starts a caret edit at
-  # the clicked slot.
+  # A string that takes typing (isTextEntryField) selects the WORD around the caret
+  # (TextSlots.wordAround: letters, digits and underscores); one that takes none escalates (the same
+  # else-escalate activated has), so a double-click on a passive label reaches the first ancestor that
+  # wants it — e.g. a spreadsheet cell's scalar-text child escalating to the CellWdgt, which starts a
+  # caret edit at the clicked slot.
   doubleActivated: (pos) ->
-    if @isEditable
+    if @isTextEntryField()
       [start, end] = TextSlots.wordAround @text, world.caret?.slot
       @selectBetween start, end
       world.caret?.gotoSlot end
@@ -1948,17 +1961,17 @@ class StringWdgt extends ControllerWdgt
       @escalateEvent "doubleActivated", pos
 
   tripleActivated: ->
-    if @isEditable
+    if @isTextEntryField()
       @selectAll()
       world.caret?.gotoSlot @text.length
 
 
-  # Every time the user clicks on the text, a new edit()
-  # is triggered, which creates a new caret.
+  # Every click on me while I take typing (isTextEntryField) triggers a new edit(), which creates a
+  # new caret; while I take none the click escalates, as a click on a label does.
   activated: (pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9) ->
     @bringToForeground()
     world.caret?.bringToForeground()
-    if @isEditable
+    if @isTextEntryField()
       # doesn't matter what we set editResult to initially,
       # just not undefined or undefined cause that's
       # going to be significant
@@ -1987,7 +2000,7 @@ class StringWdgt extends ControllerWdgt
   enableSelecting: ->
     @isSelectable = true
 
-  # A press on selectable text starts a selection (an edit, when I am editable), and STOPS here; on
+  # A press on selectable text starts a selection (an edit, when I take typing), and STOPS here; on
   # any other text it goes on as any widget's does.
   #   Except a FINGER's press the touch grammar has not armed (world.hand.strokeMeansMouseDrag(), its
   # one fact about the stroke, decided at the down): it landed on me inside a surface that takes a
@@ -2002,7 +2015,7 @@ class StringWdgt extends ControllerWdgt
     return super pos  if !@isSelectable
     return super pos  unless world.hand.strokeMeansMouseDrag()
     @clearSelection()
-    if @isEditable and !@grabsToParentWhenDragged()
+    if @isTextEntryField() and !@grabsToParentWhenDragged()
       @edit()
       world.caret.gotoPos pos
       @startMark = @slotAt pos

@@ -126,8 +126,14 @@ windows.
 - A sheet in a view-mode document takes no entry. Every door to a cell asks: an edit start, a commit (an edit
   open across the flip ends without writing), a clear, a drop into a cell, a drag out of one. The arrows still
   move its selection.
-- Typing into a field authored to take it still works in view mode (the Degrees Converter's inputs): view mode is
-  a USE mode, so no world-level or caret-level door refuses typing.
+- A text in view-mode content takes no typing, at any depth, unless its app declared it an INPUT (owner ruling
+  2026-11-19). Every edit start asks the text's ONE door, `StringWdgt.isTextEntryField` (editable, and in no
+  view-mode content unless `takesTypingInViewMode`): a click, a press, a double or triple click, a click on the
+  empty part of a pane holding the text alone, a press on a desktop link's plate, Tab. The flip to view mode
+  writes nothing on a text; it ends an edit open inside what it flipped whose text the door now refuses. So the °C↔°F converter's
+  two number fields (declared) keep taking typing, while its formula boxes, Info docs' and the Sample Slide's link
+  captions and URLs refuse it, and a press on a link's plate in view-mode content opens the link. View mode is a
+  USE mode: no world-level or caret-level door refuses typing; the text's own door does.
 
 ## 4. Mode tools: the holders and the paint surface
 

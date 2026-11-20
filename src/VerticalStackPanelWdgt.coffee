@@ -134,11 +134,13 @@ class VerticalStackPanelWdgt extends ClippingWdgt
     @color = color if color?
 
   # Capability query (duck-typed at the call sites): may "Edit layout" show content
-  # drop-slots between my elements? Follows my drop gate — slots are DROP targets, so a
-  # stack that refuses drops (CommandPanelWdgt: menus are not user-editable layouts)
-  # refuses slots for the same reason.
+  # drop-slots between my elements? Asks the ONE drop door (Widget.wantsDropOfChild: my drops
+  # are on and I sit in no view-mode content) — slots are DROP targets, so a stack that
+  # refuses drops refuses slots for the same reason: one that never takes any
+  # (CommandPanelWdgt: menus are not user-editable layouts), and one standing in content in
+  # view mode, which takes none whatever its own flag says.
   hostsContentStackDropSlots: ->
-    @_acceptsDrops
+    @wantsDropOfChild()
 
   # The content-stack drop-slot reconciler — the content twin of the division engine's
   # _addOrRemoveAdders hook (StackLayoutEngine.arrange): run at the top of every arrange,

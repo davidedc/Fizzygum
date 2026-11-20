@@ -81,15 +81,21 @@ class DegreesConverterApp extends WindowedApp
 
 
     patchProgrammingWdgt._applyBounds (new Point 114, 10), new Point 596, 592
-    # disableDragsDropsAndEditing now self-settles (wrapper + _disableDragsDropsAndEditingNoSettle core), so
-    # calling it BEFORE or AFTER world.add is equally legal; order kept as-is. See
-    # docs/archive/disable-editing-family-convert-plan.md.
+    # the converter opens in VIEW mode, its program locked. disableDragsDropsAndEditing self-settles
+    # (wrapper + _disableDragsDropsAndEditingNoSettle core), so it is as legal before world.add as
+    # after it. See docs/archive/disable-editing-family-convert-plan.md.
     patchProgrammingWdgt.disableDragsDropsAndEditing()
     world.add patchProgrammingWdgt
     patchProgrammingWdgt.setTitleWithoutPrependedContentName @_title()
 
+    # the two number fields are the converter's INPUTS: a person types a temperature into either,
+    # so view mode leaves them live (takesTypingInViewMode, which no mode flip writes: they stay
+    # live across any pencil round trip, and these lines may stand before the flip above or after
+    # it). The formula boxes declare nothing: they are the program, which view mode locks.
     cText.isEditable = true
+    cText.takesTypingInViewMode = true
     fText.isEditable = true
+    fText.takesTypingInViewMode = true
 
     # closing just closes (no save prompt) -- a sample window isn't worth
     # saving. The tracked close policy (§5.E E2).

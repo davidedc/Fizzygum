@@ -34,7 +34,8 @@ assertion a recapture after a regression silently stores two different hashes an
 ## Text & caret
 
 - **Caret placement by click** (`macroTextWdgtCaretPlacementByClick`): clicking inside an EDITABLE text places
-  `world.caret` at the nearest slot (`StringWdgt.activated`, `:1564`, gated on `@isEditable`). A
+  `world.caret` at the nearest slot (`StringWdgt.activated`, gated on `isTextEntryField`: editable, and in no
+  view-mode content unless declared an input). A
   directly-built StringWdgt/TextWdgt has **`isEditable = false`** (`:50`) — set `txt.isEditable = true` first
   (the demo widgets do). Aim at a SLOT, never at a fraction of the box: `@clickOnTextSlot_InputEvents txt, slot`
   presses where the text's own `slotAt` picks exactly that slot (`textSlotScreenPoint`), so a font or wrap change

@@ -32,7 +32,9 @@
 # My SHAPE is the tile and the plate (my appearance's): a press or a drop elsewhere in my box reaches
 # whatever lies behind me. A press on the tile -- the tile around my glyph, and on a desktop link the
 # glyph itself -- does what my class's tile does (_activateMyTile: opens, launches, runs); a press on
-# the plate is a press on my caption, which renames me. activated is where the two part.
+# the plate is a press on my caption, which renames me, while my caption takes typing -- in view-mode
+# content it takes none, so a press there does what a press on my tile does. activated is where the
+# two part.
 
 class WidgetHolderWithCaptionWdgt extends Widget
 
@@ -140,17 +142,20 @@ class WidgetHolderWithCaptionWdgt extends Widget
     if world?.isSelectedIcon @ then theme.desktopIconCaptionSelectedText else theme.desktopCaptionText
 
   # Did a press at `pos` (my plane) land on my PLATE -- its padding, or my caption on it -- while my
-  # caption can be edited? Such a press is a press on my caption, a rename, never one on my tile.
-  # With no position (a rig calling activated()) it is a press on the tile, and so it is while my
-  # caption cannot be edited: then my caption's own activated hands the press straight back to me.
+  # caption takes typing (StringWdgt.isTextEntryField: editable, and in no view-mode content)? Such a
+  # press is a press on my caption, a rename, never one on my tile. With no position (a rig calling
+  # activated()) it is a press on the tile, and so it is while my caption takes no typing: then my
+  # caption's own activated hands the press straight back to me. So this asks the very door my
+  # caption asks: a press handed to a caption that refuses it would come back here, and go back again.
   _pressIsOnMyPlate: (pos) ->
-    pos? and !!@label?.isEditable and !!@appearance?.plateContainsPoint?(pos)
+    pos? and !!@label?.isTextEntryField() and !!@appearance?.plateContainsPoint?(pos)
 
   # THE ONE DECISION POINT of a click that reaches me -- on my own pixels (the tile, a desktop
   # link's glyph inside it, the plate's padding), escalated from a child, or an activated() a rig
-  # sends -- and the one public entry for it. On my plate it is a press on my caption, which renames
-  # me (a press on the caption's text area reaches the caption itself; one on the padding around it
-  # is handed over here). Anywhere else it is a press on my tile, and what my tile does is
+  # sends -- and the one public entry for it. On my plate, while my caption takes typing, it is a
+  # press on my caption, which renames me (a press on the caption's text area reaches the caption
+  # itself; one on the padding around it is handed over here). Anywhere else, and anywhere on me while
+  # my caption takes no typing, it is a press on my tile, and what my tile does is
   # _activateMyTile's answer: my family's classes answer that, never this.
   activated: (pos, args...) ->
     if @_pressIsOnMyPlate pos

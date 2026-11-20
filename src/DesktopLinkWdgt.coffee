@@ -11,8 +11,8 @@
 #   My glyph is a PICTURE, never a pointer target (_showsChildAsAPicture), so a press anywhere on my
 # tile is a press on ME: the press, the release and the click all reach me together, and my tile's
 # look follows each of them -- pressed while the press lasts, then, once it ends, hovered or at rest
-# by where the pointer is, at rest when the pointer leaves. A press on my plate is a press on my
-# caption (a rename) and shows no press on my tile (_showsPressOnMyTile).
+# by where the pointer is, at rest when the pointer leaves. A press on my plate, while my caption
+# takes typing, is a press on my caption (a rename) and shows no press on my tile (_showsPressOnMyTile).
 
 class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
 
@@ -36,8 +36,8 @@ class DesktopLinkWdgt extends WidgetHolderWithCaptionWdgt
     @_changed()
 
   # Does my TILE show a press? While the hand presses me (ActivePointerWdgt.pressesOn), unless that
-  # press LANDED on my PLATE: one there is a press on my caption, a rename
-  # (WidgetHolderWithCaptionWdgt._pressIsOnMyPlate), and shows nothing on my tile. Where it landed is
+  # press LANDED on my PLATE while my caption takes typing: one there is a press on my caption, a
+  # rename (WidgetHolderWithCaptionWdgt._pressIsOnMyPlate), and shows nothing on my tile. Where it landed is
   # the hand's fact (mouseDownPosition, on the screen), asked into my plane as the hand hands a press
   # its point.
   _showsPressOnMyTile: ->
