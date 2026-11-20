@@ -23,8 +23,7 @@ nothing: a docked toolbar never falls back to working for the person.
 - **A subclass is an item list.** `_toolbarItems` returns the items, each a literal `new X` so the boot
   dependency finder sees the edge, and `dockSide` names the edge slot it takes by default (`'left'`; the text
   bar, and the sheet bar with it, say `'top'`). Everything else (docking, the refresh, the transfers of a paint tool) is the
-  base's. `PaintToolbarWdgt` adds the stock paint-tool sources (§4.3), and `TextToolbarWdgt` the font menu's
-  reader (`currentFontName`, §5.1).
+  base's. `PaintToolbarWdgt` adds the stock paint-tool sources (§4.3).
 - **Born locked.** `_buildAndConnectChildrenNoSettle` adds the items and disables drags, drops and editing
   on the strip: its items are tools to use or to drag out, never editable content.
 - **Two homes, one object.** A toolbar is always a `FrameWdgt`'s payload. FLOATING, that frame is a desktop
@@ -66,8 +65,8 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
 - **A band the host's view mode disengages is still docked.** It is hidden, and still listed among the
   host's payloads (`FrameWdgt.dockedPayloads`).
 - **The seam.** `ToolbarWdgt.hostWindow` asks the toolbar's frame for its `dockHost` at every asking; nothing
-  stores it. `ToolbarWdgt.hostWindowOf(aWidget)` (a static) is the one home every tool asks: it climbs from
-  the tool, nearest first, to the first ancestor answering `hostWindow`. The climb tests a capability
+  stores it. `ToolbarWdgt.hostWindowOf(aWidget)` (a static) is the one home every tool asks: it asks the one climb,
+  `ToolbarWdgt.toolbarOf(aWidget)`, from the tool, nearest first, to the first ancestor answering `hostWindow`. The climb tests a capability
   (`hostWindow?`), never a class, so a tool stands in any toolbar. A tool standing in no toolbar works for the person.
 - **Reach.** "In reach of host H" means inside H's CONTENT subtree (`H.contents` is the widget or an ancestor
   of it). A band is not its host's content.
@@ -245,7 +244,8 @@ The editor focus itself stands: a click in view mode still sets it, and putting 
 bin, a hide, a collapse) does not clear it, so once it shows again the tools act on it again. Every reader of the
 subject goes through this
 door: the family's `_styleSubject` (which passes `ToolbarWdgt.hostWindowOf @`), `AlignButtonWdgt`'s second
-subject, and `TextToolbarWdgt.currentFontName`, which the font menu's rows read to decide which is ticked.
+subject, and `ChangeFontButtonWdgt.currentFontName` (its `_styleSubject()?.fontName`), which its Fonts menu's rows read
+to decide which is ticked.
 
 ### 5.2 The contract (`EditorContentPropertyChangerButtonWdgt`)
 
@@ -277,9 +277,12 @@ row of a dimmed tool is DISABLED exactly while its cell dims the tool: its row c
 (`OverflowChevronButtonWdgt.actOnClick`), so it greys and refuses its tap, leaving the menu open, and it re-reads
 whenever the cell announces, as its tick does. The tool's own refusal stays behind it. The font tool's Fonts menu
 follows its tool the same way: each row is enabled while the tool has something to act on
-(`MenuRowReflectionSpec.enabledWhile tool, "hasSomethingToActOn", true`, announced by the tool's toolbar,
-`ToolbarWdgt.noteToolStatesChanged`), so a pinned copy greys while the tool's cell dims; a destroyed tool has nothing
-to act on, so a copy left open past its window's end greys and refuses. A text's own menu follows
+(`MenuRowReflectionSpec.enabledWhile tool, "hasSomethingToActOn", true`, announced by the toolbar the tool stands in,
+`ToolbarWdgt.noteToolStatesChanged`, else by the world: `ChangeFontButtonWdgt._fontsMenuAnnouncer`, decided as the
+menu is built), so a pinned copy greys while the tool's cell dims; a destroyed tool has nothing
+to act on, so a copy left open past its window's end greys and refuses. The tool keeps nothing about its menu: a
+press re-pops the open Fonts menu it opened, found among `world.openPopUps`, else builds one, so a COPIED tool (its
+own Duplicate, a duplicated window) opens a menu of its own, and a window whose Fonts menu was opened saves. A text's own menu follows
 the same rule as the tools in view mode: a menu built there leaves its editing rows out, and one built in edit mode
 and left open (pinned) across a flip to view mode greys them and they refuse, its Fonts menu's rows and "Soft wrap"
 included (`StringWdgt._editingRowEnablement`: enabled while the text does not sit in view-mode content, announced
@@ -326,8 +329,9 @@ What a tool SHOWS (active, dimmed) is read when its cell is painted; the refresh
 - **Told directly:** a window whose own tool changes (`FrameWdgt.armDrawingTool`), and a toolbar that docks or
   leaves (`noteDockedOn` / `noteUndockedFrom`).
 - **`ToolbarWdgt.noteToolStatesChanged`** tells every cell `noteItemStateChanged` (hidden ones too, so a cell the
-  strip shows later is already right), then announces the toolbar itself (`markNonValueChange @`), which the text
-  bar's font menu rows re-read: their ticks, and their enablement on the font tool's `hasSomethingToActOn`.
+  strip shows later is already right), then announces the toolbar itself (`markNonValueChange @`), which the rows
+  of its font tool's Fonts menu re-read (they name the toolbar as their announcer): their ticks on the tool's
+  `currentFontName`, and their enablement on its `hasSomethingToActOn`.
 - **`GlassBoxBottomWdgt.noteItemStateChanged`** repaints the cell, its tool's glyph with it, and announces the cell,
   so a pinned overflow row for that tool re-reads its tick (`holdsActiveTool`).
 - **Pointer state** is separate: the hand tells a tool `notePointerStateChanged`, and every tool family passes it to
@@ -365,7 +369,9 @@ SystemTests:
 - reach of docked tools and the mixed bar's refresh: `SystemTest_macroDockedTextBarActsOnlyInItsWindow`,
   `SystemTest_macroDockedCreatorPlacesOnlyIntoItsHost`, `SystemTest_macroMixedToolbarKeepsEveryLookCurrent`;
 - dimming: `SystemTest_macroDimmedToolsWakeWithTheirSubject`, `SystemTest_macroDimmedToolCellStaysDarkUnderThePointer`,
-  `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool`.
+  `SystemTest_macroPinnedToolbarFontsMenuGreysWithItsTool`;
+- a copied font tool's own Fonts menu, and a window whose Fonts menu was opened saving:
+  `SystemTest_macroCopiedFontToolOpensItsOwnFontsMenu`.
 
 Macro authors: `src/macros/MACRO-PATTERNS.md` teaches that a tool acts on the focus only within the window its
 toolbar works for, and how to assert a dimmed tool.

@@ -20,8 +20,8 @@ class SheetToolbarWdgt extends TextToolbarWdgt
     new AlignRightButtonWdgt
 
     new SliderInCellButtonWdgt
-    # the toolbar itself is the font-menu stash home (re-clicking re-focuses the open menu)
-    new ChangeFontButtonWdgt @
+    # the font tool: I announce what its Fonts menu's rows show (ChangeFontButtonWdgt._fontsMenuAnnouncer)
+    new ChangeFontButtonWdgt
     new IncreaseFontSizeButtonWdgt
     new DecreaseFontSizeButtonWdgt
   ]

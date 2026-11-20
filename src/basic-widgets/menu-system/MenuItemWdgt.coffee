@@ -26,8 +26,9 @@ class MenuItemWdgt extends LabelButtonWdgt
 
   # my MenuRowReflectionSpec when I am a VIEW of somebody else's value: whether I am TICKED is then
   # derived from that value, not fixed when I was built. undefined for an ordinary row.
-  #   I SUBSCRIBE MYSELF to the source (see the constructor), because the reflection is mine and not
-  # my panel's: all of reflecting is re-reading `@rowReflection.holds()` on ME, through MY
+  #   I SUBSCRIBE MYSELF to what announces it, the source or the announcer it names
+  # (_subscribeToWhatIShow, from the constructor), because the reflection is mine and not my
+  # panel's: all of reflecting is re-reading `@rowReflection.holds()` on ME, through MY
   # source and MY readerName. Subscribing the PANEL instead is the tempting shape and it is worse in
   # three ways — it wakes rows that reflect nothing, it needs its own dedup (several rows commonly
   # share one source: seven wallpapers, nine fonts), and it makes a row's liveness a property of
@@ -50,7 +51,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   opensSubmenu: false
 
   # MY TICK: undefined for a row that never ticks; true or false for one that does -- read from my
-  # reflection when I am born and re-read whenever its source announces a change
+  # reflection when I am born and re-read whenever its announcer, else its source, announces a change
   # (_applyRowReflectionNoSettle). A reflection is the only way a row ticks: a tick shows somebody's
   # state, so it is read from them, never fixed when the menu is built. Shown as a drawn tick in my
   # leading tick column, never as text in my label, which stays my plain wording.
@@ -185,12 +186,14 @@ class MenuItemWdgt extends LabelButtonWdgt
       sideInset: theme.menuRowSideInset
       iconGap: theme.menuRowIconGap
 
-  # One edge per thing I show -> me: from my reflection's source (my tick) and from my enablement's
-  # announcer, or its source (my enablement), waking me whenever either changes by ANY route (a
-  # gesture, a script, the loader, another menu). firesOnAnyChange because what I show is almost
-  # never the source's VALUE — a text's font, its soft wrap, a wire's delivery policy, a tool's having
-  # something to act on are none of them their owner's value — so markNonValueChange has to reach me
-  # too. I never read what is delivered; I re-read my own records.
+  # One edge per thing I show -> me: from my reflection's announcer, or its source (my tick), and from
+  # my enablement's announcer, or its source (my enablement) -- each record names its announcer when its
+  # source cannot announce the value itself (a font tool's tick and enablement: its toolbar, else the
+  # world) -- waking me whenever either changes by ANY route (a gesture, a script, the loader, another
+  # menu). firesOnAnyChange because what I show is almost never the source's VALUE — a text's font,
+  # its soft wrap, a wire's delivery policy, a tool's having something to act on are none of them
+  # their owner's value — so markNonValueChange has to reach me too. I never read what is delivered;
+  # I re-read my own records.
   #   No dedup needed and none possible to need: one edge per record, each with its own action, and
   # the engine keeps several records for one pair. Several rows sharing a source (the seven
   # wallpapers, the nine fonts) are several DISTINCT consumers. Made at my construction, and again
@@ -205,7 +208,7 @@ class MenuItemWdgt extends LabelButtonWdgt
   _subscribeToWhatIShow: ->
     return unless world?.dataflow?
     if @rowReflection?.source?
-      world.dataflow.addEdge @rowReflection.source, @, action: "applyRowReflection", firesOnAnyChange: true
+      world.dataflow.addEdge (@rowReflection.announcer ? @rowReflection.source), @, action: "applyRowReflection", firesOnAnyChange: true
     if @rowEnablement?.source?
       world.dataflow.addEdge (@rowEnablement.announcer ? @rowEnablement.source), @, action: "refreshRowEnablement", firesOnAnyChange: true
     return

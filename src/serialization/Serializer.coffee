@@ -28,11 +28,13 @@ class Serializer
   # spreadsheet) rebuilds it in the per-class hook, pass 4(c), before any event can arrive; the
   # REFERENCE TRACKER's consumers read destroyed + referencedWidget, both serialized (ShortcutWdgt
   # declares no transients); the OPENPOPUPS consumers read isOrphan()/instanceNumericID (re-derived /
-  # serialized), and the dropped closure mark restores false -- the correct state for a pinned pop-up
-  # (a serialized pop-up is a PINNED one: transient pop-ups never reach a world snapshot, and the
-  # membership must ride along or the restored world loses track of it -- mostRecentlyCreatedPopUp and
-  # the lazy orphan pruning consult the set). A NEW marker must state its verdict here: what does the
-  # re-registered machinery read, and is any of it transient-dropped?
+  # serialized) and an opener's search for its own open menu its widgetOpeningThePopUp and title (both
+  # serialized: ChangeFontButtonWdgt._myOpenFontsMenu), and the dropped closure mark restores false --
+  # the correct state for a pinned pop-up (a serialized pop-up is a PINNED one: transient pop-ups
+  # never reach a world snapshot, and the membership must ride along or the restored world loses track
+  # of it -- mostRecentlyCreatedPopUp and the lazy orphan pruning consult the set). A NEW marker must
+  # state its verdict here: what does the re-registered machinery read, and is any of it
+  # transient-dropped?
   @WORLD_SET_MEMBERSHIPS:
     stepping:         "steppingWdgts"
     keyboardReceiver: "keyboardEventsReceivers"

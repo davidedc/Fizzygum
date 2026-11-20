@@ -98,7 +98,9 @@ class FrameWdgt extends ClippingWdgt
   # first attach. Merged up the chain by Serializer.transientsForClass — this ADDS to Widget's list.
   @serializationTransients: ["isPopUpMarkedForClosure"]
   isPopUpMarkedForClosure: false
-  # the widgetOpeningThePopUp is only useful to get the "parent" pop-up.
+  # the widgetOpeningThePopUp gets the "parent" pop-up, and tells an
+  # opener which open pop-up is its own (ChangeFontButtonWdgt._myOpenFontsMenu
+  # finds its open Fonts menu by it, at every press).
   # the "parent" pop-up is the menu that this menu is attached to,
   # but we need this extra property because it's not the
   # actual parent. The reason is that menus are actually attached

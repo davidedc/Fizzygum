@@ -681,8 +681,8 @@ mark after `add` + `setExtent` adds nothing.
       reflection: MenuRowReflectionSpec.tickWhen @, "currentPatternName", patternName, patternName
   ```
 
-  The row is then **born** with the current tick and re-derives it whenever the source announces
-  a change, in *every* open copy of the menu. Writing it by hand instead means a routine that walks
+  The row is then **born** with the current tick and re-derives it whenever the source (or the announcer it
+  names) announces a change, in *every* open copy of the menu. Writing it by hand instead means a routine that walks
   `rowsPanel.children` **by index** and can only fix up the one menu that was clicked — so a second
   open copy disagrees, and so does one open across a change made by a script or the loader. It also
   breaks the day someone adds a divider.
@@ -699,11 +699,13 @@ mark after `add` + `setExtent` adds nothing.
   [`../specs/dataflow-engine-spec.md`](../specs/dataflow-engine-spec.md) §3a.
   ⚠ **When WHOSE state a row shows changes, the source is the stable thing that follows it** — never
   the object it points at this moment. The text toolbar's font menu shows the font of whatever is
-  being edited, and that changes with every click: its rows reflect the TOOLBAR
-  (`TextToolbarWdgt.currentFontName`, reading `world.editorStyleSubject` within the window the toolbar
-  works for), which, like every toolbar, already hears every move of the focus, of its style or of the
-  edit mode of the content holding it (content in view mode hands over no style) and re-announces it
-  (`ToolbarWdgt.noteToolStatesChanged`, `markNonValueChange @`).
+  being edited, and that changes with every click: its rows reflect the font TOOL
+  (`ChangeFontButtonWdgt.currentFontName`, reading `world.editorStyleSubject` within the window its
+  toolbar works for) and name an ANNOUNCER (`tickWhen …, announcedBy:`): the toolbar the tool stands in,
+  which, like every toolbar, already hears every move of the focus, of its style or of the edit mode of
+  the content holding it (content in view mode hands over no style) and re-announces it
+  (`ToolbarWdgt.noteToolStatesChanged`, `markNonValueChange @`), else the world. A source that cannot
+  announce its own value names who does.
   The same holds when the state is DERIVED from elsewhere: a tool's "active" is read off the edited text
   or the person's hand, so the toolbar overflow's row for a tool reflects the tool's CELL
   (`GlassBoxBottomWdgt.holdsActiveTool`), which every toolbar already tells at each such move
@@ -730,7 +732,8 @@ mark after `add` + `setExtent` adds nothing.
   refuses its press (`MenuItemWdgt.isDisabled`, read live as it paints and as it is pressed, so a missed
   announcement can only leave a stale look, never a wrong act). A row carries its tick and its enablement as two
   records, because the two can be read from different sources. The source must be able to announce, as above,
-  or the row must be told who announces for it: `enabledWhile source, "readerName", theValue, announcedBy: aProducer`.
+  or the row must be told who announces for it: `enabledWhile source, "readerName", theValue, announcedBy: aProducer`
+  (a tick names one the same way, `tickWhen source, "readerName", theValue, theLabel, announcedBy: aProducer`).
   The toolbar overflow's row of a property tool is the model: enabled while its cell does not hold the tool with
   nothing to act on (`OverflowChevronButtonWdgt.actOnClick`). A text's editing rows show the announcer form: each
   is enabled while the text does not sit in view-mode content (`StringWdgt._editingRowEnablement`), a mode the

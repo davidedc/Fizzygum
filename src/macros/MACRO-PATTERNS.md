@@ -2071,8 +2071,8 @@ assertion a recapture after a regression silently stores two different hashes an
   interaction at all — `world.wallpaper.setPattern world.wallpaper.pattern5` — and the open
   menu's tick MOVES. The rows carry a `MenuRowReflectionSpec` (they declare that their TICK reflects a
   value: ticked exactly while it is the row's choice; the tick is drawn, the label stays plain); the source is a
-  dataflow node that `markStale`s itself on change, and each reflecting row subscribes ITSELF to it (one edge per
-  row, `MenuItemWdgt`'s constructor), so the drain re-derives every subscribed row's tick wherever it is. Assert with
+  dataflow node that `markStale`s itself on change, and each reflecting row subscribes ITSELF to it, or to the
+  announcer its reflection names (one edge per row, `MenuItemWdgt`'s constructor), so the drain re-derives every subscribed row's tick wherever it is. Assert with
   `@assertValuesEqual "…", "Dots", (@tickedRowLabelOfMenu menu)` — the plain label of the row whose tick state is set (a
   wallpaper row is its value capitalised at the row, `CommandPanelWdgt.rowLabelOfValue`; the pattern's value stays "dots").
   ⚠ Grab the menu with `@getMostRecentlyOpenedMenu()` right after it opens, and do NOT pin it unless the

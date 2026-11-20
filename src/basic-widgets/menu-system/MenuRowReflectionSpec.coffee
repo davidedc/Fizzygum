@@ -8,13 +8,13 @@
 # clicked, by walking `rowsPanel.children` by INDEX — so a second open copy of the same menu
 # disagrees, and so does one open across a change made by a script, the loader, or another menu.
 # This record says instead: *my tick is a function of that object's value*, and each reflecting row
-# re-reads it (MenuItemWdgt._applyRowReflectionConnector) whenever the value announces itself
-# through the dataflow drain.
+# re-reads it (MenuItemWdgt._applyRowReflectionConnector) whenever a move of the value is announced
+# through the dataflow drain -- by the record's `announcer`, else by the source itself.
 #   The tick is DRAWN (MenuItemWdgt's tick indicator), never typed into the label: the label is the
 # row's plain wording, the same whether or not it is ticked.
 #
 # SHALLOWLY IMMUTABLE (docs/architecture/immutable-value-classes.md): the fields are never written
-# after construction, though `source` references a live object.
+# after construction, though `source` references a live object, and so does `announcer` when one is named.
 #
 # ⚠ `readerName` is a METHOD NAME on `source`, not a function — the same late binding a wire's
 # `@action` uses, and for the same reasons: it survives serialization and duplication, where a
@@ -63,12 +63,15 @@ class MenuRowReflectionSpec
     @readerArguments = opts.readerArguments if opts.readerArguments?
 
   # THE TICK'S DOOR: one row per choice, ticked while that choice is the current one, saying theLabel;
-  # opts.readerArguments, when the source's reader answers for one of several things it holds.
+  # opts.readerArguments, when the source's reader answers for one of several things it holds;
+  # opts.announcedBy, when the source cannot announce the value itself (a font tool's value moves with
+  # the focus, which its toolbar announces: ChangeFontButtonWdgt._fontsMenuAnnouncer).
   @tickWhen: (source, readerName, theValue, theLabel, opts = {}) ->
     new MenuRowReflectionSpec source, readerName,
       whenValue: theValue
       label: theLabel
       readerArguments: opts.readerArguments
+      announcedBy: opts.announcedBy
 
   # THE ENABLEMENT'S DOOR: the row is ENABLED exactly while `source[readerName]()` is theValue, and
   # disabled (greyed, refusing its press) otherwise. `opts.announcedBy` names who announces the value

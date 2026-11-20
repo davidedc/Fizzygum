@@ -23,16 +23,9 @@ class TextToolbarWdgt extends ToolbarWdgt
   # depth derives from the standard grid metrics rather than from a private pair.
   dockSide: 'top'
 
-  # the edited text's font, within the window I work for: what my font menu's rows read to decide
-  # which is ticked (MenuRowReflectionSpec.readerName), as a text's own fonts menu reads
-  # StringWdgt.currentFontName. They re-read it whenever I announce (ToolbarWdgt.noteToolStatesChanged).
-  currentFontName: ->
-    world.editorStyleSubject(@hostWindow())?.fontName
-
   _toolbarItems: -> [
-    # the toolbar itself is the font-menu stash home (re-clicking re-focuses
-    # the open menu instead of stacking a new one)
-    new ChangeFontButtonWdgt @
+    # the font tool: I announce what its Fonts menu's rows show (ChangeFontButtonWdgt._fontsMenuAnnouncer)
+    new ChangeFontButtonWdgt
     new BoldButtonWdgt
     new ItalicButtonWdgt
     new FormatAsCodeButtonWdgt

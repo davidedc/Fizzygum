@@ -24,7 +24,7 @@
 # when its own tool changes (FrameWdgt.armDrawingTool), and I tell myself when I dock or leave.
 #
 # A subclass is an ITEM LIST (_toolbarItems) and, where it differs, its docking side -- plus, for the
-# paint palette, the stock tool sources, and for the text bar, the font menu's reader.
+# paint palette, the stock tool sources.
 #
 # Colloquial name rides the contents: ToolPanelWdgt.viewportColloquialName
 # names the whole strip "toolbar" in hierarchy menus.
@@ -103,16 +103,23 @@ class ToolbarWdgt extends ViewportWdgt
   hostWindow: ->
     @parent?.dockHost?()
 
-  # WHO A TOOL WORKS FOR, the one home every tool asks: the window the toolbar it stands in works
-  # for (hostWindow), found by climbing from the tool to its nearest ancestor that answers the
-  # question -- a capability, so no tool names a toolbar class. undefined when the tool stands in no
-  # toolbar or its toolbar floats: the tool then works for the person.
-  @hostWindowOf: (aWidget) ->
+  # THE TOOLBAR A WIDGET STANDS IN: found by climbing from it, itself first, to its nearest ancestor
+  # that answers whom it works for (hostWindow) -- a capability, so no tool names a toolbar class.
+  # undefined when it stands in no toolbar. The one climb: who a tool works for is asked through it
+  # (hostWindowOf), and so is who announces what a tool shows through a menu of its own
+  # (ChangeFontButtonWdgt._fontsMenuAnnouncer).
+  @toolbarOf: (aWidget) ->
     each = aWidget
     while each?
-      return each.hostWindow() if each.hostWindow?
+      return each if each.hostWindow?
       each = each.parent
     undefined
+
+  # WHO A TOOL WORKS FOR, the one home every tool asks: the window the toolbar it stands in
+  # (toolbarOf) works for (hostWindow). undefined when the tool stands in no toolbar or its toolbar
+  # floats: the tool then works for the person.
+  @hostWindowOf: (aWidget) ->
+    @toolbarOf(aWidget)?.hostWindow()
 
   # Do I carry a DRAWING tool -- a tool that names a paint tool by its key (drawingToolKey), whatever
   # else I carry beside it? A window wearing me then holds a tool of its own (FrameWdgt
@@ -132,10 +139,10 @@ class ToolbarWdgt extends ViewportWdgt
   # Every one of my cells re-derives its look, asking its tool (a tool with no state to show answers
   # nothing and stays at rest), the hidden ones too, so a cell my strip shows later is already right;
   # each cell passes the news on to what shows it through it (a toolbar overflow menu's row). And I
-  # pass it on myself, so what shows my tools' subject THROUGH me re-reads it: the text bar's font
-  # menu's rows, ticked by TextToolbarWdgt.currentFontName and enabled while the font tool has
-  # something to act on. markNonValueChange: what moved is not my
-  # value (I have none to deliver).
+  # pass it on myself, so what shows my tools' subject THROUGH me re-reads it: the rows of my font
+  # tool's Fonts menu, which name me as their announcer (ChangeFontButtonWdgt._fontsMenuAnnouncer),
+  # ticked by the tool's currentFontName and enabled while it has something to act on.
+  # markNonValueChange: what moved is not my value (I have none to deliver).
   noteToolStatesChanged: ->
     for cell in @contents.childrenNotHandlesNorCarets()
       cell.noteItemStateChanged?()
