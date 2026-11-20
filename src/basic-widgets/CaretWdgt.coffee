@@ -62,6 +62,12 @@ class CaretWdgt extends BlinkerWdgt
   # singleton: the reason belongs on the class it is about (type-test-elimination convention).
   isPointerTargetAt: (aPoint) -> false
 
+  # I AM LEFT OUT OF A COPY OR A SAVE OF WHAT I STAND IN (Widget.isLeftOutOfCopiesAndSaves): the world builds me for
+  # its one edit and parks me under my target's parent, and I am no part of that parent. A copy of me would join the
+  # keyboard receivers and the stepping widgets, outlive the edit (world.stopEditing ends only world.caret) and type
+  # into the copy's text; a saved one would come back the same way at the load.
+  isLeftOutOfCopiesAndSaves: -> true
+
   # The INERT re-sync of the caret to its target: re-size it to the target's caret box and re-place it
   # where a caret stands at the target's CURRENT slot. The caret is isLayoutInert, so this schedules / mutates NO
   # layout -- it is READ-ONLY w.r.t. the layout tree and therefore safe to run at PAINT time
@@ -180,10 +186,11 @@ class CaretWdgt extends BlinkerWdgt
 
   # whether I act on this key as a COMMAND, asked of every keyboard receiver by the browser bridge so that the
   # browser's own default stays off such a key (BrowserInputBridge._aKeyboardReceiverActsOnAsCommand): a key that has
-  # a verb for my person's keyboard family, while I am the world's live caret -- a copy of me, riding a copied
-  # container, joins the receivers too and claims nothing.
+  # a verb for my person's keyboard family. The caret among the receivers is the world's live one: the world adds me
+  # as it builds me for an edit (WorldWdgt._editTearingAndAddingCaretWith), my destroy takes me out
+  # (Widget._destroyNoSettle), and no copy or save of what I stand in carries me (isLeftOutOfCopiesAndSaves).
   actsOnKeyAsCommand: (key, code, ctrlKey, altKey, metaKey) ->
-    @ is world.caret and (CaretWdgt.verbFor key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily)?
+    (CaretWdgt.verbFor key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily)?
 
   # WHETHER A KEYSTROKE MAY TYPE, rather than be a chord (one the tables do not name does nothing): with neither Ctrl
   # nor Cmd held, or as AltGr on a PC. Windows reports AltGr as Ctrl+Alt, so on a PC a key that is one character

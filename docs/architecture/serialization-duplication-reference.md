@@ -143,6 +143,38 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   the envelope root — `_buildObjectTable`'s `detachRoots`) and the restore homes it to the
   shelf in `ShortcutWdgt._afterDeserialization` (attached-in-truth guarded, so a
   world-snapshot restore — where the shelf is itself a serialized root — is a no-op).
+- **An ephemeral overlay and the text caret are LEFT OUT of a copy or a save of what they
+  stand in** (`Widget.isLeftOutOfCopiesAndSaves`, which answers `isEphemeral()` and which
+  `CaretWdgt` answers true). Both are the WORLD's, standing under a parent — for its place, its
+  plane and its clip — and no part of it: an EPHEMERAL overlay is built by a reconciler from
+  live state (a highlight is parented INTO its target's transform island or scrolled pane,
+  `WorldWdgt.addHighlightingWidgets`), and the CARET is the world's one edit, parked under the
+  edited text's parent (`WorldWdgt._editTearingAndAddingCaretWith`; `world.caret` is the only
+  field that holds it). Such a widget is not in the in-structure set — the closure above and a
+  world snapshot's roots (§11) take every subtree as a copy or a save carries it,
+  `TreeNode.subtreeCarriedByCopiesAndSaves` — and the one link that reaches it, its parent's
+  `children`, is walked without it (`TreeNode.childrenCarriedByCopiesAndSaves`, which
+  `Duplicator._clonePropertyInto` and the Serializer's `encodeOwnProps` read: `children` is the
+  tree's other structural link, as `parent` is). So a container copied, saved or caught in a
+  world snapshot while a text in it is being edited carries no caret, at whatever depth the
+  text stands — a rotated text's own copy included, whose caret stands in its transform island
+  — and neither walk touches the original: its edit goes on. A caret that travelled would join
+  the keyboard receivers and the stepping widgets (the copy's aligners, a record's
+  `memberships`), outlive the edit (`world.stopEditing` ends only `world.caret`) and type into
+  the copy's text. The rule is asked of the CHILDREN a walk meets: a copy or a save whose ROOT
+  is such a widget carries it (no gesture makes one: the pointer never lands on a caret or an
+  overlay), and a field holding one would meet the external-widget rule above (none does). The
+  edited TEXT travels as it stands, with the text typed so far, its undo history and its
+  selection marks (`docs/BACKLOG.md` files the marks: a copy shows a selection no edit owns).
+  ⚠ The halo's temporary handles (`world.temporaryHandlesAndLayoutAdjusters`) are a third kind
+  the world keeps under a widget, and they answer false: a press anywhere but on one destroys
+  them (`ActivePointerWdgt.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem`),
+  so no gesture copies or saves a widget wearing them. Checks:
+  `SystemTest_macroMidEditCopyAndSaveCarryNoCaret` (a person's Duplicate and Save to file…
+  mid-edit, and the load of that file) and the rig's `midEdit.*`,
+  `overlay.nestedHighlightLeftOut`, `spreadsheet.roundtrip.midBarEditCarriesNoCaret`,
+  `world.midEdit.snapshotCarriesNoCaret` and `world.ephemeral.nestedExcludedFromSnapshot`
+  (`serialization-roundtrip-headless.js`).
 - `instanceNumericID` is never copied (clones get fresh identity — §7).
 
 The constructor is **never re-run** on a clone/restored shell (`Object.create` of the
@@ -248,7 +280,9 @@ At serialize time each encountered object is classified, in order:
 
 Function-valued own properties are handled by the function policy (§5), not this
 classification — except a CLASS, which step 0 names by its class before the function policy is
-asked. Transient fields (§5) never reach classification at all.
+asked. Transient fields (§5) never reach classification at all, and neither does a widget left
+out of copies and saves (the caret, an ephemeral overlay — §2): its parent's `children` are
+encoded without it.
 
 ### 4a. WellKnownObjects
 
@@ -743,9 +777,12 @@ D8. So the world's genuine state goes into an explicit, greppable **`world` enve
 and only the SNAPSHOT ROOTS are walked into the object table. This is why the world needs no
 `@serializationTransients` at all — its transient surface is simply never visited.
 
-**Snapshot roots** (a settled world — the hand-held transient and the caret are dropped by
-construction; EPHEMERAL overlays and open TRANSIENT pop-ups/menus (`isTransientPopUp?()`,
-§5) are world children, so the
+**Snapshot roots** (a settled world — the hand-held transient is dropped by construction: it
+lives outside the roots; the caret and the EPHEMERAL overlays are left out by the rule every
+copy and save shares, at whatever depth they stand (§2, `Widget.isLeftOutOfCopiesAndSaves`) —
+the caret stands under the edited text's parent, inside a root, or among the world's own
+children when that text is a desktop child; open TRANSIENT
+pop-ups/menus (`isTransientPopUp?()`, §5) are world children, so the
 children filter drops them explicitly — the very menu whose item triggers the save is still
 attached, and already marked for closure, while the save runs; PERSISTENT pop-ups are desktop
 furniture and stay): the desktop `world.children`, the off-tree `world.binWdgt` and

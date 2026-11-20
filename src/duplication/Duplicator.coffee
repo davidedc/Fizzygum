@@ -35,6 +35,10 @@
 # out": a save's transients are rebuilt by a LOAD's paths (_afterDeserialization, the stepping loop's re-seed), and a
 # copy runs other hooks, so a field joins only where its class's copy rebuilds it. (A record copied WITHOUT its sheet --
 # an inspector on a sheet's model, duplicated -- has nothing to rebuild them, and holds none.)
+# Note 6: a widget the WORLD keeps in a tree -- an ephemeral overlay, the text caret -- stands under a parent for its
+# place, plane and clip and is no part of that parent (Widget.isLeftOutOfCopiesAndSaves): a copy of anything it stands
+# in leaves it out, as a save does. It is not in the in-structure set (Widget.allWidgetsInStructureForCopy), and a
+# widget's children are walked without it (_clonePropertyInto), so the copy holds no clone of it, nor the original.
 class Duplicator
 
   constructor: (allWidgetsInStructure) ->
@@ -291,6 +295,11 @@ class Duplicator
       cloneOfMe.parent = if @widgetsInStructure.has value then @_duplicate value else undefined
       WorldWdgt.noteStructureChange()
       return
+    # A widget's CHILDREN are the other structural link, walked as the copy carries them
+    # (TreeNode.childrenCarriedByCopiesAndSaves, Note 6) and copied by the generic branches below: a widget the world
+    # keeps under obj is no widget of the structure (the closure leaves it out), and walked as an item it would be
+    # KEPT BY REFERENCE, as an outside widget is (_duplicate) -- the original's caret among the copy's children.
+    value = obj.childrenCarriedByCopiesAndSaves?() ? value if property is "children"
     if !value?
       # undefined, null, undefined
       cloneOfMe[property] = undefined

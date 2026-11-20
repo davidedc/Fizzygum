@@ -51,8 +51,11 @@ const METHOD_CEILINGS = {
   // Raised 392 -> 393 on 2026-11-20 for the editing residue's follow-ups (loop 3, H4b), the owner's grant of one dated
   // raise and the right shape over the count: actOnLayoutKnobFromMenu, the one door through which a layout spec's
   // menu rows name the widget's knob by reader (a row names an outside widget's PART by the widget plus a name), so a
-  // copied pinned "Layout in stack" or "Layout in row" menu drives the real spec, not a clone
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 393 },
+  // copied pinned "Layout in stack" or "Layout in row" menu drives the real spec, not a clone. Raised 393 -> 394 on
+  // 2026-11-20 under the owner's standing ruling of 2026-11-16 (the right shape over the count):
+  // isLeftOutOfCopiesAndSaves, the one question both walkers ask of a widget the world keeps in a tree (the text
+  // caret, an ephemeral overlay), so a copy or a save of what it stands in leaves it out
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 394 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
   // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on
@@ -126,8 +129,12 @@ const RECORDED = {
   'PatchNodeWdgt#_heightsSplitByWeights': 25,
   'RectangularAppearance#paintIntoAreaOrBlitFromBackBuffer': 17,
   'ScriptIconAppearance#_scriptMetrics': 27,
-  'Serializer._buildObjectTable': 106,
-  'Serializer.serializeWorld': 37,
+  // raised 106 -> 109 on 2026-11-20 under the owner's standing ruling of 2026-11-16 (the right shape over the count):
+  // a widget's children are encoded as a save carries them, one line in encodeOwnProps beside the detach-root's
+  // parent, the copy's same rule (Duplicator._clonePropertyInto) — the caret and the ephemeral overlays the world
+  // keeps under a widget are left out of its record
+  'Serializer._buildObjectTable': 109,
+  'Serializer.serializeWorld': 35,
   'SimpleSpreadsheetWdgt#_presentCellNoSettle': 23,
   'SimpleSpreadsheetWdgt#_reconcileViewportNoSettle': 24,
   'SimpleSpreadsheetWdgt#_reindexCellsNoSettle': 24,

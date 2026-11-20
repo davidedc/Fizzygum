@@ -358,7 +358,7 @@ class Widget extends TreeNode
   # created and destroyed by the per-cycle reconciler in WorldWdgt.doOneCycle, not by normal
   # widget code. Dedicated overlay classes (HighlighterWdgt) set this on their prototype; ad-hoc
   # overlays (the pinout StringWdgt) set it per-instance at creation. Read via the isEphemeral()
-  # capability, which drives hit-test exclusion, shadow-skip and world-snapshot exclusion (below).
+  # capability, which drives hit-test exclusion, shadow-skip and exclusion from every copy and save (below).
   _ephemeralOverlay: false
 
   destroyed: false
@@ -2937,10 +2937,19 @@ class Widget extends TreeNode
   # EPHEMERAL capability (owner's term). An ephemeral is a transient overlay owned wholly by the
   # per-cycle reconciler (WorldWdgt.addHighlightingWidgets / PinoutsOverlay.reconcile): it is
   # hit-test-excluded (never steals hoverEntered / clicks / drops — ActivePointerWdgt.topWdgtUnderPointer),
-  # casts no shadow (skipsAddShadowManagement below), and is skipped by world-snapshot serialization
-  # (Serializer.serializeWorld). Capability, not a type test (type-test-elimination convention): reads
+  # casts no shadow (skipsAddShadowManagement below), and is left out of every copy and save, at any depth
+  # (isLeftOutOfCopiesAndSaves below). Capability, not a type test (type-test-elimination convention): reads
   # the _ephemeralOverlay flag, so dedicated overlay classes AND ad-hoc reconciler-marked instances qualify.
   isEphemeral: -> @_ephemeralOverlay is true
+
+  # LEFT OUT OF EVERY COPY AND SAVE: a widget the WORLD keeps in a tree — an ephemeral overlay (its reconciler's)
+  # and the text caret (the world's one edit) — stands under a parent for its place, its plane and its clip, and
+  # is no part of that parent. A copy or a save of anything it stands in leaves it out, at whatever depth it
+  # stands: a copied or restored one would be a second overlay or caret that nothing owns. Both walkers read it
+  # through TreeNode.childrenCarriedByCopiesAndSaves — the copy closure (allWidgetsInStructureForCopy) and the
+  # world snapshot's roots (Serializer.serializeWorld) take each subtree as it carries it, and the Duplicator and
+  # the Serializer walk a widget's children as it carries them. CaretWdgt answers true for itself.
+  isLeftOutOfCopiesAndSaves: -> @isEphemeral()
 
   # A widget added to the world normally gains a drop-shadow (Widget._addNoSettle). Ephemerals opt
   # out — "not anything material the user clicks/drags". The caret ALSO opts out (it is not an
@@ -4056,8 +4065,8 @@ class Widget extends TreeNode
   # Duplicate the whole FIGURE — the widget PLUS any enclosing transform-island plumbing — not just the
   # content widget. A widget's rotation/scale does not live on the widget: it lives on an enclosing
   # TransformFrameWdgt island of which the widget is the sole content (materialized by the
-  # setRotationDegrees/setScaleFactor sugar). @fullCopy's scope is @allChildrenBottomToTop() — my own
-  # subtree — so copying the CONTENT leaves the island out and the copy "resets" its transform.
+  # setRotationDegrees/setScaleFactor sugar). @fullCopy's scope is my own subtree (subtreeCarriedByCopiesAndSaves)
+  # — so copying the CONTENT leaves the island out and the copy "resets" its transform.
   # _enclosingIslandFigure() resolves that island (or returns me off any island — the entire
   # un-transformed population, so this is byte-identical dormant there). The island's fullCopy deep-copies
   # the transform for free (§1a: TransformSpec rides the Duplicator walk). Offset the copy from the
@@ -4118,7 +4127,9 @@ class Widget extends TreeNode
   # visited-set fixpoint matters: folder-in-folder filings make reference-through-containment
   # cycles constructible, and the Duplicator's identity map only handles cycles INSIDE the walk,
   # not in this set computation before it. An ARROW'D in-structure shortcut contributes nothing —
-  # its referent stays outside the set, so a copy shares it, per its own glyph.
+  # its referent stays outside the set, so a copy shares it, per its own glyph. Each subtree is taken as a copy or
+  # a save carries it (subtreeCarriedByCopiesAndSaves): the widgets the world keeps under it — the caret, the
+  # ephemeral overlays (isLeftOutOfCopiesAndSaves) — are left out.
   # Returns {structure, referentFigures}: `structure` feeds the Duplicator's in-structure set and
   # the Serializer's object table (Serializer.buildEnvelope is the second consumer — one closure,
   # so copy and save cannot disagree about what a content icon carries); `referentFigures` are
@@ -4126,7 +4137,7 @@ class Widget extends TreeNode
   # path encodes as detached embedded roots (their restore homing lives in
   # ShortcutWdgt._afterDeserialization).
   allWidgetsInStructureForCopy: ->
-    structure = @allChildrenBottomToTop()
+    structure = @subtreeCarriedByCopiesAndSaves()
     inStructure = new Set structure
     referentFigures = []
     i = 0
@@ -4137,7 +4148,7 @@ class Widget extends TreeNode
       figure = w.referencedWidget._enclosingIslandFigure()
       continue if inStructure.has figure
       referentFigures.push figure
-      for member in figure.allChildrenBottomToTop()
+      for member in figure.subtreeCarriedByCopiesAndSaves()
         continue if inStructure.has member
         inStructure.add member
         structure.push member

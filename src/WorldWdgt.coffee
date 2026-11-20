@@ -3630,9 +3630,8 @@ class WorldWdgt extends IconGridPanelWdgt
       @lastEditedText.clearSelection()
       @caret = tearDownCaret @caret
 
-    # the only place where the caret is removed from the keyboardEventsReceivers
-    # (and the hidden input is removed)
-    @keyboardEventsReceivers.delete @caret
+    # the virtual keyboard's hidden input is removed (the caret leaves the keyboardEventsReceivers in its
+    # own destroy, Widget._destroyNoSettle)
     if @browserInput.inputDOMElementForVirtualKeyboard
       @browserInput.inputDOMElementForVirtualKeyboard.blur()
       document.body.removeChild @browserInput.inputDOMElementForVirtualKeyboard

@@ -420,8 +420,8 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
   `hoverEntered` dispatch, or the drop climb (no feedback loops between feedback and input).
 - **Landed (Phase 1): the `isEphemeral` capability** (the owner's term, as a capability on `Widget`).
   `Widget.isEphemeral()` — backed by the per-instance `@_ephemeralOverlay` flag — is the ONE check behind
-  hit-test exclusion, `skipsAddShadowManagement`, serialization exclusion (the world serializer skips
-  ephemeral world children) and "reconciler-owned lifecycle". `topWdgtUnderPointer` reads the single
+  hit-test exclusion, `skipsAddShadowManagement`, being left out of a copy or a save of what it stands in, at
+  whatever depth (`Widget.isLeftOutOfCopiesAndSaves`, which answers it) and "reconciler-owned lifecycle". `topWdgtUnderPointer` reads the single
   `!m.isEphemeral()` where it used to enumerate per-type marker predicates
   (`wdgtThisWdgtIsHighlighting?` / `wdgtThisWdgtIsPinouting?`), which survive only as the overlays'
   back-references to their targets, not as the hit-test gate — so this spec's own new ephemeral types

@@ -237,6 +237,23 @@ class TreeNode
       result = result.concat child.allChildrenBottomToTop()
     result
 
+  # My children as a copy or a save carries them: every child but one the world keeps under me and that is
+  # no part of me (Widget.isLeftOutOfCopiesAndSaves: the text caret, an ephemeral overlay). A FRESH list in my
+  # own order, never my children array itself, whether or not a child is left out -- a walker holds the answer
+  # and never the live array. The Duplicator and the Serializer walk a widget's children through it.
+  childrenCarriedByCopiesAndSaves: ->
+    @children.filter (child) -> not child.isLeftOutOfCopiesAndSaves?()
+
+  # Me and everything under me that a copy or a save of me carries, in allChildrenBottomToTop's order: a child
+  # left out (childrenCarriedByCopiesAndSaves) is left out with all it holds. The copy closure
+  # (Widget.allWidgetsInStructureForCopy) and the world snapshot's roots (Serializer.serializeWorld) are built
+  # from it.
+  subtreeCarriedByCopiesAndSaves: ->
+    carried = [@]
+    for child in @childrenCarriedByCopiesAndSaves()
+      carried = carried.concat child.subtreeCarriedByCopiesAndSaves()
+    carried
+
   # the easiest way here would be to just return
   #   @allChildrenBottomToTop().slice().reverse()
   # but that's slower.

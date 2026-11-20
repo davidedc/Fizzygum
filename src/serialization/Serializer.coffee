@@ -152,19 +152,23 @@ class Serializer
   # is captured in an explicit, greppable `world` envelope section, and only the SNAPSHOT ROOTS —
   # the desktop children, the off-tree bin and shelf, the registered app windows (world.appWindows)
   # — are walked into the object table. A snapshot restores a SETTLED world (§1): the hand-held
-  # widget and the caret are dropped by construction (they live outside the snapshot roots);
-  # open UNPINNED menus/pop-ups ARE world children, so the filter below drops them explicitly.
+  # widget is dropped by construction (it lives outside the snapshot roots); the caret and the
+  # ephemeral overlays are left out by the rule a copy and a save share (Widget.isLeftOutOfCopiesAndSaves),
+  # at whatever depth they stand; open UNPINNED menus/pop-ups ARE world children, so the filter
+  # below drops them explicitly.
   @serializeWorld: (theWorld, opts = {}) ->
-    # EPHEMERAL overlays (live highlight / pinout / drag-affordance widgets) are reconciler-owned
-    # transient world children — never part of the persisted desktop. TRANSIENT (unpinned)
-    # POP-UPS are mid-gesture UI: the very menu whose item triggers "Save world snapshot…" is
-    # still attached (and already marked for closure) while the save runs, so without this
-    # filter it gets baked into the file and restores as a zombie. Pinned pop-ups are desktop
-    # furniture and stay. Exclude both up front so they ride NEITHER the snapshot-roots walk NOR
-    # the explicit `section.children` list below (with onExternal:"capture" a section.children
-    # ref would otherwise pull an excluded child back into the object table). The reconciler
-    # recreates ephemerals from live state after a restore.
-    snapshotChildren = (child for child in (theWorld.children or []) when not (child.isEphemeral?() or child.isTransientPopUp?()))
+    # The world's children, and every snapshot root's subtree below, are taken as a save carries
+    # them (TreeNode.childrenCarriedByCopiesAndSaves): the caret and the EPHEMERAL overlays (live
+    # highlight / pinout / drag-affordance widgets, reconciler-owned — never part of the persisted
+    # desktop) are left out at whatever depth they stand, and the reconciler recreates the ephemerals
+    # from live state after a restore. TRANSIENT (unpinned) POP-UPS are mid-gesture UI: the very menu
+    # whose item triggers "Save world snapshot…" is still attached (and already marked for closure)
+    # while the save runs, so without this filter it gets baked into the file and restores as a
+    # zombie. Pinned pop-ups are desktop furniture and stay. Both are excluded up front so they ride
+    # NEITHER the snapshot-roots walk NOR the explicit `section.children` list below (with
+    # onExternal:"capture" a section.children ref would otherwise pull an excluded child back into
+    # the object table).
+    snapshotChildren = (child for child in theWorld.childrenCarriedByCopiesAndSaves() when not child.isTransientPopUp?())
     # snapshot roots (deduped by the widgetSet Set below); an app window may also be a desktop
     # child, an orphan in the bin or on the shelf, or off-tree — all are captured here.
     liveAppWindows = ([appName, appWindow] for [appName, appWindow] from theWorld.appWindows when not appWindow.destroyed)
@@ -175,7 +179,7 @@ class Serializer
     roots.push appWindow for [appName, appWindow] in liveAppWindows
     widgetSet = new Set
     for aRoot in roots when aRoot?
-      widgetSet.add w for w in aRoot.allChildrenBottomToTop()
+      widgetSet.add w for w in aRoot.subtreeCarriedByCopiesAndSaves()
 
     # a world snapshot CAPTURES everything reachable: a cross-root pointer resolves as {"$r"};
     # an off-tree widget reached only via a property (e.g. the widget a demo PointerWdgt stands in
@@ -374,7 +378,10 @@ class Serializer
         # canvas context beside its canvas) is left out: after a load its holder rebuilds it, lazily,
         # as a fresh widget builds it
         continue if NativeValueKinds.isDerivedAt obj, name
-        props[name] = refFor obj[name], (path + SerializationError.intoProperty name), obj, name
+        # a widget's children as a save carries them, the copy's same rule (Duplicator._clonePropertyInto)
+        value = obj[name]
+        value = obj.childrenCarriedByCopiesAndSaves?() ? value if name is "children"
+        props[name] = refFor value, (path + SerializationError.intoProperty name), obj, name
       props
 
     # the world sets holding the widget, by their markers (@WORLD_SET_MEMBERSHIPS, in its order)
