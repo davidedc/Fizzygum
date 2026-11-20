@@ -132,6 +132,13 @@ class RectangularAppearance extends Appearance
   _borderColor: ->
     @widget.strokeColor ? @widget._surfaceStroke?()
 
+  # Does my widget's body draw a 1 px border along its outline? When it has a _borderColor
+  # (_paintBorder strokes nothing without one). A ring laid over a selected widget strokes the
+  # outline too when it does (Widget._drawSelectionOverlay), and a viewport keeps its thin scroll
+  # indicators clear of that border (ViewportWdgt._indicatorEdgeInset).
+  outlineIsStroked: ->
+    @_borderColor()?
+
   # My widget's BORDER, painted inside paintStroke's scope (widget-local logical coordinates,
   # `localDamageBox` the part being repainted): its _borderColor outline all round, when it has one.
   # A subclass whose border is not that outline answers its own (StretchablePanelAppearance: a page's

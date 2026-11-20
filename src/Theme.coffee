@@ -735,7 +735,8 @@ class Theme
     # plate's rounding and padding, a pop-up's
     # content padding and its header's rule and title inset, a plain or member list rows-panel's
     # padding, a scroll
-    # indicator's fat and thin widths and the thin one's edge inset, a toolbar grid's cell
+    # indicator's fat and thin widths and the thin one's clearance from its edge and inset from
+    # its side's ends, a toolbar grid's cell
     # side / inter-cell gap / outer margin / row count, a tool cell's rounding and the overflow
     # chevron's glyph square, a text field's rounding, a button's height, paddings and rounding,
     # a toggle's height, padding and rounding, a chip's height, padding and rounding, a Fizzytiles
@@ -975,11 +976,14 @@ class Theme
     # indicator rests THIN and untouchable for as long as its pane overflows, and is absent when
     # it does not: visibility is a derivation from overflow, on no clock at all.
     @scrollIndicatorThickness = 4
-    # how far in from its viewport's edge a THIN indicator lies: clear of the viewport's own
-    # border, and of the border of a pop-up or a window around it. A fat indicator lies flush,
-    # since its bar is the band the hover pass watches and every press aims into
-    # (ViewportWdgt._indicatorEdgeInset).
-    @scrollIndicatorEdgeInset = 2
+    # how far a THIN indicator stands clear of the line at its viewport's edge: the border the
+    # viewport paints over its edge, or the edge itself where it paints none
+    # (ViewportWdgt._indicatorEdgeInset). A fat indicator lies flush, since its bar is the band the
+    # hover pass watches and every press aims into.
+    @scrollIndicatorEdgeClearance = 1
+    # how far a THIN indicator stops short of each end of its side
+    # (ViewportWdgt._indicatorEndInsetFor); a fat one is not shortened.
+    @scrollIndicatorEndInset = 3
 
     # a prompt's input slider's CROSS axis, i.e. the thumb you drag: a TARGET (G3), like the
     # prompt text it sits under.

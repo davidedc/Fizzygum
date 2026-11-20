@@ -104,8 +104,8 @@ scrollability question every drag-scroll consumer asks — `grabsToParentWhenDra
 foreground- and background-drag-scroll branches (`Widget.coffee`/`PanelWdgt.coffee`) among
 them; `anyScrollBarShowing()`, the visibility-as-scrollability proxy, is retired. The derivation is a pure function of layout
 state, nothing time-driven on any path: while content overflows the bar shows THIN
-(`scrollIndicatorThickness`, thumb-only painting, no track, `scrollIndicatorEdgeInset` in from the
-viewport's edge so no border covers it) and passes the pointer through to
+(`scrollIndicatorThickness`, thumb-only painting, no track; placed by the rule below) and passes
+the pointer through to
 the content under it — `SliderWdgt.catchesPointerAt` answers false whenever
 `indicatorIsIntangible()` (thin or hidden; an indicator is not a target); resting the pointer
 within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
@@ -114,10 +114,34 @@ always in the hand's mouse-over ancestry for content under it) fattens both bars
 painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); leaving the band,
 or the content no longer overflowing, reverts to thin or hidden. A bar also stays hidden, however
 much the content overflows, when its frame has no room for its thumb
-(`ViewportWdgt._barFrameHasRoomForThumb`: the frame must be at least as long as the thumb a press
-meets is wide). Under a resizer (a naked inspector's), a viewport shorter than the corner reserve has
-a frame whose length is not even positive, and the bar would be a 1px sliver no pointer can work. The
-pane still scrolls, since scrollability is asked of overflow.
+(`ViewportWdgt._barFrameHasRoomForThumb`: the frame a press meets, at full thickness and the run's
+whole length, must be at least as long as the thumb a press meets is wide; the shorter frame the
+thin look is drawn in is not the one asked). Under a resizer (a naked inspector's), a viewport
+shorter than the corner reserve has a frame whose length is not even positive, and the bar would be
+a 1px sliver no pointer can work. The pane still scrolls, since scrollability is asked of overflow.
+
+WHERE A THIN INDICATOR STANDS is one derived rule, with no dial per kind of viewport: clear of the
+LINE at the viewport's edge, and short of its side's ends.
+- Across its axis it stands `scrollIndicatorEdgeClearance` (1 px of paper) in from the line
+  (`ViewportWdgt._indicatorEdgeInset`). The line is the 1 px border the viewport's appearance
+  strokes over its own edge, where it strokes one (`outlineIsStroked`, asked through the soft
+  probe the selection ring uses: a plain panel on the desk, a patch node's text box), so the
+  indicator lies 2 px in from the edge; where it strokes none (a window's whole content, a folder's
+  pane, an inspector's panes, a document, a pop-up's rows) the line is the edge itself, and the
+  indicator lies 1 px in: a window's pane then shows one pixel of paper between its thumb and its
+  window's border, which runs just past that edge.
+- Along its axis it stops `scrollIndicatorEndInset` (3 px) short of each end of its run
+  (`_indicatorEndInsetFor`), the run being its side less the corner reserve below.
+- The FAT look is none of this: flush with the edge, full thickness, the run's whole length. It is
+  the frame every press meets, so no aim, hover band or hit area moves with the thin look.
+- A bar picked up off its viewport is a plain slider: it keeps the thickness it left with and its
+  run's whole length (`_barIsMineToPresent`).
+- The border is a function of where the viewport stands (`_surfaceStroke` reads its parent), and
+  not every re-parenting arranges a viewport: dropped back onto the desk it keeps its extent, and
+  an unchanged extent re-fits nothing. So a re-parented viewport places its bars again
+  (`ViewportWdgt._reactToBeingAdded`). The border is also a function of the roles a builder
+  dresses the viewport in (`wearPaneRoles`), which it does as it builds it, before the first
+  arrange places the bars.
 
 The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
 (`ViewportWdgt._cornerReserveFor`, read by `_barFrameAt`):
@@ -126,7 +150,7 @@ The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
   it lies in the window's grip strip, below everything the window holds. The climb that finds a
   resizer (`_resizerOverMyCorner`) answers the resizer itself;
 - failing that, the other bar, where it crosses, takes `scrollBarsThickness`;
-- with neither, the bar runs its side's full length.
+- with neither, the run is its side's full length.
 
 Each answer comes from STRUCTURE, because the passes that read it are still laying out geometry
 and visibility:
@@ -178,8 +202,9 @@ own down runs its position head (the hover move) ahead of the press (`input-and-
 §"Touch hover dissolution") — so what a press can take is the FAT thumb, which is wider and placed
 differently. `ViewportWdgt.buttonScreenBoxOnArrival` answers where that is without fattening
 anything, from the same two derivations the arrange commits: `_barFrameAt` (where the viewport
-places a bar of a given thickness and edge inset — both looks come from it: the thin one 2 px in, the
-fat one flush, so every aim derived from the fat frame is unchanged by the inset) and
+places a bar of a given thickness, edge inset and end inset — both looks come from it: the thin one
+clear of the line at the edge and short of its side's ends, the fat one flush and the run's whole
+length, so every aim derived from the fat frame is unchanged by the thin look) and
 `SliderButtonWdgt.boxInSliderFrame` (the thumb's box inside a frame of a given extent and track
 inset, `SliderWdgt.trackThumbInset` for every pressable look). Its client is the macro toolkit's
 `sliderButtonPressPoint`: a press aimed at the thin thumb's centre can fall on the track beside the
@@ -188,7 +213,9 @@ sibling `barScreenFrameOnArrival` answers the frame that box lies in. The fat th
 than the thin one, since a thumb is never shorter than it is wide (10px fat where 4px show), so a
 drag that carries the thumb a fraction of its travel measures that travel from these two, not from
 the bar as drawn. Measured from the thin look, it overshoots by a share that grows with the
-distance dragged.
+distance dragged. The toolkit's `dragSliderButtonToFraction` measures both ends of its drag there
+too: the pointer goes from the centre of the thumb a press meets to its fraction point of the frame
+a press meets.
 
 The indicator's COLOURS are the theme's and follow its presentation, read as the bar paints. A bar
 holds no track colour of its own (unless its viewport's builder names one, `sliderColor`): while

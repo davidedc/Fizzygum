@@ -1464,17 +1464,31 @@ class MacroToolkit
   # "set target"), it drives target[setter](value) LIVE as it is dragged. This is the controller-DRAG
   # sibling of clickOnSliderTrackAtFraction_InputEvents (which only JUMPS the button via a track click, and
   # only when the slider is parented to a ViewportWdgt/PromptWdgt); a free-standing controller slider
-  # responds to dragging its button, not to track clicks. `fraction` is a [fx, fy] point of the SLIDER's
-  # bounds = the destination of the drag along the track (for a vertical slider, vary fy; default sliders
-  # have smallestValueIsAtBottomEnd false, so a larger fy = a larger value). Queues input events — follow
+  # responds to dragging its button, not to track clicks. The pointer goes from the centre of the THUMB A
+  # PRESS MEETS to the `fraction` point, [fx, fy], of the FRAME A PRESS MEETS: the destination of the
+  # drag along the track (for a vertical slider, vary fy; default sliders have smallestValueIsAtBottomEnd
+  # false, so a larger fy = a larger value). For a slider that is a target where it is drawn (a plain
+  # slider, a scroll indicator already fat) those are its button and its own bounds, read in its plane.
+  # For a THIN scroll indicator they are the thumb and the frame its viewport gives it on the pointer's
+  # arrival (_sliderFrameAndButtonAsPressed) -- flush with the viewport's edge and the whole run long,
+  # where the bar drawn at rest stands in from that edge and stops short of its side's ends -- so the
+  # drag carries the thumb the same distance whatever the thin look on screen. The press itself is placed
+  # by sliderButtonPressPoint, which keeps that centre wherever a press there takes the button. Queues
+  # input events — follow
   # with `yield "waitNoInputsOngoing"`. sliderOrIdentifier may be a widget reference or a recorded
   # text-description identifier. Verifies that the press lands on the slider's BUTTON (a press on the
   # track beside it would page the bar instead of grabbing the thumb).
   dragSliderButtonToFraction_InputEvents: (sliderOrIdentifier, fraction, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     slider = @_widgetOfTarget sliderOrIdentifier
     @_aimingAt slider.button, "dragSliderButtonToFraction", =>
-      buttonCentre = @sliderButtonPressPoint slider
-      trackPoint = @screenPointAtFractionOf slider, fraction
+      if slider.indicatorIsIntangible?()
+        {frame, button} = @_sliderFrameAndButtonAsPressed slider
+        thumbCentre = new Point (button.left() + Math.round button.width() * 0.5), (button.top() + Math.round button.height() * 0.5)
+        buttonCentre = @sliderButtonPressPoint slider, thumbCentre
+        trackPoint = new Point (frame.left() + Math.round frame.width() * fraction[0]), (frame.top() + Math.round frame.height() * fraction[1])
+      else
+        buttonCentre = @sliderButtonPressPoint slider
+        trackPoint = @screenPointAtFractionOf slider, fraction
       @_dragChromeFromTo_InputEvents buttonCentre, trackPoint, milliseconds, startTime
 
   # WHERE A PRESS TAKES A SLIDER'S BUTTON (a scrollbar's thumb), on the screen. `preferred` is the

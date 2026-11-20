@@ -569,9 +569,10 @@ class Widget extends TreeNode
     # clips), so it follows a rounded body instead of squaring it off. It is the drop outline's ring,
     # painted by the same painter (HighlightOutlineAppearance.paintRing), with its stroke half on only
     # when my body draws a 1 px border along its outline (my appearance's outlineIsStroked: a bordered
-    # box, a magnet) -- over a borderless rounded body the stroke would cover pixels my corners leave
-    # to whatever is behind me. It is clipped to the damaged part of my box (al, at, w, h: device
-    # pixels), so a partially-scrolled widget is not outlined past its clip, and painted at full alpha
+    # box, a bordered rectangle, a magnet) -- over a borderless rounded body the stroke would cover
+    # pixels my corners leave to whatever is behind me. It is clipped to the damaged part of my box
+    # (al, at, w, h: device pixels), so a partially-scrolled widget is not outlined past its clip, and
+    # painted at full alpha
     # whatever mine is; its geometry is my whole box, never the damage box. My box is laid out the way
     # an appearance body lays out its widget's pixels (Appearance._paintInLocalScope): logical pixels,
     # the origin moved to my position, in whatever context I am painted into -- the world canvas, or

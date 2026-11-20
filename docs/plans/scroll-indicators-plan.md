@@ -15,7 +15,7 @@ Status:
 
 | Unit | Item | Status |
 |---|---|---|
-| U1 | A thin indicator stands clear of the line at its viewport's edge, and short of its side's ends | open (§U1) |
+| U1 | A thin indicator stands clear of the line at its viewport's edge, and short of its side's ends | CLOSED 2026-11-20 (§U1) |
 | U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant) | open (§U2) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | open (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
@@ -285,7 +285,7 @@ D10's last sentence ("its overlay scroll indicator over the items' right edge is
 
 ### 2.7 Gate constraints that shape the edits
 - **Method-count ceilings with zero headroom** (`check-complexity-ratchets.js` `METHOD_CEILINGS`): `Widget`
-  392/392, `WorldWdgt` 129/129, `FrameWdgt` 173/173, `ActivePointerWdgt` 74/74. This plan ADDS NO METHOD to any of
+  394/394, `WorldWdgt` 129/129, `FrameWdgt` 173/173, `ActivePointerWdgt` 74/74. This plan ADDS NO METHOD to any of
   them (it edits bodies, renames, and deletes). `ViewportWdgt` (104), `SimpleSpreadsheetWdgt` (83),
   `DocumentViewportWdgt` (26) and `ClippingWdgt` (9) have no ceiling.
 - **Complexity**: 15, except recorded functions. Recorded here: `ViewportWdgt#_reLayoutScrollbars` 26,
@@ -379,6 +379,58 @@ difference is a thin thumb one pixel nearer its edge (window panes, documents) a
 thin one 2 px in, the fat one flush"); `visual-design-system.md` §1's METRICS row.
 
 **If parked:** U2 and U3 go on with today's placement; U4 lifts it as it stands.
+
+**Landed 2026-11-20.** `Theme.scrollIndicatorEdgeClearance` (1) replaces the edge-inset dial and
+`scrollIndicatorEndInset` (3) is new. `ViewportWdgt._indicatorEdgeInset` is the clearance, plus 1 where the
+viewport's appearance strokes a border along its outline (`RectangularAppearance.outlineIsStroked`, read through the
+soft probe the selection ring uses). `_indicatorEndInsetFor bar` gives the end inset to a thin bar the viewport
+presents, `_barFrameAt` takes it off both ends of the run, and `_barFrameHasRoomForThumb bar` asks the frame a press
+meets. What research corrected in the fix as written above:
+- step 3's read is the soft probe: the nine toolbar classes wear `SeamRulesAppearance`, which answers no
+  `outlineIsStroked`, and an unguarded call throws at their first bar arrange;
+- step 4's end inset is for a bar the viewport PRESENTS: the arrange still sizes a bar picked up off it, which keeps
+  its run. It is asked per bar, in a helper, because written inline it took `_reLayoutScrollbars` from 26 to 30;
+- step 2: `StretchablePanelAppearance` overrides `_paintBorder`, so it answers `outlineIsStroked` for the edges it
+  paints (all four: a line along the whole outline);
+- §2.7: `Widget`'s ceiling is 394/394; §2.1: three toolkit readers use the arrival frames (`_widgetAPressMeets`
+  too); seven comment sites stated the old placement, not three.
+Ruled here:
+- **The bars follow a re-parenting.** The inset derives from the border, which derives from where the viewport
+  stands, and not every re-parenting arranges a viewport. A re-parented viewport places its bars again
+  (`ViewportWdgt._reactToBeingAdded`): a window that adopts a content whose layout is pending arranges it, the way
+  back onto the desk keeps the extent and arranges nothing. That way out was MEASURED with the hook removed (a
+  panel picked up off its window and dropped on the desk keeps its thumbs 1 px from its edge, on the pixel beside
+  its border, where 2 is right) and has no standing test: the one way a person takes a pane out of its window is the
+  "Pick up" row, and `Widget.pickUp` runs the window's `_beforeChildPickedUp` outside any settle, a careless
+  end-of-cycle push the gauntlet's `capstone` leg holds at zero for every test (filed in this plan's BACKLOG
+  section). The standing test reads the way in.
+- **A re-dress does not place the bars, and that is left so.** The border also derives from the roles a builder
+  dresses the viewport in (`wearPaneRoles`), and every builder dresses an orphan, before the first arrange. Placing
+  the bars from that public method was tried in two forms and withdrawn: applied directly it broke the layering
+  gate's rule [F] (an off-settle apply), scheduled it was a careless end-of-cycle push the gauntlet's `capstone` leg
+  holds at zero. The form that passes both is a self-settling setter over a no-settle core, for a path no product
+  code takes.
+- **For a thin indicator, the toolkit's `dragSliderButtonToFraction` measures both ends of its drag on the look a
+  press meets** (the centre of the thumb a press meets, the fraction point of the frame a press meets); a plain
+  slider keeps its two reads. Measured on the bar as drawn, `SystemTest_macroMenuPinnedInScrollPanel`'s content
+  would have ended 7 to 11 px short: a changed shot that is not this unit's target. Every drag of the suite is
+  unchanged along the run.
+- **The new test plays under both pointers** and asserts the frames a press meets by value; the hovered look stays
+  `SystemTest_macroScrollIndicatorFattensAndDrags`'s (mouse-only by meaning: a finger has no hover).
+- `outlineIsStroked` keeps its name for both readers: on a square-cornered box the ring's stroke half is the
+  border's own `strokeRect` over pixels the ring's fill already covers (a selected bordered canvas kept its pixels).
+Evidence: `SystemTest_macroThinIndicatorStandsClearOfItsEdge` (an unbordered pane, a bordered panel, the frames a
+press meets, both ends of the run, a 14 px tall viewport, the panel taken as a window's content; two shots) with
+four plants, one per door (the clearance, the end inset, the border term, the room test), each biting under both
+pointers; the premise of `SystemTest_macroTrackPressInTheFatteningCycleStillPages`
+and of `SystemTest_macroSliderTrackClickMovesButton`'s first click is asserted. The measured failing set was the
+corrected prediction exactly: 70 tests and 198 shots at dpr 1 under the mouse, every one a screenshot mismatch. That
+is the forecast's 202 less the four of `SystemTest_macroInspectorScrollbarUnplugged`, whose detached bar the
+forecast plant shortened; the forecast re-run's one assertion failure (a list click missing its row) was an artifact
+of the same plant shortening the frames a press meets, and the fix does not fail it. Under a finger the same tests
+fail less the six that are mouse-only, with three more shots where a tap leaves the bar thin and a mouse's resting
+pointer keeps it fat. Every changed shot was measured at both densities (396 shots): the changed pixels of each
+are strips at most 5 px wide, the thumbs, and nothing else moved.
 
 ---
 
@@ -709,7 +761,7 @@ stop at its commit, which you propose and do not make."
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
-(none yet)
+- [x] U1: a thin scroll indicator stands 2 px inside its viewport's edge whatever is there, and touches both ends of its side; it is to stand 1 px clear of the line at that edge and 3 px short of each end. — CLOSED 2026-11-20 (scroll-indicators loop, U1): the inset across is derived (the theme's clearance, plus the border where the viewport's appearance strokes one: `outlineIsStroked`), the end inset comes off both ends of the run of a thin bar the viewport presents, and the bars follow a re-parenting; `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

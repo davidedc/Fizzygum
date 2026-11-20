@@ -21,3 +21,8 @@ class StretchablePanelAppearance extends RectangularAppearance
       toBePainted = edge.intersect localDamageBox
       if toBePainted.isNotEmpty()
         @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
+
+  # My border is my widget's edges, not the outline the base strokes in its _borderColor: a line runs
+  # along the whole outline only while there is an edge on all four sides.
+  outlineIsStroked: ->
+    @widget._insetEdgeRects().length is 4
