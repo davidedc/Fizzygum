@@ -15,6 +15,10 @@ class StretchableWidgetContainerWdgt extends Widget
   ratio: undefined
   contents: undefined
 
+  # set at my subtree's destroy ENTRY (_fullDestroyNoSettle below), so the whole recursion knows I am
+  # going away -- see _reactToChildRemoved
+  _beingFullDestroyed: undefined
+
   constructor: (@contents) ->
     super()
     @_buildAndConnectChildren()
@@ -32,6 +36,50 @@ class StretchableWidgetContainerWdgt extends Widget
     @_applyExtent new Point 300, 300
     @contents._applyExtent new Point @width(), @height()
     @_invalidateLayout()
+
+  # A PAGE THAT LEAVES ME LEAVES A FRESH ONE BEHIND, the rule my window keeps one level up
+  # (MakerDocumentWdgt._resetToDefaultContents: losing the payload rebuilds a fresh one of its kind).
+  # Every reader of my page reads @contents -- add, my drop receivers, my layout and sizing, the mode
+  # my edit toggle flips (my window's question whether anything was put in it reads my ratio) -- so
+  # a page living elsewhere would go on taking what is meant for my page wherever it stands. Whatever takes it away
+  # ("Pick up", "Attach", "Delete", a destroy, or a "Pick up" or "Delete" of the island wrapping it) re-homes
+  # it through _addNoSettle or ends it through _destroyNoSettle, and each tells me here once it is gone:
+  # the ONE hook a departure of my own child reaches, after the fact, so one departure builds one page. A
+  # page taken out of the island wrapping it (its own "Attach" or destroy) tells only the island. A page
+  # that still stands under me has not left (a rotation wraps it in an island IN PLACE), and only a
+  # departure that carries my page away concerns me.
+  #   The fresh page is the departed page's own kind, which only the page can name (freshPageOfMyKind,
+  # asked through ?(): a page that names none -- a drawing's canvas, whose glass its Maker lays,
+  # ImageWdgt._makeStartingPayload -- is not replaced). It holds MY mode, taken through its own mode
+  # core while it still stands alone, the core every page flips by: once in me it would hand the
+  # flip to me (StretchablePanelWdgt's relay), and I already hold the mode. It is empty, so the ratio
+  # the departed page crystallized goes (resetRatio), and it takes my box, as my construction gives
+  # my first page my extent. Not while I am torn down myself (the flag), and not once I am destroyed:
+  # a page built inside the destroy-until-empty iteration would never let it end, and one built into
+  # a dead container would be pinned forever by the instances registry.
+  _reactToChildRemoved: (child) ->
+    return if @destroyed or @_beingFullDestroyed
+    return unless @contents? and child.isAncestorOf(@contents) and !@isAncestorOf(@contents)
+    freshPage = @contents.freshPageOfMyKind?()
+    return unless freshPage?
+    freshPage._disableDragsDropsAndEditingNoSettle() unless @dragsDropsAndEditingEnabled
+    @contents = freshPage
+    # public-call-sanctioned: resetRatio is the ratio's one release (the page's own hook calls it as
+    # its last child leaves, StretchablePanelWdgt._reactToChildRemoved): field writes and a layout
+    # mark, settle-free, so it rides the departure's settle like the add below
+    @resetRatio()
+    freshPage._applyMoveTo @position()
+    freshPage._applyExtent @extent()
+    @_addNoSettle freshPage
+    @_invalidateLayout()
+
+  # Consulted at the child-departure hook above; set here at the subtree's destroy ENTRY so every
+  # teardown path (resetWorld's fullDestroyChildren, a direct fullDestroy, the bin's, my window's)
+  # covers the whole recursion -- FrameWdgt._fullDestroyNoSettle keeps the same flag for the same
+  # reason.
+  _fullDestroyNoSettle: ->
+    @_beingFullDestroyed = true
+    super
 
   # actually
   # ends up in the Panel inside it
@@ -261,8 +309,10 @@ class StretchableWidgetContainerWdgt extends Widget
 
   # My toggle is Widget's -- it acts on me and on my contents -- but I tell my window's bar FIRST.
   # Widget's core returns before telling it when my contents already hold the new mode and I do not,
-  # and that state is reachable: a page picked out of me stays my @contents, and toggled on its own
-  # it leaves me behind. My window's bar must follow my mode all the same.
+  # and my window's bar must follow my mode all the same. A panel page that leaves me is replaced by a
+  # fresh one in my mode (_reactToChildRemoved), and a page's own toggle hands the flip to me
+  # (StretchablePanelWdgt), but a drawing's canvas is not replaced and a tilted page answers its own
+  # "Disable editing" -- so this guards the bar against a page whose mode was written apart from mine.
   _enableDragsDropsAndEditingNoSettle: ->
     if @dragsDropsAndEditingEnabled
       return

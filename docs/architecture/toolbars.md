@@ -106,6 +106,11 @@ row-by-row ruling: BACKLOG.) A widget that answers edit mode itself (a folder li
 is held by its holder's answer too, while what a folder holds still lifts out. And the editor-focus outline never
 frames it (`WorldWdgt._widgetBeingEdited` asks `sitsInViewModeContent` first).
 
+A panel page that leaves its window (its own "Pick up", "Attach", "Delete") leaves a fresh, empty page of its kind
+behind, in the window's mode (`StretchableWidgetContainerWdgt._reactToChildRemoved`, owner ruling 2026-11-19), so the
+window's pencil, its placements and its drops reach the page it holds, never the departed one. A drawing's canvas is
+not replaced, and a tilted page taken out of its rotation island is heard only by the island (BACKLOG).
+
 **Which content is in view mode** (`Widget.sitsInViewModeContent`): view mode is inherited DOWNWARD, bounded by
 windows.
 - A window that offers its own edit toggle (`FrameWdgt.offersEditToggle`, the one definition its strip's pencil

@@ -813,11 +813,14 @@ class Widget extends TreeNode
     # SELF-SETTLE (single-mutation tier, the canonical wrap). _settleLayoutsAfter checks orphan at
     # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyNoSettle
     # orphans me.
-    # The one hook that rebuilds during destroy -- a window losing its @contents
-    # (_beforeChildDestroyed -> _resetToDefaultContents) -- is safe inside this _inLayoutMutation:
+    # The two hooks that rebuild during destroy -- a window losing its @contents
+    # (_beforeChildDestroyed -> _resetToDefaultContents) and a stretchable container losing its page
+    # (StretchableWidgetContainerWdgt._reactToChildRemoved) -- are safe inside this _inLayoutMutation:
     # _resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
     # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
-    # flush-throw (see _settleLayoutsAfter's orphan guard). So nothing re-enters a settle mid-destroy.
+    # flush-throw (see _settleLayoutsAfter's orphan guard); the container builds its fresh page with
+    # no settle of its own (cores, and resetRatio, which settles nothing). So nothing re-enters a
+    # settle mid-destroy.
     @_settleLayoutsAfter => @_destroyNoSettle()
 
   _destroyNoSettle: ->

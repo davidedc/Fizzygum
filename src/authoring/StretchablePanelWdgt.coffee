@@ -67,6 +67,12 @@ class StretchablePanelWdgt extends PanelWdgt
   consumesFractionalGeometryOf: (child) ->
     !child.isLayoutInert?()
 
+  # A FRESH, EMPTY PAGE OF MY KIND: what my container builds in my place once I leave it
+  # (StretchableWidgetContainerWdgt._reactToChildRemoved, which gives it the container's mode and
+  # box). My colour and what I hold go with me: the page left behind is blank, in the page's look.
+  freshPageOfMyKind: ->
+    new StretchablePanelWdgt
+
   _reactToChildRemoved: (child) ->
     super
     if @parent?.setRatio? and @parent.ratio?

@@ -974,6 +974,12 @@ arrive, `FrameWdgt.defaultContents`). So a copy, a save and the world inventory 
 and nothing else, and none of them meets a widget its owner hid on the side
 ([`world-lifetime-and-inventory.md`](world-lifetime-and-inventory.md) §2).
 
+A holder that keeps a part by pointer (`@contents`) and rebuilds a fresh part of its kind when the part leaves
+guards the rebuild with a `_beingFullDestroyed` flag its `_fullDestroyNoSettle` sets at entry, so destroying it
+until it is empty never meets a fresh part: `FrameWdgt` rebuilds in its `_beforeChild…` hooks (pick-up, destroy,
+close), `StretchableWidgetContainerWdgt` in `_reactToChildRemoved` (every re-home and destroy of its own child).
+`_reactToChildRemoved` hears only a DIRECT child's departure.
+
 ---
 
 ## 14. Type tests
