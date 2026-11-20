@@ -598,6 +598,9 @@ class InspectorWdgt extends ClippingWdgt
 
     cnts = @detail.textWdgt
     cnts.setText txt
+    # every load of a member's source starts the pane's history afresh, the same member's reload included
+    # (it replaces unsaved typing with the saved source): no undo or redo brings back a text from before it
+    cnts.forgetUndoHistory()
     # `constructor`'s code is shown, never edited: it is my subject's class itself, which a save
     # would replace (Class.refuseTheConstructor)
     cnts.isEditable = selected isnt "constructor"

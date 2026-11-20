@@ -275,8 +275,12 @@ class CaretWdgt extends BlinkerWdgt
     if !key? then console.error "INVARIANT_VIOLATED: a keystroke to insert has no key"
     @insert key, shiftKey if TextSlots.isOneCharacter key
 
+  # A cut deletes my target's LIVE selection, asked as the cut is processed; the event's text (selectedText: what
+  # ClipboardInputEvent.fromBrowserEvent read at the browser's event and put on the clipboard then) is not read.
+  # With nothing selected it deletes nothing, as a platform's text field cuts nothing: the character before me
+  # stays, and neither undo history moves.
   processCut: (selectedText) ->
-    @deleteLeft()
+    @deleteLeft() unless @target.selection() is ""
     @_settleScrollFollow()   # converge the deferred caret follow in-place (clipboard event, bypasses processKeyDown)
 
   processPaste: (clipboardText) ->
@@ -722,9 +726,10 @@ class CaretWdgt extends BlinkerWdgt
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
 
-  # THE DELETE of Backspace and Delete, and so of the delete chords and of cut (processCut): it deletes the
-  # selection, else the character beside me, through the caller's deleteTheCharacter (aCharacterIsBesideMe says
-  # whether there is one: before me for Backspace, after me for Delete). Like insert, it pushes an undo state
+  # THE DELETE of Backspace and Delete, and so of the delete chords and of a cut of a selection (processCut, which
+  # does not reach me with nothing selected): it deletes the selection, else the character beside me, through the
+  # caller's deleteTheCharacter (aCharacterIsBesideMe says whether there is one: before me for Backspace, after me
+  # for Delete). Like insert, it pushes an undo state
   # before the change and one after it, so undo brings back what it deleted, the caret where it stood (one
   # character off after a move of just one since the last state, which the dedupe merges, as in typing) and what
   # was selected selected again, and redo deletes it again. The state after is what the delete leaves: setText

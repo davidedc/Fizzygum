@@ -124,7 +124,7 @@ windows.
   So a bare drawing in a view-mode document refuses paint, although its own canvas, a holder by class, keeps its
   flag on: its surface carries no tool and its canvas stamps no drop.
 - A sheet in a view-mode document takes no entry. Every door to a cell asks: an edit start, a commit (an edit
-  open across the flip ends without writing), a clear, a drop into a cell, a drag out of one. The arrows still
+  open across the flip ends without writing at its next key there; back in edit mode a key resumes it), a clear, a drop into a cell, a drag out of one. The arrows still
   move its selection.
 - A text in view-mode content takes no typing, at any depth, unless its app declared it an INPUT (owner ruling
   2026-11-19). Every edit start asks the text's ONE door, `StringWdgt.isTextEntryField` (editable, and in no

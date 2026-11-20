@@ -560,6 +560,16 @@ class StringWdgt extends ControllerWdgt
       if onlyUndo.isJustFirstClickToPositionCursor
         @undoHistory = []
 
+  # AN UNDO HISTORY BELONGS TO THE TEXT IT WAS BUILT IN. An owner that LOADS me with a subject's text tells me
+  # so, and I forget the undo and the redo I kept, so neither brings back a text from before the load: a sheet's
+  # formula bar at the start of every edit, whatever cell it edits (SheetFormulaBarWdgt.beginEditNoSettle), and
+  # an inspector's code pane at every load of a member's source (InspectorWdgt.selectionFromList), the same
+  # member's reload included, which replaces unsaved typing with the saved source. Only the loader knows it
+  # loaded: a setText keeps my history, since the caret's own typing and its undo and redo set my text through it.
+  forgetUndoHistory: ->
+    @undoHistory = []
+    @redoHistory = []
+
   # My weight, slant, font and alignment are MY STYLE, which a text toolbar's tools mirror while I am
   # the text being edited (TextToolbarWdgt): each of my setters for them tells the world it moved
   # (WorldWdgt.noteStyleChanged), and the world announces it if I am its editor focus.

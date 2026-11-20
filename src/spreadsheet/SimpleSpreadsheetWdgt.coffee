@@ -59,8 +59,12 @@
 #     edit; Enter commits and Escape reverts via the caret's accept/cancel escalations
 #     (fired from the editor, landing on the CellWdgt, forwarded to acceptCellEdit /
 #     cancelCellEdit); acting elsewhere commits (the pointer funnel accepts, wheel commits
-#     before scrolling, and a DANGLING edit — a caret torn down by a path that fires no
-#     escalation — self-heals by committing on the sheet's next key/click). While the caret
+#     before scrolling). A DANGLING edit — a caret torn down by a path that fires no
+#     escalation (a put-away, the flip to view mode, among others) — resumes on the sheet's next
+#     key while its editor stands, shows and takes typing, the key acting as on the live edit;
+#     otherwise that key ends it through the commit, as a click elsewhere in the sheet does
+#     either way: the commit writes what the editor holds, but nothing in view mode or once the
+#     editor's cell has left the viewport (processKeyDown, _commitEditNoSettle). While the caret
 #     edit is live this widget's processKeyDown IGNORES keys (the caret owns them; the
 #     receivers-Set dispatch snapshot in KeydownInputEvent keeps the edit-starting key from
 #     double-delivering into the fresh caret); Tab is swallowed at the cell. Multi-line
@@ -715,10 +719,26 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     # early-return-sanctioned: every key reaches every receiver, and a key that is not mine must
     # not open a settle.
     return unless @_keysAreMine()
+    # AN EDIT LEFT OPEN -- its caret ended by a path that fires no accept or cancel: my window put away
+    # (collapsed, or closed into storage), where the world ends the caret of a text on no screen
+    # (WorldWdgt._keepEditingOnScreenNoSettle), or the flip to view mode, among others -- RESUMES on my next
+    # key while its editor stands in me, shows and takes typing (owner ruling 2026-11-19). "Shows" is the
+    # world's own on-screen rule for a caret, read at the resume: an editor hidden in place (its cell, holding
+    # a widget, kept hidden out of my viewport) or detached shows on no screen; "takes typing" is the typing
+    # door (StringWdgt.isTextEntryField). The caret comes back at the end of the text (where a caret is built,
+    # CaretWdgt's constructor) and takes the key as it takes one on the live edit the person sees (Escape
+    # cancels, Enter commits and moves down, Backspace deletes one character, a typed character appends). It
+    # takes it outside my settle: its accept and cancel settle themselves.
+    if @_editing and (editor = @_liveEditorWdgt())? and
+        not editor.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage() and editor.isTextEntryField()
+      @_settleLayoutsAfter => world._editNoSettle editor
+      world.caret.processKeyDown key, code, shiftKey, ctrlKey, altKey, metaKey
+      return
     @_settleLayoutsAfter =>
-      # a DANGLING edit — the caret was torn down by a path that fires no accept/cancel (a mid-edit
-      # grab, a subtree teardown) — self-heals: commit what was typed, then handle this key normally
-      # in selection mode (click-away-commits semantics).
+      # the key ENDS any other edit left open through the commit (_commitEditNoSettle), which writes what its
+      # editor holds, but nothing while I sit in view-mode content or once its cell has left my viewport (the
+      # commit's unreachable-editor branch drops it); then I handle the key in selection mode. A click
+      # elsewhere in me ends an edit left open the same way (activated).
       @_commitEditNoSettle() if @_editing
       @_processKeyWhileSelectingNoSettle key, code, shiftKey, ctrlKey, altKey, metaKey
     return
@@ -850,12 +870,14 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # dataflow drain (this same doOneCycle) recomputes the value and the grid repaints. The
   # source is what the user typed = the TEXT of the editor holding the caret (there is no
   # separate buffer). A blank text is a legitimate commit (it EMPTIES the cell); an UNREACHABLE
-  # editor (its cell vanished under the edit — not a known path, the edit commits before any
-  # scroll) must NOT masquerade as one: abandon instead of blanking. An error never blocks a
+  # editor must NOT masquerade as one: the edit ends without writing, its typed text dropped. An
+  # editor is unreachable once its cell has left my viewport under an edit left open (a resize that
+  # shrinks me past the cell recycles it; a scroll commits first). An error never blocks a
   # commit: a #SYNTAX, #ERR or #LOOP is the cell's VALUE (spec §9.6), shown in the cell and
-  # explained in the formula bar. An edit still open when my content went into view mode (its window's
-  # pencil pressed mid-edit) ends WITHOUT writing: content in view mode takes no entry, on any commit
-  # path.
+  # explained in the formula bar. An edit left open across the flip to view mode (its window's
+  # pencil pressed mid-edit) ends WITHOUT writing when it is committed while my content is in view
+  # mode: content in view mode takes no entry, on any commit path. Flipped back to edit mode first,
+  # a key resumes it instead (processKeyDown).
   _commitEditNoSettle: ->
     return unless @_editing
     if @sitsInViewModeContent()
@@ -974,10 +996,12 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   _teardownEditorNoSettle: ->
     editingCell = @_editingCellWdgt()
     # a caret still LIVE on the mounted editor (a commit reached from the wheel-scroll
-    # commit-before-scroll or the dangling-edit self-heal — not from the caret's own
-    # accept/cancel, which tear the caret down first) must die WITH the editor: the caret
-    # is the editor's PARENT's child, not the editor's, so destroying the editor alone would
-    # orphan the caret targeting a dead widget (its paint-time re-sync reads the target).
+    # commit-before-scroll, a zoom chosen from my zoom menu or a toolbar tool's enterSource, all
+    # of which leave the caret alive -- not from the caret's own accept/cancel, which tear the
+    # caret down first, nor from a key on an edit left open, which no caret holds) must die WITH
+    # the editor: the caret is the editor's PARENT's child, not the editor's, so destroying the
+    # editor alone would orphan the caret targeting a dead widget (its paint-time re-sync reads
+    # the target).
     world._stopEditingNoSettle() if @_isCaretEditLive()
     @_editing = false
     @_editCol = undefined

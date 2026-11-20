@@ -462,11 +462,17 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   word is TextSlots's); a delete chord deletes from the caret to where its family's move of the same
   reach lands (one character where that move goes nowhere). Both families redo with Shift and their undo
   chord, a PC also with Ctrl+Y. Undo steps back over deleting as over typing: insert and the one delete
-  (`CaretWdgt._deleteSelectionOrCharacter`: Backspace, Delete, the delete chords, cut) each push an undo
+  (`CaretWdgt._deleteSelectionOrCharacter`: Backspace, Delete, the delete chords, a cut of a selection) each push an undo
   state before and after the change, so an undone delete brings back what it took, selected if it took a
   selection (a further undo then only drops that selection), and the caret where it stood, unless it had
   moved by one character only since the last state, a move `StringWdgt.pushUndoState` merges as it
-  merges typing's; a delete of nothing pushes nothing.
+  merges typing's; a delete of nothing pushes nothing. A cut or a copy with nothing selected does nothing,
+  as in a platform's text field: `CaretWdgt.processCut` deletes only a selection, and
+  `ClipboardInputEvent.fromBrowserEvent`, which both clipboard listeners call, claims the browser's event
+  (`preventDefault` + `setData`) only while the edited text has something selected, so otherwise the
+  browser's default stands and the clipboard keeps what it held. A text its owner loads with ANOTHER
+  subject's text (a sheet's formula bar another edit's, an inspector's pane another member's source)
+  forgets its undo and redo history (`StringWdgt.forgetUndoHistory`).
 - ONE rule says whether a keystroke that is no verb may TYPE, `CaretWdgt.keystrokeMayType`, asked by
   the caret and by a spreadsheet's type-to-edit: with neither Ctrl nor Cmd held, or as AltGr on a PC.
   Windows reports AltGr as Ctrl+Alt, so a one-character key with Ctrl and Alt and no Win key types
@@ -481,7 +487,7 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   a keyboard receiver acts on as a command has its browser default kept off, on the canvas and on the
   virtual keyboard's input alike (`BrowserInputBridge._aKeyboardReceiverActsOnAsCommand` asks each
   receiver's `actsOnKeyAsCommand`: the world's live caret's verbs through `verbFor`; a spreadsheet's
-  arrows while it is the focus, shows on a screen and is in selection mode, which it moves on whatever modifier is
+  arrows while it is the focus, shows on a screen and has no live caret, which it moves on whatever modifier is
   held; a focused sheet put away, its window collapsed or closed, stays the focus but takes no key, so its arrows'
   defaults are not kept off). That keeps off the page's scroll on the arrows, Home and End; typing is never
   prevented.

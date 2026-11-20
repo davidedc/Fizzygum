@@ -344,7 +344,7 @@ duplicate never edits in lockstep), a sheet worked on earlier never takes keys t
 focused sheet put away (its window collapsed or closed) stays the focus but clears and edits nothing unseen. **A sheet in view-mode
 content takes no entry** (`Widget.sitsInViewModeContent`: a sheet nested in a document whose window shows the
 eye; a sheet in its own window has no view mode): `_startEditNoSettle`, `_commitEditNoSettle` (an edit open
-across the flip ends without writing), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop door each ask it,
+across the flip ends without writing at its next key in view mode; back in edit mode a key resumes it), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop door each ask it,
 and no drag takes anything out of a cell there, since the grab door (`Widget.grabsToParentWhenDragged`) and a button's
 `isDetachablePayloadOfMyParent` ask it of every holder first; the arrows, Tab, the wheel and the zoom still act.
 
@@ -389,7 +389,10 @@ time, so a saved or duplicated sheet wears the current look.
 - **The formula bar** (`SheetFormulaBarWdgt`) is at the top of the grid (`_gridTop()`), never zoomed.
   An edit can start in the cell or in the bar (`_startEditNoSettle seed, inBar`); the cell's editor is
   mounted either way and whichever view lacks the caret mirrors the other on the caret's
-  `reactToKeystroke` escalation; `_liveEditorWdgt()` is the one that commits.
+  `reactToKeystroke` escalation; `_liveEditorWdgt()` is the one that commits. Each edit's undo history is
+  its own in either view: the cell's editor is built for each edit, and the bar's one field forgets the
+  last edit's history as an edit starts (`SheetFormulaBarWdgt.beginEditNoSettle` →
+  `StringWdgt.forgetUndoHistory`).
 - **Focus and formatting.** `focusesAsAWhole` makes every click in the sheet focus the SHEET
   (`WorldWdgt._setEditorFocusNoSettle`), and a window opened around a sheet focuses it
   (`WorldWdgt.openFrameWith`), so a fresh sheet takes typing and the arrows at once; the sheet acts on
@@ -531,8 +534,14 @@ time, so a saved or duplicated sheet wears the current look.
   accept/cancel escalations (editor → cell → sheet's `acceptCellEdit`/`cancelCellEdit`; the
   formula bar's field reaches the same two); acting elsewhere COMMITS (the pointer's click-away
   funnel calls `caret.accept()`, the wheel commits before scrolling — tearing down a
-  still-live caret in the same settle — and a DANGLING edit self-heals by committing on
-  the sheet's next key/click). While the edit is live the sheet's `processKeyDown` ignores
+  still-live caret in the same settle). A DANGLING edit — its caret ended by a path that fires
+  no escalation: a put-away (`WorldWdgt._keepEditingOnScreenNoSettle`) or the flip to view mode —
+  RESUMES on the sheet's next key while its editor stands in the sheet, shows on a screen and takes typing
+  (`StringWdgt.isTextEntryField`; owner ruling 2026-11-19): the caret comes back at the text's end and takes
+  the key, so Escape cancels, Enter commits and moves down, Backspace deletes one character;
+  otherwise the key ends it through the commit, which writes what the editor holds but nothing in
+  view mode or once the editor's cell has left the viewport, and a click elsewhere in the sheet
+  ends it the same way. While the edit is live the sheet's `processKeyDown` ignores
   keys (`_isCaretEditLive`); the edit-starting key never double-delivers into the fresh
   caret because `KeydownInputEvent` dispatches over a SNAPSHOT of the receivers Set; Tab
   and Shift+Tab commit and move right / left (`nextTab`/`previousTab` → `tabFromEdit`), so

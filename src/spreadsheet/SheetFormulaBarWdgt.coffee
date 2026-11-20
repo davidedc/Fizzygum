@@ -15,7 +15,9 @@
 # like the cells: the copy carries it, and the sheet re-attaches and re-syncs it (rebuilding it there
 # would build its zoom button, which settles, inside the copy and restore notifications). While the sheet edits a cell, the field shows the
 # edit's text: with the caret in it when the edit started here (a click on the field), or following
-# the cell's editor as it is typed into (the sheet's reactToKeystroke). Enter, Tab and Escape in the
+# the cell's editor as it is typed into (the sheet's reactToKeystroke). The field is one text for every
+# edit, a copy's and a restore's included, and each edit starts its undo history afresh
+# (beginEditNoSettle). Enter, Tab and Escape in the
 # field reach the sheet through my accept / nextTab / previousTab / cancel, exactly as from a cell.
 
 class SheetFormulaBarWdgt extends Widget
@@ -125,10 +127,14 @@ class SheetFormulaBarWdgt extends Widget
   # ── editing in the field ──────────────────────────────────────────────────────────────────
 
   # an edit of the selected cell started (SimpleSpreadsheetWdgt._startEditNoSettle): the field
-  # shows its text, and takes the caret when the edit started here
+  # shows its text, and takes the caret when the edit started here. The field starts the edit's undo
+  # history afresh (StringWdgt.forgetUndoHistory), as the cell's editor does by being built for each
+  # edit, so no undo or redo in the field brings back a text of an earlier edit, another cell's
+  # included.
   beginEditNoSettle: (text, takesTheCaret) ->
     return unless @textWdgt?
     @textWdgt._setTextNoSettle text
+    @textWdgt.forgetUndoHistory()
     @textWdgt.isEditable = takesTheCaret
     return
 
