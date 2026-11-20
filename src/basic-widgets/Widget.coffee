@@ -2026,8 +2026,8 @@ class Widget extends TreeNode
   #     island) — no churn, Phase-1's whole-figure grab. macroTransformFrameScaledDragged relies on this.
   #   • I am a genuine SUB-part (my innermost island wraps a larger subtree) ⇒ extract me and wrap me in a
   #     FRESH island carrying the accumulated similitude (_pickOutRotatedFigureNoSettle).
-  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: the grab's own settle covers
-  # the extraction's re-fit of my former container.
+  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: the caller's own settle covers
+  # the extraction's re-fit of my former container (the drag's grab; a menu pick-up's first settle).
   _resolvePickOutFigureNoSettle: ->
     island = @_enclosingNonIdentityIsland()
     if !island?
@@ -2251,7 +2251,7 @@ class Widget extends TreeNode
   #      whole-figure grab, no churn) or a FRESH island carrying the accumulated N-deep similitude (I am a
   #      genuine sub-part, extracted + re-homed screen-coincident). Off any island this returns me UNCHANGED
   #      ⇒ byte-identical dormant. NoSettle: the extraction's re-fit of my former container rides the
-  #      caller's own grab settle (the drag's @grab, pickUpMenuAction's pickUp).
+  #      caller's own settle (the drag's @grab; pickUpMenuAction's pickUp, whose first settle flushes it).
   #   2. §7.5 Bug F (reparent-transparency): a drop→pick round-trip can leave an IDENTITY compensating sugar
   #      wrapper (the -deg wrapper's spec folded to identity against its +deg container on pick-out).
   #      DISSOLVE it — self-settling (_unwrapIfIdentitySugar) — so the BARE content is what goes on the hand,
@@ -2262,7 +2262,7 @@ class Widget extends TreeNode
   # Returns the figure to grab.
   # DECLARED deferred settle (claimsSpace arc S2): step 1's Bug-F ancestor-fold calls the island's
   # _set*NoSettle cores, whose claim reflow (_invalidateLayout) fires now that sugar figures
-  # default to 'footprint' — an off-settle push the caller's own grab settle carries (the drag's
+  # default to 'footprint' — an off-settle push the caller's own settle carries (the drag's
   # @grab, pickUpMenuAction's pickUp), exactly as step 1's contract above always stated. The
   # declaration window makes that contract explicit to the end-of-cycle capstone audit.
   _resolvePickUpFigure: ->
@@ -4790,7 +4790,16 @@ class Widget extends TreeNode
   
   pickUp: ->
     oldParent = @parent
-    oldParent?._beforeChildPickedUp? @
+    # I am the DISPATCHER of both callbacks, so I own the settle of each (rule [J]: a hook is a
+    # settle-neutral core and declares none -- the twins are ActivePointerWdgt.grab's settles round
+    # _beforeBeingGrabbed and _reactToChildGrabbed). The one before the grab is where a window whose
+    # contents I am rebuilds its payload (_resetToDefaultContents: FrameWdgt's placeholder, or by
+    # MakerDocumentWdgt's override a Maker's fresh payload, whose constructors settle and so need
+    # a settle open to defer to), and its marks are flushed here, before the hand takes me. Each callback has a settle of its own
+    # because one cannot span the two: grab settles in between, on the hand (a dotted .grab, so no
+    # [T] pairing), and a settle an attached widget reaches inside another throws. With no parent,
+    # or under a parent that defines no such hook, the thunk does nothing.
+    @_settleLayoutsAfter => oldParent?._beforeChildPickedUp? @
     world.hand.grab @
     # if one uses the "deferred" API then we need to look
     # into the "desiredExtent" as the true extent has yet
@@ -4799,12 +4808,8 @@ class Widget extends TreeNode
       @_applyMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
       @_applyMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
-    # the DISPATCHER owns the callback's settle (rule [J] — the _reactToChildGrabbed twin in
-    # ActivePointerWdgt.grab): the hook is a settle-neutral core (a framed citizen rebuilds its
-    # payload through _resetToDefaultContents, GenericPanelWdgt), and this single settle
-    # flushes it at the gesture — consistent on return, not riding the end-of-cycle flush. grab's own
-    # settles above are already closed (dotted .grab — not a [T] subject pairing), so this opens
-    # cleanly outside any pass.
+    # the callback after the grab, in its own settle: grab's settles are closed by this point, so
+    # this one opens outside any pass
     @_settleLayoutsAfter => oldParent?._reactToChildPickedUp? @
 
   # The menu "Pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the

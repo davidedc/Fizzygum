@@ -16,7 +16,7 @@ Status:
 | Unit | Item | Status |
 |---|---|---|
 | U1 | A thin indicator stands clear of the line at its viewport's edge, and short of its side's ends | CLOSED 2026-11-20 (§U1) |
-| U1b | A pane picked up off its window is settled at the gesture (`Widget.pickUp`; added by the owner 2026-11-20) | open (§U1b) |
+| U1b | A pane picked up off its window leaves at its own size: the window's hook runs inside the pick-up's settle (`Widget.pickUp`; added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U1b) |
 | U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant) | open (§U2) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | open (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
@@ -403,10 +403,10 @@ Ruled here:
   (`ViewportWdgt._reactToBeingAdded`): a window that adopts a content whose layout is pending arranges it, the way
   back onto the desk keeps the extent and arranges nothing. That way out was MEASURED with the hook removed (a
   panel picked up off its window and dropped on the desk keeps its thumbs 1 px from its edge, on the pixel beside
-  its border, where 2 is right) and has no standing test: the one way a person takes a pane out of its window is the
-  "Pick up" row, and `Widget.pickUp` runs the window's `_beforeChildPickedUp` outside any settle, a careless
-  end-of-cycle push the gauntlet's `capstone` leg holds at zero for every test (unit U1b). The standing test reads
-  the way in.
+  its border, where 2 is right) and had no standing test when this unit landed: the way a person takes a pane out
+  of its window onto the hand is the "Pick up" row, and `Widget.pickUp` ran the window's `_beforeChildPickedUp`
+  outside any settle, a careless end-of-cycle push the gauntlet's `capstone` leg holds at zero for every test.
+  Unit U1b fixed that, and the standing test plays the way out again, with its plant.
 - **A re-dress does not place the bars, and that is left so.** The border also derives from the roles a builder
   dresses the viewport in (`wearPaneRoles`), and every builder dresses an orphan, before the first arrange. Placing
   the bars from that public method was tried in two forms and withdrawn: applied directly it broke the layering
@@ -437,7 +437,7 @@ are strips at most 5 px wide, the thumbs, and nothing else moved.
 
 ---
 
-### U1b — A pane picked up off its window is settled at the gesture
+### U1b — A pane picked up off its window leaves at its own size (the window's hook runs inside the pick-up's settle)
 
 **Ruling:** the owner's, 2026-11-20 ("add the pickUp defect to the scope of this loop"). **Needs U1 CLOSED. Time
 box 2 h.** Grouped with U1: the fix gives U1's re-parenting hook its standing way-out test back, and it lands
@@ -462,9 +462,10 @@ through the same door in this unit when the fix is the same line, and filed othe
 - `SystemTest_macroThinIndicatorStandsClearOfItsEdge` gets its way out back: the panel picked up off its window
   and dropped on the desk strokes its border and its indicators lie 2 in again, the read the re-parenting hook
   alone answers for; the plant that removes the hook returns to the standing set.
-- New `SystemTest_macroPickingAPaneUpOffItsWindowSettlesAtOnce` (values): by the person's "Pick up" row and by
-  the direct call, a window whose content is picked up shows its default payload laid out when the call returns,
-  with no layout mark left for the end of the cycle; the carried pane is dropped and lands. Both pointers.
+- New `SystemTest_macroPanePickedUpOffItsWindowKeepsItsSize` (values): by the person's "Pick up" row and by the
+  direct call, the window's hook runs inside a settle the pick-up opens (a spy), the pane rides the hand and lands
+  at the extent it had, and the window shows its default payload. Both pointers. (As planned it read "the default
+  payload laid out when the call returns", which the Landed paragraph below shows tells nothing.)
 - Plant: the before-hook dispatched outside the settle again.
 
 **Predicted pixel set:** EMPTY.
@@ -472,6 +473,34 @@ through the same door in this unit when the fix is the same line, and filed othe
 **Docs.** The architecture doc that states the dispatcher rule, if the fix changes what it says.
 
 **If parked:** U1's hook keeps no standing way-out test; U2 goes on.
+
+**Landed 2026-11-20.** One line: `Widget.pickUp` dispatches `oldParent?._beforeChildPickedUp? @` inside a
+`_settleLayoutsAfter` of its own, the shape `ActivePointerWdgt.grab` gives `_beforeBeingGrabbed`; the settle round
+the trailing `_reactToChildPickedUp` stays. What research corrected in the section above:
+- the marks ARE flushed inside the call on the product before the fix, by `grab`'s first settle, so a plain window is
+  laid out when `pickUp` returns either way and nothing is painted in between: "the default payload laid out when
+  the call returns" tells nothing. What was wrong is that the hook ran in no settle's window;
+- on a MAKER's window that had a cost a person sees, MEASURED: the fresh payload's constructors settle, and with no
+  settle open to defer to each lays the world out in the middle of the rebuild, while the window still holds the
+  departing payload and has already retired its toolbar band. A Docs Maker's document, 582×229 in its window, came
+  away 582×295, taller by the band's room. With the fix it leaves at 582×229;
+- `_beforeChildPickedUp` has one definer (`FrameWdgt`) and `_resetToDefaultContents` one override
+  (`MakerDocumentWdgt`). Of the other `_before…` dispatchers, close, destroy, collapse, un-collapse and
+  `_beforeBeingGrabbed` run inside a settle; `_beforeChildDropped` does not, and its two implementers schedule no
+  layout (left). `_reactToChildPickedUp` has had no implementer since 2026-07-20 (left).
+Evidence: `SystemTest_macroPanePickedUpOffItsWindowKeepsItsSize` (the new test's name: what it pins is the pane's
+size and the settle, not "settles at once"): two plain windows, by the person's "Pick up" row and by the direct
+call, and a Docs Maker in edit mode; a sanctioned spy on the window's hook reads the world's settle mark as the hook
+runs. Run first against the product before the fix, it failed five reads under both pointers (the spy in each leg,
+the Maker document's extent on the hand and on the desk), passed with the fix, and failed the same five under the
+plant that runs the hook bare again. `SystemTest_macroThinIndicatorStandsClearOfItsEdge` plays the way out of the
+window again, and the plant that removes U1's re-parenting hook fails that read alone. Both tests show zero
+careless pushes under the production probe. Predicted pixel set EMPTY, met.
+Filed on the way (this plan's BACKLOG section): a Maker whose payload leaves it shrinks to its fresh payload,
+though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Measured on a Docs Maker whose
+document is picked up: 600×400 to 68×211 round a 50×40 document (before the fix, to 68×145 round a 50×5 one: the
+fix also changes what the Maker is left with). By reading, the same reset runs for every Maker kind and from the
+"Destroy" row.
 
 ---
 
@@ -803,6 +832,7 @@ stop at its commit, which you propose and do not make."
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] U1: a thin scroll indicator stands 2 px inside its viewport's edge whatever is there, and touches both ends of its side; it is to stand 1 px clear of the line at that edge and 3 px short of each end. — CLOSED 2026-11-20 (scroll-indicators loop, U1): the inset across is derived (the theme's clearance, plus the border where the viewport's appearance strokes one: `outlineIsStroked`), the end inset comes off both ends of the run of a thin bar the viewport presents, and the bars follow a re-parenting; `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
+- [x] U1b: `Widget.pickUp` runs its parent's `_beforeChildPickedUp` outside any settle, so a window whose content is picked up (the "Pick up" row) rebuilds its payload as a careless end-of-cycle push and no test can take a pane out of its window; it is to settle both its callbacks. — CLOSED 2026-11-20 (scroll-indicators loop, U1b): `pickUp` opens a settle round the before-hook, as `grab` does round `_beforeBeingGrabbed`; a Docs Maker's document no longer comes away 66 px taller; `SystemTest_macroPanePickedUpOffItsWindowKeepsItsSize`, and the way out restored in `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
