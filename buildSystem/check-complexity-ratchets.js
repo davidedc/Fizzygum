@@ -94,7 +94,6 @@ const RECORDED = {
   'DashboardsIconAppearance#_dashboardLineMetrics': 33,
   'DashboardsIconAppearance#_dashboardSpreadDots': 38,
   'DataflowEngine#_orderTopologically': 41,
-  'DataflowEngine#_processNode': 18,
   'DegreesConverterIconAppearance#_thermoMetrics': 34,
   'Deserializer.whyItCanNeverBeRestored': 16,
   'DiffingPatchNodeWdgt#diff': 23,

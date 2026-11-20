@@ -148,7 +148,12 @@ target pin is `bang`. So there is a second announcement, and an edge declares wh
 A reflected menu row is the shape: it ignores the delivered value entirely and re-reads through
 its own `readerName` (§P7 of `../archive/connector-ubiquity-and-reflection-plan.md`). Wires leave
 the flag false and stay value-only. `markNonValueChange` is **dark** unless the node actually has
-a re-reading subscriber — its callers are ordinary property setters. A value mark **supersedes** a
+a re-reading subscriber — its callers are ordinary property setters. It delivers nothing that pass whether or not
+anything is wired INTO the node: a non-computing node seeded only by it, into which no producer reacted that pass,
+has not changed its value — sink or pure source alike — so its wires stay silent and the drain records no value for
+it. A value it moved without a fire reaches its wires at its next visit that reads its value: a fire of its own, a
+delivery into it, a re-read of what it tracks. A computing node so seeded still recomputes, and fires every out-edge
+if its output differs from the one last recorded (a copied or loaded node has none). A value mark **supersedes** a
 non-value one raised earlier in the same frame, in either order.
 
 ⚠ Because a wire is not the only kind of out-edge a producer can have, re-wiring a controller

@@ -80,7 +80,11 @@ and engine delivery is the only path:
   lane, which joins the pass settle. A widget SINK then takes the equal-value cutoff on its pulled
   `dataflowValue` (`Widget.dataflowValue -> @exportedValue()`, which resolves through the widget's
   declared principal pin — the palette's reads `@choice` that way; patch nodes and the fanout
-  family override outright, → `@output` / `@inputValue`); a pure source stays always-changed.
+  family override outright, → `@output` / `@inputValue`); a pure source stays always-changed. Neither applies to a
+  node seeded only by `markNonValueChange` into which no producer reacted this pass: sink or source, it has not
+  changed, so its wires deliver nothing and the engine records no value for it (`DataflowEngine._readValueChanged`),
+  until its next visit that reads its value (a fire, a delivery into it, a re-read of what it tracks), which then
+  delivers it; a computing node still recomputes.
 - **The echo is dropped.** A controller's `updateTarget` tail re-marking the node the engine is
   applying is dropped via `@_applyingNode`, so a driven ring is ONE pass. The engine's visit-once
   + equal-value cutoff terminate a cascade: there are no connection tokens, and no trailing token
@@ -135,7 +139,7 @@ A node is any object held by identity. It MAY implement:
 | `dataflowNoteError(error) -> value` | optional: turn a mid-recompute throw into the node's own error VALUE (a cell → a `SheetError`). |
 
 A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **always-changed**
-(the safe default for a source). Equality for the equal-value cutoff is `_valuesEqual`
+(the safe default for a source), unless it was seeded only by `markNonValueChange`. Equality for the equal-value cutoff is `_valuesEqual`
 (`a.equals?(b)` when defined, else identity).
 
 `User` (`world.users`, core) is a live non-widget node on this seam beside `DataflowSource`: it
@@ -156,6 +160,7 @@ the toolbars it wears directly.
   text's font, its soft wrap, a wire's delivery policy). A node has ONE value, so saying this
   with `markStale` would re-deliver the unchanged principal value along every wire — inert for
   an ordinary value pin, a **cascading force-fire** for a `bang` pin. It wakes only the out-edges
+  (of a non-computing node; a computing one still recomputes and fires if its output moved)
   declared **`firesOnAnyChange`** ("my consumer RE-READS the producer rather than receiving its
   value"), which is what a reflected menu row is, and what a scrollbar tracking its panel is; and
   it is **dark** unless such an edge exists. Spec §3a; connector plan §P3, §P8.

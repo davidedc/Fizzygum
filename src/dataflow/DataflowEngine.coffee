@@ -30,9 +30,9 @@
 #                                       own error VALUE (a sheet cell -> a SheetError), so the
 #                                       drain cannot spin on it (spec §5/§9.6).
 # A node with neither dataflowRecompute nor dataflowValue is treated as ALWAYS-CHANGED — the
-# conservative default for a source. Equality for the cutoff: `_valuesEqual` (a.equals?(b)
-# when the value defines it, else identity) — so immutable value classes (Color) cut off by
-# value and everything else by reference.
+# conservative default for a source — unless it was seeded only by markNonValueChange. Equality
+# for the cutoff: `_valuesEqual` (a.equals?(b) when the value defines it, else identity) — so
+# immutable value classes (Color) cut off by value and everything else by reference.
 #
 # ── THE TWO VERBS (mirrors layout's _invalidateLayout / __markForRelayout) ───────────────
 #   • markStale(node, forced)   the public, policy-aware verb sources call. During a drain it
@@ -52,12 +52,16 @@
 #   So there are two announcements, and an edge declares which it listens to:
 #   • markStale(node)            my VALUE changed. Fires every out-edge (the original meaning).
 #   • markNonValueChange(node)   something about me changed that is NOT my value. Fires ONLY the
-#                                out-edges declared `firesOnAnyChange`.
+#                                out-edges declared `firesOnAnyChange` (a computing node still
+#                                recomputes; see _processNode).
 #   • edge opt firesOnAnyChange  "my consumer RE-READS the producer rather than receiving its
 #                                value, so wake it for either announcement". A reflected menu row
 #                                is the shape (MenuItemWdgt._subscribeToWhatIShow):
 #                                the delivered value is ignored; the row re-reads via its own
 #                                reader name. Wires leave it false and stay value-only.
+#   The drain keeps that promise for a SINK as for a source: a NON-computing node seeded only by
+# markNonValueChange, into which no producer reacted this pass, has not changed its value, so its
+# wires stay silent even when its value moved without a fire (_readValueChanged).
 #
 # ── THE DRAIN (recalculateDataflow — runs once per cycle in doOneCycle) ──────────────────
 # Empty-pool early-return first (the dark-phase hot path). Otherwise, drain-until-quiet: each
@@ -598,6 +602,10 @@ class DataflowEngine
     # @_applyingNode names the node the engine is applying INTO, so its own onward-fire tail (a ported
     # controller's updateTarget → markStale @) is recognised as the echo and dropped (see markStale).
     @_applyingNode = node
+    # a node seeded ONLY by markNonValueChange, into which no producer reacted this pass: that
+    # announcement is all that happened to it, so, unless it computes, it has not changed its value
+    # (_readValueChanged)
+    onlyValueless = valuelessSet.has(node) and not @_hasReactingProducer node, changed, noted
     # a node seeded ONLY by markNonValueChange announces to its re-readers whatever its value does
     noted.add node if valuelessSet.has node
     try
@@ -621,24 +629,35 @@ class DataflowEngine
           changed.add node
       else
         newVal = @pullValue node
-        if @edgesTo.get(node)?.size > 0
-          # a widget SINK (a node reached via wire edges): equal-value cutoff on the APPLIED value — read
-          # its value after the incoming applies and traverse onward only if it changed (spec §8). Alongside
-          # the visit-once rule this walks a driven ring exactly one lap and stops a DAG limb early.
-          if forcedSet.has(node) or not @_valuesEqual (@lastValues.get node), newVal
-            changed.add node
-          @lastValues.set node, newVal
-        else
-          # pure source / seed (a time source, an untargeted seed): no incoming edge to cut off on, so
-          # conservatively always-changed — UNLESS it only announced a non-value change, which is a
-          # claim about a property that is not its value and must not be read as one.
-          changed.add node unless valuelessSet.has node
+        changed.add node if @_readValueChanged node, newVal, forcedSet, onlyValueless
       # sink application hook — a node applying its OWN value (a cell → its socket/presenter); routes via
       # the node's _<action>Connector lane and joins the pass settle opened by _drainOnePass.
       node.dataflowApply?(newVal)
     finally
       @_applyingNode = undefined
     return
+
+  # Did this NON-computing node's value change this pass, so that every out-edge fires? `newVal` is
+  # its value read after its incoming applies.
+  #   A node that ONLY ANNOUNCED a non-value change (`onlyValueless`) has not, sink or source alike:
+  # the announcement is a claim about a property that is not its value, and reading it as one would
+  # fire the node's WIRES with its principal value (spec §3a) — a palette told its colour by a
+  # script delivering it onward, a slider promoted to track delivering the value it just adopted.
+  # Its re-readers still re-read it (it stays `noted`). Its value is NOT recorded either: this visit
+  # delivered nothing, and recording a value that moved silently would cut off as "unchanged" the next
+  # fire that genuinely delivers it — and it means the next visit that reads the value delivers it, a
+  # re-read that leaves it where it is included.
+  #   Otherwise a pure source / seed (a time source, an untargeted seed) has no incoming edge to cut
+  # off on, so it is conservatively always-changed; a widget SINK (a node reached via wire edges)
+  # takes the equal-value cutoff on the APPLIED value and traverses onward only if it changed (spec
+  # §8). Alongside the visit-once rule this walks a driven ring exactly one lap and stops a DAG limb
+  # early.
+  _readValueChanged: (node, newVal, forcedSet, onlyValueless) ->
+    return false if onlyValueless
+    return true unless @edgesTo.get(node)?.size > 0
+    valueMoved = forcedSet.has(node) or not @_valuesEqual (@lastValues.get node), newVal
+    @lastValues.set node, newVal
+    valueMoved
 
   _noteRecomputeError: (node, error, oldVal) ->
     # Force-resolve so the drain cannot spin on a throwing node (spec §5/§9.6). If the node turns
