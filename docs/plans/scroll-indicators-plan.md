@@ -16,6 +16,7 @@ Status:
 | Unit | Item | Status |
 |---|---|---|
 | U1 | A thin indicator stands clear of the line at its viewport's edge, and short of its side's ends | CLOSED 2026-11-20 (§U1) |
+| U1b | A pane picked up off its window is settled at the gesture (`Widget.pickUp`; added by the owner 2026-11-20) | open (§U1b) |
 | U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant) | open (§U2) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | open (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
@@ -330,7 +331,9 @@ D10's last sentence ("its overlay scroll indicator over the items' right edge is
 ## 4. Units
 
 ### U-order
-U1 → U2 → U3 → U4 → U5 → U6 → U7. U2 edits `_barFrameAt` after U1 did. U3 needs U2's mechanism. U4 lifts what U1–U3
+U1 → U1b → U2 → U3 → U4 → U5 → U6 → U7. U1b needs U1 alone (it restores a step of U1's test) and nothing after
+it needs it; it stands before U3 so that a document's way out of its window can be played in a test. U2 edits
+`_barFrameAt` after U1 did. U3 needs U2's mechanism. U4 lifts what U1–U3
 left (if U2 or U3 PARKED, U4 lifts the code as it stands). U5 is independent of U1–U3 but uses U4's shared range
 helper. U6 needs U4 and U5.
 
@@ -402,8 +405,8 @@ Ruled here:
   panel picked up off its window and dropped on the desk keeps its thumbs 1 px from its edge, on the pixel beside
   its border, where 2 is right) and has no standing test: the one way a person takes a pane out of its window is the
   "Pick up" row, and `Widget.pickUp` runs the window's `_beforeChildPickedUp` outside any settle, a careless
-  end-of-cycle push the gauntlet's `capstone` leg holds at zero for every test (filed in this plan's BACKLOG
-  section). The standing test reads the way in.
+  end-of-cycle push the gauntlet's `capstone` leg holds at zero for every test (unit U1b). The standing test reads
+  the way in.
 - **A re-dress does not place the bars, and that is left so.** The border also derives from the roles a builder
   dresses the viewport in (`wearPaneRoles`), and every builder dresses an orphan, before the first arrange. Placing
   the bars from that public method was tried in two forms and withdrawn: applied directly it broke the layering
@@ -431,6 +434,44 @@ of the same plant shortening the frames a press meets, and the fix does not fail
 fail less the six that are mouse-only, with three more shots where a tap leaves the bar thin and a mouse's resting
 pointer keeps it fat. Every changed shot was measured at both densities (396 shots): the changed pixels of each
 are strips at most 5 px wide, the thumbs, and nothing else moved.
+
+---
+
+### U1b — A pane picked up off its window is settled at the gesture
+
+**Ruling:** the owner's, 2026-11-20 ("add the pickUp defect to the scope of this loop"). **Needs U1 CLOSED. Time
+box 2 h.** Grouped with U1: the fix gives U1's re-parenting hook its standing way-out test back, and it lands
+before U3, whose document can then be picked up off its window in a test.
+
+**The defect (found by U1's gauntlet, probed).** `Widget.pickUp` dispatches its old parent's
+`_beforeChildPickedUp` OUTSIDE any settle, while its own comment gives the dispatcher the callback's settle (the
+layering gate's rule [J]) and it does settle `_reactToChildPickedUp`. `FrameWdgt._beforeChildPickedUp` rebuilds
+the window's default payload when the child is its contents (`_resetToDefaultContents`: the bar's title string
+destroyed and rebuilt, the frame re-titled and re-fitted), so each of those layout marks is a careless
+end-of-cycle push, which the gauntlet's `capstone` leg holds at zero for the whole suite. A person reaches it by
+the context menu's "Pick up" row on a window's content. No test took the path before U1's, so the zero held.
+
+**Fix (confirm the shape against the code; the research report is `u1b/RESEARCH.md` in the loop's scratch).**
+`pickUp` owns the settle of BOTH its callbacks. `Widget` sits at its method ceiling: a body edit, no method added.
+Find every instance first: every implementer of `_beforeChildPickedUp`, every caller of `pickUp` in both repos
+(some act on a detached widget), and every other dispatcher of a `_before…` hook (`_beforeChildClosed`,
+`_beforeChildDestroyed`, `_beforeChildCollapsed`): a sibling with the same defect and a reach path is fixed
+through the same door in this unit when the fix is the same line, and filed otherwise.
+
+**Tests.**
+- `SystemTest_macroThinIndicatorStandsClearOfItsEdge` gets its way out back: the panel picked up off its window
+  and dropped on the desk strokes its border and its indicators lie 2 in again, the read the re-parenting hook
+  alone answers for; the plant that removes the hook returns to the standing set.
+- New `SystemTest_macroPickingAPaneUpOffItsWindowSettlesAtOnce` (values): by the person's "Pick up" row and by
+  the direct call, a window whose content is picked up shows its default payload laid out when the call returns,
+  with no layout mark left for the end of the cycle; the carried pane is dropped and lands. Both pointers.
+- Plant: the before-hook dispatched outside the settle again.
+
+**Predicted pixel set:** EMPTY.
+
+**Docs.** The architecture doc that states the dispatcher rule, if the fix changes what it says.
+
+**If parked:** U1's hook keeps no standing way-out test; U2 goes on.
 
 ---
 
