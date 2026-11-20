@@ -485,13 +485,16 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   held; a focused sheet put away, its window collapsed or closed, stays the focus but takes no key, so its arrows'
   defaults are not kept off). That keeps off the page's scroll on the arrows, Home and End; typing is never
   prevented.
-- The browser's HISTORY CHORDS stay off whenever the world's canvas has the keyboard, mid-edit or idle,
-  whatever a receiver claims (owner ruling 2026-11-19): `BrowserInputBridge._navigatesHistory`, asked by
-  both keydown listeners, over one family-free table (`historyChords`: a Mac browser's Back and Forward on
-  Cmd+Left/Right and Cmd+[ / ], a PC's on Alt+Left/Right), each with its one modifier and no other, so
-  Shift+Cmd+[ and Cmd+Option+Left (tab switches) and Cmd+C/V/X (their default fires the clipboard events)
-  stay the browser's. Backspace, a Back key in several browsers, is kept off on the canvas always. The
-  rule covers keys only: the toolbar's Back and the mouse's back button stay the browser's (whether the
+- The browser's PAGE-LEAVING CHORDS stay off whenever the world's canvas has the keyboard, mid-edit or
+  idle, whatever a receiver claims (owner rulings 2026-11-19 and 2026-11-20): `BrowserInputBridge._leavesThePage`,
+  asked by both keydown listeners, over one family-free table (`pageLeavingChords`: a Mac browser's Back
+  and Forward on Cmd+Left/Right and Cmd+[ / ] and its home page on Shift+Cmd+H, a PC's Back and Forward on
+  Alt+Left/Right and its home page on Alt+Home). A keydown is spelled Shift first, then as the caret spells
+  a chord (`CaretWdgt.chordOf`, so a non-Latin layout's Shift+Cmd+Р at KeyH is Shift+Cmd+H), and must
+  match EXACTLY, so a modifier more or fewer is another chord: Shift+Cmd+[ and Cmd+Option+Left (tab
+  switches), Cmd+H (a Mac's Hide) and Cmd+C/V/X (their default fires the clipboard events) stay the
+  browser's. Backspace, a Back key in several browsers, is kept off on the canvas always. The
+  rule covers keys only: the toolbar's Back and Home and the mouse's back button stay the browser's (whether the
   wheel listener's `preventDefault` also keeps a history swipe off is unmeasured), and no `beforeunload`
   guard asks.
 - The test harness pins "mac" on every test's world (`WorldTestSupport._afterWorldResetNoSettle`), as

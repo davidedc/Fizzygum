@@ -119,8 +119,9 @@ class CaretWdgt extends BlinkerWdgt
   # Ctrl+Z is the key marked Z, and by the key's place where it is any other character and its code names one, so
   # Ctrl+Я on a Russian layout is Ctrl+Z.
   # The browser bridge asks me through verbFor too (actsOnKeyAsCommand), to keep the browser's own default (the page's
-  # scroll on Home and End, for one) off every key I act on while I am live; the browser's history chords (Back on a
-  # Mac's Cmd+Left, on a PC's Alt+Left) it keeps off whether or not I am (BrowserInputBridge._navigatesHistory).
+  # scroll on Home and End, for one) off every key I act on while I am live; the browser's page-leaving chords (Back on
+  # a Mac's Cmd+Left, on a PC's Alt+Left; the home page on a PC's Alt+Home, on a Mac's Shift+Cmd+H) it keeps off
+  # whether or not I am (BrowserInputBridge._leavesThePage), reading each with my chord spelling (chordOf).
   @keyVerbs:
     "ArrowLeft": "goLeft"
     "ArrowRight": "goRight"
