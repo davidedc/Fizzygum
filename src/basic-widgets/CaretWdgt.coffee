@@ -115,8 +115,12 @@ class CaretWdgt extends BlinkerWdgt
   #     reach lands (a Mac: Option+Backspace and Option+Delete a word, Cmd+Backspace to the line's start; a PC:
   #     Ctrl+Backspace and Ctrl+Delete a word), one character where that move goes nowhere; a PC's Alt+Backspace
   #     stays Backspace, as its Alt+Left stays Left.
-  # The browser bridge asks me through verbFor too (actsOnKeyAsCommand), to keep the browser's own default (Back on
-  # Cmd+Left, on a PC's Alt+Left; the page's scroll on Home and End) off every key I act on while I am live.
+  # A chord's character (_chordCharacterOf) goes by the letter where the key is an ASCII letter or digit, so QWERTZ's
+  # Ctrl+Z is the key marked Z, and by the key's place where it is any other character and its code names one, so
+  # Ctrl+Я on a Russian layout is Ctrl+Z.
+  # The browser bridge asks me through verbFor too (actsOnKeyAsCommand), to keep the browser's own default (the page's
+  # scroll on Home and End, for one) off every key I act on while I am live; the browser's history chords (Back on a
+  # Mac's Cmd+Left, on a PC's Alt+Left) it keeps off whether or not I am (BrowserInputBridge._navigatesHistory).
   @keyVerbs:
     "ArrowLeft": "goLeft"
     "ArrowRight": "goRight"
@@ -149,25 +153,36 @@ class CaretWdgt extends BlinkerWdgt
       "Ctrl+z": "undo"
       "Ctrl+y": "redo"
 
-  # a chord as the tables spell it: its modifiers, then the key (a one-character key in lower case, so Shift+Cmd+Z
-  # is "Meta+z" with Shift held); undefined when no Ctrl, Alt or Cmd is held
-  @chordOf: (key, ctrlKey, altKey, metaKey) ->
+  # a chord as the tables spell it: its modifiers, then its key's character (_chordCharacterOf, in lower case, so
+  # Shift+Cmd+Z is "Meta+z" with Shift held) or a named key's name; undefined when no Ctrl, Alt or Cmd is held
+  @chordOf: (key, code, ctrlKey, altKey, metaKey) ->
     return undefined unless ctrlKey or altKey or metaKey
     (if ctrlKey then "Ctrl+" else "") + (if altKey then "Alt+" else "") + (if metaKey then "Meta+" else "") +
-      (if TextSlots.isOneCharacter key then key.toLowerCase() else key)
+      CaretWdgt._chordCharacterOf key, code
+
+  # the character a chord reads its key as: a key that is an ASCII letter or digit is itself, so an ASCII letter goes
+  # by the letter wherever it sits (QWERTZ's "z", at the code KeyY, is z); any other key that is one character is the
+  # character its CODE names where the code names one (_characterNamedByCode), so it goes by the key's place (a
+  # Russian "я", at the code KeyZ, is z; so is a Latin layout's own non-ASCII letter, a Czech "ž" at Digit6 is 6), and
+  # itself where it does not (a "[" or an "ä" at Quote); each in lower case. A named key (Home, ArrowLeft, Process,
+  # Dead) is its name, whatever its code (a NumLock-off Home at Numpad7 is Home).
+  @_chordCharacterOf: (key, code) ->
+    return key unless TextSlots.isOneCharacter key
+    return key.toLowerCase() if /^[A-Za-z0-9]$/.test key
+    CaretWdgt._characterNamedByCode(code) ? key.toLowerCase()
 
   # the verb I run for a key pressed with these modifiers on a keyboard of this family, or undefined where I do not
   # act on it as a command (typing, the keys processKeyDown's switch reads, a chord of another family)
-  @verbFor: (key, ctrlKey, altKey, metaKey, family) ->
-    CaretWdgt.chordVerbs[family]?[CaretWdgt.chordOf key, ctrlKey, altKey, metaKey] ?
+  @verbFor: (key, code, ctrlKey, altKey, metaKey, family) ->
+    CaretWdgt.chordVerbs[family]?[CaretWdgt.chordOf key, code, ctrlKey, altKey, metaKey] ?
       (CaretWdgt.keyVerbs[key] unless ctrlKey or metaKey)
 
   # whether I act on this key as a COMMAND, asked of every keyboard receiver by the browser bridge so that the
   # browser's own default stays off such a key (BrowserInputBridge._aKeyboardReceiverActsOnAsCommand): a key that has
   # a verb for my person's keyboard family, while I am the world's live caret -- a copy of me, riding a copied
   # container, joins the receivers too and claims nothing.
-  actsOnKeyAsCommand: (key, ctrlKey, altKey, metaKey) ->
-    @ is world.caret and (CaretWdgt.verbFor key, ctrlKey, altKey, metaKey, world.user.keyboardFamily)?
+  actsOnKeyAsCommand: (key, code, ctrlKey, altKey, metaKey) ->
+    @ is world.caret and (CaretWdgt.verbFor key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily)?
 
   # WHETHER A KEYSTROKE MAY TYPE, rather than be a chord (one the tables do not name does nothing): with neither Ctrl
   # nor Cmd held, or as AltGr on a PC. Windows reports AltGr as Ctrl+Alt, so on a PC a key that is one character
@@ -200,7 +215,7 @@ class CaretWdgt extends BlinkerWdgt
     #   https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
     #   https://w3c.github.io/uievents/tools/key-event-viewer.html
 
-    verb = CaretWdgt.verbFor key, ctrlKey, altKey, metaKey, world.user.keyboardFamily
+    verb = CaretWdgt.verbFor key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily
     if verb?
       @[verb] shiftKey
     else if CaretWdgt.keystrokeMayType key, code, ctrlKey, altKey, metaKey, world.user.keyboardFamily

@@ -740,12 +740,13 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
 
   # whether I act on this key as a COMMAND, asked of every keyboard receiver by the browser bridge so that the
   # browser's own default stays off such a key (BrowserInputBridge._aKeyboardReceiverActsOnAsCommand): an arrow,
-  # while the keys are mine. I move my selection on it whatever modifier is held, so a Mac browser's Back on
-  # Cmd+Left, a PC's on Alt+Left and the page's scroll must stay off it. Tab, space and Backspace already are, on
-  # every page (BrowserInputBridge._keydownDefaultIsPrevented); my other keys have no default to keep off in the
-  # browsers the suite runs (Chrome, Safari). The arrows' "whatever modifier" is read in two places, here and in
+  # while the keys are mine. I move my selection on it whatever modifier is held, so the page's scroll must stay off
+  # it; the key's code, which every receiver is asked with, tells me nothing more. Tab, space, Backspace and the
+  # browser's history chords (Back on a Mac's Cmd+Left, on a PC's Alt+Left) already are, on every page
+  # (BrowserInputBridge._keydownDefaultIsPrevented); my other keys have no default to keep off in the browsers the
+  # suite runs (Chrome, Safari). The arrows' "whatever modifier" is read in two places, here and in
   # _processKeyWhileSelectingNoSettle: a rule on what a modified arrow does changes both.
-  actsOnKeyAsCommand: (key, ctrlKey, altKey, metaKey) ->
+  actsOnKeyAsCommand: (key, code, ctrlKey, altKey, metaKey) ->
     @_keysAreMine() and SimpleSpreadsheetWdgt.arrowMoves[key]?
 
   # the text widget the caret edits for this sheet: the formula bar's text when the edit is in the

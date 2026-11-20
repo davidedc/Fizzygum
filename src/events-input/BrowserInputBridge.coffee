@@ -93,12 +93,7 @@ class BrowserInputBridge
 
     @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener = (event) =>
       @world.inputEventsQueue.push KeydownInputEvent.fromBrowserEvent event
-
-      # the browser's own default is kept off: Backspace (in several browsers the "back button"), Tab (so every
-      # browser hands it to us rather than moving the focus), and every key a keyboard receiver acts on as a command
-      # (_aKeyboardReceiverActsOnAsCommand), as on my canvas. The key is read as the canvas's own keydown listener
-      # reads it, by `event.key`.
-      event.preventDefault() if event.key in ["Backspace", "Tab"] or @_aKeyboardReceiverActsOnAsCommand event
+      event.preventDefault() if @_virtualKeyboardKeydownDefaultIsPrevented event
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
       @inputDOMElementForVirtualKeyboardKeydownBrowserEventListener, false
@@ -207,31 +202,54 @@ class BrowserInputBridge
     canvas.addEventListener "gesturechange", @gesturechangeBrowserEventListener, false
 
 
-  # WHETHER THE BROWSER'S OWN DEFAULT for a keydown is kept off:
-  # - Backspace, outside a text field (or in a read-only or disabled one), is the browser's "back button"
-  #   (http://stackoverflow.com/a/2768256);
+  # WHETHER THE BROWSER'S OWN DEFAULT for a keydown on my canvas is kept off:
+  # - Backspace: in several browsers the "back button" (http://stackoverflow.com/a/2768256);
+  # - the browser's history chords (_navigatesHistory), whatever is being edited or has the focus, so none of these
+  #   chords takes the page Back or Forward while my canvas has the keyboard (the BrowserBack and BrowserForward keys,
+  #   and a mouse's back button, are not among them);
   # - space on my canvas scrolls the page (https://stackoverflow.com/a/22559917). Preventing it also stops the
   #   keypress event (just the keydown comes), which is why the keydown processes the space (stopPropagation
   #   instead, or as well, did not work);
   # - Tab on my canvas: browsers do special things with it;
   # - every key a keyboard receiver acts on as a COMMAND (_aKeyboardReceiverActsOnAsCommand).
   _keydownDefaultIsPrevented: (event) ->
-    if event.key == "Backspace"
-      d = event.srcElement or event.target
-      tag = d.tagName.toUpperCase()
-      inATextField = (tag == 'INPUT' and d.type.toUpperCase() in ['TEXT', 'PASSWORD', 'FILE', 'SEARCH', 'EMAIL', 'NUMBER', 'DATE']) or tag == 'TEXTAREA'
-      return if inATextField then (d.readOnly or d.disabled) else true
+    return true if event.key is "Backspace"
+    return true if @_navigatesHistory event
     return true if event.target == @world.worldCanvas and event.key in [" ", "Tab"]
     @_aKeyboardReceiverActsOnAsCommand event
 
+  # WHETHER THE BROWSER'S OWN DEFAULT for a keydown on the virtual keyboard's input is kept off: that input's own
+  # list, beside my canvas's (_keydownDefaultIsPrevented), with no space rule and Tab always. Backspace (in several
+  # browsers the "back button"), the browser's history chords (_navigatesHistory), Tab (so every browser hands it to
+  # us rather than moving the focus), and every key a keyboard receiver acts on as a command
+  # (_aKeyboardReceiverActsOnAsCommand), as on my canvas. The key is read as my canvas's listener reads it, by
+  # `event.key`.
+  _virtualKeyboardKeydownDefaultIsPrevented: (event) ->
+    event.key in ["Backspace", "Tab"] or (@_navigatesHistory event) or @_aKeyboardReceiverActsOnAsCommand event
+
+  # THE BROWSER'S HISTORY CHORDS, spelled as the macro toolkit spells a chord: a Mac browser's Back and Forward on
+  # Cmd+Left/Right and Cmd+[ / ], a PC browser's on Alt+Left/Right. One list for every page, whatever keyboard family
+  # the person holds (User.keyboardFamily): which keys go Back is a fact of the browser, and none of them has another
+  # default on my canvas (Alt+Left, a PC's Back, does nothing on a Mac's).
+  @historyChords: ["Meta+ArrowLeft", "Meta+ArrowRight", "Meta+[", "Meta+]", "Alt+ArrowLeft", "Alt+ArrowRight"]
+
+  # whether a keydown is one of the browser's history chords (historyChords): its key held with Cmd alone or Alt
+  # alone. Another modifier with them makes another chord, the browser's own too (Shift+Cmd+[ and Cmd+Option+Left
+  # switch tabs), and Cmd+C, Cmd+V and Cmd+X keep their default: it fires the clipboard events my listeners read.
+  _navigatesHistory: (event) ->
+    return false if event.shiftKey or event.ctrlKey or (event.metaKey and event.altKey)
+    modifier = if event.metaKey then "Meta+" else if event.altKey then "Alt+"
+    modifier? and (modifier + event.key) in BrowserInputBridge.historyChords
+
   # whether a keyboard receiver (world.keyboardEventsReceivers) acts on this key as a COMMAND, so that the browser's own
-  # default must stay off it, whichever of my two listeners (my canvas's, the virtual keyboard's input) it reaches:
-  # Cmd+Left is Back to a Mac browser, Alt+Left to a PC's, the arrows, Home and End scroll the page. Each receiver
-  # answers for itself (actsOnKeyAsCommand): a live caret through CaretWdgt.verbFor, the one definition its own
-  # keystroke handling reads too; a spreadsheet in selection mode for the arrows it moves on. Typing is never one.
+  # default must stay off it, whichever of my two listeners (my canvas's, the virtual keyboard's input) it reaches: the
+  # arrows, Home and End scroll the page. Each receiver answers for itself (actsOnKeyAsCommand, asked with the key and
+  # its code): a live caret through CaretWdgt.verbFor, the one definition its own keystroke handling reads too; a
+  # spreadsheet in selection mode for the arrows it moves on. Typing is never one. The browser's history chords stay
+  # off whether or not a receiver claims them (_navigatesHistory).
   _aKeyboardReceiverActsOnAsCommand: (event) ->
     Array.from(@world.keyboardEventsReceivers).some (receiver) ->
-      receiver.actsOnKeyAsCommand?(event.key, event.ctrlKey, event.altKey, event.metaKey) is true
+      receiver.actsOnKeyAsCommand?(event.key, event.code, event.ctrlKey, event.altKey, event.metaKey) is true
 
   _initKeyboardEventListeners: ->
     canvas = @world.worldCanvas

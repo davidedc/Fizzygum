@@ -406,7 +406,9 @@ class MacroToolkit
     # the "code" is the physical key; a 1:1 key->code is fine for synthetic events
     # (Shift uses "ShiftLeft" to match syntheticEventsStringKeys_InputEvents) -- except where a
     # rule reads the code: CaretWdgt.keystrokeMayType tells a PC's AltGr character from a
-    # Ctrl+Alt chord by it, so a test of that queues KeydownInputEvents with real codes ("KeyA").
+    # Ctrl+Alt chord by it, and CaretWdgt.chordOf (_chordCharacterOf) reads a chord on a key that
+    # is no ASCII letter or digit by the place its code names ("Meta+я" sent here carries the code
+    # "я" and finds no verb), so a test of either queues KeydownInputEvents with real codes ("KeyA").
     code = if key == "Shift" then "ShiftLeft" else key
     @queueInputEvent new KeydownInputEvent key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime
     @queueInputEvent new KeyupInputEvent  key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime + millisecondsBetweenKeys

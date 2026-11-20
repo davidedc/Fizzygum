@@ -452,7 +452,12 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   Option+Delete word deletes, Cmd+Backspace to the line's start, Cmd+A, Cmd+Z; a PC's Ctrl+Home/End,
   Ctrl+Left/Right, Ctrl+Backspace and Ctrl+Delete word deletes, Ctrl+A, Ctrl+Z, Ctrl+Y), then `keyVerbs`
   (every family's arrows, Home and End, with any modifier but Ctrl or Cmd: a PC's Alt+Left is Left).
-  STRICT: a Mac's Ctrl chords and a PC's Cmd chords do nothing. A word jump to the right lands at the
+  STRICT: a Mac's Ctrl chords and a PC's Cmd chords do nothing. A chord's character
+  (`CaretWdgt._chordCharacterOf`) is the key's own when the key is an ASCII letter or digit, else the
+  character its `code` names (`_characterNamedByCode`, below), else the key: a Latin layout goes by the
+  letter (QWERTZ's Ctrl+Z is the key marked Z), any other by the key's place (Ctrl+Я on a Russian layout
+  is Ctrl+Z), as Windows does; `verbFor` and every receiver's `actsOnKeyAsCommand` are asked with the key
+  and its code. A word jump to the right lands at the
   word's END on a Mac, at the next word's START on a PC (`TextSlots.wordEndAfter` / `wordStartAfter`; a
   word is TextSlots's); a delete chord deletes from the caret to where its family's move of the same
   reach lands (one character where that move goes nowhere). Both families redo with Shift and their undo
@@ -478,9 +483,17 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   receiver's `actsOnKeyAsCommand`: the world's live caret's verbs through `verbFor`; a spreadsheet's
   arrows while it is the focus, shows on a screen and is in selection mode, which it moves on whatever modifier is
   held; a focused sheet put away, its window collapsed or closed, stays the focus but takes no key, so its arrows'
-  defaults are not kept off). That keeps off Back on a
-  Mac's Cmd+Left and a PC's Alt+Left, and the page's scroll on the arrows, Home and End; typing is never
+  defaults are not kept off). That keeps off the page's scroll on the arrows, Home and End; typing is never
   prevented.
+- The browser's HISTORY CHORDS stay off whenever the world's canvas has the keyboard, mid-edit or idle,
+  whatever a receiver claims (owner ruling 2026-11-19): `BrowserInputBridge._navigatesHistory`, asked by
+  both keydown listeners, over one family-free table (`historyChords`: a Mac browser's Back and Forward on
+  Cmd+Left/Right and Cmd+[ / ], a PC's on Alt+Left/Right), each with its one modifier and no other, so
+  Shift+Cmd+[ and Cmd+Option+Left (tab switches) and Cmd+C/V/X (their default fires the clipboard events)
+  stay the browser's. Backspace, a Back key in several browsers, is kept off on the canvas always. The
+  rule covers keys only: the toolbar's Back and the mouse's back button stay the browser's (whether the
+  wheel listener's `preventDefault` also keeps a history swipe off is unmeasured), and no `beforeunload`
+  guard asks.
 - The test harness pins "mac" on every test's world (`WorldTestSupport._afterWorldResetNoSettle`), as
   it pins the screen's extent; a test exercises a PC by setting `world.user.keyboardFamily = "pc"`. That
   the prevention stops a headed browser's Back is a hand check: a headless browser has no accelerators.
