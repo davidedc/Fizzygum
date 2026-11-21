@@ -322,6 +322,23 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] **`xor` is binary on partial alpha** (SWCanvas), and `lighter` and the blend modes fall back to source-over (off by up to 220). Fizzygum uses only source-over, source-in and destination-out.
 - [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
 
+### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
+- [ ] U3: four facts cut from `Fizzygum-tests/CLAUDE.md` by byte count, three tests' prose that stopped naming `catchesPointerAt`, a layering-doc shape bent to hold one site, two stale sanction pointers — small.
+- [ ] U4: four platform calls respelled for unresolved-sends (one dropped a Duplicator hardening), eleven `new (window["X"])` sites, and `isDesktopShortcut`, alive only for two rigs — small.
+- [ ] U5: `isVisuallyTransformed` duplicates a private twin made so a macro could call it; `boxPresentedToOverlays` has its default written at four readers — small, inspector churn.
+- [ ] U6: three checks take their expected value from the rule they judge, or dodge a finger failure: the serialization rig's pane list, the thumb-highlight test, the pointer-cancel test's mouse-only declaration — small.
+- [ ] U7: two dev-menu rows throw when clicked before anything is serialised, excused in the menu sweep's `KNOWN` table; the bouncer's `return unless @parent?` guards the stepping defect filed in this file — small.
+- [ ] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium.
+- [ ] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn.
+- [ ] U11: `WorldWdgt.loadWorldSnapshot` stays at complexity 67 because its split adds methods to a class at its method ceiling — medium.
+- [ ] U12: `WorldInventory.takeInventory` stays at complexity 129 because a split's child above 15 could not be recorded — medium.
+- [ ] U13: six type tests in disguise: a soak on `updateVisibility`, one on `_materializedBySugar`, and `isDivider`, `isGlassBoxWrapper`, `isGlassBoxLid`, `isLayoutChrome` — small each.
+- [ ] U14: five methods stay public and a `setExtent` sits in a constructor because layering rule [A] has no per-method marker: the canonical NoSettle shape where it exists, else the owner rules — medium.
+- [ ] U15: the list-row macro verb keeps a drag, nudges and a wheel so old shots keep their offsets; a class-inspector test changed its example class so a row shows — medium, a recapture.
+- [ ] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium.
+- [ ] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first.
+- [ ] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium.
+
 ### Gate audit 2026-11-16 — residue (no plan doc; detail in `archive/backlog-open-items-detail.md`)
 - [ ] **A firing gate says how to go quiet, never when the quiet fix is wrong** — ratchets steered sessions to inline helpers, home code by a ceiling, make a CLAUDE.md line false; many gates have a cheap quiet fix that is a contortion; each should print why it exists and when a raise or sanction is right — medium.
 - [ ] **No audit has looked for shapes chosen only to quiet a non-ratchet gate** — search the session transcripts and git for each gate's quiet-fix spelling (an `if X?` guard, a stub, a deletion, a tier rename, a new exemption) and re-judge each find on its merits — medium.
