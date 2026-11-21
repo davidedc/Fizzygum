@@ -220,8 +220,7 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §8/top banner: S2 Tier 2, S6b, F1 (precompiled test-harness boot) still unlanded
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 
-### `plans/scroll-indicators-plan.md` — one placement rule for a scroll indicator, the document's margin, and the spreadsheet's own
-AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b and U2b (added on the owner's word), U2, U3, U4, U4b to U4e, U5 and U6 are closed (the plan's ledger); U4b to U4e were added on the owner's word.
+### `archive/scroll-indicators-plan.md` — one placement rule for a scroll indicator, the document's margin, and the spreadsheet's own (CLOSED 2026-11-21; U1–U6 and U1b, U2b, U4b–U4e done, see its ledger)
 - [ ] A finger's scroll that starts on ANOTHER text of a document being edited ends the edit: the press is read as acting elsewhere (`stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere`) before the drag turns into a scroll (probed). Reachable, low. Detail: the plan's §U3.
 - [ ] A payload released over a scrolled viewport's FAT bar (a carry with no button held: the "Pick up" row, then a click) lands in the plane displaced by the scroll offset: `ViewportWdgt.add` forwards it unmapped. Seen through U2's plant 4 (236 px off). Reachable, low. Detail: the plan's §U2.
 - [ ] An inert child (a highlight, a drag outline) added inside a tracking island re-lays every tracking ancestor (`Widget._invalidateLayout` does not ask `isLayoutInert`): idempotent, one per hover over an island target. Reachable, low. Detail: the plan's §U4b.

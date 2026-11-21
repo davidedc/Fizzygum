@@ -1,5 +1,13 @@
 # Scroll indicators — one placement rule, the document's margin, and the spreadsheet's own
 
+**COMPLETE 2026-11-21.** Executed by its unattended loop, 2026-11-20 to 21, in orchestration mode: U1 to U6 and the
+owner-added U1b, U2b, U4b, U4c, U4d and U4e all CLOSED, each by a green `fg gauntlet`, none parked; the last unit's
+heads were Fizzygum `18d5149b` and Fizzygum-tests `ddefa7873`. What it built is described in the present tense in
+`docs/architecture/viewports-and-planes.md` ("Scroll indicators"), `docs/architecture/transforms.md` and
+`src/spreadsheet/CLAUDE.md`. The items its units filed stay open in `docs/BACKLOG.md` under this plan's heading,
+each naming the section here that holds its detail. The text below is the plan as executed; each unit's Landed
+paragraph is its record.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 AUTHORED 2026-11-19 against Fizzygum master `99d1540e` and Fizzygum-tests master `1cfecb761` (430 SystemTests, build
 FRESH, last gauntlet 20/20). Executed by a loop whose process (the per-unit cycle, the grants, the park and stop rules,
@@ -1233,7 +1241,7 @@ rigs to what is read before the gauntlet (they are gauntlet legs too).
 
 The loop's prompt is `Fizzygum-tests/.scratch/scroll-indicators-loop/LOOP-PROMPT.md`. To run one unit by hand
 instead: "Read `/Users/davidedellacasa/code/Fizzygum-all/Fizzygum-tests/.scratch/scroll-indicators-loop/BRIEF.md`,
-then `Fizzygum/docs/plans/scroll-indicators-plan.md`; run `fg status`; execute unit U<N> by the BRIEF's cycle and
+then `Fizzygum/docs/archive/scroll-indicators-plan.md`; run `fg status`; execute unit U<N> by the BRIEF's cycle and
 stop at its commit, which you propose and do not make."
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
