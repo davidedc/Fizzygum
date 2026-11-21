@@ -2023,18 +2023,20 @@ class Widget extends TreeNode
     island._destroyNoSettle()                                    # drop the now-empty island (I was inserted before it)
 
   # ---------------------------------------------------------------------------
-  # Affine transforms (§6 Phase 4D-2a): PICK-OUT. When a widget inside a non-identity island is grabbed,
-  # resolve the FIGURE that comes onto the hand. Two cases (the grab dispatch calls this on the loose unit
-  # the normal grabsToParentWhenDragged rules already picked — a window title resolves to the window, a
-  # loose content child to the child):
+  # Affine transforms (§6 Phase 4D-2a): THE STANDING FIGURE of a pick-up. When a widget is grabbed,
+  # resolve the FIGURE that already stands for it on the hand's behalf (the grab dispatch calls this on the
+  # loose unit the normal grabsToParentWhenDragged rules already picked — a window title resolves to the
+  # window, a loose content child to the child):
   #   • I am my innermost island's SOLE content ⇒ grabbing me ≡ grabbing that island (and any outer islands
   #     it is in turn the sole content of), so REUSE the existing island (climb to the outermost sole-content
   #     island) — no churn, Phase-1's whole-figure grab. macroTransformFrameScaledDragged relies on this.
-  #   • I am a genuine SUB-part (my innermost island wraps a larger subtree) ⇒ extract me and wrap me in a
-  #     FRESH island carrying the accumulated similitude (_pickOutRotatedFigureNoSettle).
-  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: the grab's own settle covers
-  # the extraction's re-fit of my former container (the drag's grab, or the one pickUp makes for a menu pick-up).
-  _resolvePickOutFigureNoSettle: ->
+  #   • I am a genuine SUB-part (my innermost island wraps a larger subtree) ⇒ no figure stands for me yet, so
+  #     I answer none: _resolvePickUpFigure extracts me into a FRESH island carrying the accumulated
+  #     similitude (_pickOutRotatedFigureNoSettle), inside a settle of its own.
+  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: what the reuse marks (the claim
+  # reflow of the fold below, which turns the reused island by its ancestors' transform) rides the grab's first
+  # settle, declared intentional by my caller (_resolvePickUpFigure).
+  _resolveStandingFigureNoSettle: ->
     island = @_enclosingNonIdentityIsland()
     if !island?
       # paint-time scroll (plan Phase 2c): grabbed OUT of a scrolled plane (no island on my
@@ -2096,7 +2098,8 @@ class Widget extends TreeNode
           # if done bare), and this is a NoSettle method that must not self-settle (rule [G]) — so the
           # settle belongs at the non-NoSettle caller, NOT here. Dematerialize preserves the content's
           # position and the sugar wrapper hugs its content, so positioning the wrapper positions the
-          # content. (The other pick-out paths reparent into a FRESH orphan island, which is audit-exempt.)
+          # content. (A sub-part's extraction settles at that caller too: it re-homes into a FRESH orphan
+          # island, but out of an attached holder, which hears it leave and may build.)
           figure._applyMoveTo screenCentreBefore.round().subtract figure.extent().floorDivideBy 2
           return figure
         # non-identity total: post-reparent the figure renders its own map at its numeric bounds — home
@@ -2105,8 +2108,8 @@ class Widget extends TreeNode
         centreAfter = figure.transformSpec.mapPoint(figure.center(), figure.bounds)
         figure._applyMoveTo figure.position().add (screenCentreBefore.subtract centreAfter).round()
       return figure
-    # genuine sub-part: extract + wrap in a fresh island
-    return @_pickOutRotatedFigureNoSettle()
+    # a genuine sub-part: no figure stands for me yet (my caller extracts me, inside a settle)
+    return undefined
 
   # Affine transforms (§6 Phase 4D-2a): extract me from my island chain into a FRESH sugar-style island that
   # carries the ACCUMULATED similitude of ALL my ancestor islands, positioned so I stay screen-coincident
@@ -2153,8 +2156,8 @@ class Widget extends TreeNode
   # Affine transforms (§7.5 Bug B + latent 2, Option B): the outermost island of which I am (transitively)
   # the SOLE content — sugar or explicit — i.e. the whole "figure" that a RE-HOME (close-to-bin,
   # reopen, a future "send to desktop") must move AS A UNIT so its rotation/scale travels with it — or ME
-  # when I am not island-wrapped. This is the re-home SIBLING of the pick-OUT verb
-  # _resolvePickOutFigureNoSettle (4D-2a): pick-OUT may EXTRACT a sub-part onto the hand; re-home never
+  # when I am not island-wrapped. This is the re-home SIBLING of the pick-up's figure resolution
+  # _resolvePickUpFigure: pick-OUT may EXTRACT a sub-part onto the hand; re-home never
   # extracts — it moves the intact figure. ONE greppable home for every re-home site: route
   # close/reopen/eject through this, NEVER inline the climb. Pure (no mutation, no settle). Explicit
   # sole-content islands travel too (Option B): the island IS the authored transform, so leaving it behind
@@ -2251,14 +2254,24 @@ class Widget extends TreeNode
 
   # Affine transforms (§6 Phase 4D-2a): the shared figure resolution for BOTH pick-up entry points — the
   # drag pipeline (ActivePointerWdgt.determineGrabs) and the menu "Pick up" item (pickUpMenuAction) — so
-  # the two cannot drift. Two steps:
-  #   1. Resolve the FIGURE that comes onto the hand (_resolvePickOutFigureNoSettle): when I am grabbed from
-  #      inside a non-identity island, either REUSE the existing island (I am its sole content — Phase-1's
-  #      whole-figure grab, no churn) or a FRESH island carrying the accumulated N-deep similitude (I am a
-  #      genuine sub-part, extracted + re-homed screen-coincident). Off any island this returns me UNCHANGED
-  #      ⇒ byte-identical dormant. NoSettle: the extraction's re-fit of my former container rides the
-  #      caller's own grab settle (the drag's @grab; pickUpMenuAction's pickUp, whose grab's first settle flushes it).
-  #   2. §7.5 Bug F (reparent-transparency): a drop→pick round-trip can leave an IDENTITY compensating sugar
+  # the two cannot drift. Three steps:
+  #   1. The FIGURE that already stands for me (_resolveStandingFigureNoSettle): off any island, me
+  #      (byte-identical dormant); in one, the existing island I am the sole content of (the whole figure
+  #      grabbed as one, no churn), its ancestors' transform folded into it. DECLARED deferred settle: the
+  #      fold calls the island's _set*NoSettle cores, whose claim reflow (_invalidateLayout) fires now that
+  #      sugar figures default to 'footprint', and that push rides the caller's own grab settle (the drag's
+  #      @grab, pickUpMenuAction's pickUp). The declaration window only marks the push intentional to the
+  #      end-of-cycle capstone audit, and changes no behaviour (the reason the 'footprint' default gave it:
+  #      docs/archive/claimsspace-footprint-default-and-scroll-reachability-plan.md).
+  #   2. A genuine SUB-part has no figure yet, so I am EXTRACTED into a FRESH island carrying the
+  #      accumulated N-deep similitude, re-homed screen-coincident (_pickOutRotatedFigureNoSettle). That
+  #      core takes me OUT of the attached holder I stand in, so it dispatches the holder's removal
+  #      notification (_reactToChildRemoved), which the holder may answer by BUILDING -- a window shows its
+  #      default content again, a Maker a fresh payload whose constructors settle -- and a constructor
+  #      defers only to a settle that is OPEN: outside one it lays the whole world out, in the middle of the
+  #      holder's rebuild. So I settle round the core that dispatches that notification; a declaration
+  #      window is no settle.
+  #   3. Reparent transparency: a drop→pick round-trip can leave an IDENTITY compensating sugar
   #      wrapper (the -deg wrapper's spec folded to identity against its +deg container on pick-out).
   #      DISSOLVE it — self-settling (_unwrapIfIdentitySugar) — so the BARE content is what goes on the hand,
   #      the sibling of the drop side's post-add self-settling unwrap. Guarded so it fires ONLY for the
@@ -2266,18 +2279,14 @@ class Widget extends TreeNode
   #      figure is non-identity. (The dissolve reparents into the ATTACHED parent — a settling layout
   #      mutation — which is why THIS is a non-NoSettle helper and the pick-out resolver stays NoSettle.)
   # Returns the figure to grab.
-  # DECLARED deferred settle (claimsSpace arc S2): step 1's Bug-F ancestor-fold calls the island's
-  # _set*NoSettle cores, whose claim reflow (_invalidateLayout) fires now that sugar figures
-  # default to 'footprint' — an off-settle push the caller's own grab settle carries (the drag's
-  # @grab, pickUpMenuAction's pickUp), exactly as step 1's contract above always stated. The
-  # declaration window makes that contract explicit to the end-of-cycle capstone audit.
   _resolvePickUpFigure: ->
-    figure = @_deferredSettleDeclare => @_resolvePickOutFigureNoSettle()
+    figure = @_deferredSettleDeclare => @_resolveStandingFigureNoSettle()
+    # throws if reached inside an open settle's mutation window; neither caller is (both run from event handling)
+    figure ?= @_settleLayoutsAfter => @_pickOutRotatedFigureNoSettle()
     if figure._materializedBySugar and figure.transformSpec?.isIdentity()
       # nosettle-sanctioned: called ONLY from event-stream contexts (the drag pipeline determineGrabs and
-      # the menu pickUpMenuAction), never mid-pass, so the deliberate self-settling dissolve is correct —
-      # and keeping it self-settling (rather than the NoSettle core) preserves determineGrabs' exact,
-      # byte-identical pre-extraction cadence (this whole two-step was inline there before).
+      # the menu pickUpMenuAction), never mid-pass, so the deliberate self-settling dissolve is correct:
+      # it settles on its own before the grab starts, as the extraction above does.
       figure = figure._unwrapIfIdentitySugar()
     figure
 
@@ -4503,7 +4512,7 @@ class Widget extends TreeNode
     # Affine transforms (§6 Phase 4D-2a): the Phase-1-symmetric escalation guard that USED to force a
     # widget inside a non-identity island to grab-to-parent (so a float-drag lifted the whole island) is
     # REMOVED — the loose unit is now resolved by the normal rules below, and ActivePointerWdgt's grab
-    # dispatch maps it to the on-hand figure via _resolvePickOutFigureNoSettle (reuse the existing island
+    # dispatch maps it to the on-hand figure via _resolvePickUpFigure (reuse the existing island
     # when the grabbed widget is its sole content — the Phase-1 whole-figure grab, no jump — or extract +
     # re-wrap a genuine sub-part). This is what lets you pick a SUB-widget OUT of an island. (Non-float
     # drags — sliders/handles — are unaffected: findFirstLooseWidget checks nonFloatDragging FIRST.)
@@ -4858,7 +4867,7 @@ class Widget extends TreeNode
     # drag pointer through screenPointToMyPlane, so the dragged edge follows the island's rotated/
     # scaled axes. The Phase-1 refusal guard that used to `return` here is therefore lifted. (Float-
     # drag of island content resolves the on-hand figure via ActivePointerWdgt.determineGrabs →
-    # _resolvePickOutFigureNoSettle — reuse the island when I am its sole content, else pick-out;
+    # _resolvePickUpFigure — reuse the island when I am its sole content, else pick-out;
     # the old Phase-1 grabsToParentWhenDragged island-escalation was removed by 4D-2a.)
     if @isFreeFloating()
       # idempotent: this is reachable while my handles are already up (the
@@ -6026,6 +6035,11 @@ class Widget extends TreeNode
   # is > 0, so the off-settle invalidates the core schedules are marked INTENTIONAL and the end-of-cycle debug
   # check (WorldWdgt.auditUndeclaredEndOfCycle) does NOT flag them as "careless". Every *DeferredSettle entrypoint
   # wraps its core through here. Nestable; returns the core's value. (Default-off audit => ~zero overhead.)
+  #   A declaration only MARKS: it is no settle, so a constructor reached inside it (an orphan's settle defers
+  # only to an OPEN one) lays the whole world out there and then. So a core that takes a widget out of a holder
+  # that ANSWERS its removal (_reactToChildRemoved, a notification the holder may answer by building) runs inside
+  # a settle, never in a declaration window (Widget._resolvePickUpFigure's extraction). The drop's re-expression
+  # (ActivePointerWdgt.drop) may stay declared: it re-homes the payload out of the hand, which answers no removal.
   _deferredSettleDeclare: (coreThunk) ->
     return coreThunk() unless world?
     world._deferredSettleDeclarationDepth += 1

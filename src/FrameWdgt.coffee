@@ -1006,8 +1006,7 @@ class FrameWdgt extends ClippingWdgt
 
   # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
   # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
-  # once my contents has left me, inside the verb that took it, whose settle flushes it (or, for a
-  # "Pick up" of my content while I am tilted, the grab's first settle: see _reactToChildRemoved) -- a
+  # once my contents has left me, inside the settle of the verb that took it, which flushes it -- a
   # self-settling setText would open a nested settle mid-pass. (The label is fitted to its box, so
   # the swap moves no geometry of its own; _retitleNoSettle re-lays the strip, whose arrange grades
   # the title.)
@@ -1184,11 +1183,11 @@ class FrameWdgt extends ClippingWdgt
   # ("Attach"), the bin (a nested window's "Close") or its own destroy -- re-homes it through
   # _addNoSettle or ends it through _destroyNoSettle, and each tells me once it is gone. So I show my
   # default content again after the fact, once per departure, inside the settle of the verb that took
-  # it -- with ONE exception: a "Pick up" of my content while I am tilted picks it out of my island's
-  # figure in the pick-up's declared deferred window, where no settle is open, and the grab's first
-  # settle flushes my marks. Nothing my own rebuild constructs settles, so that window is safe for me;
-  # a rebuild whose constructors settle (a Maker's payload) is exposed there. A hook run before the
-  # verb would answer an intent, and an intent can come to nothing: a busy hand takes nothing.
+  # it (a "Pick up" of my content while I stand in a rotated or scaled figure, my own island or one of a
+  # container I stand in, extracts it into an island of its own inside the pick-up's settle,
+  # Widget._resolvePickUpFigure), where what my rebuild constructs defers its own
+  # settle to that one -- a Maker's fresh payload among it. A hook run before the verb would answer an
+  # intent, and an intent can come to nothing: a busy hand takes nothing.
   #   Only a content that LEFT me: one re-added to me, or moved into a widget of mine (a band of my
   # own), is still mine, and is not replaced.
   #   Docked in a host's slot, I am a band, and a band keeps its thickness when its payload leaves,
@@ -1701,11 +1700,9 @@ class FrameWdgt extends ClippingWdgt
     # the placeholder I show next is a fresh one
     @defaultContents = new FrameContentsPlaceholderText
     @contents = @defaultContents
-    # Reached only from _reactToChildRemoved, inside the verb that took my contents. Rebuild through
-    # the non-settling core, so the marks ride that verb's settle instead of re-entering the public
-    # self-settler -- or, for a "Pick up" of my content while I am tilted, the declared deferred window
-    # the grab's first settle flushes, which is why nothing built here may settle. (window-rebuild
-    # follow-up)
+    # Reached only from _reactToChildRemoved, inside the settle of the verb that took my contents.
+    # Rebuild through the non-settling core, so the marks ride that settle instead of re-entering the
+    # public self-settler.
     @_buildAndConnectChildrenNoSettle()
     @_setEmptyWindowLabelNoSettle()
 

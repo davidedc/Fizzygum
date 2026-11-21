@@ -138,6 +138,13 @@ is a real recursion/hang, not purity: a container that re-invalidated itself mid
   cascade once. Reached from inside the flush walk itself it keeps the strict orphan-defer + throw. The lane is opt-in
   per entrypoint and gated by check-layering rule `[P]`.
 
+**A declaration is no settle.** `_deferredSettleDeclare` (§7's declared riders) only marks the pushes it covers
+intentional; it opens no mutation window, so an orphan's settle reached inside one flushes the whole world there and
+then. A core that takes a widget out of a holder that ANSWERS its removal (a removal notification the holder may answer
+by building: a window's default content, a Maker's fresh payload) runs inside a settle its dispatcher opens, never in a
+declaration window — the pick-up's extraction of a tilted figure's part included (`Widget._resolvePickUpFigure`). The
+drop's re-home of the carried payload off the hand into a fresh island may stay declared: the hand answers no removal.
+
 **The same figure, one step earlier: the enqueue-side orphan.** `_invalidateLayout`'s PARENTLESS-RECEIVER branch (§3)
 is the counterpart on the *invalidation* side rather than the settle side: a widget with no `@parent` marks itself
 (`__markForRelayout`) and returns — there is no ancestor to climb into, so the climb is structurally vacuous, and

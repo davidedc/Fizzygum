@@ -531,7 +531,11 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
   `_normalizePinnedAnchorNoSettle` first (the hand-carry pipeline assumes a slot-centre pivot). Public
   API with no menu item since arc 3 phase 7 — the one "Duplicate" item means copy-in-place.
 - **Pick up** (`pickUpMenuAction`) — `_resolvePickUpFigure` (the same resolution the drag pipeline's
-  `determineGrabs` uses, so a menu pick-up and a drag grab take the same thing), then `pickUp`.
+  `determineGrabs` uses, so a menu pick-up and a drag grab take the same thing), then `pickUp`. A genuine
+  sub-part is EXTRACTED into a fresh island inside a settle of the resolution's own: the holder it leaves hears it go
+  and may build (a window's default content, a Maker's fresh payload). A reused figure's transform fold is DECLARED
+  instead and rides the grab's first settle, which runs once the release has taken the figure out of its host's
+  layout.
 - **Save to file** (`saveToFile`) — serialize the figure, not the bare content: the Serializer
   clears the root's parent, and serializing bare content actually **throws** a `SerializationError`
   (the content still references its island). The filename stays derived from the content.

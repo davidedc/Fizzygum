@@ -1799,9 +1799,9 @@ class ActivePointerWdgt extends Widget
           # Affine transforms (§6 Phase 4D-2a): PICK-OUT + Bug-F identity-wrapper dissolve. Resolve the
           # FIGURE that comes onto the hand — reuse the sole-content island, extract a genuine sub-part into
           # a fresh island, or (off any island) return the widget UNCHANGED ⇒ byte-identical dormant — then
-          # dissolve an identity compensating sugar wrapper so the BARE content grabs. The whole two-step is
+          # dissolve an identity compensating sugar wrapper so the BARE content grabs. All three steps are
           # _resolvePickUpFigure, SHARED with the menu "Pick up" entry point (pickUpMenuAction) so the two
-          # cannot drift; its doc comment carries the full pick-out / Bug-F reasoning. Resolved HERE (once,
+          # cannot drift; its doc comment carries the full pick-out / dissolve reasoning. Resolved HERE (once,
           # at drag-start) so BOTH the grab below and the "pointer left its bounds, re-centre" re-grab
           # further down in this method operate on the SAME figure. It does NOT set switcherooHappened
           # (the fresh figure is already positioned to stay put, then follows the cursor via

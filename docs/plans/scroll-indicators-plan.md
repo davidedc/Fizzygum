@@ -22,8 +22,9 @@ Status:
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | CLOSED 2026-11-21 (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | CLOSED 2026-11-21 (§U4) |
 | U4b | A tilted window content's window keeps its size at its next arrange (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4b) |
-| U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | open (§U4c) |
+| U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4c) |
 | U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | open (§U4d) |
+| U4e | A stretchable panel's arrange places a child whose spec owns its placement (added by the owner 2026-11-21) | open (§U4e) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
 | U7 | Close: this plan archived, or left open with what parked | open (§U7) |
@@ -335,13 +336,14 @@ D10's last sentence ("its overlay scroll indicator over the items' right edge is
 ## 4. Units
 
 ### U-order
-U1 → U1b → U2 → U2b → U3 → U4 → U4b → U4c → U4d → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
+U1 → U1b → U2 → U2b → U3 → U4 → U4b → U4c → U4d → U4e → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
 document sits in its window. U1b needs U1 alone (it restores a step of U1's test) and nothing after
 it needs it; it stands before U3 so that a document's way out of its window can be played in a test. U2 edits
 `_barFrameAt` after U1 did. U3 needs U2's mechanism. U4 lifts what U1–U3
 left (if U2 or U3 PARKED, U4 lifts the code as it stands). U4b and U4c (added by the owner) fix two defects of a
 tilted window's content that U2b filed; they need no indicator unit and stand after U4, which was ready first. U4d
-(added by the owner) needs U4b: the window keeps its size round a tilted content before it crops it. U5 is
+(added by the owner) needs U4b: the window keeps its size round a tilted content before it crops it. U4e (added by
+the owner) is independent of every unit before it and stands after them. U5 is
 independent of U1–U4: its range helper is its own (§U4's Landed paragraph). U6 needs U4 and U5.
 
 ---
@@ -896,6 +898,27 @@ is weighed against that.
 
 **If parked:** filed, as U2b left it.
 
+**Landed 2026-11-21.** `Widget._resolvePickUpFigure` settles the EXTRACTION: `figure ?= @_settleLayoutsAfter =>
+@_pickOutRotatedFigureNoSettle()`. A genuine sub-part of a tilted figure is re-homed out of its attached holder inside a
+settle of the resolution's own, so the holder's removal notification (a Maker's reset) builds inside it and each fresh
+constructor defers its settle to that one; a reused figure's transform fold keeps its declaration (the claimsSpace
+arc gave the declaration that reason, and the Bug-F ruling keeps one-shot structural mutations out of declarations).
+The resolver that answers the standing figure or none is renamed to say so, `_resolvePickOutFigureNoSettle` →
+`_resolveStandingFigureNoSettle` (the owner granted the inspector recapture the rename needs: an inspector's member
+list shows it). The layering doc's second sanctioned settle shape names the pick-up's resolution; `layout.md` §2.3 states
+that a declaration is no settle. Measured on the product before this unit: a tilted Docs Maker's "Pick up" ran 7
+layout flushes inside the removal notification and the Maker shrank 600×400 → 52×129 (its fresh document 50×5),
+the picked-up payload's window spec re-armed, the capstone blind (every mark declared). Correction to U2b's caveat:
+settling the extraction changes the cadence of exactly the three tests that take that branch, not every tilted drag
+(a census of every resolution in the suite, both pointers; settling the whole resolution showed no jump either). No
+pixel moved. Proof: `SystemTest_macroTiltedMakerKeepsItsSizeWhenItsPayloadIsPickedUp` (L0–L4) failed exactly its
+twelve door reads on the unfixed product, both pointers, and passes with zero careless end-of-cycle pushes; two plants
+(the extraction declared again; a flush inside the notification) each trip exactly their reads; the capstone, settle
+and revisit gates pass on it and the four tests whose cadence moves; followers clean. Filed (this plan's BACKLOG
+section): a part picked out of a figure whose tilts cancel (a widget tilted −θ inside a panel tilted +θ) leaves an
+empty orphan island alive — the extraction builds an identity island, and the dissolve skips it while it has no
+parent (`Widget._dematerializeSugarIslandIfIdentityNoSettle`'s early return); the same before and after this unit.
+
 ### U4d — A window shows its content only inside its body
 
 **Added by the owner 2026-11-21**, after U4b's options picture
@@ -916,7 +939,45 @@ affine plan §4.9, the cyclic constraint); E (the picture scaled to fit: a conta
 affine plan's per-widget knob; banked as a per-widget opt-in if ever wanted); A alone (the chrome stays covered).
 Its cost: a tilted content's corners are cut where they cross the strips, its own controls included.
 
+**The halo (the owner's ruling, after a picture at 15° and 45°).** A tilted window content's own halo is cut with it
+where it crosses: a halo is the target's children, painted into its island (the affine plan's halo model), and every
+clipping container already cuts a child's halo; a world-level halo was weighed and set aside (it re-does the in-plane
+mapping by hand and paints a back widget's halo over the windows in front). Measured: the rotate handle stays
+reachable at 15° and 45° (its centre included); at 45° the move and corner-resize handles cannot be pressed; and a
+dragged-out content's halo is whole on the desktop. The content keeps its own halo handles (the owner chose this over
+offering an upright content's none); their resize half works under its window's dictation, filed.
+
 **If parked:** the overhang stays, filed.
+
+### U4e — A stretchable panel's arrange places a child whose spec owns its placement
+
+**Added by the owner 2026-11-21**, from U4b's gauntlet. **Needs U4d CLOSED or PARKED.** Research first:
+`Fizzygum-tests/.scratch/scroll-indicators-loop/u4e/`.
+
+**The defect, as read (seen once, never reproduced).** In U4b's gauntlet the menu sweep, running beside eight other
+legs, logged `LAYOUT_ERROR: … w.layoutSpec.grantedBoundsWithin is not a function` in a stretchable panel's arrange; it
+passed on the serial retry, and four sweeps alone were clean (the log:
+`Fizzygum-tests/.scratch/scroll-indicators-loop/u4b/menusweep-inwave-layout-error.log`). `StretchablePanelWdgt._reLayout`
+(`src/authoring/StretchablePanelWdgt.coffee` ~:129-136) asks `_rememberFractionalSituationInHoldingPanel` for a stretch
+record and then grants `w.layoutSpec.grantedBoundsWithin`; the recorder (`Widget.coffee` ~:2443) refuses a spec that
+OWNS placement (a corner-armed piece, "the one owning kind a CONSUMING holder can host"), so the grant meets a spec with
+no `grantedBoundsWithin`, and the throw aborts the panel's whole pass. The recorder's own comment says the arrange
+places such a widget FROM its spec. To find: the door that puts an owning child in a stretchable panel, and why only
+under load (a deterministic reproduction comes before any fix).
+
+**Found by the research (read; phase 2 measures).** The door is "Test menu" → "Attach with horizontal layout" onto a
+stretchable container, which hands its page the child with a division box; the throw is DETERMINISTIC, and only its
+REPORT depends on load: a settle that throws stashes its error, and the `LAYOUT_ERROR` line is printed at the start of
+the NEXT world cycle; the menu sweep does all its work in one synchronous page evaluate and closes the browser as soon
+as it returns, so alone it never saw the line, and under a loaded wave its close was slow enough for a cycle to run.
+
+**Widened by the owner (2026-11-21):** "Can you fix / improve the mechanism in this loop so that doesn't happen
+again." So U4e also makes a caught error's report independent of any later cycle and of load — for the product's
+stash-then-report and for every rig that closes after a synchronous evaluate — with a bite-proof that plants an error
+just before a close and must see it, and with everything that turns red once errors are always reported fixed or
+ruled in the same unit. **Time box 4 h.**
+
+**If parked:** filed, with the log.
 
 ---
 
@@ -1086,15 +1147,8 @@ stop at its commit, which you propose and do not make."
 - [x] U3: a document's scroll indicator lies 11 px from its window's edge, over its items' right edge; the document is to keep its 8 px as its viewport's margin, and a viewport is to paint its plane's selection ring. — CLOSED 2026-11-21 (scroll-indicators loop, U3): the document is a pane keeping `documentItemSpacing` as its `planeMargin`, bare or windowed; a viewport hosts and paints its plane's ring; a margin click selects the page; `SystemTest_macroDocumentKeepsItsMargin`, `SystemTest_macroViewportPaintsItsPlanesRing`.
 - [x] U4: the scroll-indicator presentation lives in `ViewportWdgt` alone; it is to move to a base class both scrollers extend, pixel-neutral. — CLOSED 2026-11-21 (scroll-indicators loop, U4): `ScrollIndicatorHostWdgt extends ClippingWdgt` holds it, `ViewportWdgt` extends it and answers two hooks and the builder's two actions; proven by the resolution map and a statics probe; no pixel moved.
 - [x] U4b: a tilted window content's window grows to the content's footprint at its next arrange (a hover highlight, a grip resize; measured 249 → 311 px tall); a window is to keep its size. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4b): an island claims space only from an asking container; as a window's content it forwards to its content in every mode, and a tilted nested window hides its grip as an upright one; `SystemTest_macroWindowKeepsItsSizeRoundATiltedContent`.
+- [x] U4c: "Pick up" on the payload of a TILTED Maker would run the Maker's reset outside a settle (the extraction is declared, not settled), so its payload's constructors lay the world out mid-reset. Read, unplayed. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4c): the pick-up's resolution settles the extraction (measured before: the Maker 600×400 → 52×129); the reuse branch keeps its declaration; `SystemTest_macroTiltedMakerKeepsItsSizeWhenItsPayloadIsPickedUp`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
-**A stretchable panel's arrange throws on a child whose spec owns its placement** (seen once, 2026-11-21, in the
-menu sweep of U4b's gauntlet under its wave's load; the sweep alone, four times, clean; the log is
-`Fizzygum-tests/.scratch/scroll-indicators-loop/u4b/menusweep-inwave-layout-error.log`). `StretchablePanelWdgt._reLayout`
-(`src/authoring/StretchablePanelWdgt.coffee` ~:129-136) asks `_rememberFractionalSituationInHoldingPanel` for a
-stretch record and then grants `w.layoutSpec.grantedBoundsWithin`; the recorder (`Widget.coffee` ~:2443) refuses a
-spec that OWNS placement (a corner-armed piece, "the one owning kind a CONSUMING holder can host"), so the grant meets
-a spec with no `grantedBoundsWithin`: `LAYOUT_ERROR: … grantedBoundsWithin is not a function`, which aborts the panel's
-whole pass. The arrange is to place an owning child from its own spec, as the recorder's comment says; which sweep
-action puts a corner-armed piece in a stretchable panel, and why only under load, is unmeasured.
+(none yet)

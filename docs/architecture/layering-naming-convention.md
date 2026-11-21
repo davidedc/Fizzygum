@@ -127,7 +127,10 @@ answering "why isn't the thunk always a `*NoSettle` core?"):
    polymorphic hook. Confined to the re-parent gestures, `ActivePointerWdgt.grab` (`_beforeBeingGrabbed`,
    `_reactToBeingGrabbed`, the trailing `_reactToChildGrabbed`) and `.drop` (its re-fits), where the body is an
    inherent SEQUENCE of settles (grab hand-rolls its own), so a `_<name>NoSettle` restructure is impossible
-   without re-entering the flush guard. (`Widget.pickUp` is a grab that centres the widget under the hand, and
+   without re-entering the flush guard; and the pick-up's figure resolution, `Widget._resolvePickUpFigure`, round
+   the self-core that DISPATCHES the hook: `_pickOutRotatedFigureNoSettle` takes a tilted figure's part out of its
+   holder, whose `_reactToChildRemoved` it so dispatches — the settle is round that notification, reached through
+   the core that causes it. (`Widget.pickUp` is a grab that centres the widget under the hand, and
    opens no settle of its own.) A `_before<Event>` hook needs its settle as much as a `_reactTo<Event>` one: a
    hook that builds (a constructor that settles) has no settle to defer to outside one, and lays the world out in
    the middle of the build. Fenced from three sides:
