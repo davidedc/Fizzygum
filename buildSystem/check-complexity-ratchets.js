@@ -74,8 +74,11 @@ const METHOD_CEILINGS = {
   // (renamed smallestExtentKeepingMyControlsUsable on 2026-11-19 for the editing residue's U9, when the titled strip's
   // floor joined it: the same count, one question).
   // Raised 172 -> 173 on 2026-11-18, owner-granted for the toolbar residue's U5: offersEditToggle, the ONE definition
-  // of a window's pencil, which its strip reads and which bounds view mode's downward inheritance
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 173 },
+  // of a window's pencil, which its strip reads and which bounds view mode's downward inheritance. Lowered 173 -> 170
+  // on 2026-11-20 for the scroll indicators' U2b: a window hears its content leave in ONE seat, _reactToChildRemoved,
+  // whatever the door, so its three per-verb hooks (_beforeChildPickedUp, _beforeChildClosed, _beforeChildDestroyed)
+  // are gone
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 170 },
 };
 
 const COMPLEXITY_CEILING = 15;

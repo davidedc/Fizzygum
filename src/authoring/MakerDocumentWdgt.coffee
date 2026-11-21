@@ -8,8 +8,8 @@
 #   - closed from its bar, it offers to be SAVED as an icon when the user has put something in it,
 #     is destroyed when they have not, and simply closes when a reference or a wire reaches into it
 #     (_closeFromFrameBarWhenSaveOrAsk below);
-#   - losing its payload (picked up, destroyed or closed) builds a fresh one of its kind rather
-#     than falling back to the empty-window placeholder.
+#   - losing its payload, by any door, builds a fresh one of its kind, in its mode and at its extent,
+#     rather than falling back to the empty-window placeholder.
 #   A subclass states: _makeStartingPayload, colloquialName, buildToolbar,
 # hasStartingContentBeenChangedByUser (whether the user has put anything in it) and the picture its
 # icons show, representativeIcon (its own, or its payload's through FrameWdgt's).
@@ -43,11 +43,23 @@ class MakerDocumentWdgt extends FrameWdgt
     else
       @close()
 
-  # Losing the payload rebuilds a FRESH one of my kind: drops stay disabled (the frame is occupied
-  # again) and the title and extent stay put. NOT during my own teardown (the flag): constructing a
-  # fresh child inside the destroy-until-empty iteration never terminates (§5.B B3 case law).
+  # Losing the payload rebuilds a FRESH one of my kind, in MY mode and in MY box: drops stay disabled
+  # (the frame is occupied again), my mode and my extent stay put, and my title is my kind's name
+  # (_titleForContents, which the rebuild's fresh title piece asks), as at my birth.
+  #   MY MODE is my payload's (FrameWdgt.isInEditMode), so it is read off the one that left, before I
+  # let go of it, and put back through my own mode core once the fresh one is mounted: that core takes
+  # the payload to view mode by the payload's own core, and my strip's toggle and my docked bands
+  # follow. A fresh payload is born in edit mode, which needs nothing.
+  #   MY EXTENT: I am no newborn window taking its first content's size (the first placement a
+  # free-floating frame hugs) -- I have my size, so the fresh payload's placement is captured here, at
+  # its mount, and my arrange fits IT to ME, as at every later re-fit.
+  #   NOT during my own teardown (the flag): constructing a fresh child inside the destroy-until-empty
+  # iteration never terminates (§5.B B3 case law).
   _resetToDefaultContents: ->
     return if @_beingFullDestroyed
+    wasInEditMode = @isInEditMode()
     @_retireDockedFramesNoSettle()
     @contents = @_makeStartingPayload()
     @_buildAndConnectChildrenNoSettle()
+    @_disableDragsDropsAndEditingNoSettle() unless wasInEditMode
+    @contents.contentStackSpec().captureInitialPlacement @contents, @

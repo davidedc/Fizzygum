@@ -124,13 +124,13 @@ answering "why isn't the thunk always a `*NoSettle` core?"):
    or the same round a `_before<Event>` hook: a gesture/lifecycle DISPATCHER settling around a §3 callback. The
    hook is settle-neutral **by rule [J]** (deliberately NOT `NoSettle`-suffixed — §3.2), so it plays the same
    role as a core inside the thunk; there is no self-core to name because the callee is the counterparty's
-   polymorphic hook. Confined to the re-parent gestures — `ActivePointerWdgt.grab` (`_beforeBeingGrabbed`,
-   `_reactToBeingGrabbed`, the trailing `_reactToChildGrabbed`), `.drop` (its re-fits) and `Widget.pickUp`
-   (`_beforeChildPickedUp` before its grab, `_reactToChildPickedUp` after it) — where the body is an inherent
-   SEQUENCE of settles (grab hand-rolls its own), so a `_<name>NoSettle` restructure is impossible without
-   re-entering the flush guard. A `_before<Event>` hook needs its settle as much as a `_reactTo<Event>` one: a
-   window whose content is picked up rebuilds its payload there, and a constructor that settles has no settle to
-   defer to outside one, so it lays the world out in the middle of the rebuild. Fenced from three sides:
+   polymorphic hook. Confined to the re-parent gestures, `ActivePointerWdgt.grab` (`_beforeBeingGrabbed`,
+   `_reactToBeingGrabbed`, the trailing `_reactToChildGrabbed`) and `.drop` (its re-fits), where the body is an
+   inherent SEQUENCE of settles (grab hand-rolls its own), so a `_<name>NoSettle` restructure is impossible
+   without re-entering the flush guard. (`Widget.pickUp` is a grab that centres the widget under the hand, and
+   opens no settle of its own.) A `_before<Event>` hook needs its settle as much as a `_reactTo<Event>` one: a
+   hook that builds (a constructor that settles) has no settle to defer to outside one, and lays the world out in
+   the middle of the build. Fenced from three sides:
    [J] (static), the notification-settle runtime audit (dynamic), and rule [T] (a subject that double-settles
    on `@`-self). Anything not matching either shape is a smell — see `check-layering.js` [T] and
    `check-call-separation.js` [S].
@@ -192,13 +192,12 @@ How widgets tell *each other* that a structural/geometric EVENT happened (drag/d
 destroy/collapse/uncollapse, z-order, copy). The container re-fit is deliberately NOT in this family — it is the
 settle-time up-edge (§2.6), a valve call from the settle loop, not a notification. The behaviour is uniform — the **dispatcher owns
 the `_settleLayoutsAfter` round each callback it dispatches**, the callbacks being settle-neutral cores inside it (the
-gestures hand-roll their settles in `ActivePointerWdgt.grab`/`.drop` and `Widget.pickUp`, one per callback where a
-settling step stands between two of them; the structural ops wrap one in a public `verb()` over a
-`_verbNoSettle()` core). So this family is pure naming + a settle-discipline (rule [J]).
+gestures hand-roll their settles in `ActivePointerWdgt.grab`/`.drop`, one per callback where a settling step stands
+between two of them; the structural ops wrap one in a public `verb()` over a `_verbNoSettle()` core). So this family is pure naming + a settle-discipline (rule [J]).
 
 ### 3.1 The decomposition
 Every notification is `(event × perspective × phase)`:
-- **EVENT** — `Added` · `Removed` · `Grabbed` · `PickedUp` · `Dropped` · `Closed` · `Destroyed` · `Collapsed` ·
+- **EVENT** — `Added` · `Removed` · `Grabbed` · `Dropped` · `Closed` · `Destroyed` · `Collapsed` ·
   `UnCollapsed` · `MovedToFront` · `Copied`. (An event may be qualified — e.g.
   `AddedInScrollPanel`, `DroppedIntoFolder`.)
 - **PERSPECTIVE** — **self** (the widget the event happens to) · **container** (a parent, about its child) · a
@@ -217,7 +216,7 @@ Every notification is `(event × perspective × phase)`:
 Plus the **third-perspective** hooks `_reactToHolderFrame<Event>(…)` (a widget reacting to its holder window's event).
 
 Rules:
-- **`<Event>` is already the past participle** (`Dropped`, `PickedUp`, `MovedToFront`) — the hooks append nothing.
+- **`<Event>` is already the past participle** (`Dropped`, `Grabbed`, `MovedToFront`) — the hooks append nothing.
   The one exception is the CONTAINER gate, which reads as a question about an incoming action and so takes the bare
   verb: `wantsDropOfChild` / `wantsDetachOfChild`.
 - **Tier = `_`** for every hook (an internal override protocol); **gates are public + pure + positive** (queried by
@@ -234,9 +233,11 @@ Rules:
 - **grab ≠ pickUp.** The grab/pickUp family is EXCLUSIVELY the **float-drag** case: the widget DETACHES off its parent
   into the hand (gated by `detachesWhenDragged()`). A **non-float drag** (sliders, resize handles) leaves the widget IN
   PLACE and uses the SEPARATE `nonFloatDragging` / `endOfNonFloatDrag` family, firing NONE of these notifications — so
-  dragging a slider is NOT a pickup. `grab` (mouse) and `pickUp` (programmatic) are two entry points to "detach into
-  hand" whose hook sets OVERLAP, not coincide, so they stay DISTINCT events (merging them is a behaviour change, not a
-  rename).
+  dragging a slider is NOT a pickup. `grab` (mouse) and `pickUp` (programmatic: a grab that centres) are two entry
+  points to "detach into hand". A holder that must react to its part LEAVING it does so where every door tells it,
+  `_reactToChildRemoved`, after the fact, not in a per-verb before-hook that answers an intent: a window showing its
+  default content again whether its content was picked up, dragged, attached elsewhere, closed or destroyed is
+  `FrameWdgt._reactToChildRemoved`, as a stretchable container's fresh page is.
 - **Capability predicates stay as-is** — `imposesRatioConstraintOnDroppedChildren` /
   `releasesRatioConstraintOnGrabbedChildren`, `isDesktopShortcut` / `isShortcutTo` are capability *queries*, not phase
   hooks, so they are outside the grid.
@@ -362,7 +363,7 @@ dropped.)
 - **Naming + tier-reclassification only — no behaviour change.** Pixels stay identical except inspector member lists
   (method names show in the Object Inspector, so a rename of an inspected class's own method forces a benign reference
   recapture).
-- **grab/pickUp stay DISTINCT** (§3.3) — a true unification is a separate, behaviour-verified change.
+- **grab/pickUp** (§3.3): `pickUp` is a grab that centres the widget under the hand, and dispatches no hook of its own.
 - **NON-GOAL:** the non-float-drag family (`nonFloatDragging` / `endOfNonFloatDrag`) — already consistent, a separate
   concern, left alone.
 - **Out of scope:** the repaint-cache data-FIELD naming (a separate data-field convention, distinct from these METHOD

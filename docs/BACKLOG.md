@@ -100,7 +100,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **On a PC, Ctrl+Alt on a key with no AltGr character can type that key's own character** — AltGr is told from a chord by the key's code, which names a US-layout place, so a punctuation key, or any key on another layout, types where Windows types nothing (F6 review; plan §U3) — reachable, low.
 - [ ] **A copy or a save made mid-edit keeps the text's selection** — the marks are the text's fields; only the original's clear as the edit ends, so the copy, or the loaded file, shows a selected run with no caret (measured: `Fizzygum-tests/.scratch/dup-caret/probe-v1-text-state-travels.js`) — reachable (dev menu), low.
 - [ ] **A driven or computing controller wired to a new target delivers nothing on connect** — the connect's offer is a non-forced mark, so the equal-value cutoff drops it, against spec §8 ("stale+forced"); `ControllerWdgt.coffee:53` reasons from the wrong pair of values (H5c review B1) — reachable, low.
-- [ ] **A window's content moved out by "Attach" stays its `@contents`** — `FrameWdgt._reactToChildRemoved` frees dock slots but keeps the pointer (only pick-up, destroy and close rebuild), so the window's arrange moves the departed widget back (read; dev menu: the content's row → Attach → Desktop; H3d) — reachable, low.
 - [ ] **A tilted page taken out of its rotation island stays its window's page** — its own "Attach" or destroy tells only the island (`PanelWdgt._reactToChildRemoved`), so the container keeps the departed page and an empty island (read; dev menu: rotate the page, then its "Attach"; H3d review A1) — reachable, low.
 - [ ] **A pinned layout submenu keeps the rows it was built with** — the current alignment (or cross alignment) is left out, nothing ticked, so after a press, here or in its copy, a pinned "Layout in stack"/"Layout in row" menu offers that choice, not the old one (§10; H4b review) — reachable, low.
 - [ ] **A duplicated pinned layout prompt writes a clone of the spec** — the size and elasticity prompts (`VerticalStackLayoutSpec`, `DivisionStackLayoutSpec`) still target the spec itself, so a Duplicate of a pinned prompt edits a clone and nothing moves (H4b review A2) — reachable (dev menu), low.
@@ -222,13 +221,15 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 
 ### `plans/scroll-indicators-plan.md` — one placement rule for a scroll indicator, the document's margin, and the spreadsheet's own
-AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b (added on the owner's word) and U2 are closed (the plan's ledger).
+AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b and U2b (added on the owner's word) and U2 are closed (the plan's ledger).
 - [ ] U3: a document's scroll indicator lies 11 px from its window's edge, over its items' right edge; the document is to keep its 8 px as its viewport's margin, and a viewport is to paint its plane's selection ring.
 - [ ] U4: the scroll-indicator presentation lives in `ViewportWdgt` alone; it is to move to a base class both scrollers extend, pixel-neutral.
 - [ ] U5: the spreadsheet's view origin has no pins, so no slider can drive or follow it; it is to get a "scroll column" and a "scroll row" pin.
 - [ ] U6: the spreadsheet scrolls and shows no scroll indicator; it is to present the two bars every viewport shows.
 - [ ] A payload released over a scrolled viewport's FAT bar (a carry with no button held: the "Pick up" row, then a click) lands in the plane displaced by the scroll offset: `ViewportWdgt.add` forwards it unmapped. Seen through U2's plant 4 (236 px off). Reachable, low. Detail: the plan's §U2.
-- [ ] A Maker whose payload leaves it (the "Pick up" row; by reading "Destroy" too, any Maker kind) shrinks to its fresh payload: a Docs Maker goes 600×400 to 68×211 (measured), though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Reachable, medium. Detail: the plan's §U1b.
+- [ ] A tilted window content's window grows by the content's footprint at the first hover highlight: the highlight parented into the island re-fits the window round a footprint the tilt left unclaimed (measured: 249 → 311 px tall). Reachable, low. Detail: the plan's §U2b.
+- [ ] "Pick up" on the payload of a TILTED Maker would run the Maker's reset outside a settle (the extraction is declared, not settled), so its payload's constructors lay the world out mid-reset. Read, unplayed. Reachable, low. Detail: the plan's §U2b.
+- [ ] A tilted window content that leaves its island (its own "Attach", a destroy, a shortcut's bring-up) leaves its window an empty island: only the island is told. The page's case is filed under the editing residue. Read. Reachable, low.
 
 ### `plans/single-file-save-plan.md`
 AUTHORED 2026-07-10, design LOCKED by owner, no code written yet; next = Phase 0 spikes S1/S2

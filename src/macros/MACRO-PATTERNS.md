@@ -794,8 +794,8 @@ assertion a recapture after a regression silently stores two different hashes an
   "Composing macros" in CLAUDE.md (one test owns the composite screenshot, the other reuses the fixture without re-shooting).
 - **Close an inner (nested) window → the outer survives and stays reusable** (`macroClosingInnerWindowKeepsOuter`): the lifecycle
   follow-on to the bullet above. Once an internal window is the outer window's `@contents`, `@closeWindow_InputEvents intWin`
-  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `_beforeChildClosed(child)` (`FrameWdgt.coffee:204`)
-  detects `child == @contents` and calls `resetToDefaultContents` (`:246`) — re-enabling drops and restoring the
+  (clicks the INNER window's own `.closeButton`) closes only it; the outer's `_reactToChildRemoved(child)` (`FrameWdgt`)
+  detects `child is @contents` and calls `_resetToDefaultContents` — re-enabling drops and restoring the
   `FrameContentsPlaceholderText` ("Drop a widget in here") + the "empty window" label. The outer window is NEVER closed and stays
   functional: a fresh `@dragWidgetTo_InputEvents clock2, extWin` is accepted as its new content (relabelled "analog clock"). Build via
   the shared `buildExternalAndFreeInternalWindow_Macro()` and put an `AnalogClockWdgt` in the inner window with `intWin.add (new

@@ -18,6 +18,7 @@ Status:
 | U1 | A thin indicator stands clear of the line at its viewport's edge, and short of its side's ends | CLOSED 2026-11-20 (§U1) |
 | U1b | A pane picked up off its window leaves at its own size: the window's hook runs inside the pick-up's settle (`Widget.pickUp`; added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U1b) |
 | U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant; the field is `planeMargin`) | CLOSED 2026-11-20 (§U2) |
+| U2b | A window whose content leaves it keeps its size and shows its default content, by any door (added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U2b) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | open (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
@@ -331,7 +332,8 @@ D10's last sentence ("its overlay scroll indicator over the items' right edge is
 ## 4. Units
 
 ### U-order
-U1 → U1b → U2 → U3 → U4 → U5 → U6 → U7. U1b needs U1 alone (it restores a step of U1's test) and nothing after
+U1 → U1b → U2 → U2b → U3 → U4 → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
+document sits in its window. U1b needs U1 alone (it restores a step of U1's test) and nothing after
 it needs it; it stands before U3 so that a document's way out of its window can be played in a test. U2 edits
 `_barFrameAt` after U1 did. U3 needs U2's mechanism. U4 lifts what U1–U3
 left (if U2 or U3 PARKED, U4 lifts the code as it stands). U5 is independent of U1–U3 but uses U4's shared range
@@ -596,6 +598,59 @@ margin in the suite). The hand-off does not cover the side where a bar stands fa
 fattens it): the release meets the bar. Filed on the way (this plan's BACKLOG section): a payload released over a
 scrolled viewport's fat bar lands displaced by the scroll offset (`ViewportWdgt.add` forwards it to the plane
 unmapped; a defect of the product before this unit, seen through this unit's plant 4).
+
+---
+
+### U2b — A window whose content leaves it keeps its size and shows its default content, by any door
+
+**Ruling:** the owner's, 2026-11-20, "go" on the recommendation: research first, then ONE door for "my content
+left" with the window keeping its size, or the narrow size fix with the rest filed. **Needs U2 CLOSED. Time box
+3 h.** It took in the item U1b filed (a Maker shrinks to its fresh payload when its payload leaves it) and a
+review's two unprobed reads of U1b's (content leaving by another door never reaches the window; a Maker reset in
+view mode comes back in edit mode).
+
+**Landed 2026-11-20.** A window hears its content leave in ONE seat, `FrameWdgt._reactToChildRemoved`, the generic
+removal notification every door reaches (a pick-up, a drag, "Attach", a close into the bin, a destroy), after the
+fact and inside the settle of the verb that took it (one exception: a "Pick up" of a tilted window's content
+extracts it in the pick-up's declared deferred window, which the grab's first settle flushes), when the child is
+its content and has really left it (`child is @contents and !@isAncestorOf(child)`, the predicate a stretchable
+container's fresh-page seat uses). The three per-verb hooks `_beforeChildPickedUp`, `_beforeChildClosed`,
+`_beforeChildDestroyed`, their dispatch lines in `Widget`, and both of `Widget.pickUp`'s settles are deleted
+(`pickUp` is a grab that centres); `FrameWdgt` 173 → 170 methods, its ceiling lowered. Ruled here:
+- **One seat, not three hooks.** Research found no plan that ruled the hooks: they are the 2018 window code, renamed
+  twice, never re-decided, and the reset reads nothing of the departing content. A hook run before a verb answers
+  an INTENT (a busy hand's `pickUp` emptied the window and took nothing); the removal notification answers a FACT.
+  The precedent is a stretchable container's fresh page (`c7d6dfa4`, in the same notification).
+- **A window keeps its size, plain, Maker or docked band.** A Maker's reset captures the fresh payload's placement at
+  its mount, so the arrange fits the payload to the window instead of hugging it as a first placement (no arrange
+  code changes); a plain window no longer snaps to 300×300 (the placeholder takes whatever room the window has: the
+  owner saw the before/after of the one reference it changes and said "keep"; a narrow emptied window shows no
+  title, the strip's own rule at that width); a docked band keeps its thickness
+  (`EdgeDockLayoutSpec.notePayloadLeft`: without it a band whose toolbar left by "Attach" committed NaN heights,
+  measured, a door this unit's one seat newly reaches).
+- **A Maker keeps its mode**: read off the departing payload and put back through the frame's own mode core, so the
+  strip's toggle and the docked bands follow.
+- **"Delete" / "Move to trash" on a TILTED window content closes the window, as on an upright one**: the three
+  content-to-frame redirects look through islands (`_parentThroughIslands`).
+Evidence, MEASURED by the new test run first against the product before this unit (27 reads failing under both
+pointers): after "Attach" a window kept the departed pane as its content and a grip resize pulled the pane back and
+resized it (300×200 → 340×230); after "Pick up" in a tilted window, a drag of a tilted content and the "Close" of a
+tilted nested window the window kept the departed figure; "Delete" on a tilted content sent the content to the bin
+and left its window; a Docs Maker shrank 600×400 → 68×211 and a Generic panel 460×400 → 318×405; a Maker reset in
+view mode came back in edit mode with its band engaged. `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`
+(twelve legs, values only) passes under both pointers with zero careless end-of-cycle pushes (the production audit
+as a prelude), and nine plants (one per door: the hand, "Attach", the bin, destroy, the Maker's size, its mode, the
+redirect, the band's thickness, the content that has not left) each fail their own legs. The one risk research
+could not settle by reading, a nested window picked out of its window (the window is told only after the hand's
+release flush), passed the `capstone`, `settle` and `revisits` gates on the test alone (under the mouse).
+Recaptured: `SystemTest_macroClosingInnerWindowKeepsOuter` image_2 (mouse and finger, dpr 1 and 2), the emptied
+outer window keeping its size; the suite changed nothing else.
+`SystemTest_macroPanePickedUpOffItsWindowKeepsItsSize` keeps its subject: its spy moved to the new seat, and its
+Maker leg now reads the Maker's extent.
+Filed on the way (this plan's BACKLOG section): a tilted window content's window grows by the content's footprint
+at the first hover highlight (measured: 249 → 311 px tall, on the product before this unit too); "Pick up" on the
+payload of a TILTED Maker would run its reset outside a settle (the extraction is declared, not settled; settling
+it changes every tilted drag's cadence); a tilted content that leaves its island leaves its window an empty island.
 
 ---
 
@@ -886,6 +941,8 @@ stop at its commit, which you propose and do not make."
 - [x] U1: a thin scroll indicator stands 2 px inside its viewport's edge whatever is there, and touches both ends of its side; it is to stand 1 px clear of the line at that edge and 3 px short of each end. — CLOSED 2026-11-20 (scroll-indicators loop, U1): the inset across is derived (the theme's clearance, plus the border where the viewport's appearance strokes one: `outlineIsStroked`), the end inset comes off both ends of the run of a thin bar the viewport presents, and the bars follow a re-parenting; `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
 - [x] U1b: `Widget.pickUp` runs its parent's `_beforeChildPickedUp` outside any settle, so a window whose content is picked up (the "Pick up" row) rebuilds its payload as a careless end-of-cycle push and no test can take a pane out of its window; it is to settle both its callbacks. — CLOSED 2026-11-20 (scroll-indicators loop, U1b): `pickUp` opens a settle round the before-hook, as `grab` does round `_beforeBeingGrabbed`; a Docs Maker's document no longer comes away 66 px taller; `SystemTest_macroPanePickedUpOffItsWindowKeepsItsSize`, and the way out restored in `SystemTest_macroThinIndicatorStandsClearOfItsEdge`.
 - [x] U2: a viewport's `padding` ("around the scrollable area") is read in six places and crops nothing; it is to be a margin the plane shows inside. A mechanism, dormant until U3. — CLOSED 2026-11-20 (scroll-indicators loop, U2): the field is `planeMargin`; the plane is cropped to `_planeBox` in both paint bodies and at the clip-through edge (`clipIntoPlaneOfChild`), the thin bars run along the plane box, a drop in the margin goes to the plane; dormant (nothing gives a viewport a margin); `SystemTest_macroViewportMarginCropsItsPlane`.
+- [x] **A window's content moved out by "Attach" stays its `@contents`** — `FrameWdgt._reactToChildRemoved` frees dock slots but keeps the pointer (only pick-up, destroy and close rebuild), so the window's arrange moves the departed widget back (read; dev menu: the content's row → Attach → Desktop; H3d) — reachable, low. — CLOSED 2026-11-20 (scroll-indicators loop, U2b; filed under `archive/editing-residue-plan.md`): the window shows its default content in `_reactToChildRemoved`, the one seat every door reaches; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
+- [x] A Maker whose payload leaves it (the "Pick up" row; by reading "Destroy" too, any Maker kind) shrinks to its fresh payload: a Docs Maker goes 600×400 to 68×211 (measured), though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Reachable, medium. Detail: the plan's §U1b. — CLOSED 2026-11-20 (scroll-indicators loop, U2b): the Maker's reset captures the fresh payload's placement, and keeps its mode; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

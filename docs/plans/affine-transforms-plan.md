@@ -2166,7 +2166,7 @@ pinned-anchor interplay line).**
   1. **ONE canonical figure-resolution helper** (reuse/rename 4D-2a's "resolve the figure" verb — do NOT re-derive
      `_enclosingSugarIsland() ? @` inline at each site; keep re-homing sites greppable). Close/launch route through it.
   2. **`_closeNoSettle`: swap only the RE-HOMING TARGET.** The window's own close bookkeeping (stepping, focus, app
-     registry, `_beforeChildClosed`) MUST keep running on the WINDOW; only the `_addLostWidgetNoSettle` ARGUMENT
+     registry; a holder window hears its content leave in `_reactToChildRemoved`) MUST keep running on the WINDOW; only the `_addLostWidgetNoSettle` ARGUMENT
      becomes the figure (the enclosing sugar island).
   3. **`launch` (reopen): `world.add figure`** and, if it repositions, reposition the FIGURE — moving the bare
      window by screen coords while it is island-resident is a plane mismatch (4A-2 territory).

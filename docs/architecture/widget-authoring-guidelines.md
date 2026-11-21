@@ -980,9 +980,10 @@ and nothing else, and none of them meets a widget its owner hid on the side
 
 A holder that keeps a part by pointer (`@contents`) and rebuilds a fresh part of its kind when the part leaves
 guards the rebuild with a `_beingFullDestroyed` flag its `_fullDestroyNoSettle` sets at entry, so destroying it
-until it is empty never meets a fresh part: `FrameWdgt` rebuilds in its `_beforeChild…` hooks (pick-up, destroy,
-close), `StretchableWidgetContainerWdgt` in `_reactToChildRemoved` (every re-home and destroy of its own child).
-`_reactToChildRemoved` hears only a DIRECT child's departure.
+until it is empty never meets a fresh part. Both such holders rebuild in `_reactToChildRemoved`, the one seat every
+door reaches (every re-home and destroy of the holder's own child, inside the settle of the verb that took it):
+`FrameWdgt` (a window's content, keeping the window's size and, for a Maker, its mode) and
+`StretchableWidgetContainerWdgt` (a page). `_reactToChildRemoved` hears only a DIRECT child's departure.
 
 ---
 

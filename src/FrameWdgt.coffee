@@ -56,8 +56,8 @@ class FrameWdgt extends ClippingWdgt
   # MY EMPTY-STATE PLACEHOLDER, which exists exactly while I hold nothing else: whenever it is
   # defined it is my mounted @contents. It is built when I start empty or lose my contents, and
   # destroyed the moment real contents arrive -- never kept off my tree, so a copy, a save and the
-  # world inventory meet it as an ordinary child or not at all. A placeholder that LEAVES me
-  # (picked up, closed, destroyed) stops being mine: the next one is built fresh.
+  # world inventory meet it as an ordinary child or not at all. A placeholder that LEAVES me,
+  # by any door, stops being mine: the next one is built fresh.
   defaultContents: undefined
   # MY FOUR EDGE SLOTS: a `side -> FrameWdgt` map, at most one docked frame per side (program
   # ruling C12). The occupant is an ordinary frame carrying an EdgeDockLayoutSpec of mine — no
@@ -998,9 +998,11 @@ class FrameWdgt extends ClippingWdgt
 
   # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
   # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
-  # inside a close/destroy settle, so the enclosing settle flushes it -- a self-settling setText
-  # would open a nested settle mid-pass. (The label is fitted to its box, so the swap moves no
-  # geometry of its own; _retitleNoSettle re-lays the strip, whose arrange grades the title.)
+  # once my contents has left me, inside the verb that took it, whose settle flushes it (or, for a
+  # "Pick up" of my content while I am tilted, the grab's first settle: see _reactToChildRemoved) -- a
+  # self-settling setText would open a nested settle mid-pass. (The label is fitted to its box, so
+  # the swap moves no geometry of its own; _retitleNoSettle re-lays the strip, whose arrange grades
+  # the title.)
   _setEmptyWindowLabelNoSettle: ->
     # a strip too narrow for text carries no title piece, so there is nothing to title
     if @isInternal()
@@ -1169,10 +1171,32 @@ class FrameWdgt extends ClippingWdgt
   # is already marked destroyed), and a destroy is no departure. A slot freed BEFORE its occupant goes
   # is none either -- a re-side (_reSideMyDockNoSettle) and a content change's retirement
   # (_retireDockedFramesNoSettle) free it themselves.
+  #   MY CONTENT LEAVING ME is heard here too, and here alone: this is the one seat for every door.
+  # Whatever takes it away -- the hand (a "Pick up", a drag of a tilted content), another parent
+  # ("Attach"), the bin (a nested window's "Close") or its own destroy -- re-homes it through
+  # _addNoSettle or ends it through _destroyNoSettle, and each tells me once it is gone. So I show my
+  # default content again after the fact, once per departure, inside the settle of the verb that took
+  # it -- with ONE exception: a "Pick up" of my content while I am tilted picks it out of my island's
+  # figure in the pick-up's declared deferred window, where no settle is open, and the grab's first
+  # settle flushes my marks. Nothing my own rebuild constructs settles, so that window is safe for me;
+  # a rebuild whose constructors settle (a Maker's payload) is exposed there. A hook run before the
+  # verb would answer an intent, and an intent can come to nothing: a busy hand takes nothing.
+  #   Only a content that LEFT me: one re-added to me, or moved into a widget of mine (a band of my
+  # own), is still mine, and is not replaced.
+  #   Docked in a host's slot, I am a band, and a band keeps its thickness when its payload leaves,
+  # as every window keeps its size: my edge spec keeps what the departing payload was granted
+  # (EdgeDockLayoutSpec.notePayloadLeft), which my placeholder, declaring no thickness of its own, is
+  # then granted.
+  #   Not once I am destroyed, nor while I am torn down myself (the flag): the rebuild would re-title
+  # a bar the destroy-until-empty iteration has already destroyed and detached, and mount content
+  # that iteration can never reach -- alive, unowned, and pinned forever by the instances registry.
   _reactToChildRemoved: (child) ->
     wasDocked = @_isMyDockedFrame child
     @_freeDockSlotOf child
     child.contents?.noteUndockedFrom? @ if wasDocked and !child.destroyed
+    if child is @contents and !@isAncestorOf(child) and !(@destroyed or @_beingFullDestroyed)
+      @_myEdgeDockSpec()?.notePayloadLeft child
+      @_resetToDefaultContents()
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
@@ -1181,23 +1205,6 @@ class FrameWdgt extends ClippingWdgt
     for side in FrameWdgt.DOCK_SIDES
       delete @dockedFrames[side] if @dockedFrames?[side] == child
     return
-
-  _beforeChildDestroyed: (child) ->
-    # NOT while I myself am being torn down: the rebuild would re-title a bar the
-    # destroy-until-empty iteration has already destroyed and detached, and mount a
-    # placeholder that iteration can never reach -- alive, unowned, and pinned forever
-    # by the instances registry.
-    return if @_beingFullDestroyed
-    if child == @contents
-      @_resetToDefaultContents()
-
-  _beforeChildPickedUp: (child) ->
-    if child == @contents
-      @_resetToDefaultContents()
-
-  _beforeChildClosed: (child) ->
-    if child == @contents
-      @_resetToDefaultContents()
 
   _beforeChildCollapsed: (child) ->
     if child == @contents
@@ -1648,7 +1655,7 @@ class FrameWdgt extends ClippingWdgt
   extentWrappingPayloadAt: (payloadExtent) ->
     payloadExtent.add new Point @_chromeWidth(), @_chromeHeight()
 
-  # Consulted at the child-death hook (_beforeChildDestroyed: a mid-teardown rebuild
+  # Consulted where I hear my contents leave (_reactToChildRemoved: a mid-teardown rebuild
   # strands fresh chrome on already-destroyed parts of me) and by a framed CITIZEN's
   # _resetToDefaultContents (§5.B): a payload dying because the WHOLE frame is going
   # away must NOT be replaced -- a citizen constructs a FRESH payload per reset, and
@@ -1660,22 +1667,27 @@ class FrameWdgt extends ClippingWdgt
     @_beingFullDestroyed = true
     super
 
+  # SHOW MY DEFAULT CONTENT AGAIN, my contents having left me: the placeholder, titled as an empty
+  # window, drops accepted again. I keep my size: the placeholder takes whatever room I have
+  # (its frame-content spec does not mind its size), so an emptied window stays where the person
+  # had it, the size they had it at. (A window born empty takes its starting extent in its
+  # constructor, _initialExtent, which reaches nothing here.)
   _resetToDefaultContents: ->
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
     # cross-object code drive it) — settle-free, consciously reused here.
     @enableDrops()
     @_retireDockedFramesNoSettle()
-    # reached as my contents LEAVES me -- a placeholder leaving (picked up, closed, destroyed) stops
-    # being mine -- so the placeholder I show next is a fresh one
+    # reached once my contents has left me -- a placeholder that leaves stops being mine too -- so
+    # the placeholder I show next is a fresh one
     @defaultContents = new FrameContentsPlaceholderText
     @contents = @defaultContents
-    # Reached only from a child-lifecycle hook (_beforeChildDestroyed/PickedUp/Closed). Rebuild through
-    # the non-settling core so a hook firing INSIDE an enclosing settle (destroy/close) is absorbed by
-    # that operation's settle instead of re-entering the public self-settler. (window-rebuild follow-up)
+    # Reached only from _reactToChildRemoved, inside the verb that took my contents. Rebuild through
+    # the non-settling core, so the marks ride that verb's settle instead of re-entering the public
+    # self-settler -- or, for a "Pick up" of my content while I am tilted, the declared deferred window
+    # the grab's first settle flushes, which is why nothing built here may settle. (window-rebuild
+    # follow-up)
     @_buildAndConnectChildrenNoSettle()
     @_setEmptyWindowLabelNoSettle()
-    if @recursivelyAttachedAsFreeFloating()
-      @_applyExtent new Point 300, 300
 
   _beforeChildDropped: (child) ->
     @removeChild @contents
@@ -2373,7 +2385,7 @@ class FrameWdgt extends ClippingWdgt
   # FrameWdgt._addNoSettle. The single settle runs AFTER the core: O(1) relayouts.
   #
   # This PUBLIC self-settler is only ever called STANDALONE (the constructor). Every rebuild path that
-  # fires from inside an enclosing settle -- a child-lifecycle hook (_beforeChildDestroyed/Closed/PickedUp)
+  # fires from inside an enclosing settle -- my content leaving me (_reactToChildRemoved)
   # -> _resetToDefaultContents -> rebuild, or _reactToChildDropped inside the drop's settle -- goes through the
   # non-settling @_buildAndConnectChildrenNoSettle directly, never this wrapper, so the wrapper never
   # re-enters a flush. The chrome the core constructs adds to ORPHANS, exempt from the flush-throw

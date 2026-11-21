@@ -31,7 +31,8 @@ class EdgeDockLayoutSpec extends LayoutSpec
   side: undefined
 
   # the payload's cross extent as it arrived (width for left/right, height for top/bottom), which
-  # the band grants a payload that declares no dockThickness of its own; undefined for one that does
+  # the band grants a payload that declares no dockThickness of its own; undefined for one that does,
+  # until that payload leaves the band (notePayloadLeft)
   thickness: undefined
 
   # the host's mode switch: a disengaged dock takes no layout space
@@ -44,6 +45,14 @@ class EdgeDockLayoutSpec extends LayoutSpec
   # now, or else the cross extent recorded when it arrived.
   thicknessGrantedTo: (payload) ->
     payload?.dockThickness?() ? @thickness
+
+  # My carrier's payload has LEFT it (FrameWdgt._reactToChildRemoved, before the carrier shows its
+  # placeholder): the band keeps its thickness, as every window whose content leaves keeps its size.
+  # So I keep what the departing payload was granted -- the cross extent I recorded at its arrival, or,
+  # for a payload that declared its own dockThickness and left me nothing recorded, that thickness --
+  # and grant it to whatever the band holds next that declares none (the placeholder).
+  notePayloadLeft: (payload) ->
+    @thickness ?= @thicknessGrantedTo payload
 
   # The axis the band I give runs along: the length of my edge. A top or bottom band runs across its
   # host, a left or right one down it. My carrier's RUN (FrameWdgt._runAxis), whether it is expanded

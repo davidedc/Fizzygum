@@ -659,17 +659,19 @@ class Widget extends TreeNode
   _closeNoSettle: (restingContainer) ->
 
     # closing a frame's content closes the FRAME: the chrome is there to manipulate what it
-    # holds, so the two leave together. A nested FRAME is not that kind of content -- it is its
-    # own thing, with its own chrome and its own identity -- so it closes ALONE and its host
-    # stays, reverting to an empty frame. ONE step either way: the frame reached here is a
-    # frame, so it does not redirect again.
-    if !@isFrame?() and @parent?.isFrame?()
+    # holds, so the two leave together. The frame is the one I really live in, seen through any
+    # transform island I am the sole content of (_parentThroughIslands), so a tilted or scaled
+    # content closes its window exactly as an upright one does. A nested FRAME is not that kind of
+    # content -- it is its own thing, with its own chrome and its own identity -- so it closes ALONE
+    # and its host stays, reverting to an empty frame. ONE step either way: the frame reached here
+    # is a frame, so it does not redirect again.
+    frame = @_parentThroughIslands()
+    if !@isFrame?() and frame?.isFrame?()
       # private chain: the core, not public close() -- we are already inside close()'s settle batch.
-      @parent._closeNoSettle restingContainer
+      frame._closeNoSettle restingContainer
       return
 
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
-    @parent?._beforeChildClosed? @
     restingContainer ?= world.binWdgt
     if restingContainer?
       # §7.5 Bug B (model a) + latent 2 (Option B): re-home the whole FIGURE, not just me -- if I am the
@@ -707,11 +709,13 @@ class Widget extends TreeNode
 
   _moveToTrashNoSettle: ->
     # trashing a frame's content trashes the FRAME — the same one-step redirect _closeNoSettle
-    # makes, and with the same exemption: a nested frame is its own thing and is trashed alone
-    # (the frame reached here is a frame, so it does not redirect again).
-    if !@isFrame?() and @parent?.isFrame?()
+    # makes, to the same frame (seen through any transform island I am the sole content of), and
+    # with the same exemption: a nested frame is its own thing and is trashed alone (the frame
+    # reached here is a frame, so it does not redirect again).
+    frame = @_parentThroughIslands()
+    if !@isFrame?() and frame?.isFrame?()
       # private chain: the core, not public moveToTrash() -- we are already inside its settle batch.
-      @parent._moveToTrashNoSettle()
+      frame._moveToTrashNoSettle()
       return
     world._severLivenessEdgesIntoWdgtNoSettle @_enclosingIslandFigure()
     @_closeNoSettle()
@@ -723,10 +727,11 @@ class Widget extends TreeNode
   # Redirects like _closeNoSettle/_moveToTrashNoSettle so the question is asked about the same
   # figure the trash would file.
   _wouldTrashSeverAnything: ->
-    if !@isFrame?() and @parent?.isFrame?()
-      # private chain: the same one-step content-to-frame redirect as _moveToTrashNoSettle,
-      # nested frames exempt for the same reason.
-      return @parent._wouldTrashSeverAnything()
+    frame = @_parentThroughIslands()
+    if !@isFrame?() and frame?.isFrame?()
+      # private chain: the same one-step content-to-frame redirect as _moveToTrashNoSettle, to the
+      # same frame through any island, nested frames exempt for the same reason.
+      return frame._wouldTrashSeverAnything()
     # public-call-sanctioned: anyReferenceOrWireIntoWdgt is a pure read (a tree walk that
     # mutates nothing and settles nothing), the same ask the close sites make.
     world.anyReferenceOrWireIntoWdgt @_enclosingIslandFigure()
@@ -815,7 +820,7 @@ class Widget extends TreeNode
     # the START (I'm still attached) then flushes globally, so my parent settles even though _destroyNoSettle
     # orphans me.
     # The two hooks that rebuild during destroy -- a window losing its @contents
-    # (_beforeChildDestroyed -> _resetToDefaultContents) and a stretchable container losing its page
+    # (FrameWdgt._reactToChildRemoved -> _resetToDefaultContents) and a stretchable container losing its page
     # (StretchableWidgetContainerWdgt._reactToChildRemoved) -- are safe inside this _inLayoutMutation:
     # _resetToDefaultContents rebuilds through the non-settling @_buildAndConnectChildrenNoSettle (not the
     # public self-settler), and the chrome it constructs adds to ORPHANS, which are exempt from the
@@ -826,7 +831,6 @@ class Widget extends TreeNode
 
   _destroyNoSettle: ->
 
-    @parent?._beforeChildDestroyed? @
     @unregisterThisInstance()
     world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
     world.keyboardEventsReceivers.delete @
@@ -2025,8 +2029,8 @@ class Widget extends TreeNode
   #     island) — no churn, Phase-1's whole-figure grab. macroTransformFrameScaledDragged relies on this.
   #   • I am a genuine SUB-part (my innermost island wraps a larger subtree) ⇒ extract me and wrap me in a
   #     FRESH island carrying the accumulated similitude (_pickOutRotatedFigureNoSettle).
-  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: the caller's own settle covers
-  # the extraction's re-fit of my former container (the drag's grab; a menu pick-up's first settle).
+  # Off any island ⇒ returns me unchanged (byte-identical dormant). NoSettle: the grab's own settle covers
+  # the extraction's re-fit of my former container (the drag's grab, or the one pickUp makes for a menu pick-up).
   _resolvePickOutFigureNoSettle: ->
     island = @_enclosingNonIdentityIsland()
     if !island?
@@ -2250,7 +2254,7 @@ class Widget extends TreeNode
   #      whole-figure grab, no churn) or a FRESH island carrying the accumulated N-deep similitude (I am a
   #      genuine sub-part, extracted + re-homed screen-coincident). Off any island this returns me UNCHANGED
   #      ⇒ byte-identical dormant. NoSettle: the extraction's re-fit of my former container rides the
-  #      caller's own settle (the drag's @grab; pickUpMenuAction's pickUp, whose first settle flushes it).
+  #      caller's own grab settle (the drag's @grab; pickUpMenuAction's pickUp, whose grab's first settle flushes it).
   #   2. §7.5 Bug F (reparent-transparency): a drop→pick round-trip can leave an IDENTITY compensating sugar
   #      wrapper (the -deg wrapper's spec folded to identity against its +deg container on pick-out).
   #      DISSOLVE it — self-settling (_unwrapIfIdentitySugar) — so the BARE content is what goes on the hand,
@@ -2261,7 +2265,7 @@ class Widget extends TreeNode
   # Returns the figure to grab.
   # DECLARED deferred settle (claimsSpace arc S2): step 1's Bug-F ancestor-fold calls the island's
   # _set*NoSettle cores, whose claim reflow (_invalidateLayout) fires now that sugar figures
-  # default to 'footprint' — an off-settle push the caller's own settle carries (the drag's
+  # default to 'footprint' — an off-settle push the caller's own grab settle carries (the drag's
   # @grab, pickUpMenuAction's pickUp), exactly as step 1's contract above always stated. The
   # declaration window makes that contract explicit to the end-of-cycle capstone audit.
   _resolvePickUpFigure: ->
@@ -4089,7 +4093,7 @@ class Widget extends TreeNode
   # standing where the original is. Normalize a possibly-pinned anchor first, matching the Bug-G pick-up
   # seam — the whole hand-carry pipeline assumes a slot-centre pivot. Only islands define
   # _normalizePinnedAnchorNoSettle (the `?.` no-ops off any island); the copy is a detached root, so no
-  # settle is needed here — pickUp's own settle covers it.
+  # settle is needed here — the grab's own settles, through pickUp, cover it.
   # PUBLIC API WITH NO MENU ITEM, deliberately: arc 3 phase 7 unified the two entry pages onto ONE
   # "Duplicate" item meaning copy-in-place (the less surprising end-user behaviour), so this variant is
   # reachable only programmatically. Do not re-add it to a context menu without an owner decision.
@@ -4787,18 +4791,10 @@ class Widget extends TreeNode
   disableDrops: ->
     @_acceptsDrops = false
   
+  # PUT ME ON THE HAND, centred under it: a grab (ActivePointerWdgt.grab owns every settle of the
+  # gesture, and its add tells the holder I leave), then the centring. A window whose contents I am
+  # hears me leave there, as every holder does (_reactToChildRemoved).
   pickUp: ->
-    oldParent = @parent
-    # I am the DISPATCHER of both callbacks, so I own the settle of each (rule [J]: a hook is a
-    # settle-neutral core and declares none -- the twins are ActivePointerWdgt.grab's settles round
-    # _beforeBeingGrabbed and _reactToChildGrabbed). The one before the grab is where a window whose
-    # contents I am rebuilds its payload (_resetToDefaultContents: FrameWdgt's placeholder, or by
-    # MakerDocumentWdgt's override a Maker's fresh payload, whose constructors settle and so need
-    # a settle open to defer to), and its marks are flushed here, before the hand takes me. Each callback has a settle of its own
-    # because one cannot span the two: grab settles in between, on the hand (a dotted .grab, so no
-    # [T] pairing), and a settle an attached widget reaches inside another throws. With no parent,
-    # or under a parent that defines no such hook, the thunk does nothing.
-    @_settleLayoutsAfter => oldParent?._beforeChildPickedUp? @
     world.hand.grab @
     # if one uses the "deferred" API then we need to look
     # into the "desiredExtent" as the true extent has yet
@@ -4807,9 +4803,6 @@ class Widget extends TreeNode
       @_applyMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
       @_applyMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
-    # the callback after the grab, in its own settle: grab's settles are closed by this point, so
-    # this one opens outside any pass
-    @_settleLayoutsAfter => oldParent?._reactToChildPickedUp? @
 
   # The menu "Pick up" item (buildBaseWidgetClassContextMenu). Bare `pickUp` grabs the CONTENT widget the
   # menu opened on — which, for a rotated/scaled widget, rips the content off the hand un-transformed AND

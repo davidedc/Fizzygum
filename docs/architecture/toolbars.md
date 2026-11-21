@@ -60,8 +60,9 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   the person, exactly like a floating one.
 - **Every edge-slot dock ties**, whatever the host holds: no content, or content that is itself a toolbar. A band
   never asks its host's content whom it works for. A window whose content is REPLACED (a widget dropped into an empty
-  window, its content picked up or closed) retires every band it wears (`FrameWdgt._retireDockedFramesNoSettle`) and
-  docks the new content's toolbar, if it declares one.
+  window, or its content leaving it by any door, `FrameWdgt._reactToChildRemoved`) retires every band it wears
+  (`FrameWdgt._retireDockedFramesNoSettle`) and docks the new content's toolbar, if it declares one. A band is a window
+  too: one whose payload leaves it keeps its thickness, the one its payload was granted.
 - **A band the host's view mode disengages is still docked.** It is hidden, and still listed among the
   host's payloads (`FrameWdgt.dockedPayloads`).
 - **The seam.** `ToolbarWdgt.hostWindow` asks the toolbar's frame for its `dockHost` at every asking; nothing
