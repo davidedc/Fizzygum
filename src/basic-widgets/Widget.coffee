@@ -557,14 +557,16 @@ class Widget extends TreeNode
   # below. (The spreadsheet cell's ring is a separate MODEL selection drawn inline -- CellAppearance --
   # since a cell is never the editor-focus widget.) One ring is not mine to draw though I am selected:
   # when I fill a window's PAGE and that window keeps a gutter around it, the window paints my ring in
-  # its gutter, outside my box (FrameWdgt.hostsSelectionRingOf, WorldWdgt.editorSelectionRingHost),
-  # and I draw none (_paintEditorSelectionOverlayIfSelected).
+  # its gutter, outside my box, and when I am a viewport's PLANE, the viewport paints it, in its
+  # margin or at its own box (hostsSelectionRingOf, WorldWdgt.editorSelectionRingHost); I draw none
+  # (_paintEditorSelectionOverlayIfSelected).
   _showsSelectionOverlay: ->
     world?.isEditorSelected @
   _drawSelectionOverlay: (aContext, al, at, w, h) ->
     # THE SELECTION OUTLINE (visual-design-system §4.8: the accent says "selected"): a ring
     # selectionOutlineWidth thick in the selectionOutline role, lying wholly inside my box (the ring of
-    # a widget filling a window's page excepted, which that window paints in its gutter), its corners
+    # a widget filling a window's page excepted, which that window paints in its gutter, and the ring
+    # of a viewport's plane, which the viewport paints), its corners
     # the ones I show (cornerRadiiFollowingMyOutline: my own rounded outline and my ancestors' rounded
     # clips), so it follows a rounded body instead of squaring it off. It is the drop outline's ring,
     # painted by the same painter (HighlightOutlineAppearance.paintRing), with its stroke half on only
@@ -3201,9 +3203,9 @@ class Widget extends TreeNode
   # itself runs after the children). TransformFrameWdgt's non-identity island renders children into its
   # buffer where each draws its own, so a rotated island's selected content warps for free. Never in the
   # shadow pass, and only for the ONE selected widget (an O(1) check), so calculateKeyValues costs nothing
-  # on the common path. Not for the selected widget whose ring a window paints in its page gutter
-  # either (WorldWdgt.editorSelectionRingHost): that ring lies outside my box, and drawing mine too
-  # would ring the page twice.
+  # on the common path. Not for the selected widget whose ring a host paints either
+  # (WorldWdgt.editorSelectionRingHost: a window in its page gutter, a viewport around its plane):
+  # that ring lies outside my box, and drawing mine too would ring the page twice.
   _paintEditorSelectionOverlayIfSelected: (aContext, clippingRectangle, appliedShadow) ->
     return if appliedShadow? or !@_showsSelectionOverlay()
     return if world?.editorSelectionRingHost()? and world.isEditorSelected @

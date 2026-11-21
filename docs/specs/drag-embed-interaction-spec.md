@@ -84,7 +84,7 @@ how much the destination has to lose.
 |---|---|
 | Self drop-gate: `wantsToBeDropped()` → `@internal`; base default true | `FrameWdgt.coffee:256` · `Widget.coffee:2910` |
 | Drop routing: if `!wantsToBeDropped()` → target forced to `world`, else climb | `ActivePointerWdgt.drop`, `ActivePointerWdgt.coffee:247-287` |
-| Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild`; the climb STARTS at what the hit widget names for points on its own body (`dropReceiverForPointsOnMyBody`: a page window's gutter and a letterboxed Stretchable page's margin name the page's receiver, and a viewport keeping a plane margin names its plane), and a payload released there is moved inside that receiver | `ActivePointerWdgt.dropTargetFor`, `_dropClimbStart`, `_moveGutterDropInsideTarget`, `topWdgtUnderPointer` |
+| Target resolution: cursor hit-test then parent-climb until `wantsDropOfChild`; the climb STARTS at what the hit widget names for points on its own body (`dropReceiverForPointsOnMyBody`: a page window's gutter and a letterboxed Stretchable page's margin name the page's receiver, a viewport keeping a plane margin names its plane, and a window around such a viewport names what its margin names), and a payload released there is moved inside that receiver | `ActivePointerWdgt.dropTargetFor`, `_dropClimbStart`, `_moveGutterDropInsideTarget`, `topWdgtUnderPointer` |
 | Accept predicate: `wantsDropOfChild` → `@_acceptsDrops` (default false; `enableDrops`/`disableDrops`) and not `sitsInViewModeContent` (content in view mode takes no drop; every override that can take a drop asks through `super`) | `Widget.wantsDropOfChild` |
 | Grab mirror: content in view mode gives nothing up — a widget whose holder sits in view-mode content grabs to its parent, so a drag that would lift it out climbs and takes the content as a whole (non-float drags keep their own answers; folders, the bin and their links bound the walk); a button there is no detachable payload | `Widget.grabsToParentWhenDragged` (`@parent?.sitsInViewModeContent()`), `ButtonWdgt.isDetachablePayloadOfMyParent` |
 | Edit/view toggle: pencil → window relay → content `dragsDropsAndEditingEnabled` | `EditIconButtonWdgt` → `FrameBarWdgt` → `FrameWdgt.editButtonInBarPressed` → the content's base `Widget.editButtonPressedFromFrameBar` (the fused editor middle layer dissolved — Frame-model §5.B/§5.D) |
@@ -199,7 +199,8 @@ offering a band under the pointer wins outright and the climb below never runs f
   destination — predictable, matches every OS; the highlight communicates it.
 - **Candidate = the innermost receptive widget on the parent-climb from the hit** (decision 3, uniform at all
   depths; the climb starts where `dropTargetFor`'s does, `ActivePointerWdgt._dropClimbStart` — over a page
-  window's gutter at the page's receiver, over a viewport's plane margin at its plane — while the dock offer
+  window's gutter at the page's receiver, over a viewport's plane margin at its plane, over the own body of a window
+  around such a viewport at that plane — while the dock offer
   is consulted first, from the hit itself):
   climb until `wantsDropOfChild(payload)` is true, exactly as `dropTargetFor` — with TWO additions:
   1. **The world is never a "candidate"** for embed UX. If the climb reaches `world`, there is no candidate: no
@@ -382,7 +383,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 
 | Element | Mechanism | Spec |
 |---|---|---|
-| Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the candidate's `clippedThroughBounds`; the accent (`dropCandidateOutline`), 2 px (`dropOutlineWidth`), its corners following the target's own (`Widget.cornerRadiiFollowingMyOutline`). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
+| Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the box the candidate presents to an overlay (`boxPresentedToOverlays`: a viewport keeping a margin presents its plane box; else its `clippedThroughBounds`); the accent (`dropCandidateOutline`), 2 px (`dropOutlineWidth`), its corners following the target's own (`Widget.cornerRadiiFollowingMyOutline`). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
 | Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, the accent), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
 | Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; while a test plays (`aTestIsPlaying()`) follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
@@ -415,7 +416,7 @@ Implementation note (when code opens up): the drag ephemerals are PRODUCT featur
 - **Ephemerals: separation of concerns + a free synergy.** The state machine (§6) only mutates declarative
   state (which candidate, which charge step, armed?, lock cue?); the reconciler turns state into pixels once
   per cycle pre-paint. Because the reconciler already repositions overlays when the target's paint bounds
-  change (`hasMaybeChangedPaintBounds` → re-apply `clippedThroughBounds`), the candidate highlight tracks the
+  change (`hasMaybeChangedPaintBounds` → re-apply the box the target presents), the candidate highlight tracks the
   destination through §6.1 wheel-scrolling and through any layout settle FOR FREE — no per-event visual
   bookkeeping. And since ephemerals are hit-test-excluded, no overlay can ever perturb candidate resolution,
   `hoverEntered` dispatch, or the drop climb (no feedback loops between feedback and input).

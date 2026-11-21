@@ -77,8 +77,11 @@ const METHOD_CEILINGS = {
   // of a window's pencil, which its strip reads and which bounds view mode's downward inheritance. Lowered 173 -> 170
   // on 2026-11-20 for the scroll indicators' U2b: a window hears its content leave in ONE seat, _reactToChildRemoved,
   // whatever the door, so its three per-verb hooks (_beforeChildPickedUp, _beforeChildClosed, _beforeChildDestroyed)
-  // are gone
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 170 },
+  // are gone. Lowered 170 -> 168 on 2026-11-21 for the scroll indicators' U3: a document keeps its margin itself, so
+  // no viewport stands between a window and the page whose ring it paints (_visibleBoxOnMyPage's translation climb
+  // went, its island test folded into hostsSelectionRingOf), and the ring's reach is one derived theme value
+  // (Theme.pageSelectionOutlineReach) the window and a viewport both read (_pageSelectionRingReach went)
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 168 },
 };
 
 const COMPLEXITY_CEILING = 15;

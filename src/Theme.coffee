@@ -438,7 +438,8 @@ class Theme
     # the SELECTION OUTLINE: the ring the editor-focus selection draws inside the box of the widget
     # an op will act on (Widget._drawSelectionOverlay, from WorldWdgt._widgetBeingEdited; never one a
     # caret is in -- the caret, in the accent too, says "focus" there), or around a window's page in
-    # the window's gutter (FrameWdgt._paintPageSelectionRing): the accent, which says "selected"
+    # the window's gutter (FrameWdgt._paintPageSelectionRing), or around a viewport's plane in the
+    # viewport's margin (ViewportWdgt._drawSelectionOverlay): the accent, which says "selected"
     # (visual-design-system §4.8), the drop outline's painter at its own width, selectionOutlineWidth.
     @selectionOutline = @accent
 
@@ -555,7 +556,7 @@ class Theme
     # its builder gives it this ink as it builds it, over a text's default ink.
     @framePlaceholderText = @muted2
     # a DOCUMENT's page (DocumentViewportWdgt): its fill, with no border -- a borderless sheet whose
-    # edge is where this fill ends, inside a window's page gutter or bare on the desk ...
+    # edge is where this fill ends, at a window's lines or bare on the desk ...
     @documentPageFill = @paper
     # ... and the ink of a document's text (DocumentViewportWdgt.getNormalParagraph), which also
     # takes fonts.document.
@@ -840,7 +841,7 @@ class Theme
     # instead (below).
     @frameBodyMargin = 0
     # the GUTTER a window keeps around a PAGE payload (a payload declaring wantsWindowPageGutter: a
-    # document, a canvas, a board), in place of frameBodyMargin: the page stands this far in from
+    # sheet, a canvas, a board), in place of frameBodyMargin: the page stands this far in from
     # every inner edge of the window's body and this far from each docked band. Read at every measure
     # and arrange of the page's window (FrameWdgt._bodyMargin), never copied into the window. A band
     # stands the larger of this and dockedBandInset in from the body's edges, so a gutter no wider
@@ -1087,21 +1088,27 @@ class Theme
     # the SELECTION OUTLINE's width (Widget._drawSelectionOverlay, painted with the drop outline's ring,
     # HighlightOutlineAppearance.paintRing): the ring an editor-focus selection draws wholly inside the
     # selected widget's box, its corners those the widget shows -- except the ring of a window's PAGE,
-    # which its window paints outside the page (below).
+    # which its window paints outside the page, and the ring of a viewport's PLANE, which its viewport
+    # paints outside the plane box (below).
     @selectionOutlineWidth = 2
-    # ... and how far OUTSIDE a page's box its window paints the page's selection ring, in the window's
-    # page gutter (FrameWdgt._paintPageSelectionRing, read as the ring is painted): this much air
-    # between the page and the ring, then the ring, selectionOutlineWidth thick. Only a window whose
-    # gutter around its page holds the ring (windowPageGutter at least this plus that width) paints it
-    # there, and the selected widget filling the page then draws no ring of its own; a narrower gutter
-    # leaves the ring inside that widget.
+    # ... and how far OUTSIDE the box it stands around such a ring is painted: around a page, in its
+    # window's page gutter (FrameWdgt._paintPageSelectionRing), around a viewport's plane box, in the
+    # viewport's margin (ViewportWdgt._drawSelectionOverlay), read as the ring is painted: this much
+    # air between that box and the ring, then the ring, selectionOutlineWidth thick. Only a host whose
+    # room around the box holds the ring (pageSelectionOutlineReach, below) paints it there, and the
+    # selected widget then draws no ring of its own; a window whose gutter is narrower leaves the ring
+    # inside that widget, a viewport whose margin is narrower paints it at its own box.
     @pageSelectionOutlineOffset = 2
+    # ... and the ring's REACH past the box it stands around: that air, then the ring. Derived, so the
+    # two painters of such a ring (a window in its page gutter, a viewport in its margin) and the test
+    # each makes that its room holds the ring read one number.
+    @pageSelectionOutlineReach = @pageSelectionOutlineOffset + @selectionOutlineWidth
 
     # a DOCUMENT's items (its paragraphs and whatever is dropped in among them): how far apart they
-    # stand (the gap of the document's stack), and how far in from the edge of the space around the
-    # page -- its own edges, or the body of a window keeping windowPageGutter around it, the gutter
-    # counted toward it, so the stack's inset is what is left of this past the gutter
-    # (DocumentViewportWdgt, read at every arrange). The stack sample keeps the stack's own.
+    # stand (the gap of the document's stack), and how far in from the document's own edges: the
+    # margin its viewport keeps around its plane (ViewportWdgt.planeMargin), its stack's inset
+    # agreeing (DocumentViewportWdgt._takeItemSpacing, read at every arrange), in a window as bare on
+    # the desk. The stack sample keeps the stack's own.
     @documentItemSpacing = 8
     # ... and the ITEM SHAPE a document dresses the texts on its page in
     # (DocumentViewportWdgt.itemShapeOfTextOnPlane, read at every ask): the rounding of the block

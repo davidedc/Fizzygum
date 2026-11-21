@@ -48,11 +48,13 @@ class PinoutsOverlay
       if @widgetsToBePinouted.has eachPinoutingWidget.wdgtThisWdgtIsPinouting
         if eachPinoutingWidget.wdgtThisWdgtIsPinouting.hasMaybeChangedPaintBounds()
           # reposition the pinout widget if needed. The label is a WORLD child, so it must anchor to the
-          # target's SCREEN footprint: clippedThroughBounds is plane-local, and for a target inside a
-          # rotated/scaled island the un-mapped box is the wrong plane (§7.11) — off any island
-          # mapRectToScreen returns the box unchanged.
+          # target's SCREEN footprint: the box is plane-local, and for a target inside a rotated/scaled
+          # island the un-mapped box is the wrong plane (§7.11) — off any island mapRectToScreen returns
+          # the box unchanged. The box is the one the target presents to an overlay, as every overlay laid
+          # at a widget reads it (boxPresentedToOverlays, asked through ?(): a viewport keeping a margin
+          # presents its plane box), else its clippedThroughBounds.
           target = eachPinoutingWidget.wdgtThisWdgtIsPinouting
-          peekThroughBox = target.mapRectToScreen target.clippedThroughBounds()
+          peekThroughBox = target.mapRectToScreen (target.boxPresentedToOverlays?() ? target.clippedThroughBounds())
           eachPinoutingWidget._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
@@ -71,8 +73,9 @@ class PinoutsOverlay
         hM._ephemeralOverlay = true
         world.add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
-        # SCREEN-anchor, same mapping as the reposition branch above (§7.11)
-        peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen eachWidgetNeedingPinout.clippedThroughBounds()
+        # SCREEN-anchor, same box and mapping as the reposition branch above (§7.11)
+        shownBox = eachWidgetNeedingPinout.boxPresentedToOverlays?() ? eachWidgetNeedingPinout.clippedThroughBounds()
+        peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen shownBox
         hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor WorldWdgt.theme.pinoutLabelText
         hM.setWidth 400

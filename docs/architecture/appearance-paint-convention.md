@@ -125,8 +125,10 @@ back-ref checks) stay in the caller, before the scope call.
   translated to the widget, and the drop outline's painter (`HighlightOutlineAppearance.paintRing`)
   draws it in the context the widget paints into — the world canvas, or its island's buffer.
   A page's ring, which its window paints in its gutter (`FrameWdgt._paintPageSelectionRing`, called from
-  the window's own `paintIntoAreaOrBlitFromBackBuffer` after its fill and before its children), is spelled
-  the same way, translated to the ring's box instead of the widget's.
+  the window's own `paintIntoAreaOrBlitFromBackBuffer` after its fill and before its children), and a
+  plane's ring, which its viewport paints in its margin (`ViewportWdgt._drawSelectionOverlay`, from the
+  clipping widget's overlay seat, last, over its plane, its bars and its border), are spelled the same
+  way, translated to the ring's box instead of the widget's.
 
 ## The vocabulary law: pixels say "damage", layout says "dirty"
 

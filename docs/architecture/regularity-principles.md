@@ -119,12 +119,15 @@ vocabulary below is the convention for all new code:
   - `MenuWdgt` / `PromptWdgt` are framed citizens (`extends FrameWdgt`, born transient): a
     menu or a prompt is a frame around a rows payload, not a parallel hierarchy alongside it.
   - **What a frame wraps is a PAGE or a PANE, declared by the payload's class, never by the
-    frame** (`wantsWindowPageGutter`): a page (a document, a canvas, a board) gets the theme's
+    frame** (`wantsWindowPageGutter`): a page (a canvas, a board, a sheet) gets the theme's
     page gutter as the frame's body margin, read at every measure and arrange, so the same page
     keeps its gutter in any window and a saved or duplicated window lays out in the current theme;
     a pane runs flush. The gutter is the frame's space, so the frame paints what lies in it (the
-    page's selection ring) and hands its points' drops to the page
-    ([`visual-design-system.md`](visual-design-system.md) §4.10).
+    page's selection ring) and hands its points' drops to the page. A pane that scrolls keeps any
+    air of its own as its viewport's plane margin (a document), and the same rule holds one level
+    in: the margin is the viewport's space, so the viewport paints its plane's ring there and hands
+    its points' drops to the plane, and the window hands its own body's drops to what that margin
+    names ([`visual-design-system.md`](visual-design-system.md) §4.10).
 
 ## How to apply it
 

@@ -319,18 +319,20 @@ class WorldWdgt extends IconGridPanelWdgt
   # z-order + back-buffer for free. This is a once-per-cycle cache; the per-widget paint reads it via the
   # O(1) _isEditorSelected identity check (never the tree-walking _widgetBeingEdited).
   _editorSelectedWidget: undefined
-  # The WINDOW that paints the selected widget's ring, or undefined: the nearest frame above the
-  # selected widget, when it answers that it hosts that ring (FrameWdgt.hostsSelectionRingOf -- a
-  # window keeping a page gutter, whose page the selected widget fills). That window paints the ring
-  # in its gutter, outside the page, and the selected widget paints none of its own. Derived in the
-  # same once-per-cycle pass and cached beside the selection (_updateEditorSelectionOverlay), because
-  # it can change while the selection does not: the page can stop or start filling, the gutter can
-  # open or close. Read through editorSelectionRingHost.
+  # The HOST that paints the selected widget's ring, or undefined: the nearest ancestor of the
+  # selected widget that answers the host question, when it answers that it hosts that ring
+  # (hostsSelectionRingOf -- a window keeping a page gutter, whose page the selected widget fills:
+  # FrameWdgt; a viewport, whose plane the selected widget is: ViewportWdgt). That host paints the
+  # ring outside the selected widget's box -- in the window's gutter, in the viewport's margin or at
+  # the viewport's box -- and the selected widget paints none of its own. Derived in the same
+  # once-per-cycle pass and cached beside the selection (_updateEditorSelectionOverlay), because it
+  # can change while the selection does not: the page can stop or start filling, the gutter can open
+  # or close. Read through editorSelectionRingHost.
   _editorSelectionRingHost: undefined
-  # ... and the box of the ring that window paints (FrameWdgt.pageSelectionRingBox), or undefined with
-  # no such window: kept beside the host by the same pass so a ring that MOVES while the selection and
-  # its window stay put (a band floated out of the window, docked into it or collapsed, changing the
-  # page's box inside an unchanged window) is still a change, and the window is told to repaint it.
+  # ... and the box of the ring that host paints (hostedSelectionRingBox), or undefined with no such
+  # host: kept beside the host by the same pass so a ring that MOVES while the selection and its host
+  # stay put (a band floated out of the window, docked into it or collapsed, changing the page's box
+  # inside an unchanged window) is still a change, and the host is told to repaint it.
   _editorSelectionRingBox: undefined
   # The SELECTED ICON this cycle -- the desktop icon (a WidgetHolderWithCaptionWdgt of any class: an
   # app launcher, a shortcut, a folder, the bin) the selection names, on my desktop or in a folder or
@@ -1766,9 +1768,11 @@ class WorldWdgt extends IconGridPanelWdgt
         @dragEmbedLockBadgeWdgt.setColor WorldWdgt.theme.dragBadgeText
       # the badge is a world child, so anchor it to the target's SCREEN footprint — the target can sit
       # inside a rotated/scaled island, where the plane-local box is the wrong plane (§7.11 mapping;
-      # off any island mapRectToScreen returns the box unchanged)
+      # off any island mapRectToScreen returns the box unchanged) — at the box the target presents to
+      # an overlay, as its outline does (a viewport keeping a margin presents its plane box:
+      # ViewportWdgt.boxPresentedToOverlays)
       badgeTarget = @dragEmbedLockBadgeDeclared.target
-      box = badgeTarget.mapRectToScreen badgeTarget.clippedThroughBounds()
+      box = badgeTarget.mapRectToScreen (badgeTarget.boxPresentedToOverlays?() ? badgeTarget.clippedThroughBounds())
       @dragEmbedLockBadgeWdgt._applyMoveTo new Point(box.right() - 70, box.top() + 4)
     else if @dragEmbedLockBadgeWdgt?
       @dragEmbedLockBadgeWdgt.fullDestroy()
@@ -1809,17 +1813,17 @@ class WorldWdgt extends IconGridPanelWdgt
   # rides tilted (_frameSeenThroughIslands) -- changes nothing: the selection stays where it was.
   # Focus is for the window the user works IN (isFocusedFrame, derived from z-order), the selection
   # for the thing they work ON: dropping a window after a move, or clicking its own body (its border,
-  # its page gutter), raises and focuses it and leaves selected the paragraph or the item the tools
-  # act on. This is no ancestry opt-out: everything INSIDE the window stays selectable, and a window
-  # NESTED as content (a card -- a Docs Maker dropped into a document) is an item like any other,
-  # selectable and never focused. One case clears the selection instead: the window named IS the
-  # selection (itself, or the island it rides) -- it was selected as a nested item and has just come
-  # to stand on my desktop, carried out of its container, so it is selected no more, and the clear
-  # goes through this same write, announced like any change. undefined (a clear) and I (a click on
-  # the bare desktop, which selects nothing) pass through. The rule sits HERE, at the one write,
-  # rather than at the sites that call it, so every path that writes the focus, present and future,
-  # obeys it by construction; a window that comes to stand on my desktop with no write at all is
-  # covered where the selection is read (_widgetTheFocusSelects).
+  # its grip strip, its page gutter), raises and focuses it and leaves selected the paragraph or the
+  # item the tools act on. This is no ancestry opt-out: everything INSIDE the window stays
+  # selectable, and a window NESTED as content (a card -- a Docs Maker dropped into a document) is
+  # an item like any other, selectable and never focused. One case clears the selection instead:
+  # the window named IS the selection (itself, or the island it rides) -- it was selected as a
+  # nested item and has just come to stand on my desktop, carried out of its container, so it is
+  # selected no more, and the clear goes through this same write, announced like any change.
+  # undefined (a clear) and I (a click on the bare desktop, which selects nothing) pass through. The
+  # rule sits HERE, at the one write, rather than at the sites that call it, so every path that
+  # writes the focus, present and future, obeys it by construction; a window that comes to stand on
+  # my desktop with no write at all is covered where the selection is read (_widgetTheFocusSelects).
   #   A WIDGET FOCUSED AS A WHOLE takes a write naming any part of it (_focusedAsAWholeAround,
   # applied first): a click on a spreadsheet's cell focuses the spreadsheet.
   _setEditorFocusNoSettle: (aWdgt) ->
@@ -2025,7 +2029,10 @@ class WorldWdgt extends IconGridPanelWdgt
     # transformSpec, not its @bounds). Resolve to the wrapped CONTENT instead: it draws its frame WARPED
     # inside the island buffer, so a tilted editor is framed exactly like the non-tilted one, and a tilted
     # icon dropped after a move is selected like an untilted one. Loop for nested islands
-    # (rotate-then-scale can wrap twice); an empty wrapper resolves to undefined.
+    # (rotate-then-scale can wrap twice); an empty wrapper resolves to undefined. A viewport keeping a
+    # margin answers the same capability (ViewportWdgt.resolvesEditorSelectionToContent): a click in
+    # its margin makes it the focus, and selecting it selects its plane, its first such child, as a
+    # click on the plane's empty area does.
     while focus.resolvesEditorSelectionToContent?()
       focus = focus.childrenNotHandlesNorCarets()?[0]
       return undefined unless focus?
@@ -2044,15 +2051,16 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # Recompute, once per cycle just before paint, which widget is generically SELECTED for editing
   # (_widgetBeingEdited, §5.D D-3/D21) and cache it for the per-widget paint-time selection overlay
-  # (Widget._drawSelectionOverlay) -- together with the window that paints its ring instead, when the
-  # selected widget fills a page whose window's gutter holds the ring (_editorSelectionRingHostOf),
-  # and the box of that ring (FrameWdgt.pageSelectionRingBox). On a CHANGE of the widget or the window
-  # (retarget, on/off, or the ring passing to or from a window) invalidate BOTH the old and new
-  # widgets, so their paint (hence the after-subtree overlay draw, or its absence) re-runs and the
-  # damage-rect repaint clears the old outline / draws the new one -- the selection-change
-  # invalidation the old HighlighterWdgt used to get from its own _changed()/fullDestroy() -- and
-  # tell the old and new ring windows through their public notification, since a ring in a window's
-  # gutter lies outside the selected widget's box, where that widget's repaint cannot reach. A
+  # (Widget._drawSelectionOverlay) -- together with the HOST that paints its ring instead
+  # (_editorSelectionRingHostOf): the window, when the selected widget fills a page whose window's
+  # gutter holds the ring, or the viewport, when the selected widget is its plane -- and the box of
+  # that ring (hostedSelectionRingBox). On a CHANGE of the widget or the host (retarget, on/off, or
+  # the ring passing to or from a host) invalidate BOTH the old and new widgets, so their paint
+  # (hence the after-subtree overlay draw, or its absence) re-runs and the damage-rect repaint
+  # clears the old outline / draws the new one -- the selection-change invalidation the old
+  # HighlighterWdgt used to get from its own _changed()/fullDestroy() -- and tell the old and new
+  # ring hosts through their public notification, since a ring in a window's gutter or a viewport's
+  # margin lies outside the selected widget's box, where that widget's repaint cannot reach. A
   # MOVING target needs no handling here: moving a widget already invalidates it, so its overlay
   # follows for free (unlike the old reconciler, which had to re-bounds); a window that moves or
   # resizes repaints its whole box, ring included. What a moving widget cannot cover is a ring that
@@ -2081,7 +2089,7 @@ class WorldWdgt extends IconGridPanelWdgt
       icon?._fullChanged()
     target = @_widgetBeingEdited()
     host = @_editorSelectionRingHostOf target
-    ringBox = host?.pageSelectionRingBox()
+    ringBox = host?.hostedSelectionRingBox()
     sameRingBox = if ringBox? then ringBox.equals(@_editorSelectionRingBox) else !@_editorSelectionRingBox?
     return if target is @_editorSelectedWidget and host is @_editorSelectionRingHost and sameRingBox
     previous = @_editorSelectedWidget
@@ -2089,10 +2097,10 @@ class WorldWdgt extends IconGridPanelWdgt
     @_editorSelectedWidget = target
     @_editorSelectionRingHost = host
     @_editorSelectionRingBox = ringBox
-    # only the ring's box moved (the same widget selected, the same window painting its ring): the
-    # selected widget draws nothing either way, so only the window repaints
+    # only the ring's box moved (the same widget selected, the same host painting its ring): the
+    # selected widget draws nothing either way, so only the host repaints
     if target is previous and host is previousHost
-      host.notePageSelectionRingChanged()
+      host.noteHostedSelectionRingChanged()
       return
     # only invalidate a previous widget still on a screen -- in the world or carried by the hand, which
     # paints it again only when it moves (isOrphan asks for neither): a destroyed one invalidated its
@@ -2102,22 +2110,23 @@ class WorldWdgt extends IconGridPanelWdgt
     previous._changed() if previous? and !previous.isOrphan()
     # cross-invalidation-sanctioned: selection-overlay reconciler (see above)
     target?._changed()
-    # the same rule for the windows painting a page's ring in their gutter: an old one still on a screen
-    # clears the ring it painted, a new one paints it, and one that keeps the ring repaints it where
-    # its box has moved to
-    previousHost.notePageSelectionRingChanged() if previousHost? and previousHost isnt host and !previousHost.isOrphan()
-    host?.notePageSelectionRingChanged() if host isnt previousHost or !sameRingBox
+    # the same rule for the hosts painting a ring outside the selected widget (a window in its gutter,
+    # a viewport in its margin or at its box): an old one still on a screen clears the ring it
+    # painted, a new one paints it, and one that keeps the ring repaints it where its box has moved to
+    previousHost.noteHostedSelectionRingChanged() if previousHost? and previousHost isnt host and !previousHost.isOrphan()
+    host?.noteHostedSelectionRingChanged() if host isnt previousHost or !sameRingBox
 
-  # The frame that paints `target`'s selection ring in its gutter, or undefined. Only the NEAREST
-  # frame above `target` is asked (FrameWdgt.hostsSelectionRingOf, through ?()): a widget filling a
-  # frame nested in a page fills that frame's page, never the outer one, and a widget in a docked band
-  # answers to its band.
+  # The host that paints `target`'s selection ring outside it, or undefined. Only the NEAREST ancestor
+  # of `target` that answers the host question is asked (hostsSelectionRingOf, through ?(): a window,
+  # FrameWdgt, or a viewport, ViewportWdgt): a widget filling a frame nested in a page fills that
+  # frame's page, never the outer one, a widget in a docked band answers to its band, and a widget on
+  # a viewport's plane answers to that viewport, which hosts its plane's ring alone.
   _editorSelectionRingHostOf: (target) ->
     return undefined unless target?
-    frame = target.parent
-    frame = frame.parent while frame? and !frame.hostsSelectionRingOf?
-    return undefined unless frame?.hostsSelectionRingOf target
-    frame
+    host = target.parent
+    host = host.parent while host? and !host.hostsSelectionRingOf?
+    return undefined unless host?.hostsSelectionRingOf target
+    host
 
   # Is w the widget generically selected for editing this cycle? PUBLIC query (called cross-object from
   # any widget's Widget._showsSelectionOverlay, like the spreadsheet's public isSelectedAddress): an O(1)
@@ -2132,11 +2141,12 @@ class WorldWdgt extends IconGridPanelWdgt
   isSelectedIcon: (aHolder) ->
     aHolder? and aHolder is @_selectedIcon
 
-  # The window painting the selected widget's ring in its page gutter this cycle, or undefined (no
-  # selection, or a ring the selected widget paints inside itself). PUBLIC query, read at paint
-  # time: by that window, which then paints the ring (FrameWdgt.paintIntoAreaOrBlitFromBackBuffer),
-  # and by the selected widget, which then paints none (Widget._paintEditorSelectionOverlayIfSelected).
-  # A read of the once-per-cycle cache, like isEditorSelected.
+  # The host painting the selected widget's ring this cycle -- a window in its page gutter, a viewport
+  # in its margin or at its box -- or undefined (no selection, or a ring the selected widget paints
+  # inside itself). PUBLIC query, read at paint time: by that host, which then paints the ring
+  # (FrameWdgt.paintIntoAreaOrBlitFromBackBuffer, ViewportWdgt._drawSelectionOverlay), and by the
+  # selected widget, which then paints none (Widget._paintEditorSelectionOverlayIfSelected). A read
+  # of the once-per-cycle cache, like isEditorSelected.
   editorSelectionRingHost: ->
     @_editorSelectionRingHost
 
@@ -2161,7 +2171,9 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # The frame `aWdgt` is, or the frame a transform island `aWdgt` wraps as its sole content (through
   # nested islands, each the sole content of the one around it); undefined for anything else. An
-  # island is recognised as it is in _widgetTheFocusSelects, by the capability it answers.
+  # island is recognised as it is in _widgetTheFocusSelects, by the capability it answers; a viewport
+  # keeping a margin answers it too, and its plane and two bars leave it no sole content, so it wraps
+  # no frame.
   _frameSeenThroughIslands: (aWdgt) ->
     figure = aWdgt
     while figure.resolvesEditorSelectionToContent?()
@@ -3181,9 +3193,10 @@ class WorldWdgt extends IconGridPanelWdgt
     # the editor-focus selection is world-level state NOT held as tracked-tree bookkeeping: it is a bare
     # ref to a selected widget (which fullDestroyChildren above tears down), so just drop the dangling ref.
     # editorFocusWdgt itself is cleared in _softResetWorld, so the PULL update would compute undefined next cycle
-    # regardless; the selected widget's own repaint clears its overlay. The window that painted its ring in a
-    # page gutter is a bare ref of the same kind, to a window fullDestroyChildren also tore down; the box
-    # of its ring goes with it, and so does the selected icon, a bare ref to an icon torn down with it.
+    # regardless; the selected widget's own repaint clears its overlay. The host that painted its ring (a window
+    # in its page gutter, a viewport in its margin) is a bare ref of the same kind, to a widget fullDestroyChildren
+    # also tore down; the box of its ring goes with it, and so does the selected icon, a bare ref to an icon torn
+    # down with it.
     @_editorSelectedWidget = undefined
     @_editorSelectionRingHost = undefined
     @_editorSelectionRingBox = undefined

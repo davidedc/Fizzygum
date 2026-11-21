@@ -17,8 +17,8 @@ class ViewportWdgt extends ClippingWdgt
   # is painted UNDER the plane — occluded, not skipped — wherever the plane shows.
 
   # the panel facts I genuinely mean, restated off PanelWdgt:
-  # around-the-content padding a caller can add via setContents (reads: the arrange,
-  # _caretScrollMargin)
+  # around-the-content padding a caller can add via setContents (reads: the arrange, the caret
+  # follow)
   extraPadding: 0
   # an EMPTY generic viewport accepts drops (wantsDropOfChild consults the contents' veto)
   _acceptsDrops: true
@@ -34,10 +34,14 @@ class ViewportWdgt extends ClippingWdgt
   # read. My plane still counts it as padding around its content (_positionAndResizeChildren), so my
   # scroll range, my clamps and my caret follow are a marginless viewport's: at both ends of a scroll
   # the content rests at the margin's inner edge. It is MAPPING state, as my scroll offset is (the
-  # version-keyed clip caches fold it in, see _writeScrollOffset): it is given to me as I am built,
-  # before I am shown, and nothing writes it on a live viewport. It is not called `padding`: a handle
-  # reads that name off whatever it is attached to, to know how far in from the corner it sits
-  # (HandleWdgt._cornerInsetFrom), and a handle on me sits by my corner whatever my margin.
+  # version-keyed clip caches fold it in, see _writeScrollOffset): on a live viewport it is written
+  # through its one door, _writePlaneMargin, as the offset is through _writeScrollOffset (a
+  # document keeps the theme's item spacing as its margin: DocumentViewportWdgt._takeItemSpacing).
+  # While I keep one, a click in it selects my plane (resolvesEditorSelectionToContent), my plane's
+  # selection ring stands in it (hostedSelectionRingBox) and an overlay laid over me frames my plane
+  # box (boxPresentedToOverlays). It is not called `padding`: a handle reads that name off whatever
+  # it is attached to, to know how far in from the corner it sits (HandleWdgt._cornerInsetFrom), and
+  # a handle on me sits by my corner whatever my margin.
   planeMargin: 0
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
@@ -153,6 +157,16 @@ class ViewportWdgt extends ClippingWdgt
   # stack IS its viewport's contents). FolderWindowWdgt declares the third the same way.
   hidesContainedWidgetFromHierarchyMenu: (aWdgt) ->
     @isMyContentsPanel aWdgt
+
+  # While I keep a margin, selecting ME selects my PLANE: a click in my margin -- the only place a
+  # pointer meets me rather than my plane -- selects the page, as a click on the page's empty area
+  # does, and its ring stands in my margin (I host it, below). Asked through ?() by the world as it
+  # reads what the editor focus selects (WorldWdgt._widgetTheFocusSelects resolves me to my first
+  # child that is no handle and no caret: my plane, my first child), and as it looks for the frame a
+  # transform island wraps (_frameSeenThroughIslands, which my three children leave unanswered).
+  # Without a margin I am selected as myself, like any widget.
+  resolvesEditorSelectionToContent: ->
+    @planeMargin > 0
 
   # ── the plane's up-relays (scroll-frame role plan P3) ─────────────────────────────────────
   # My paint values MIMIC my contents' (I DO paint every repaint, at alpha 1 once
@@ -312,12 +326,12 @@ class ViewportWdgt extends ClippingWdgt
 
   # WHO RECEIVES A DROP ON MY BODY -- on a point of me that none of my children covers: my margin
   # (planeMargin), where my plane is cropped away and my thin indicators let the pointer through.
-  # That room is my plane's, as a window's page gutter is its page's
-  # (FrameWdgt.dropReceiverForPointsOnMyBody), so a payload released there goes to my plane by my
-  # plane's own drop rules, moved first inside the box it shows through
+  # That room is my plane's, as a window's page gutter is its page's, so a payload released there
+  # goes to my plane by my plane's own drop rules, moved first inside the box it shows through
   # (ActivePointerWdgt._moveGutterDropInsideTarget). With no margin, nobody. PUBLIC: the hand asks it,
   # through ?(), of the top widget under the pointer (ActivePointerWdgt._dropClimbStart,
-  # _targetReachedThroughAGutter); its dock offer and a press never ask it.
+  # _targetReachedThroughAGutter), and a window holding me as its pane asks it for the points of its
+  # own body (FrameWdgt.dropReceiverForPointsOnMyBody); the hand's dock offer and a press never ask it.
   #   THE LIMIT: it covers my body, so not the side of my margin a bar of mine stands FAT over. A
   # carry with no button held sends hover moves, which fatten my bars within a bar's width of my
   # right and bottom edges (hoverMoved), and a fat bar covers my margin on its side: the release
@@ -326,6 +340,57 @@ class ViewportWdgt extends ClippingWdgt
   # where it was let go, moved nowhere. A carry under a held button keeps my bars thin.
   dropReceiverForPointsOnMyBody: ->
     if @planeMargin > 0 then @contents else undefined
+
+  # ── MY PLANE'S SELECTION RING ──────────────────────────────────────────────────────────────
+  # My plane is as tall as its content, so a ring inside its box scrolls away with it. I am the box
+  # that stays, so while my plane is the selected widget I paint its ring: in my margin, the theme's
+  # air out from my plane box, while my margin holds the ring's reach; else at my own box. The world
+  # decides once per cycle who paints the selected widget's ring and around which box
+  # (WorldWdgt._updateEditorSelectionOverlay), through the three public answers below, which a window
+  # gives too for the page it keeps a gutter around (FrameWdgt). Painted from the seat a clipping
+  # widget already has, last, over my plane, my bars and my border; my thin thumb is not moved for it.
+
+  # Do I paint the selection ring of `aWdgt`? Of my plane, and of nothing else: an item on my plane
+  # keeps its ring inside its own box. PUBLIC: asked through ?() by the world of the nearest ancestor
+  # of the selected widget that answers it (WorldWdgt._editorSelectionRingHostOf).
+  hostsSelectionRingOf: (aWdgt) ->
+    @isMyContentsPanel aWdgt
+
+  # THE BOX OF THE RING I paint for my plane, in my bounds' coordinates (not my plane's, which my
+  # scroll translates): my plane box grown by the ring's reach while my margin holds it, else my own
+  # box. The one home of its geometry, read by my paint and by the world, which keeps the last answer
+  # and tells me when it changes. PUBLIC query, read live.
+  hostedSelectionRingBox: ->
+    reach = WorldWdgt.theme.pageSelectionOutlineReach
+    if @planeMargin >= reach then @_planeBox().expandBy reach else @boundingBox()
+
+  # PUBLIC notification from the world: the ring I paint for my plane came, went or moved. It lies
+  # inside my box, so my own repaint covers it.
+  noteHostedSelectionRingChanged: ->
+    @_changed()
+
+  # I show a selection overlay while I am selected myself, as any widget, and while I paint my
+  # plane's ring.
+  _showsSelectionOverlay: ->
+    super() or world?.editorSelectionRingHost() is @
+
+  # My plane's ring in my margin: the selection outline's own spelling (Widget._drawSelectionOverlay),
+  # translated to the ring's box, its corners the ones I show there, its stroke half off (no border
+  # runs under it in my margin). Any other ring of mine -- my own, or my plane's when my margin does
+  # not hold it, which then stands at my box -- is Widget's.
+  _drawSelectionOverlay: (aContext, al, at, w, h) ->
+    unless world.editorSelectionRingHost() is @ and @planeMargin >= WorldWdgt.theme.pageSelectionOutlineReach
+      return super aContext, al, at, w, h
+    ringBox = @hostedSelectionRingBox()
+    theme = WorldWdgt.theme
+    aContext.save()
+    aContext.clipToRectangle al, at, w, h
+    aContext.globalAlpha = 1
+    aContext.useLogicalPixelsUntilRestore()
+    aContext.translate ringBox.left(), ringBox.top()
+    HighlightOutlineAppearance.paintRing aContext, ringBox.width(), ringBox.height(), theme.selectionOutlineWidth,
+      (@cornerRadiiFollowingMyOutline ringBox), theme.selectionOutline, false
+    aContext.restore()
 
   colloquialName: ->
     # the CONTENTS names the construct ("folder"/"toolbar") — capability via ?(), was two
@@ -378,6 +443,18 @@ class ViewportWdgt extends ClippingWdgt
   _planeBox: ->
     @boundingBox().insetBy @planeMargin
 
+  # THE BOX I PRESENT TO AN OVERLAY laid over me -- the hover wash a menu row standing for me lays
+  # (HighlighterWdgt.coverTarget), the drag's outline around me as a target or as one that
+  # declines the drop, the lock badge at that outline's corner (WorldWdgt.addDragAffordanceWidgets),
+  # and the dev label naming my output pins (PinoutsOverlay.reconcile): what shows of me
+  # (clippedThroughBounds), less my margin while I keep one, so such an overlay frames my plane,
+  # where what I hold shows, and not the margin around it. In my bounds' coordinates, as
+  # clippedThroughBounds is (not my plane's, which my scroll translates). PUBLIC: asked through ?()
+  # of the overlay's target, which answers clippedThroughBounds when it answers nothing.
+  boxPresentedToOverlays: ->
+    shown = @clippedThroughBounds()
+    if @planeMargin is 0 then shown else shown.intersect @_planeBox()
+
   # THE PLANE-MAPPING PROTOCOL, my half (TransformFrameWdgt answers it too, for its content).
   # Widget's screen↔plane walks — mapRectToScreen, screenPointToMyPlane, localPointToScreen,
   # screenBounds, and the iterator they share, _enclosingMappedPlaneRoot — ask every ancestor
@@ -412,8 +489,8 @@ class ViewportWdgt extends ClippingWdgt
     clipSoFar?.translateBy @_scrollTranslation()
 
   # The translation itself, for the walks that need the vector rather than a mapping
-  # (cornerRadiiFollowingMyOutline, FrameWdgt._visibleBoxOnMyPage, my own add, and my clip-through
-  # answer below): t when I map the child's plane, else undefined.
+  # (cornerRadiiFollowingMyOutline, my own add, and my clip-through answer below): t when I map the
+  # child's plane, else undefined.
   scrollTranslationOfChild: (child) ->
     if @mapsPlaneOfChild child then @_scrollTranslation() else undefined
 
@@ -1227,6 +1304,15 @@ class ViewportWdgt extends ClippingWdgt
     @_changed()
     true
 
+  # THE MARGIN WRITE DOOR: every write of my plane margin on a live viewport comes through here, for
+  # the offset funnel's reason (above): the margin is mapping state the version-keyed clip caches fold
+  # in, so a change breaks them, and my whole box repaints. A write of the margin I keep does nothing.
+  _writePlaneMargin: (margin) ->
+    return if margin is @planeMargin
+    @planeMargin = margin
+    WorldWdgt.geometryVersion++
+    @_changed()
+
   # §4.2 Stage 3 (structural arrange): the SCROLL CLAMP keeping the visible window inside the
   # content frame — the offset stays in [0, max(0, content − window)] per axis, so a shrink
   # at the bottom scrolls back up (no vacant space revealed) and fitting content rests at 0.
@@ -1642,14 +1728,19 @@ class ViewportWdgt extends ClippingWdgt
     fb = @contents.top() + @scrollOffsetY + @height() - @planeMargin
     fl = @contents.left() + @scrollOffsetX + @planeMargin
     fr = @contents.left() + @scrollOffsetX + @width() - @planeMargin
-    # how far past that box's edge the caret comes to stand, on either axis
-    marginAroundCaret = @_caretScrollMargin()
+    # how far past that box's edge the caret comes to stand, on either axis, so some of what
+    # surrounds it shows too: my margin and the padding a caller set around my content
+    # (setContents), my layout inset
+    marginAroundCaret = @planeMargin + (@extraPadding ? 0)
     # DIRECT, deliberately UN-clamped offset writes (the follow's one licence — the movement
     # cores clamp to the content frame, but a caret at the very end of the content needs the
-    # window to overshoot by its caret scroll margin): the arrange below then GROWS the frame to
-    # cover the overshot window (the window-in-plane merge) and its bookkeeping+clamp normalize
-    # the offset against the grown frame, so the overshoot STICKS exactly as far as the margin —
-    # the same fixpoint the moved-plane follow reached by moving the plane un-clamped.
+    # window to overshoot by that margin). What the arrange below makes of an overshoot depends on
+    # my plane: around free-floating content it GROWS the frame to cover the overshot window (the
+    # window-in-plane merge) and its bookkeeping+clamp normalize the offset against the grown frame,
+    # so the overshoot STICKS exactly as far as the margin — the same fixpoint the moved-plane follow
+    # reached by moving the plane un-clamped; a content-sizing plane (a stack, a document, a text)
+    # is framed from its measure alone, so the clamp takes the overshoot away and a caret on the
+    # content's last lines comes to rest where the content ends.
     if caretWidget.top() < ft
       @_writeScrollOffset @scrollOffsetX, (Math.round @scrollOffsetY - (ft - caretWidget.top() + marginAroundCaret))
     else if caretWidget.bottom() > fb
@@ -1660,16 +1751,6 @@ class ViewportWdgt extends ClippingWdgt
       @_writeScrollOffset (Math.round @scrollOffsetX + (caretWidget.right() - fr + marginAroundCaret)), @scrollOffsetY
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
-
-  # MY CARET SCROLL MARGIN: how far past the edge of the box my plane shows through (_planeBox) a
-  # caret I bring into view comes to stand (scrollCaretIntoView, on both axes), so some of what
-  # surrounds it shows too. It is a SCROLLING policy (CSS scroll-padding), apart from my layout
-  # inset (CSS padding), though by default it equals that inset: my plane margin plus the extra
-  # padding a caller set around my content (setContents). A viewport whose inset can yield to room
-  # someone else keeps around it answers its own (DocumentViewportWdgt). Read at every follow and
-  # kept nowhere.
-  _caretScrollMargin: ->
-    @planeMargin + (@extraPadding ? 0)
 
   # ViewportWdgt events.
   scrolledBy: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->

@@ -2,32 +2,19 @@
 # just for having "a more human name". Also provides additional document-oriented
 # features such as for adding divider lines, bullets etc.
 #
-# A document is a PAGE: a borderless documentPageFill, its items stacked documentItemSpacing apart
-# and documentItemSpacing in from the edge of the space around the page -- my own edges, or the
-# body of a window that keeps its page gutter around me, the gutter counted toward it -- each
-# paragraph in the document text (fonts.document, the documentText ink) on the editable-item fill,
-# and the texts on the page dressed as ITEMS: rounded blocks, each text inset from its block's
-# edges (itemShapeOfTextOnPlane).
+# A document is a sheet of PAPER: a borderless documentPageFill reaching my own edges, in a window
+# as bare on the desk -- a window holding me is my frame, its lines my edges, and keeps no gutter
+# around me (I am its pane: FrameWdgt._hostsAPage) -- its items stacked documentItemSpacing apart
+# and documentItemSpacing in from my edges, the MARGIN I keep around my plane (planeMargin), where
+# my plane is cropped and my scroll indicators and my plane's selection ring stand; each paragraph
+# in the document text (fonts.document, the documentText ink) on the editable-item fill, and the
+# texts on the page dressed as ITEMS: rounded blocks, each text inset from its block's edges
+# (itemShapeOfTextOnPlane).
 
 class DocumentViewportWdgt extends VerticalStackViewportWdgt
 
   colloquialName: ->
     "document"
-
-  # I am a PAGE, not a pane: a window holding me keeps the theme's page gutter (windowPageGutter)
-  # around me on every side and between me and each band it docks, and my items' inset YIELDS to
-  # that gutter (_itemInset), so my items stand where they would with no gutter at all. Asked by
-  # that window at every measure and arrange (FrameWdgt._hostsAPage), through ?(): a payload that
-  # does not answer is a pane.
-  wantsWindowPageGutter: -> true
-
-  # THE RECEIVER OF DROPS AROUND ME: my stack, where a drop on my page lands. Asked through ?() by a
-  # window keeping its page gutter around me (FrameWdgt.dropReceiverForPointsOnMyBody), so a payload
-  # released in that gutter goes into my stack, slotted among my items by the release point's height
-  # exactly as a drop on my page is (VerticalStackPanelWdgt._indexForDropAt): above my page, first;
-  # below it, last.
-  receiverOfDropsAroundMe: ->
-    @contents
 
   # Smart-placement protocol (see CreatorWdgt.activated):
   # the placer routes a creator-button click to a frame's CONTENT --
@@ -64,8 +51,8 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
     @getNormalParagraph text
 
   # My look as a page, read as I and my stack are painted: the document's paper, with no border of
-  # my own -- a borderless sheet whose edge is where its fill ends, inside the page gutter of a
-  # window holding me or bare on the desk.
+  # my own -- a borderless sheet whose edge is where its fill ends, at the lines of a window holding
+  # me or bare on the desk; my margin shows my own fill, which is my plane's (the mimic).
   _defaultPaneFill: ->
     WorldWdgt.theme.documentPageFill
 
@@ -73,64 +60,35 @@ class DocumentViewportWdgt extends VerticalStackViewportWdgt
     undefined
 
   # MY ITEM SPACING (documentItemSpacing): my items stand that far apart -- the GAP, which my stack
-  # asks of me through its plane (interElementGapOfPlane) -- and that far in from the edge of the
-  # space around me, a gutter my window keeps around me counted toward it, so my own INSET is what
-  # is left of the spacing past that gutter (_itemInset). The inset is my stack's padding, and my
-  # content frame keeps the same margin around my items (my extraPadding; the two must agree, or my
-  # arrange and my stack's would each size the stack to a different bottom). Taken from the theme
-  # and my parent at the top of every arrange of mine, never from a previous one: a document saved,
-  # loaded, duplicated or moved is spaced for the theme and the parent it is next laid out in.
+  # asks of me through its plane (interElementGapOfPlane) -- and that far in from my edges: my MARGIN
+  # (planeMargin), where my plane is cropped and my indicators and my plane's selection ring stand,
+  # and my stack's padding, so my content frame and my stack's own arrange size the stack to one
+  # bottom. Taken from the theme at the top of every arrange of mine, never from a previous one: a
+  # document saved, loaded, duplicated or moved is spaced for the theme it is next laid out in, in a
+  # window as on the desk. The margin is mapping state, so it goes through its write door
+  # (ViewportWdgt._writePlaneMargin).
   _positionAndResizeChildren: ->
     @_takeItemSpacing()
     super
 
   _takeItemSpacing: ->
-    inset = @_itemInset()
-    @extraPadding = inset
-    @contents?.padding = inset
+    spacing = WorldWdgt.theme.documentItemSpacing
+    @_writePlaneMargin spacing
+    @extraPadding = 0
+    @contents?.padding = spacing
 
-  # MY ITEMS' INSET: the item spacing less the page gutter my parent keeps around me, never below
-  # zero -- the band rule applied to items. Asked of my parent through ?() (a window holding me as
-  # its page answers its gutter, FrameWdgt.pageGutterAround); a parent that does not answer (the
-  # desk, a transform island, a stack) keeps no gutter, so a bare document keeps the whole spacing.
-  _itemInset: ->
-    Math.max 0, WorldWdgt.theme.documentItemSpacing - ((@parent?.pageGutterAround? @) ? 0)
-
-  # RE-PARENTED: when my new parent changes my items' inset (a window keeping its page gutter around
-  # me, or a parent that keeps none), I mark my own layout so my next arrange re-takes it -- the
-  # inset is taken only at the top of an arrange of mine (_takeItemSpacing), and a re-parenting
-  # does not arrange a viewport by itself (a window adopting me as its page can keep my extent, and
-  # an unchanged extent re-fits nothing). Nothing is marked while the inset stays what it is. A
-  # dirty mark, no settle (a notification hook is settle-neutral: the add's dispatcher owns the
-  # settle), through the phase valve, because an add can run inside a layout pass, where the
-  # climbing _invalidateLayout throws.
-  _reactToBeingAdded: (whereTo, beingDropped) ->
-    super
-    @_scheduleRelayoutRespectingPhase() unless @_itemInset() is @extraPadding
-
-  # content set into me stands at my items' inset (_itemInset: the margin my arrange keeps around
-  # it), so a caller hands me the content alone
+  # content set into me stands at my margin, which I take first: my constructor sets my opening
+  # paragraph before any arrange of mine has run (VerticalStackViewportWdgt)
   setContents: (aWdgt) ->
-    super aWdgt, @_itemInset()
+    @_takeItemSpacing()
+    super aWdgt
 
   # THE GAP between two consecutive items on my page, asked through my plane by my stack
   # (VerticalStackPanelWdgt.interElementGap) at every measure and arrange: the theme's item spacing,
-  # whatever gutter surrounds me -- only my inset yields to a window's gutter, never the space
-  # between my items. Read from the theme at every ask and kept nowhere.
+  # the same as my margin. Read from the theme at every ask and kept nowhere.
   interElementGapOfPlane: (plane) ->
     return undefined unless @isMyContentsPanel plane
     WorldWdgt.theme.documentItemSpacing
-
-  # MY CARET SCROLL MARGIN (ViewportWdgt._caretScrollMargin, read by scrollCaretIntoView): a caret I
-  # bring into view comes to stand the theme's item spacing past the edge of the box my plane shows
-  # through (my box less my plane margin), whatever my inset is. It is my SCROLL padding (CSS
-  # scroll-padding), a scrolling policy apart from my layout inset (CSS padding): where my inset
-  # yields to a window's page gutter (_itemInset, 0 at a gutter of the whole spacing) a caret
-  # scrolled into view still keeps some of its neighbouring lines in sight instead of landing flush
-  # with my edge; bare on the desk it equals my inset, as for any viewport. Read from the theme at
-  # every follow and kept nowhere.
-  _caretScrollMargin: ->
-    @planeMargin + WorldWdgt.theme.documentItemSpacing
 
   # THE ITEM SHAPE a text standing on my page wears, asked through my plane (the stack:
   # VerticalStackPanelWdgt.itemShapeOfContainedText) by the text itself, at every measure, paint and

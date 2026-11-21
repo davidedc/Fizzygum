@@ -40,7 +40,8 @@ A scrolling container decomposes into three responsibilities, each with an hones
    the arrange's window merge then grows the frame and the tail clamp normalizes, so the
    follow's margin overshoot sticks — the one licensed bypass of the cores' clamp.
 
-   **The plane margin.** A viewport's `planeMargin` (0 unless it is given one as it is built) is a fixed
+   **The plane margin.** A viewport's `planeMargin` (0 unless it is given one; a document keeps
+   `documentItemSpacing`) is a fixed
    margin, in whole pixels, between its edge and the box its plane shows through (`_planeBox`: its
    box inset by the margin, its box itself at 0). The plane is cropped there wherever a walk knows
    where it shows: the two paint bodies paint the contents child inside the damage ∩ the plane
@@ -60,9 +61,20 @@ A scrolling container decomposes into three responsibilities, each with an hones
    (`_positionAndResizeChildren`), so the scroll range, the clamps and the caret follow are a
    marginless viewport's: at both ends of a scroll the content rests at the margin's inner edge.
    The margin is MAPPING state, as the offset is (the `geometryVersion`-keyed clip caches fold it
-   in): it is given to a viewport as it is built. It is not named `padding`: a handle reads that
+   in), so it is written through ONE door, `_writePlaneMargin` (compare, assign, bump the geometry
+   version, repaint), as the offset is through `_writeScrollOffset`. It is not named `padding`: a handle reads that
    name off whatever it is attached to (`HandleWdgt._cornerInsetFrom`), and a handle on a viewport
    sits by the viewport's corner whatever its margin.
+   A viewport keeping a margin answers three more questions as the box that stays while its plane
+   scrolls. It PAINTS ITS PLANE'S SELECTION RING (`hostsSelectionRingOf` its plane;
+   `hostedSelectionRingBox`: the plane box grown by the theme's `pageSelectionOutlineReach` while the
+   margin holds it, else the viewport's own box, closed on all four sides, which is where a plain
+   viewport's plane ring stands; `noteHostedSelectionRingChanged`; painted from the clipping widget's
+   overlay seat, last, over the plane, the bars and the border, the thin thumb not moved for it). A
+   click in the margin SELECTS THE PLANE, as a click on the plane's empty area does
+   (`resolvesEditorSelectionToContent`, the island's protocol). And an overlay laid over it frames the
+   plane box (`boxPresentedToOverlays`: the hover wash, the drag's outlines, the lock badge, the pinout
+   label).
 2. **The plane** — the panel the viewport clips and scrolls, the coordinate surface content
    actually lives on. Plane-ness is a ROLE, not a class: the default `ScrolledPaneWdgt`, a
    `FolderPanelWdgt`, a `ToolPanelWdgt` or a vertical stack all play it. Every topology
@@ -390,8 +402,7 @@ generic viewport is "viewport"; composites take their contents' name
   translation, for its contents only — so a plane's residents keep integer plane-local `@bounds`
   while their screen positions are derived, the same two-vocabulary law the islands introduced.
   `scrollTranslationOfChild(child)` stays the viewport's answer for the callers that need the
-  translation vector itself (`cornerRadiiFollowingMyOutline`, `FrameWdgt._visibleBoxOnMyPage`, its
-  own `add`); the clip-through edge asks `clipIntoPlaneOfChild`, which crops to the plane box and
+  translation vector itself (`cornerRadiiFollowingMyOutline`, its own `add`); the clip-through edge asks `clipIntoPlaneOfChild`, which crops to the plane box and
   then translates. ⚠ One rule this imposes on INPUT handlers:
   `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
   is still plane-local to the SENDER — a pos-consuming GESTURE handler (`activated`,

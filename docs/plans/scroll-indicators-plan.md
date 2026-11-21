@@ -19,7 +19,7 @@ Status:
 | U1b | A pane picked up off its window leaves at its own size: the window's hook runs inside the pick-up's settle (`Widget.pickUp`; added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U1b) |
 | U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant; the field is `planeMargin`) | CLOSED 2026-11-20 (§U2) |
 | U2b | A window whose content leaves it keeps its size and shows its default content, by any door (added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U2b) |
-| U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | open (§U3) |
+| U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | CLOSED 2026-11-21 (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
@@ -741,6 +741,37 @@ Re-measure after U1 and U2 are in: the set must be explained test by test agains
 
 **If parked:** documents keep today's look; U4 goes on.
 
+**Landed 2026-11-21.** The document is a PANE: it keeps `documentItemSpacing` as its viewport's `planeMargin`, written
+through the margin's one door, `ViewportWdgt._writePlaneMargin` (compare, assign, bump the geometry version,
+repaint), windowed or bare alike; `wantsWindowPageGutter`, `receiverOfDropsAroundMe`, `_itemInset`, the
+`_reactToBeingAdded` override and the `_caretScrollMargin` override are deleted (the base's caret margin reads the
+plane margin), and so is `FrameWdgt._visibleBoxOnMyPage`'s translation climb (dead by structure: no page a window
+keeps a gutter round scrolls). A viewport hosts and paints its plane's selection ring (`hostsSelectionRingOf`,
+`hostedSelectionRingBox`, `noteHostedSelectionRingChanged`, the names the window's page ring now shares; the ring's
+reach one derived theme value, `pageSelectionOutlineReach`). The owner's rulings, as built: Q1 a click in the margin
+selects the page (`ViewportWdgt.resolvesEditorSelectionToContent` while a margin is kept); Q3 every overlay laid
+over a widget frames the box it presents (`boxPresentedToOverlays`: a document's plane box; the hover wash, both drag
+outlines, the lock badge, and the dev pinout label), so their pixels are today's; Q4 the window's grip floor counts
+its content's margin (a Docs Maker's floor stays 171 px); D7 a drop on a document window's own body (its grip strip,
+the surround of its band) goes to the page, the window forwarding what its content's margin names (a window whose
+content is itself a window forwards nothing: a release on its body lands where it does today, measured).
+`FrameWdgt` 170 → 168 methods, its ceiling lowered; no ratchet raised. Corrections to the Fix text above, measured: the base's caret margin is the plane margin (no `@padding` or
+`@extraPadding` is read); a BARE document changes beyond its bar (its margin's crop shows at rest as well as
+scrolled, and `SystemTest_macroDocumentCaretBroughtIntoViewWhenMoved`'s caret lands 8 px further in: image_4);
+`FrameWdgt` needed the two body edits (Q4, D7). The predicted set held: 15 tests under the mouse, all screenshots
+(the eleven bare-document tests, the two windowed ones by their bar alone, the two selected plain panels by their closed
+ring); under a finger the same less the two mouse-only tests, plus three scroll panels a finger's drag leaves
+selected, their ring now closed at the viewport's box (O4; the forecast ran the mouse only). The owner saw the
+pictures that differ from the review page's (a bare document's margin, a coloured document, the three finger rings)
+and said "go": the 15 and the 16 are recaptured at dpr 1 and 2, complete. One existing test
+changed its aim: `SystemTest_macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize` right-clicked 8 px inside the
+top of a paragraph standing at the foot of the view, which is now the margin; it right-clicks the middle of what
+shows of the paragraph. Proof: `SystemTest_macroDocumentKeepsItsMargin` (ten legs, three shots) and
+`SystemTest_macroViewportPaintsItsPlanesRing` (two fixtures, four shots) pass under both pointers with zero careless
+end-of-cycle pushes; ten plants (one per door) each fail their own legs under both pointers; followers clean. Filed
+on the way (this plan's BACKLOG section): a finger's scroll that starts on ANOTHER text of a document being edited
+ends the edit (the press is read as acting elsewhere before it turns into a scroll; probed).
+
 ---
 
 ### U4 — The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral)
@@ -943,6 +974,7 @@ stop at its commit, which you propose and do not make."
 - [x] U2: a viewport's `padding` ("around the scrollable area") is read in six places and crops nothing; it is to be a margin the plane shows inside. A mechanism, dormant until U3. — CLOSED 2026-11-20 (scroll-indicators loop, U2): the field is `planeMargin`; the plane is cropped to `_planeBox` in both paint bodies and at the clip-through edge (`clipIntoPlaneOfChild`), the thin bars run along the plane box, a drop in the margin goes to the plane; dormant (nothing gives a viewport a margin); `SystemTest_macroViewportMarginCropsItsPlane`.
 - [x] **A window's content moved out by "Attach" stays its `@contents`** — `FrameWdgt._reactToChildRemoved` frees dock slots but keeps the pointer (only pick-up, destroy and close rebuild), so the window's arrange moves the departed widget back (read; dev menu: the content's row → Attach → Desktop; H3d) — reachable, low. — CLOSED 2026-11-20 (scroll-indicators loop, U2b; filed under `archive/editing-residue-plan.md`): the window shows its default content in `_reactToChildRemoved`, the one seat every door reaches; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
 - [x] A Maker whose payload leaves it (the "Pick up" row; by reading "Destroy" too, any Maker kind) shrinks to its fresh payload: a Docs Maker goes 600×400 to 68×211 (measured), though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Reachable, medium. Detail: the plan's §U1b. — CLOSED 2026-11-20 (scroll-indicators loop, U2b): the Maker's reset captures the fresh payload's placement, and keeps its mode; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
+- [x] U3: a document's scroll indicator lies 11 px from its window's edge, over its items' right edge; the document is to keep its 8 px as its viewport's margin, and a viewport is to paint its plane's selection ring. — CLOSED 2026-11-21 (scroll-indicators loop, U3): the document is a pane keeping `documentItemSpacing` as its `planeMargin`, bare or windowed; a viewport hosts and paints its plane's ring; a margin click selects the page; `SystemTest_macroDocumentKeepsItsMargin`, `SystemTest_macroViewportPaintsItsPlanesRing`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

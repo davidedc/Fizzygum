@@ -388,7 +388,8 @@ class FrameWdgt extends ClippingWdgt
   # faces my payload across, by the larger of my body margin and the theme's band inset
   # (_dockedBandInset is what the band inset adds past my margin). My body margin depends on what
   # my payload IS: a PAGE (a surface you work on, which declares wantsWindowPageGutter) keeps the
-  # theme's page gutter, a PANE (a view whose edges are my lines) the theme's frame body margin.
+  # theme's page gutter, a PANE (a view whose edges are my lines) the theme's frame body margin --
+  # a document is a pane, which keeps its own margin inside its edges (ViewportWdgt.planeMargin).
   # My padding (_chromePadding) is border inset plus the frame body margin: a pane's inset where no
   # strip runs, whatever my payload is.
 
@@ -407,7 +408,7 @@ class FrameWdgt extends ClippingWdgt
     return WorldWdgt.theme.windowPageGutter if @_hostsAPage()
     @padding - @_borderInset()
 
-  # Is my payload a PAGE -- a surface you work on (a document, a canvas, a board) -- rather than a
+  # Is my payload a PAGE -- a surface you work on (a sheet, a canvas, a board) -- rather than a
   # PANE whose edges are my own lines? The payload's class declares it (wantsWindowPageGutter, a
   # capability asked through ?(): a payload that does not answer is a pane). Asked at every read and
   # never kept, stored or serialized, because my payload can be swapped.
@@ -416,11 +417,11 @@ class FrameWdgt extends ClippingWdgt
 
   # THE GUTTER I KEEP AROUND `aPayload` as my page: my body margin (the theme's page gutter) when
   # aPayload is my content and a PAGE, else 0 -- around a pane, a band, my strip or a widget that is
-  # not mine I keep none. A page asks it of its parent through ?() at every arrange, so content
-  # spacing it keeps for itself can yield to the room I already give it (a document's items stand
-  # the theme's item spacing from my body's edge, my gutter counted toward it:
-  # DocumentViewportWdgt._itemInset); a parent that does not answer keeps no gutter. Read live and
-  # never stored, so it follows the theme and every re-parenting.
+  # not mine I keep none. A page asks it of its parent through ?(), so what it shows of its own
+  # edge can follow the room I already give it (a stretchable page's panel edges its sheet on every
+  # side while the page stands in my gutter: StretchableWidgetContainerWdgt.standsInWindowPageGutter);
+  # a parent that does not answer keeps no gutter. Read live and never stored, so it follows the
+  # theme and every re-parenting.
   pageGutterAround: (aPayload) ->
     return 0 unless aPayload is @contents and @_hostsAPage()
     @_bodyMargin()
@@ -428,19 +429,26 @@ class FrameWdgt extends ClippingWdgt
   # WHO RECEIVES A DROP ON MY BODY -- on a point of it that none of my children covers: my page
   # gutter, my border. While I keep a gutter around a PAGE that room is the page's, so a payload
   # released there goes to the page: to the child my page names as receiving drops around it
-  # (receiverOfDropsAroundMe, asked through ?(): a document's stack, a stretchable page's content),
-  # else to my page itself, and the page's own drop rules decide from there (a page that refuses a
-  # payload refuses it in my gutter too, and the climb goes on past me as it would from me). Around
-  # a pane, or a collapsed page, nobody: the climb starts at me, and I refuse drops while I hold
-  # content. A point on my strip, my grip or a docked band is that child's, never mine; my grip
-  # strip beside my grip is my body, so it counts here, and a payload released on it lands inside the
-  # page like one released in the gutter. PUBLIC: the
-  # hand asks it, through ?(), of the top widget under the pointer, where both its drop climbs start
+  # (receiverOfDropsAroundMe, asked through ?(): a stretchable page's content), else to my page
+  # itself, and the page's own drop rules decide from there (a page that refuses a payload refuses
+  # it in my gutter too, and the climb goes on past me as it would from me). Around a PANE (a payload
+  # that is no page and no window), my body's points go where the pane's own body's go (its
+  # dropReceiverForPointsOnMyBody, asked through ?()): a pane keeping a margin of its own (a
+  # document: ViewportWdgt.planeMargin) names its plane, so a payload released on my grip strip or
+  # beside a docked band lands in the document as one released in its margin does. Around any other
+  # payload -- a pane that names nobody (one keeping no margin, a placeholder), a window, a
+  # collapsed payload -- nobody: the climb starts at me, and I refuse drops while I hold content. A
+  # point on my strip, my grip or a docked band is that child's, never mine; my grip strip beside
+  # my grip is my body, so it counts here, and a payload released on it lands inside the page, or
+  # the pane's plane, like one released in the gutter or the margin. PUBLIC: the hand asks it,
+  # through ?(), of the top widget under the pointer, where both its drop climbs start
   # (ActivePointerWdgt._dropClimbStart) and where its drop learns that a release fell in my gutter
   # (_targetReachedThroughAGutter); its dock offer and a press never ask it.
   dropReceiverForPointsOnMyBody: ->
-    return undefined unless @_hostsAPage() and !@contents.collapsed
-    @contents.receiverOfDropsAroundMe?() ? @contents
+    return undefined if !@contents? or @contents.collapsed
+    return (@contents.receiverOfDropsAroundMe?() ? @contents) if @_hostsAPage()
+    return undefined if @contents.isFrame?()
+    @contents.dropReceiverForPointsOnMyBody?()
 
   # How far in from my outer TOP my body's inner edge sits: my strip, when it runs across my top
   # (it always spans my border), else my border inset.
@@ -1268,11 +1276,17 @@ class FrameWdgt extends ClippingWdgt
   #         column runs between my top and bottom slots);
   #       - across it: my chrome there, the extent at which my content is empty and the band still inside
   #         me (on a window whose strip carries a title, the strip's own cross term asks as much).
+  # My content is EMPTY at my chrome plus what it keeps as a margin of its own (a document's,
+  # ViewportWdgt.planeMargin), at both ends: a pane with a margin shows nothing in it, so that room
+  # is no content a drag may take away.
   # Undefined when neither asks for anything (an untitled strip, no band), so such a window is not
   # floored at all. Pure: theme dials, my roster and my bands' own measures, the terms my arrange lays
   # the strip and the bands out by.
   smallestExtentKeepingMyControlsUsable: ->
-    floor = (new Point @bar.shortestStripKeepingEveryPiece(), @_chromeHeight()) if @_barSpec().showsText
+    kept = 2 * (@contents?.planeMargin ? 0)
+    emptyHeight = @_chromeHeight() + kept
+    emptyWidth = @_chromeWidth() + kept
+    floor = (new Point @bar.shortestStripKeepingEveryPiece(), emptyHeight) if @_barSpec().showsText
     for side in FrameWdgt.DOCK_SIDES
       band = @_dockedFrameAt side
       continue if !band? or band.contents?.collapsed
@@ -1280,10 +1294,10 @@ class FrameWdgt extends ClippingWdgt
       continue unless run?
       if side is "top" or side is "bottom"
         along = @_bodyEdgeLeft() + @_bodyEdgeRight() + 2 * (@_bodyMargin() + @_dockedBandInset()) + band._chromeWidth() + run
-        bandFloor = new Point along, @_chromeHeight()
+        bandFloor = new Point along, emptyHeight
       else
         along = @_chromeHeight() + 2 * @_dockedBandInset() + band._chromeHeight() + run
-        bandFloor = new Point @_chromeWidth(), along
+        bandFloor = new Point emptyWidth, along
       floor = if floor? then floor.max bandFloor else bandFloor
     floor
 
@@ -2276,59 +2290,43 @@ class FrameWdgt extends ClippingWdgt
   # at least that reach wide, so nothing else reaches it (a band stands a whole gutter from my page,
   # my border a whole gutter from its edges). The selected widget then paints no ring of its own
   # (Widget._paintEditorSelectionOverlayIfSelected). The world decides once per cycle whose ring I
-  # paint and around which box, by asking hostsSelectionRingOf and pageSelectionRingBox below, and
-  # tells me when that ring comes, goes, changes hands or moves (notePageSelectionRingChanged). Every
-  # other selection ring -- a paragraph's, a board's, the page's in a window whose gutter cannot
-  # hold it -- stays inside its own widget.
+  # paint and around which box, by asking hostsSelectionRingOf and hostedSelectionRingBox below, and
+  # tells me when that ring comes, goes, changes hands or moves (noteHostedSelectionRingChanged), the
+  # three answers a viewport gives too for its plane, whose ring it paints in its margin or at its
+  # box (ViewportWdgt). Every other selection ring -- a paragraph's, a board's, the page's in a
+  # window whose gutter cannot hold it -- stays inside its own widget.
 
   # Do I paint the selection ring of `aWdgt`? Only while my gutter HOLDS the ring (my payload is a
   # PAGE, my body margin is at least the ring's reach, my page is not collapsed and shows) and
   # `aWdgt` FILLS my page: my page itself, or a widget inside it whose visible box is my page's
   # visible box. A narrower gutter would put the ring over my border or a band, so there the
   # selected widget keeps its own ring, inside its box. A click on a page selects the child that
-  # covers it -- a document's stack, a canvas's glass, a stretchable page's panel -- and never the
-  # page, so that child's ring is my page's ring; an item ON my page (a paragraph, a letterboxed
-  # slide, a Fizzytiles board) keeps its ring inside its own box. PUBLIC: the world's selection
-  # reconciler asks it, through ?(), of the nearest frame above the selected widget
-  # (WorldWdgt._editorSelectionRingHostOf); a widget that does not answer hosts no ring.
+  # covers it -- a canvas's glass, a stretchable page's panel -- and never the page, so that child's
+  # ring is my page's ring; an item ON my page (a letterboxed slide, a Fizzytiles board) keeps its
+  # ring inside its own box. PUBLIC: the world's selection reconciler asks it, through ?(), of the
+  # nearest ancestor of the selected widget that answers it (WorldWdgt._editorSelectionRingHostOf);
+  # a widget that does not answer hosts no ring.
   hostsSelectionRingOf: (aWdgt) ->
-    return false unless @_hostsAPage() and @_bodyMargin() >= @_pageSelectionRingReach() and !@contents.collapsed
+    return false unless @_hostsAPage() and @_bodyMargin() >= WorldWdgt.theme.pageSelectionOutlineReach and !@contents.collapsed
     return false unless @contents.isAncestorOf aWdgt
     pageBox = @contents.clippedThroughBounds()
     # nothing of my page shows (hidden, or clipped away by a container I stand in): no ring to paint
     return false if pageBox.isEmpty()
-    pageBox.equals @_visibleBoxOnMyPage aWdgt
+    # aWdgt's visible box is in my page's plane: no viewport stands between them, since a viewport
+    # answers this question for its own plane and the world asks the nearest that answers it; past a
+    # transform island a box is turned or scaled, so it is no box of my page's
+    return false unless aWdgt._enclosingNonIdentityIsland() is @contents._enclosingNonIdentityIsland()
+    pageBox.equals aWdgt.clippedThroughBounds()
 
-  # `aWdgt`'s visible box (its clippedThroughBounds, in its own plane) carried into my page's plane
-  # across the scroll translations between them: a scrolled document's stack lies in its viewport's
-  # translated plane, where its box stands wherever its content has scrolled to. undefined when a
-  # transform island stands between them -- past one a box is turned or scaled, so it is no box of my
-  # page's. `aWdgt` is my page or a widget inside it.
-  _visibleBoxOnMyPage: (aWdgt) ->
-    return undefined unless aWdgt._enclosingNonIdentityIsland() is @contents._enclosingNonIdentityIsland()
-    box = aWdgt.clippedThroughBounds()
-    child = aWdgt
-    until child is @contents
-      translation = child.parent.scrollTranslationOfChild? child
-      box = box.translateBy translation if translation?
-      child = child.parent
-    box
-
-  # How far my page's ring reaches out past my page's box: the theme's air, then the ring's width.
-  # Read by the guard above (my gutter must hold it) and by the ring's box below.
-  _pageSelectionRingReach: ->
-    theme = WorldWdgt.theme
-    theme.pageSelectionOutlineOffset + theme.selectionOutlineWidth
-
-  # THE BOX OF THE RING I paint around my page: my page's visible box grown by the ring's reach (the
-  # ring is the band between this box and my page's box grown by the air alone). The ONE home of the
-  # ring's geometry, read by my paint (_paintPageSelectionRing) and by the world's selection
-  # reconciler, which keeps the last answer beside the host and tells me when it changes
-  # (WorldWdgt._updateEditorSelectionOverlay) -- so the box the world compares is the box I paint.
-  # PUBLIC query, read live at every ask: my page's box moves with my resizes and with every band
-  # floated out of me, docked into me or collapsed.
-  pageSelectionRingBox: ->
-    @contents.clippedThroughBounds().expandBy @_pageSelectionRingReach()
+  # THE BOX OF THE RING I paint around my page: my page's visible box grown by the ring's reach
+  # (pageSelectionOutlineReach; the ring is the band between this box and my page's box grown by the
+  # air alone). The ONE home of the ring's geometry, read by my paint (_paintPageSelectionRing) and by
+  # the world's selection reconciler, which keeps the last answer beside the host and tells me when
+  # it changes (WorldWdgt._updateEditorSelectionOverlay) -- so the box the world compares is the box
+  # I paint. PUBLIC query, read live at every ask: my page's box moves with my resizes and with every
+  # band floated out of me, docked into me or collapsed.
+  hostedSelectionRingBox: ->
+    @contents.clippedThroughBounds().expandBy WorldWdgt.theme.pageSelectionOutlineReach
 
   # PUBLIC notification -- the page selection ring I paint came to me, left me, moved (my page's box
   # changed while it stayed selected), or now belongs to a different selected widget's page. The
@@ -2338,7 +2336,7 @@ class FrameWdgt extends ClippingWdgt
   # its top and left edges (and the damage margin past its right and bottom), so the ring's top and
   # left sides would stay on screen. I invalidate MYSELF here, in the method the world invokes on me
   # (widget-citizenship point 2) -- the world never reaches into my _changed().
-  notePageSelectionRingChanged: ->
+  noteHostedSelectionRingChanged: ->
     @_changed()
 
   # My body's own paint (my appearance: my fill), then -- in the normal pass, while the world names me
@@ -2353,20 +2351,20 @@ class FrameWdgt extends ClippingWdgt
     @_paintPageSelectionRing aContext, clippingRectangle
 
   # THE PAGE RING: selectionOutlineWidth thick, pageSelectionOutlineOffset out from my page's visible
-  # box, filling pageSelectionRingBox to its edges, in the selectionOutline role, its corners the
+  # box, filling hostedSelectionRingBox to its edges, in the selectionOutline role, its corners the
   # ones my page shows (cornerRadiiFollowingMyOutline) each grown by the ring's reach, a square corner
   # staying square. Painted by the selection outline's own painter in its own spelling
   # (Widget._drawSelectionOverlay): clipped to the damaged part of me (device pixels), at full alpha,
   # laid out in logical pixels with the origin moved to the ring's top-left, in whatever context I am
   # painted into -- the world canvas, or the buffer of the transform island I sit in, where it warps
-  # with me. Its geometry is pageSelectionRingBox, never the damage box. Its stroke half stays off:
+  # with me. Its geometry is hostedSelectionRingBox, never the damage box. Its stroke half stays off:
   # the ring's outer edge lies over my own fill in the gutter, where no border runs under it.
   _paintPageSelectionRing: (aContext, clippingRectangle) ->
     [damageBox, sl, st, al, at, w, h] = @calculateKeyValues aContext, clippingRectangle
     return unless damageBox? and damageBox.isNotEmpty() and w >= 1 and h >= 1
     theme = WorldWdgt.theme
-    reach = @_pageSelectionRingReach()
-    ringBox = @pageSelectionRingBox()
+    reach = theme.pageSelectionOutlineReach
+    ringBox = @hostedSelectionRingBox()
     pageBox = ringBox.insetBy reach
     radii = ((if radius > 0 then radius + reach else 0) for radius in @contents.cornerRadiiFollowingMyOutline pageBox)
     aContext.save()
