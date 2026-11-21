@@ -324,7 +324,7 @@ the finger ARRIVING is delivered as a pointer walking to the press point. That m
 load-bearing twice over:
 - **Text:** `StringWdgt.hoverMoved` ends a stale selecting gesture on it.
 - **Scrollbars:** it is how a finger reaches a scroll indicator. Landing within a viewport's
-  scroll band fattens the bars (`ViewportWdgt.hoverMoved`), so the press lands on a fat, tangible
+  scroll band fattens the bars (`ScrollIndicatorHostWdgt.hoverMoved`), so the press lands on a fat, tangible
   bar — chrome the finger then drags or pages like a mouse does.
 
 The arrival is a hover move even when the finger lands exactly where the previous stroke went

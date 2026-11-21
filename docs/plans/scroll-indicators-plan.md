@@ -20,7 +20,9 @@ Status:
 | U2 | A viewport's padding is a margin: its plane shows inside it (mechanism, dormant; the field is `planeMargin`) | CLOSED 2026-11-20 (§U2) |
 | U2b | A window whose content leaves it keeps its size and shows its default content, by any door (added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U2b) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | CLOSED 2026-11-21 (§U3) |
-| U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | open (§U4) |
+| U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | CLOSED 2026-11-21 (§U4) |
+| U4b | A tilted window content's window keeps its size at its next arrange (added by the owner 2026-11-21) | open (§U4b) |
+| U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | open (§U4c) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
 | U7 | Close: this plan archived, or left open with what parked | open (§U7) |
@@ -332,12 +334,13 @@ D10's last sentence ("its overlay scroll indicator over the items' right edge is
 ## 4. Units
 
 ### U-order
-U1 → U1b → U2 → U2b → U3 → U4 → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
+U1 → U1b → U2 → U2b → U3 → U4 → U4b → U4c → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
 document sits in its window. U1b needs U1 alone (it restores a step of U1's test) and nothing after
 it needs it; it stands before U3 so that a document's way out of its window can be played in a test. U2 edits
 `_barFrameAt` after U1 did. U3 needs U2's mechanism. U4 lifts what U1–U3
-left (if U2 or U3 PARKED, U4 lifts the code as it stands). U5 is independent of U1–U3 but uses U4's shared range
-helper. U6 needs U4 and U5.
+left (if U2 or U3 PARKED, U4 lifts the code as it stands). U4b and U4c (added by the owner) fix two defects of a
+tilted window's content that U2b filed; they need no indicator unit and stand after U4, which was ready first. U5 is
+independent of U1–U4: its range helper is its own (§U4's Landed paragraph). U6 needs U4 and U5.
 
 ---
 
@@ -809,6 +812,66 @@ class's own lines; `homes.txt` shows the members leaving `ViewportWdgt` for the 
 
 **If parked:** U6 parks with it (the sheet must not get a second copy of the derivation).
 
+**Landed 2026-11-21.** `ScrollIndicatorHostWdgt extends ClippingWdgt` (core) holds the presentation;
+`ViewportWdgt extends` it. Moved: the fields `scrollBarsThickness`, `vBar`, `hBar`, `_pointerInScrollBand` (and its
+transient), with `sliderColor` now declared on the base, and 19 methods, `_reLayoutScrollbars` among them, split as
+it moved into a per-bar `_reLayoutBar` (complexity 8; the arrange 0), so `ViewportWdgt#_reLayoutScrollbars`'s
+complexity record is deleted. What only a viewport knows is asked: the bars' two actions are the parameters of the one
+builder (`_buildScrollBarsNoSettle hAction, vAction`); `_scrollAxisOverflows bar` (the scroll policy and the overflow
+test); `_scrollBarRunMargin` (the plane margin, a scalar); `_scrollBarRunBox` (the host's own box, inherited);
+`_fullBarThickness` (the field, else the theme's). The base names no `@contents`, scroll policy, plane margin or scroll
+offset. Corrections to the Fix text above, ruled before the first edit: `_scrollRangeAlong` and `_reactToBeingAdded`
+STAY in `ViewportWdgt` (they read its scroll state and its border rule), so U5 takes its own range helper and no
+longer needs U4; the run box is the host's own box and the margin a scalar hook (the "plane box" reading would have
+moved the bars 8 px in); `hoverMoved`'s warning comment was false and states the mechanism. `ViewportWdgt` 116 → 99
+methods, the base 25; `Fizzygum-tests/scripts/aim-census.js` keys the two bars to the base. Proof: the resolution
+map before and after differs on each of the 16 chain classes in exactly the 11 names whose text changed and the 7
+added, plus the new class's own lines, nothing else in 545 classes (the research's prediction); every class's
+merged transient list is unchanged (a statics probe, the one fact the map cannot see); the suite and the finger
+suite changed nothing. The layering gate's rule [F] names the split's new apply door, `_reLayoutBar`, beside
+`_reLayoutScrollbars`. One visible effect, in the dev tools only (`widget-authoring-guidelines.md` §16(b)): an
+inspector's default property list for this family no longer shows `sliderColor` (now declared) nor, on a viewport,
+`vBar`, `hBar` and `scrollBarsThickness`, which now live on the base; no test inspects one.
+
+---
+
+### U4b — A tilted window content's window keeps its size at its next arrange
+
+**Added by the owner 2026-11-21** ("add the (proper, clean, architecture-compliant) fixings of these two to the
+loop"), from U2b's filing. **Time box 3 h.** Research first: `Fizzygum-tests/.scratch/scroll-indicators-loop/u4b/`.
+
+**The defect, as read (to be measured before the fix).** When a window's content is tilted, an island
+(`TrackingTransformFrameWdgt`) takes the content's place as the window's content. The window's first placement
+measures the island's untransformed box (a nested window's outer window: 252×249); every LATER arrange of the window
+asks the island its height, and the island answers its claimed footprint (252×311). So any arrange after the tilt
+grows the window, whatever starts it: the hover highlight a menu gesture adds (U2b's measurement), a grip resize
+(`SystemTest_macroIslandLensWindowHeightLock` image_3 shows the window at the claim's height), a drag over it.
+`layout.md` §4.3 (and the owner's 2026-07-17 correction it records): a window DICTATES its content's size; a
+content's claim governs only the containers that ask for one.
+
+**Fix (recommended by the research; the product question below decides it).** An island claims space only where it
+is asked for a claim, and as a window's content it forwards the window's size to its content, as its 'slot' mode
+already does: one private predicate on `TrackingTransformFrameWdgt` in place of three copies of the gate.
+
+**Open for the owner (D-1):** a window whose content is tilted keeps the content's untransformed box, its tilted
+ink overhanging and clipped at the window's edge (the research's recommendation; today's first placement), or grows
+to the tilted footprint (today's later arranges). Shown with pictures before the fix.
+
+**If parked:** today's growth stays, filed.
+
+### U4c — "Pick up" on a tilted Maker's payload resets the Maker inside a settle
+
+**Added by the owner 2026-11-21**, with U4b. **Time box 3 h.** Research first:
+`Fizzygum-tests/.scratch/scroll-indicators-loop/u4c/`.
+
+**The defect, as read (never played).** "Pick up" on the content of a tilted window extracts it from its island
+through a DECLARED settle, not a settled one, so the window's removal seat (`FrameWdgt._reactToChildRemoved`, U2b's
+one seat) runs outside any settle; for a Maker that seat resets it to a fresh payload, whose constructors then lay
+the world out mid-reset. U2b's note: settling the extraction changes every tilted drag's cadence, so the fix's seat
+is weighed against that.
+
+**If parked:** filed, as U2b left it.
+
 ---
 
 ### U5 — The spreadsheet's scroll is two pins
@@ -825,7 +888,7 @@ class's own lines; `homes.txt` shows the members leaving `ViewportWdgt` for the 
   a resize and a zoom change the range without touching it. Find the one place all of them reach (by reading,
   `_reconcileViewportNoSettle`: `_scrollByNoSettle`, `_reLayout`, the zoom, the restore and the constructor all end
   there) and announce there with `world.dataflow.markNonValueChange @`, then delete the zoom's own call if it is
-  made redundant. Precedent for announcing inside an arrange: `ViewportWdgt._reLayoutScrollbars`.
+  made redundant. Precedent for announcing inside an arrange: `ScrollIndicatorHostWdgt._reLayoutScrollbars`.
 - `sliderRangeForPin: (pin)`: by label, U4's `_scrollRangeAlong` with whole columns or rows as its two arguments
   (`_viewportColsFull()`, `sheetCols`; the row twin), so the stop is the greatest origin and the size the shown
   share; undefined when everything fits.
@@ -975,6 +1038,7 @@ stop at its commit, which you propose and do not make."
 - [x] **A window's content moved out by "Attach" stays its `@contents`** — `FrameWdgt._reactToChildRemoved` frees dock slots but keeps the pointer (only pick-up, destroy and close rebuild), so the window's arrange moves the departed widget back (read; dev menu: the content's row → Attach → Desktop; H3d) — reachable, low. — CLOSED 2026-11-20 (scroll-indicators loop, U2b; filed under `archive/editing-residue-plan.md`): the window shows its default content in `_reactToChildRemoved`, the one seat every door reaches; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
 - [x] A Maker whose payload leaves it (the "Pick up" row; by reading "Destroy" too, any Maker kind) shrinks to its fresh payload: a Docs Maker goes 600×400 to 68×211 (measured), though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Reachable, medium. Detail: the plan's §U1b. — CLOSED 2026-11-20 (scroll-indicators loop, U2b): the Maker's reset captures the fresh payload's placement, and keeps its mode; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
 - [x] U3: a document's scroll indicator lies 11 px from its window's edge, over its items' right edge; the document is to keep its 8 px as its viewport's margin, and a viewport is to paint its plane's selection ring. — CLOSED 2026-11-21 (scroll-indicators loop, U3): the document is a pane keeping `documentItemSpacing` as its `planeMargin`, bare or windowed; a viewport hosts and paints its plane's ring; a margin click selects the page; `SystemTest_macroDocumentKeepsItsMargin`, `SystemTest_macroViewportPaintsItsPlanesRing`.
+- [x] U4: the scroll-indicator presentation lives in `ViewportWdgt` alone; it is to move to a base class both scrollers extend, pixel-neutral. — CLOSED 2026-11-21 (scroll-indicators loop, U4): `ScrollIndicatorHostWdgt extends ClippingWdgt` holds it, `ViewportWdgt` extends it and answers two hooks and the builder's two actions; proven by the resolution map and a statics probe; no pixel moved.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

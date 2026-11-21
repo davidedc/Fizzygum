@@ -9,7 +9,11 @@
 # lives one level down, on the plane — so the panel-family answers (its menu rows, its
 # lock-granting, its drop slots) are wrong here, and the few panel facts I do mean are stated
 # explicitly below (scroll-frame role plan P4).
-class ViewportWdgt extends ClippingWdgt
+#   My two bars, and how they are presented -- where each stands and how long it runs, how thick it
+# is, when it shows, the hover pass that fattens them -- are my base's (ScrollIndicatorHostWdgt): I
+# build them with my two scroll setters, and answer whether my plane overflows me along a bar's axis
+# (_scrollAxisOverflows) and the margin they keep from the ends of their run (_scrollBarRunMargin).
+class ViewportWdgt extends ScrollIndicatorHostWdgt
 
   # As a ClippingWdgt I clip my chrome (and through it the scrolled content) at my bounds, as
   # PanelWdgt and FrameWdgt do. Clipping also decides hit-testing together with the
@@ -70,30 +74,12 @@ class ViewportWdgt extends ClippingWdgt
   # footgun (cropping an inspector's list pane hides properties with no cue).
   # Each opts out with a one-line reason at its own declaration.
   offersScrollPolicyToggle: true
-  scrollBarsThickness: undefined
   contents: undefined
-  vBar: undefined
-  hBar: undefined
 
-  # ── THE SCROLL INDICATORS (program ruling G4) ─────────────────────────────────────────────
-  # My two bars are OVERLAY INDICATORS: THIN and untouchable while my content overflows, absent
-  # when it does not, and fattened into real controls while a pointer hovers my scroll band.
-  # Everything here is presentation — what can be SCROLLED is asked of overflow (isScrollableNow),
-  # never of a bar's visibility.
-  #   Visibility is a pure DERIVATION from overflow: no activity stamps, no clock, nothing
-  # time-driven on any path. An indicator on an overflowing pane is therefore the same pixels at
-  # rest as it is a second after a scroll, which is what makes a capture of one reproducible and
-  # what makes scrollability discoverable without a gesture.
-  #
-  # is a pointer hovering my scroll band right now (which fattens the indicators)
-  _pointerInScrollBand: false
-
-  # Hovering does not ride a file: a restored world wakes with no pointer in any band, exactly as
-  # a freshly built one does. (The thin/absent state needs no transient — it is re-derived from
-  # overflow at the first arrange.) Nor does a gesture's scroll step (_scrollStep): a restored world
-  # has no gesture in progress, and the step is a closure no file can carry.
+  # A gesture's scroll step (_scrollStep) does not ride a file: a restored world has no gesture in
+  # progress, and the step is a closure no file can carry. (My hover state stays out of a file by my
+  # base's declaration: ScrollIndicatorHostWdgt.)
   @serializationTransients: [
-    "_pointerInScrollBand"
     "_scrollStep"
   ]
 
@@ -127,15 +113,8 @@ class ViewportWdgt extends ClippingWdgt
     world.steppingWdgts.delete @
     @_scheduleRelayoutRespectingPhase()
 
-  # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
-  # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay) or content (a dropped
-  # value control → framable). Only my actual bars match, so a content slider dropped into my content stays
-  # framable. See SliderWdgt.excludedFromEditorFocusTracking.
-  isMyScrollBar: (aWdgt) ->
-    aWdgt is @vBar or aWdgt is @hBar
-
-  # Role query, the plane-side twin of isMyScrollBar: is aWdgt the contents panel I clip and
-  # scroll? THE one place the viewport topology is stated — the chokepoints
+  # Role query, the plane-side twin of isMyScrollBar (ScrollIndicatorHostWdgt's): is aWdgt the
+  # contents panel I clip and scroll? THE one place the viewport topology is stated — the chokepoints
   # (_amITheContentsPanelOfAViewport, _amIDirectlyInsideViewport, the hierarchy
   # menu) ask this rather than pattern-matching the composite's shape, so ANY class serving as
   # my plane (the default ScrolledPaneWdgt, a FolderPanelWdgt, a ToolPanelWdgt, a stack)
@@ -293,26 +272,9 @@ class ViewportWdgt extends ClippingWdgt
     @color = @contents.color
     @alpha = @contents.alpha
 
-    # my bars hold a track colour of their own only when my builder names one (@sliderColor);
-    # otherwise each bar's track wears its presentation's role, read as it paints
-    # (SliderWdgt._surfaceFill): the scroll indicator's while I present it -- faint while fat, absent
-    # while thin -- and a plain slider's groove once it is picked up off me
-    @hBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
-    @hBar._applyHeight @scrollBarsThickness
-    @_addNoSettle @hBar
-
-    @vBar = new SliderWdgt 1, 100, 50, 10, color: @sliderColor
-    @vBar._applyWidth @scrollBarsThickness
-    @_addNoSettle @vBar
-
-    # Bind each bar with the PUBLIC wire verb any other citizen would use — the RECIPROCAL one, since
-    # a scrollbar both drives my scroll pin and must follow it. The old direct @target/@action
-    # assignment kept the forward edge outside the wire vocabulary, and made the reverse one a
-    # hand-rolled push into these two fields — which is why only these two bars ever learned anything
-    # (connector plan §P8, complaint ①). trackTarget also takes the initial value FROM me rather than
-    # pushing the bar's constructed default at me.
-    @hBar.trackTarget @, "setScrollX"
-    @vBar.trackTarget @, "setScrollY"
+    # my two bars, each driving one of my scroll pins: my base builds and wires them
+    # (ScrollIndicatorHostWdgt._buildScrollBarsNoSettle), and places them once my plane is in
+    @_buildScrollBarsNoSettle "setScrollX", "setScrollY"
 
     @_reLayoutScrollbars()
 
@@ -405,8 +367,8 @@ class ViewportWdgt extends ClippingWdgt
   # ⚠ READABLE, where Widget's `width`/`height` deliberately are not (widget-authoring-guidelines
   # §11): a reader is a licence to BIND, and geometry is where the one-way layout↔dataflow law makes
   # that expensive. A scrollbar is precisely the case that needs it — it must FOLLOW what it drives —
-  # so §P8 pays that price here and nowhere else, and `_reLayoutScrollbars` below is where the bill
-  # comes due.
+  # so §P8 pays that price here and nowhere else, and my bars' arrange (`_reLayoutScrollbars`,
+  # ScrollIndicatorHostWdgt's) is where the bill comes due.
 
   getScrollX: -> @scrollOffsetX
 
@@ -442,6 +404,12 @@ class ViewportWdgt extends ClippingWdgt
   # clip-through edge crops to it (clipIntoPlaneOfChild).
   _planeBox: ->
     @boundingBox().insetBy @planeMargin
+
+  # The margin my bars keep from the ends of their run (ScrollIndicatorHostWdgt._scrollBarRunMargin):
+  # my plane margin, so a thin bar of mine runs along the side of the box my plane shows through, and
+  # a bar I present shows only where that side holds its thumb.
+  _scrollBarRunMargin: ->
+    @planeMargin
 
   # THE BOX I PRESENT TO AN OVERLAY laid over me -- the hover wash a menu row standing for me lays
   # (HighlighterWdgt.coverTarget), the drag's outline around me as a target or as one that
@@ -684,81 +652,16 @@ class ViewportWdgt extends ClippingWdgt
   claimsPlainDragsForScrolling: ->
     @isScrollingByfloatDragging and @isScrollableNow()
 
-  # ── the indicator derivation (ruling G4) ──────────────────────────────────────────────────
-
-  # thin at rest, my full bar thickness once a hovering pointer has fattened the indicators
-  _indicatorThickness: ->
-    if @_pointerInScrollBand
-      @scrollBarsThickness
+  # Does my plane overflow me along `bar`'s axis, under a policy that lets me scroll
+  # (ScrollIndicatorHostWdgt._scrollAxisOverflows)? Along my horizontal bar's axis, my plane's width
+  # against mine; along my vertical one's, its height against mine: the facts isScrollableNow reads,
+  # one axis at a time. It decides whether that bar shows, and whether it crosses my corner.
+  _scrollAxisOverflows: (bar) ->
+    return false if @scrollPolicy is 'never'
+    if bar is @hBar
+      @contents.width() >= @width() + 1
     else
-      WorldWdgt.theme.scrollIndicatorThickness
-
-  # How far in from my edge the indicators lie. A thin one stands clear of the LINE at my edge by
-  # the theme's clearance: where my appearance strokes a border along my outline, over my children,
-  # that border is the line and the indicator stands one pixel further in; where it strokes none
-  # (a window's pane, whose line is its window's border just past my edge; a document) the line is
-  # my edge itself. A fat one lies flush, because its bar is my scroll band itself: the strip the
-  # hover pass watches (_updatePointerInScrollBand) and the frame every press is aimed into
-  # (buttonScreenBoxOnArrival). The inset moves the thin bar across its axis only, and a thin bar
-  # is no target, so the corner reserve, the hover band and every hit area are unmoved by it. The
-  # border is asked of my appearance through the soft probe, as the selection ring asks it
-  # (Widget._drawSelectionOverlay): an appearance that does not answer strokes no outline.
-  _indicatorEdgeInset: ->
-    return 0 if @_pointerInScrollBand
-    clearance = WorldWdgt.theme.scrollIndicatorEdgeClearance
-    if @appearance?.outlineIsStroked?() is true then clearance + 1 else clearance
-
-  # How far a bar of mine stops short of each end of its run (_barFrameAt): a THIN indicator I
-  # present, by the theme's end inset, and by my margin where that is the larger (planeMargin), so
-  # a thin bar runs along the side of the box my plane shows through and never past its ends. A
-  # fat one keeps its whole run (its frame is the one a press meets), and so does a bar picked up
-  # off me, whose look is its own and whose length follows my side (_barIsMineToPresent).
-  _indicatorEndInsetFor: (bar) ->
-    if @_pointerInScrollBand or not @_barIsMineToPresent bar
-      0
-    else
-      Math.max WorldWdgt.theme.scrollIndicatorEndInset, @planeMargin
-
-  # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
-  # the only one there can be — the look is settled in the same pass that decided which bars show
-  # at all, so there is nothing left for anyone else to advance and nothing steps.
-  _refreshScrollIndicators: ->
-    mode = if @_pointerInScrollBand then 'fat' else 'thin'
-    for bar in [@hBar, @vBar]
-      continue unless bar?.showAsScrollIndicator?
-      continue unless @_barIsMineToPresent bar
-      bar.showAsScrollIndicator mode
-    return
-
-  # Is this bar CHROME I present? My @hBar/@vBar fields deliberately survive the bar being picked
-  # up off me (it keeps driving me from wherever it lands — that is the point of the dataflow
-  # edge), so the field alone does not say. Parentage does: a bar outside my children is a plain
-  # slider somebody put on the desktop, and its look and its thickness are its own business.
-  _barIsMineToPresent: (bar) ->
-    bar.parent is @
-
-  # THE HOVER PASS. A thin indicator is not a target (ruling G3), so it can never notice the
-  # pointer itself — I notice for it, and I can: I am in the hand's mouse-over ancestry for
-  # anything under my content, so I get the moves. A pointer within a fat bar's width of my
-  # scroll edges fattens both indicators; anywhere else, or leaving me, thins them again.
-  #   ⚠ The `pos` parameter is deliberately NOT read: a move over my scrolled CONTENT can
-  # escalate here with the position still in the ROW's plane, offset-pixels away from mine —
-  # the same trap pressBegan documents. Re-derive it from the hand with the mapped read.
-  hoverMoved: ->
-    @_updatePointerInScrollBand @screenPointToMyPlane world.hand.position()
-
-  hoverExited: ->
-    @_updatePointerInScrollBand undefined
-
-  _updatePointerInScrollBand: (pos) ->
-    band = @scrollBarsThickness
-    inBand = pos? and @boundsContainPoint(pos) and
-      ((pos.x >= @right() - band) or (pos.y >= @bottom() - band))
-    return if inBand is @_pointerInScrollBand
-    @_pointerInScrollBand = inBand
-    # the flip changes the bars' THICKNESS as well as their look, so it goes through the
-    # arrange that owns their geometry rather than through _refreshScrollIndicators alone
-    @_reLayoutScrollbars()
+      @contents.height() >= @height() + 1
 
   # RE-PARENTED: the line at my edge is where I stand (a window holding me as its whole content
   # runs its own border round me, and I stroke none: _surfaceStroke), and my thin indicators stand
@@ -782,13 +685,6 @@ class ViewportWdgt extends ClippingWdgt
   heightContentsMustFitWithin: ->
     @height()
 
-  # Pressing a slider's TRACK jump-drags the button to the press point when the slider is
-  # chrome its parent owns (my scrollbars) — SliderWdgt.pressBegan asks its parent via ?().
-  # PromptWdgt gives its input slider the same policy. Capability, was
-  # `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)` (type-test-elimination ε).
-  sliderTrackPressJumpsButton: ->
-    true
-
   # (no childrenCanLockToMe here: my direct children are chrome, not user-lockable content, and
   # the lock-menu row keys on the capability EXISTING — see PanelWdgt.childrenCanLockToMe —
   # so a viewport simply not defining it is the opt-out)
@@ -800,216 +696,6 @@ class ViewportWdgt extends ClippingWdgt
   # tests at the arrange site (type-test-elimination ε).
   _isContentSizing: ->
     @isTextLineWrapping
-
-  # Where I place a bar of mine at a given cross-axis THICKNESS, `edgeInset` in from my edge and
-  # `endInset` short of each end of its run: the vertical one along my right edge and the
-  # horizontal one along my bottom edge. The run is its side less what OCCUPIES my bottom-right
-  # corner needs (_cornerReserveFor) -- the side's full length when nothing does -- and the end
-  # inset comes off both ends of the run that is left. The edge inset moves a bar across its axis,
-  # the end inset shortens it along it. My arrange places my bars from this, at the thickness and
-  # the insets of the look they wear (_indicatorThickness, _indicatorEdgeInset,
-  # _indicatorEndInsetFor), and buttonScreenBoxOnArrival / barScreenFrameOnArrival ask it for the
-  # look a pointer's arrival gives them: my full thickness, flush, the run's whole length.
-  _barFrameAt: (bar, thickness, edgeInset = 0, endInset = 0) ->
-    spaceToLeaveOnOneSide = @_cornerReserveFor bar
-    if bar is @vBar
-      new Rectangle (new Point @right() - edgeInset - thickness, @top() + endInset), (new Point @right() - edgeInset, @bottom() - spaceToLeaveOnOneSide - endInset)
-    else
-      new Rectangle (new Point @left() + endInset, @bottom() - edgeInset - thickness), (new Point @right() - spaceToLeaveOnOneSide - endInset, @bottom() - edgeInset)
-
-  # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
-  # resizer over the corner takes the room IT names (its cornerFootprint: a naked inspector's handle
-  # its side; never less than a bar); failing that, my
-  # other bar takes its thickness where it crosses; with neither, the corner is free and the bar
-  # runs right to it. Both are asked of STRUCTURE, never of geometry or visibility, which the passes
-  # that read this are still laying out: the other bar by the overflow its showing derives from, the
-  # resizer by climbing the corner chain (_resizerOverMyCorner). My margin is no part of the reserve:
-  # a thin bar gives it up at both ends of its run (_indicatorEndInsetFor), and a fat one keeps the
-  # run a press meets, so the two fat bars meet at my corner.
-  _cornerReserveFor: (bar) ->
-    resizer = @_resizerOverMyCorner()
-    if resizer? then Math.max @scrollBarsThickness, resizer.cornerFootprint()
-    else if @_otherBarCrossesMyCorner bar then @scrollBarsThickness
-    else 0
-
-  # Does my OTHER bar cross my bottom-right corner? Whenever it is mine to place and its axis overflows
-  # under a policy that shows bars: the facts its showing derives from, read here WITHOUT its
-  # room-for-thumb check, so neither bar's length waits on whether the other one shows.
-  _otherBarCrossesMyCorner: (bar) ->
-    other = if bar is @vBar then @hBar else @vBar
-    return false  unless other? and other.parent is @ and other.isWiredTo?(@) and @scrollPolicy isnt 'never'
-    if other is @hBar
-      @contents.width() >= @width() + 1
-    else
-      @contents.height() >= @height() + 1
-
-  # The RESIZER that sits over my bottom-right corner, or undefined when none does. Every container
-  # that runs a child out to its own bottom-right corner says which (bottomRightCornerReachedBy), so
-  # I climb for as long as I am, or am inside, such a child, and the first container on the way whose
-  # resizer would show answers with that resizer (HandleWdgt.wouldShow: what its showing derives
-  # from, not whether it shows yet). A container that names nobody ends the climb. I name nobody
-  # myself: my contents scroll under my corner.
-  _resizerOverMyCorner: ->
-    child = @
-    container = @parent
-    while container?.bottomRightCornerReachedBy?(child)
-      return container.resizer  if container.resizer?.wouldShow?()
-      child = container
-      container = container.parent
-    undefined
-
-  # What occupies a corner I reach may have changed -- its resizer came or went
-  # (HandleWdgt.updateVisibility), which tells the viewports down that corner chain
-  # (Widget.noteCornerChainChanged) -- so my bars must re-lay to the reserve the corner now asks of
-  # them: my arrange is where they are laid, so I schedule it.
-  noteCornerResizerChanged: ->
-    @_scheduleRelayoutRespectingPhase()
-
-  # The SCREEN box in which a pointer ARRIVING at one of my bars finds that bar's button. A thin
-  # indicator is intangible, and the arrival — a finger's own down, a mouse's approach — fattens it
-  # before any press is dispatched (hoverMoved), so a press always meets THIS look and never the thin
-  # one on screen: the bar at my full thickness, its thumb laid in that frame by the very derivation
-  # its own arrange commits (SliderButtonWdgt.boxInSliderFrame). MacroToolkit.sliderButtonPressPoint
-  # aims here.
-  buttonScreenBoxOnArrival: (bar) ->
-    frame = @_barFrameAt bar, @scrollBarsThickness
-    box = (bar.button.boxInSliderFrame frame.extent(), bar.trackThumbInset).translateBy frame.origin
-    new Rectangle (bar.localPointToScreen box.origin), (bar.localPointToScreen box.corner)
-
-  # The SCREEN frame of one of my bars as a pointer ARRIVING at it finds it — at my full thickness,
-  # the frame buttonScreenBoxOnArrival's box lies in. The button travels this frame's length less its
-  # own, and a fat thumb can be longer than the thin one drawn at rest, so a drag that means to carry
-  # the button a fraction of its way measures that way here and not on the bar as drawn.
-  barScreenFrameOnArrival: (bar) ->
-    frame = @_barFrameAt bar, @scrollBarsThickness
-    new Rectangle (bar.localPointToScreen frame.origin), (bar.localPointToScreen frame.corner)
-
-  # Does the frame a press meets one of my bars in have ROOM for the bar's thumb? That frame is the
-  # bar at my full thickness, flush, the run's whole length (_barFrameAt), whatever look the bar
-  # wears on screen: a thin indicator stops short of its side's ends, and the question is not asked
-  # of that shorter frame. A thumb is never shorter than it is wide, and in the look a press meets
-  # it is my full thickness less the track's inset, so a frame shorter than that holds none — in a
-  # viewport shorter than the corner reserve _barFrameAt leaves, the frame's length is not even
-  # positive. Such a bar is not shown: it would be a sliver no pointer can work. The overflow it
-  # would stand for still scrolls, since every scroll gesture asks isScrollableNow, never a bar.
-  #   For a bar I PRESENT the room is measured along the box my plane shows through: that frame's
-  # run less my margin at both ends (planeMargin) must hold the thumb. A thin bar runs along that
-  # box (_indicatorEndInsetFor), so a viewport with a margin and too short for this would hand its
-  # thin bar a run shorter than a thumb, or a negative one. A bar picked up off me
-  # (_barIsMineToPresent) runs my side's whole length, as its end inset says, and is judged on that
-  # whole run. With no margin every bar is.
-  _barFrameHasRoomForThumb: (bar) ->
-    frame = @_barFrameAt bar, @scrollBarsThickness
-    length = if bar is @vBar then frame.height() else frame.width()
-    length - (if @_barIsMineToPresent bar then 2 * @planeMargin else 0) >= @scrollBarsThickness - bar.trackThumbInset
-
-  _reLayoutScrollbars: ->
-    # §4.2 Stage 3 (structural arrange): the bars below apply their geometry via the NON-notifying
-    # arrange twins (_applyExtentBase / _applyMoveToBase), not the notifying setters -- they are
-    # chrome I own and place from my own size, never affecting my content-fit, so notifying would
-    # only trigger a redundant confirm pass. The @_adjustingContentsBounds save/restore this used to
-    # need is gone along with the notify-by-mutation seam it guarded against.
-    # See docs/archive/proper-layouts-4.2-structural-arrange-plan.md.
-
-    # the indicator's CROSS-axis size and its distance from my edge: thin and clear of the line at
-    # my edge at rest, my full bar thickness and flush while a hovering pointer has fattened it back
-    # into a control (ruling G4); how far each bar stops short of its side's ends is asked per bar,
-    # below
-    barThickness = @_indicatorThickness()
-    barEdgeInset = @_indicatorEdgeInset()
-
-    @_changed()
-
-    # this check is to see whether the bar actually belongs to this Viewport: a bar can survive
-    # detached from its original Viewport A (it's referenced as a property, not a child, so
-    # duplicating A into B does not retarget or duplicate the bar), leaving B referencing A's bar. We
-    # ask the bar whether it drives ME before touching it, so a stray duplicate never resizes/hides a
-    # scrollbar that belongs to a different panel. (`isWiredTo` since §P4 — a controller owns a LIST
-    # of wires, so "do you drive me" is a search, not a field comparison.)
-    #   ⚠ SOAKED, and that is not decoration: this guard is the gate for everything below it, so it has
-    # to answer for a @hBar that is not (yet) a live controller — mid-deserialization a widget reference
-    # can still be unresolved, which is the same case SliderWdgt.unitSize guards for on its own @button.
-    # The field comparison this replaced was total by accident (`<anything>.target == @` is just false);
-    # asking a METHOD is not, and a bar that cannot answer is exactly a bar I must not touch.
-    if @hBar.isWiredTo? @
-      # the cross axis is INDICATOR presentation, so it is imposed only on a bar I still hold;
-      # one picked up onto the desktop keeps the thickness it left with (_barIsMineToPresent), and
-      # its place is not mine to decide (it is moved only while it is mine, below).
-      hThickness = if @_barIsMineToPresent @hBar then barThickness else @hBar.height()
-      hFrame = @_barFrameAt @hBar, hThickness, barEdgeInset, @_indicatorEndInsetFor @hBar
-      # a 'never' viewport shows no bars whatever the overflow — same hide arm the
-      # fitting case takes — and neither does a bar whose frame, as a press meets it, has no room
-      # for its thumb
-      if @scrollPolicy isnt 'never' and @contents.width() >= @width() + 1 and @_barFrameHasRoomForThumb @hBar
-        @hBar.show()
-        # chrome I own and place -- apply via the non-notifying twin as above (see the method-top
-        # comment). _applyExtentBase == _applyWidth/Height minus the seam; preserves height/width by
-        # passing the current other axis.
-        @hBar._applyExtentBase hFrame.extent()  unless @hBar.extent().equals hFrame.extent()
-        # we check whether the bar has been detached. If it's still
-        # attached then we possibly move it, together with the
-        # Viewport, otherwise we don't move it.
-        if @hBar.parent == @
-          @hBar._applyMoveToBase hFrame.origin
-        # I placed and sized the bar through the NON-notifying twins, so re-laying it is MINE to do
-        # -- the same rule I follow for @contents in _positionAndResizeChildren. A slider's THUMB is
-        # derived from its frame (SliderButtonWdgt._reLayoutSelf reads its parent's height and
-        # position), so a bar whose frame I just changed and whose thumb nobody re-lays is left
-        # INTERNALLY INCONSISTENT -- which the arrange-idempotence census correctly reports as a
-        # mover. The retired four-number push happened to do this on its way past; it is a LAYOUT
-        # obligation, not a dataflow one, so it stays here where the frame changes.
-        @hBar._reLayoutSelfAndButton()
-      else
-        @hBar.hide()
-
-    # see comment on equivalent if line above.
-    if @vBar.isWiredTo? @
-      # the cross axis is presentation — imposed only on a bar I still hold (see the hBar above)
-      vThickness = if @_barIsMineToPresent @vBar then barThickness else @vBar.width()
-      vFrame = @_barFrameAt @vBar, vThickness, barEdgeInset, @_indicatorEndInsetFor @vBar
-      # 'never' shows no bars, nor does a bar with no room for its thumb — see the hBar above
-      if @scrollPolicy isnt 'never' and @contents.height() >= @height() + 1 and @_barFrameHasRoomForThumb @vBar
-        @vBar.show()
-        # §4.2 Stage 3: same as the hBar above -- non-notifying twin (chrome I own, never affects content-fit).
-        @vBar._applyExtentBase vFrame.extent()  unless @vBar.extent().equals vFrame.extent()
-        # we check whether the bar has been detached. If it's still
-        # attached then we possibly move it, together with the
-        # Viewport, otherwise we don't move it.
-        if @vBar.parent == @
-          @vBar._applyMoveToBase vFrame.origin
-        # same as the hBar above: I changed its frame through the non-notifying twins, so its thumb
-        # is mine to re-lay.
-        @vBar._reLayoutSelfAndButton()
-      else
-        @vBar.hide()
-
-    # the bars that show have just been sized and placed; give them the look that goes with the
-    # state they show in (thin, or fat under a hovering pointer). A look that changes the thumb's
-    # inset re-lays the thumb on its way in (SliderWdgt.showAsScrollIndicator).
-    @_refreshScrollIndicators()
-
-    # ── THE REVERSE EDGE (connector plan §P8) ────────────────────────────────────────────────
-    # My scroll geometry just settled, so ANNOUNCE it and let whoever tracks me re-read it — instead
-    # of pushing four numbers into the two bars I happen to hold fields for. Everything above this
-    # line is still field business, and rightly: SHOWING, SIZING and PLACING the bars is chrome I own
-    # and only my own two are mine to place. The four NUMBERS are not chrome, they are the state, and
-    # any number of bars may want them — a duplicate, a bar someone unplugged onto the desktop, one
-    # belonging to nobody. That is complaint ① closed.
-    #   markNonValueChange, not markStale: my scroll offset is not my VALUE (I declare no principal
-    # pin — a viewport has no one number), and this wakes only the edges that asked to re-read me,
-    # so it is DARK when nothing tracks me.
-    # ⚠ This is a LAYOUT station marking DATAFLOW, which the engine's standing one-way law otherwise
-    # forbids. It is deliberate, and it is option (c) of §P3's reframed table: announce here, drain
-    # whenever the drain next runs.
-    # ⭐ MEASURED (§P8, .scratch/p8-scroll-shear-probe.js), because the objection to (c) was that a
-    # tracking pair would SHEAR by a frame under fast motion. It does not, and the reason is the
-    # CYCLE ORDER read the other way round: doOneCycle plays input BEFORE the dataflow station, so a
-    # scroll driven by a wheel, a thumb drag or a track click announces itself in time for the SAME
-    # cycle's drain — measured lag ZERO frames, at every fling rate. The one-frame lag is real only
-    # for a change that originates INSIDE recalculateLayouts (a content re-fit changing the bar's
-    # RANGE) — measured at exactly 1 frame — which is the case with no motion to shear against.
-    # So (d)'s second drain+layout pass would buy nothing on the only path that moves.
-    world.dataflow.markNonValueChange @
 
   # when you add things to the ViewportWdgt they actually
   # end up in the plane inside it.

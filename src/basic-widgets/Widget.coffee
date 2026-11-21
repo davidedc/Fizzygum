@@ -1032,8 +1032,9 @@ class Widget extends TreeNode
   # (HandleWdgt.updateVisibility). Every
   # viewport down my corner chain -- the children that run out to my corner
   # (bottomRightCornerReachedBy), and theirs -- re-lays what it keeps clear of that corner, its bars
-  # and, through its arrange, contents laid out to its far edges (ViewportWdgt.noteCornerResizerChanged,
-  # which only MARKS layout, through the phase valve, so the flush that is coming lays each one once).
+  # and, through its arrange, contents laid out to its far edges
+  # (ScrollIndicatorHostWdgt.noteCornerResizerChanged, which only MARKS layout, through the phase
+  # valve, so the flush that is coming lays each one once).
   # A container that names no such child ends the walk.
   noteCornerChainChanged: ->
     visit = (container) ->

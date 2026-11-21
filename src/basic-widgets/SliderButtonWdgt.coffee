@@ -117,7 +117,7 @@ class SliderButtonWdgt extends CircleBoxWdgt
   # relative to the frame's top-left. It reads my slider's value and range and NOT my slider's
   # current frame, so it answers for a frame my slider does not have yet as well as for the one it
   # has: my arrange commits it for the frame I am in, and a viewport asks it for the frame a
-  # pointer's arrival gives its bar (ViewportWdgt.buttonScreenBoxOnArrival).
+  # pointer's arrival gives its bar (ScrollIndicatorHostWdgt.buttonScreenBoxOnArrival).
   boxInSliderFrame: (frameExtent, surround) ->
     sliderValue = @parent.value
     # notably, if you type "-2" as an input to the slider

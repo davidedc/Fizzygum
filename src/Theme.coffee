@@ -979,11 +979,11 @@ class Theme
     @scrollIndicatorThickness = 4
     # how far a THIN indicator stands clear of the line at its viewport's edge: the border the
     # viewport paints over its edge, or the edge itself where it paints none
-    # (ViewportWdgt._indicatorEdgeInset). A fat indicator lies flush, since its bar is the band the
+    # (ScrollIndicatorHostWdgt._indicatorEdgeInset). A fat indicator lies flush, since its bar is the band the
     # hover pass watches and every press aims into.
     @scrollIndicatorEdgeClearance = 1
     # how far a THIN indicator stops short of each end of its side
-    # (ViewportWdgt._indicatorEndInsetFor); a fat one is not shortened.
+    # (ScrollIndicatorHostWdgt._indicatorEndInsetFor); a fat one is not shortened.
     @scrollIndicatorEndInset = 3
 
     # a prompt's input slider's CROSS axis, i.e. the thumb you drag: a TARGET (G3), like the

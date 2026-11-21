@@ -9,8 +9,8 @@ class SliderWdgt extends ControllerWdgt
   # A slider is editor content when dropped alone (a value control you can select/align), but a
   # viewport's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
   # SAME class serves both, so I can't blanket-exclude -- instead I ASK my parent whether it owns me as a
-  # scrollbar (ViewportWdgt.isMyScrollBar, dispatched via ?() so a non-viewport parent answers
-  # undefined). A content slider -- even one dropped INTO a viewport's content -- is never the viewport's
+  # scrollbar (isMyScrollBar, which every host of scroll indicators answers: ScrollIndicatorHostWdgt's),
+  # dispatched via ?() so a parent that presents no indicators answers undefined. A content slider -- even one dropped INTO a viewport's content -- is never the viewport's
   # vBar/hBar, so it stays framable; only the actual bars are excluded.
   excludedFromEditorFocusTracking: ->
     @parent?.isMyScrollBar?(@) is true
@@ -101,7 +101,8 @@ class SliderWdgt extends ControllerWdgt
     else
       return "horizontal"
 
-  # Wear an indicator presentation (my viewport derives it; see ViewportWdgt._refreshScrollIndicators).
+  # Wear an indicator presentation (my viewport derives it; see
+  # ScrollIndicatorHostWdgt._refreshScrollIndicators).
   # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
   # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
   # thumb alone — the track's alpha goes to zero; the fat one shows my track faintly. In both, my
@@ -156,7 +157,8 @@ class SliderWdgt extends ControllerWdgt
 
   # How far my thumb sits inside my track, read by the thumb's own arrange. A thin indicator
   # paints no track for a thumb to sit inside, so there the thumb fills the bar; every look a
-  # pointer can press keeps `trackThumbInset` (ViewportWdgt.buttonScreenBoxOnArrival asks for it).
+  # pointer can press keeps `trackThumbInset` (ScrollIndicatorHostWdgt.buttonScreenBoxOnArrival asks
+  # for it).
   trackThumbInset: 2
   thumbInsetInTrack: ->
     if @indicatorIsIntangible() then 0 else @trackThumbInset

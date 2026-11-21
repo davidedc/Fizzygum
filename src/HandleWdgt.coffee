@@ -82,7 +82,8 @@ class HandleWdgt extends Widget
     new Point pad, pad
 
   # HOW MUCH OF MY TARGET'S BOTTOM-RIGHT CORNER I TAKE, along each axis: the length a viewport
-  # running out to that corner stops its bars short of it by (ViewportWdgt._cornerReserveFor): my side.
+  # running out to that corner stops its bars short of it by (ScrollIndicatorHostWdgt._cornerReserveFor):
+  # my side.
   cornerFootprint: -> @_cornerSide()
 
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
@@ -169,7 +170,7 @@ class HandleWdgt extends Widget
 
   # The two questions above, as a query: what my showing derives from, asked without asking whether I
   # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
-  # by this answer (ViewportWdgt._resizerOverMyCorner), and a frame keeps a grip strip for its grip by
+  # by this answer (ScrollIndicatorHostWdgt._resizerOverMyCorner), and a frame keeps a grip strip for its grip by
   # it (FrameWdgt._gripStripSide) -- a visibility is never a layout input.
   wouldShow: ->
     @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)

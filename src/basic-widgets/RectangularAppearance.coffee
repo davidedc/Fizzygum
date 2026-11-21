@@ -135,7 +135,7 @@ class RectangularAppearance extends Appearance
   # Does my widget's body draw a 1 px border along its outline? When it has a _borderColor
   # (_paintBorder strokes nothing without one). A ring laid over a selected widget strokes the
   # outline too when it does (Widget._drawSelectionOverlay), and a viewport keeps its thin scroll
-  # indicators clear of that border (ViewportWdgt._indicatorEdgeInset).
+  # indicators clear of that border (ScrollIndicatorHostWdgt._indicatorEdgeInset).
   outlineIsStroked: ->
     @_borderColor()?
 

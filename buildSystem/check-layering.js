@@ -119,7 +119,7 @@ const VALVE_CALL = /[@.]\s*_scheduleRelayoutRespectingPhase\b/;  // the phase-va
 // The SECOND lookahead skips a method-REFERENCE COMPARISON (`@_reLayout != Widget::_reLayout` — the
 // implementsDeferredLayout idiom for "does the subclass override _reLayout"): a comparison / `is` / `isnt`
 // right after the name means it is being compared AS A VALUE, not applied. (A real apply is never compared.)
-const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayout)\b(?!\?)(?!\s*(?:[!=]=|[<>]=?|is\b|isnt\b))/;
+const APPLY_CALL = /[@.]\s*(_reLayoutChildren|_positionAndResizeChildren|_reLayoutScrollbars|_reLayoutBar|_reLayout)\b(?!\?)(?!\s*(?:[!=]=|[<>]=?|is\b|isnt\b))/;
 const SANCTION_MARKER = 'layout-apply-sanctioned';        // the conscious-sign-off comment marker for [F]
 const PUBLIC_SET = new Set(PUBLIC_SETTERS);
 // The methods that legitimately drive recalculateLayouts(): the frame (doOneCycle) and every settle TIER read
@@ -676,7 +676,8 @@ function checkFile(file, violations, gCtx, warnings) {
     }
     // [F] the SCHEDULE/APPLY boundary, made auditable (deferred-layout-OVERVIEW.md §11). A method that is NEITHER
     // low-level NOR an immediate mutator -- i.e. a handler / property setter / menu action / gesture / constructor --
-    // must NOT call a CONTAINER-refit apply (_reLayoutChildren / _positionAndResizeChildren / _reLayoutScrollbars / _reLayout)
+    // must NOT call a CONTAINER-refit apply (_reLayoutChildren / _positionAndResizeChildren / _reLayoutScrollbars /
+    // _reLayoutBar / _reLayout)
     // synchronously OFF-SETTLE. It must DEFER (record intent via _invalidateLayout; let the cycle / a flush apply it),
     // OR, if the apply is genuinely AT a settle point (a deferred-seam in-pass arm, run under _recalculatingLayouts) or
     // a documented determinism-exempt family (scroll-input / collapse / construction), CONSCIOUSLY mark the METHOD --

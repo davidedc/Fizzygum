@@ -1034,7 +1034,7 @@ assertion a recapture after a regression silently stores two different hashes an
   the 1st bottoms the INNER, the next escalates to the OUTER. Build with a `DocumentViewportWdgt` (`outer.add inner`
   between two `outer.addNormalParagraph "…"`) holding a fixed-height `ListWdgt` (the stack constrains only WIDTH, so the inner
   keeps its height and overflows). FLANK the inner above AND below so it stays VISIBLE when the outer is fully scrolled.
-- **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ViewportWdgt._reLayoutScrollbars` (`:124`) shows the hBar
+- **Scrollbars track content** (`macroScrollBarsTrackContentChange`): `ScrollIndicatorHostWdgt._reLayoutScrollbars` (through `ViewportWdgt._scrollAxisOverflows`) shows the hBar
   only when `contents.width() >= width()+1` and the vBar only when `contents.height() >= height()+1`, sizing each thumb to the
   viewport/content ratio and positioning it by the scroll offset. Add a wrapping `SimpleTextWdgt` as a real SUBMORPH of the
   inner `@contents` (`panel.add text`); NARROW it via the public `text.setWidth` (re-wraps it taller, since

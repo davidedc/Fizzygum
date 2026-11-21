@@ -123,7 +123,7 @@ silently lands on something else changes the pixels, and a recapture would then 
   reads the world the press meets (`verifyPressLanding`): the press must land on the widget or on something
   inside it, or the test fails with **"AIM MISSED"** (recorded like a failed assertion, so the macro runs on).
   A finger press is judged as the finger meets it: its own arrival fattens a thin scroll indicator before it
-  presses, which `_widgetAPressMeets` accounts for through `ViewportWdgt.barScreenFrameOnArrival`.
+  presses, which `_widgetAPressMeets` accounts for through `ScrollIndicatorHostWdgt.barScreenFrameOnArrival`.
   A wheel named for a SCROLLER (`wheelOn_InputEvents` on a widget that takes a scroll itself — under a mouse one
   answering `scrolledBy`, under a finger one claiming plain drags for scrolling) must also start a scroll the
   dispatch hands to THAT widget: the check asks the dispatch's own decision (`_scrollTakerAbove` →
@@ -256,7 +256,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   a caret-slot test (the arc's falsified shape). And `sliderButtonPressPoint slider[, preferred]` — the
   screen point where a press TAKES a slider's button, which every thumb-pressing verb aims through: a
   thin scroll indicator's thumb is not where a press meets it (the pointer's arrival fattens the bar
-  first), so its box is asked of `ViewportWdgt.buttonScreenBoxOnArrival`; a plain slider's centre is
+  first), so its box is asked of `ScrollIndicatorHostWdgt.buttonScreenBoxOnArrival`; a plain slider's centre is
   checked with the product's hit test. The caller's own point is kept whenever a press there already
   takes the button, so no working aim moves. The same keep-the-working-point idiom answers the other
   meaning locators: `titleGrabPoint frame[, preferred]` (where a press takes hold of a window by its title

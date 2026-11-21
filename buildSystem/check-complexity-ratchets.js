@@ -157,7 +157,6 @@ const RECORDED = {
   'TypewriterIconAppearance#_typewriterKeyMetrics': 20,
   'VerticalStackPanelWdgt#_positionAndResizeChildren': 19,
   'ViewportWdgt#_positionAndResizeChildren': 23,
-  'ViewportWdgt#_reLayoutScrollbars': 26,
   'ViewportWdgt#takeStrokeScrollFrom': 92,
   'Widget#_destroyNoSettle': 18,
   'Widget#_getRecursiveStackDim': 22,

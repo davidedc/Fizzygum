@@ -188,7 +188,7 @@ class InspectorWdgt extends ClippingWdgt
   # Which of my children run out to my bottom-right corner, where my own resizer sits while I am naked.
   # While I end in my footer band, none: the band keeps that corner clear for my resizer
   # (footerRightClearance) and holds no viewport there, so the corner chain stops at me
-  # (ViewportWdgt._resizerOverMyCorner). A read-only inspector has no footer band, and its code pane
+  # (ScrollIndicatorHostWdgt._resizerOverMyCorner). A read-only inspector has no footer band, and its code pane
   # runs out to the corner, so the pane's bars keep the corner free; the resizer overlaps only the
   # pane's lowest rows, and the pane keeps the whole reserve: the safe way to be wrong. The same query
   # the footer band's build and layout ask (_subjectIsEditable). In a window my resizer is hidden, and

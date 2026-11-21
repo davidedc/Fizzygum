@@ -51,7 +51,7 @@ formula/connection that writes a widget's text feeds this frame's geometry settl
 
 ⚠ **The one narrow exception, and why it is not a hole.** A layout station may announce a **non-value** change
 (`markNonValueChange`), which wakes only the `firesOnAnyChange` edges — consumers that RE-READ the producer rather
-than receive a value. `ViewportWdgt._reLayoutScrollbars` makes it, telling whatever tracks it that its scroll
+than receive a value. `ScrollIndicatorHostWdgt._reLayoutScrollbars` makes it, telling whatever tracks it that its scroll
 geometry settled, so any number of scrollbars follow it rather than the two it holds fields for; and a text's
 style and placement writers make it when an arrange reaches them (a frame re-weighting its title, an axis
 aligning its labels), telling the menu rows that tick on that state. (A tool

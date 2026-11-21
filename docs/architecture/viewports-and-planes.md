@@ -11,8 +11,9 @@ tables.
 
 A scrolling container decomposes into three responsibilities, each with an honest home:
 
-1. **The viewport** — `ViewportWdgt extends ClippingWdgt` (NOT a panel: its children are chrome, not
-   content). An invisible-in-effect composite: its color/alpha MIMIC the plane's, so its own
+1. **The viewport** — `ViewportWdgt extends ScrollIndicatorHostWdgt`, a `ClippingWdgt` that presents
+   two scroll indicators (§"Scroll indicators" below); NOT a panel: its children are chrome, not
+   content. An invisible-in-effect composite: its color/alpha MIMIC the plane's, so its own
    painted rect lies under the plane, indistinguishable, wherever the plane shows (only the pop-up
    pair pins a true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It
    clips at its bounds, as every `ClippingWdgt` does, and owns three pieces of chrome: the contents
@@ -133,6 +134,19 @@ pane, which absorbs nothing, and the relabel's own climbing invalidate re-lays t
 
 ## Scroll indicators — one presentation, over the same two bars
 
+The presentation has ONE home, `ScrollIndicatorHostWdgt` (a `ClippingWdgt`), which every scroller that
+shows indicators extends; a member this section names without a class is that base's. What only the
+host knows, it answers:
+- the two actions its bars drive, given to the one builder that makes, adds and wires them
+  (`_buildScrollBarsNoSettle hAction, vAction`; a viewport's are `"setScrollX"`, `"setScrollY"`);
+- whether its content overflows along a bar's axis (`_scrollAxisOverflows bar`; a viewport's:
+  overflow, unless its `scrollPolicy` is `'never'`);
+- the box its bars run along (`_scrollBarRunBox`, its own box unless it narrows it) and the margin a
+  thin bar keeps from that run's ends (`_scrollBarRunMargin`; a viewport's plane margin);
+- the scale a bar's thumb lives on (`sliderRangeForPin`, asked by the bar for the pin it drives).
+The host's arrange (`_reLayoutScrollbars`, each bar through `_reLayoutBar`) is where every scroll path
+ends, so it is where the host announces its scroll state.
+
 The viewport's two `SliderWdgt` bars (`hBar`/`vBar`) stay the wiring endpoint — `trackTarget`,
 `isWiredTo`, the reverse-edge announcement, serialization — and layer an INDICATOR presentation
 on top of it. Visibility is DERIVED from overflow, never asked of a bar itself:
@@ -146,12 +160,12 @@ the pointer through to
 the content under it — `SliderWdgt.catchesPointerAt` answers false whenever
 `indicatorIsIntangible()` (thin or hidden; an indicator is not a target); resting the pointer
 within `scrollBarsThickness` of the viewport's scroll edge (the hover pass —
-`ViewportWdgt.hoverMoved`/`hoverExited` → `_updatePointerInScrollBand`, since the viewport is
+`hoverMoved`/`hoverExited` → `_updatePointerInScrollBand`, since the host is
 always in the hand's mouse-over ancestry for content under it) fattens both bars to FAT — full
 painting at `scrollBarsThickness`, full interactivity (thumb-drag, track-jump); leaving the band,
 or the content no longer overflowing, reverts to thin or hidden. A bar also stays hidden, however
 much the content overflows, when its frame has no room for its thumb
-(`ViewportWdgt._barFrameHasRoomForThumb`: the frame a press meets, at full thickness and the run's
+(`_barFrameHasRoomForThumb`: the frame a press meets, at full thickness and the run's
 whole length, less the plane margin at both ends for a bar the viewport presents, must be at least
 as long as the thumb a press meets is wide; the shorter frame the thin look is drawn in is not the
 one asked). Under a resizer (a naked inspector's), a viewport
@@ -161,7 +175,7 @@ a 1px sliver no pointer can work. The pane still scrolls, since scrollability is
 WHERE A THIN INDICATOR STANDS is one derived rule, with no dial per kind of viewport: clear of the
 LINE at the viewport's edge, and short of its side's ends.
 - Across its axis it stands `scrollIndicatorEdgeClearance` (1 px of paper) in from the line
-  (`ViewportWdgt._indicatorEdgeInset`). The line is the 1 px border the viewport's appearance
+  (`_indicatorEdgeInset`). The line is the 1 px border the viewport's appearance
   strokes over its own edge, where it strokes one (`outlineIsStroked`, asked through the soft
   probe the selection ring uses: a plain panel on the desk, a patch node's text box), so the
   indicator lies 2 px in from the edge; where it strokes none (a window's whole content, a folder's
@@ -183,7 +197,7 @@ LINE at the viewport's edge, and short of its side's ends.
   arrange places the bars.
 
 The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
-(`ViewportWdgt._cornerReserveFor`, read by `_barFrameAt`):
+(`_cornerReserveFor`, read by `_barFrameAt`):
 - a resizer over the corner takes the room it names (`HandleWdgt.cornerFootprint`), never less
   than a bar: a naked inspector's handle its side (`handleSize`). A window's grip is no such case:
   it lies in the window's grip strip, below everything the window holds. The climb that finds a
@@ -239,7 +253,7 @@ A press never meets the thin look. The thin thumb is intangible, and the pointer
 the bar before any press is dispatched — a mouse's approach crosses the band first, and a finger's
 own down runs its position head (the hover move) ahead of the press (`input-and-gestures.md`
 §"Touch hover dissolution") — so what a press can take is the FAT thumb, which is wider and placed
-differently. `ViewportWdgt.buttonScreenBoxOnArrival` answers where that is without fattening
+differently. `ScrollIndicatorHostWdgt.buttonScreenBoxOnArrival` answers where that is without fattening
 anything, from the same two derivations the arrange commits: `_barFrameAt` (where the viewport
 places a bar of a given thickness, edge inset and end inset — both looks come from it: the thin one
 clear of the line at the edge and short of its side's ends, the fat one flush and the run's whole

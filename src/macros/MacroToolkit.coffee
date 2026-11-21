@@ -693,14 +693,14 @@ class MacroToolkit
   # the hit test reads the world the press meets. A finger arrives WITH its press:
   # ActivePointerWdgt.processPointerDown's position head runs the move pipeline for the down's own
   # place before pressing, and that move's hover pass reaches every viewport above the widget under
-  # the point (ViewportWdgt.hoverMoved → _updatePointerInScrollBand). A point within a fat bar's
+  # the point (ScrollIndicatorHostWdgt.hoverMoved → _updatePointerInScrollBand). A point within a fat bar's
   # width of a viewport's right or bottom edge FATTENS both its indicators. A thin indicator is
   # intangible (SliderWdgt.indicatorIsIntangible: its catchesPointerAt answers false, its thumb's
   # too), so a hit test asked before that arrival answers for whatever lies under the bar, while the
   # press meets the FAT bar.
   #   So for a touch press every viewport above the hit (anything answering barScreenFrameOnArrival)
   # is asked, for each bar it presents (the bar is its own child, which is what
-  # ViewportWdgt._barIsMineToPresent asks), shows, and holds intangible, whether the point lies in the
+  # ScrollIndicatorHostWdgt._barIsMineToPresent asks), shows, and holds intangible, whether the point lies in the
   # frame that bar takes on arrival (barScreenFrameOnArrival). If it does, the press meets the bar's
   # button when the point lies in the button's box on arrival (buttonScreenBoxOnArrival), the bar
   # itself — its track — otherwise. When several viewports qualify the OUTERMOST wins: a viewport
@@ -1501,7 +1501,7 @@ class MacroToolkit
   #   - a THIN scroll indicator's button is not: at rest it is intangible, and the pointer's arrival
   #     (a finger's own down, a mouse's approach) fattens the bar before the press is dispatched, so
   #     the press meets the FAT thumb, wider and placed differently. Its box is the viewport's to
-  #     answer (ViewportWdgt.buttonScreenBoxOnArrival, the derivation its arrange commits). Aimed at
+  #     answer (ScrollIndicatorHostWdgt.buttonScreenBoxOnArrival, the derivation its arrange commits). Aimed at
   #     the thin thumb's centre, a press can land on the track beside the fat one, where it pages the
   #     bar and drags a thumb teleported under it instead of the one the verb meant to grab.
   # A public locator so a macro can aim a press of its own at a thumb (`@moveToAndMouseDown_InputEvents`).
