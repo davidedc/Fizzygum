@@ -134,7 +134,6 @@ const RECORDED = {
   'LCLCodePreprocessor#constructor': 17,
   'LCLTransforms#scale': 18,
   'ListWdgt#_buildAndConnectChildrenNoSettle': 17,
-  'MacroToolkit#_widgetAPressMeets': 20,
   'MacroToolkit#titleGrabPoint': 17,
   'MacroToolkit#verifyPressLanding': 22,
   'PatchNodeWdgt#_heightsSplitByWeights': 25,

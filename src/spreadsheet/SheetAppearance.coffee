@@ -17,6 +17,12 @@ class SheetAppearance extends Appearance
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     return
 
+  # Does my widget's body draw a 1 px line along its outline? Always: my four sides are one, painted
+  # over the children (paintStroke), so the sheet's thin scroll indicators stand one pixel clear of
+  # it (ScrollIndicatorHostWdgt._indicatorEdgeInset).
+  outlineIsStroked: ->
+    true
+
   # the after-children paint: the four sides
   paintStroke: (aContext, clippingRectangle) ->
     @_paintInUnshadowedScope aContext, clippingRectangle, (ctx) =>

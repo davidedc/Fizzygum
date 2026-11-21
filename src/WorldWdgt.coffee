@@ -1864,8 +1864,11 @@ class WorldWdgt extends IconGridPanelWdgt
   # AS A WHOLE (answers focusesAsAWhole), else aWdgt itself. A spreadsheet answers it: a click on a
   # cell, a header, its formula bar or a widget hosted in a cell focuses the SHEET, whose selection
   # is what the editing tools act on (SimpleSpreadsheetWdgt.textStyleSubject) — never the label the
-  # click happened to hit. Like the top-level-window rule beside it, it sits in the one write, so
-  # every path that names a focus obeys it.
+  # click happened to hit. A press on one of its scroll bars names no focus at all: a host's bar is
+  # chrome excluded from editor-focus tracking (SliderWdgt.excludedFromEditorFocusTracking), so the
+  # hand writes nothing and the focus stays where it was — a bar scrolls without focusing, as the
+  # wheel and a window's title strip do. Like the top-level-window rule beside it, it sits in the
+  # one write, so every path that names a focus obeys it.
   _focusedAsAWholeAround: (aWdgt) ->
     w = aWdgt
     while w? and w isnt @

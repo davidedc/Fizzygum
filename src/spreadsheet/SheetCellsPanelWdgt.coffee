@@ -2,7 +2,8 @@
 # 2026-07-17: "the cells attach into a subclass of the container widget"). Spans the data
 # region (right of the row-number header column, below the column-letter header row — sized
 # with the sheet since F6) and hosts
-# the sheet's CellWdgt children (84 at the default 6×14 viewport); the frozen header cells are deliberately OUTSIDE it
+# the sheet's CellWdgt children (one per visible cell — 50 at the default 5×10 open size — plus one hidden per
+# off-viewport widget-valued cell); the frozen header cells are deliberately OUTSIDE it
 # (direct sheet children), so the PanelWdgt clip below can never touch them.
 #
 # It is TRANSPARENT (undefined @appearance — the CellWdgt idiom): the sheet NEVER painted a data

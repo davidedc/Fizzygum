@@ -26,7 +26,7 @@ Status:
 | U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4d) |
 | U4e | A stretchable panel's arrange places a child whose spec owns its placement, and a caught error's report no longer depends on load (added and widened by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4e) |
 | U5 | The spreadsheet's scroll is two pins | CLOSED 2026-11-21 (§U5) |
-| U6 | The spreadsheet presents its scroll indicators | open (§U6) |
+| U6 | The spreadsheet presents its scroll indicators | CLOSED 2026-11-21 (§U6) |
 | U7 | Close: this plan archived, or left open with what parked | open (§U7) |
 
 ---
@@ -1135,6 +1135,31 @@ answers and that it is still not a viewport), the class list entry, and two fact
 102 × 40). The class header (~:41). `viewports-and-planes.md`: the second user of the base. BACKLOG's "finger
 scrolling for the spreadsheet" stays open (a drag-scroll), reworded only if it has become false.
 
+**Landed 2026-11-21.** `SimpleSpreadsheetWdgt` extends `ScrollIndicatorHostWdgt` and answers its hooks: its bars run
+along the data region (`_scrollBarRunBox` is `_dataRegionBox`, which the cells panel also reads), an axis overflows
+while whole cells do not fit (`_scrollAxisOverflows`), and the bars drive U5's two pins. The chrome step builds them
+when missing (`unless @vBar?`), above the cells panel, which goes in at index 0; a restore or a copy ADOPTS them with
+the formula bar (the re-index sweep keeps `@isMyScrollBar child`). `SheetAppearance.outlineIsStroked` answers true, so
+a thin bar stands 2 px in. ONE view funnel, `_reDeriveViewNoSettle`, replaces the five chrome-then-reconcile pairs: it
+clamps the origin (S1: the shared `_clampedViewOrigin`, which the mover's own check uses too, so an origin a grown or
+enlarged sheet leaves past its greatest one is pulled back), rebuilds the chrome, reconciles the cells and arranges the
+bars, whose arrange announces; U5's announcement line in the reconcile is gone. Two rules every host now shares: a
+click on a host's bar keeps to the bar (`SliderWdgt.activated`, through `_isMyParentsScrollBar`, which the editor-focus
+exclusion asks too), so a track press on a sheet's bar selects no cell; and the macro toolkit asks the host what part
+of a bar a finger's arrival meets, in the host's own plane (`ScrollIndicatorHostWdgt.barPartMetOnArrivalAt`), so a
+tilted sheet answers for its bars' true footprint (the tilted-click test's finger aim missed without it). The aim
+check fell from complexity 20 to 4 and its record is deleted; `_buildChromeNoSettle` rose 13 → 14, under the ceiling,
+unrecorded. The serialization rig's chrome count gains the two bars, and `spreadsheet.roundtrip.scrollBarsFollow`
+checks that a copy and a restore each hold exactly their own two bars, wired, thin, above their cells, following a
+scroll. New test `SystemTest_macroSheetScrollIndicators` (both pointers); seven plants, one per door (overflow, run
+box, adoption, z-order, the clamp, the click rule, the arrival question), each seen failing. Recaptured, both pointers
+at dpr 1 and 2: 27 tests / 51 shots under the mouse, 24 under the finger, each changing by exactly the two thin thumbs
+(measured; a tilted sheet's tilt with it). Corrections to the Fix text above: the click rule lives in `SliderWdgt` for
+every host, not as a sheet guard (no test clicks a viewport bar's track, so the shared rule moves no picture); the
+announcement moved into the bars' arrange rather than staying in the reconcile; the panel goes in at index 0 rather
+than the bars being added after it. Accepted, as ruled: a click on a sheet's bar leaves the editor focus where it was
+(a bar is chrome, excluded from focus tracking, as the wheel and a window's title strip are).
+
 ---
 
 ### U7 — Close
@@ -1225,6 +1250,7 @@ stop at its commit, which you propose and do not make."
 - [x] U4d: a window clips its content only at its own bounds, so a tilted content's ink covers the window's title and grip strips and takes their clicks; the window is to show its content only inside its body (owner's ruling). Detail: the plan's §U4d. — CLOSED 2026-11-21 (scroll-indicators loop, U4d): one per-child crop question on `ClippingWdgt`, answered by the viewport (its plane box) and the window (the box it gives its content), one climb for every clip-through; a hit inside an island lands only where the island shows; `SystemTest_macroWindowShowsItsContentOnlyInItsBody`.
 - [x] U4e: a stretchable panel's arrange throws (`grantedBoundsWithin is not a function`) on a child whose spec owns its placement: the recorder refuses such a spec, the grant assumes a stretch one. Seen once, in a gauntlet's menu sweep under load. Added to the loop by the owner. Detail: the plan's §U4e. — CLOSED 2026-11-21 (scroll-indicators loop, U4e; widened by the owner to the mechanism): a consuming holder consumes only free-floating children; every catch prints its line at once, filed under the test that caused it, a deliberate thrower declares it, and a synchronous rig cycles the world before its verdict; `SystemTest_macroStretchablePagePlacesAChildByItsOwnSpec`.
 - [x] U5: the spreadsheet's view origin has no pins, so no slider can drive or follow it; it is to get a "scroll column" and a "scroll row" pin. — CLOSED 2026-11-21 (scroll-indicators loop, U5): the two pins with the setter trio and one shared core, the range through `SliderRange.forScrolling`, one announcement at the viewport funnel; `SystemTest_macroSheetScrollPins`.
+- [x] U6: the spreadsheet scrolls and shows no scroll indicator; it is to present the two bars every viewport shows. — CLOSED 2026-11-21 (scroll-indicators loop, U6): it extends `ScrollIndicatorHostWdgt`; one view funnel clamps, re-derives and announces; a host's bar keeps its own click. The plan's §U6.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

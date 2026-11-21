@@ -36,15 +36,15 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   2a/2b/8 + follow-ons F5/F1/F6, and the UX arc `docs/archive/spreadsheet-ux-plan.md`). It is a PAGE in
   its window (`wantsWindowPageGutter`) and paints only its PAGE EDGE, over its children
   (`SheetAppearance`) — every other visible thing is a child widget (see `SheetFormulaBarWdgt` /
-  `SheetCellsPanelWdgt` / `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (F6:
-  a `ClippingWdgt`, cropping partial-edge headers; the panel crops partial
+  `SheetCellsPanelWdgt` / `SheetHeaderCellWdgt` / `CellWdgt` below) — and it CLIPS at its bounds (a
+  `ScrollIndicatorHostWdgt`, so a `ClippingWdgt`, cropping partial-edge headers; the panel crops partial
   cells). It materialises the widget chrome
   (`_buildChromeNoSettle` — sized with the sheet, headers built/trimmed to the visible
   counts) + the VIEWPORT of cells over the 26×100 LOGICAL sheet — the viewport DERIVES from
-  the sheet's extent (F6: default 6×14, partial edge cells at a non-quantized granted size;
+  the sheet's extent (F6: default 5×10, partial edge cells at a non-quantized granted size;
   the `_reLayout` arrange re-derives chrome + viewport on every resize)
   (`_reconcileViewportNoSettle` — F1 scroll: sheet-owned `viewOriginCol/Row`, wheel +
-  keyboard scroll-follow and two scroll pins, the viewport invariant below), reconciles each cell's value into its
+  keyboard scroll-follow, two scroll pins and two scroll indicators, the viewport invariant below), reconciles each cell's value into its
   widget (`_reconcileCellNoSettle`), owns the single-cell selection (SHEET-space; cells render
   their own ring off the PUBLIC `isSelectedAddress`) and the EDIT STATE (standard-caret
   editing — the editor WIDGET lives on the editing cell and the standard `CaretWdgt` does the
@@ -73,7 +73,8 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   `_reactToBeingCopied` / `_afterDeserialization` notifications (the notification-settle gate).
 - `SheetAppearance.coffee` — the sheet's one paint of its own: the page edge, 1 px of
   `stretchablePageEdge` on all four sides, painted after the children (`ClippingWdgt`'s
-  `paintStroke` call).
+  `paintStroke` call). It answers that the outline is stroked (`outlineIsStroked`), so the sheet's thin
+  scroll indicators stand clear of that line.
 - `SheetCellStyle.coffee` — what the editing tools act on while the sheet is the editor focus: the
   selected cell's STYLE, answering the StringWdgt style protocol the text tools duck-type (`isBold`,
   `toggleWeight`, …) plus the sheet tools' (`pickFillColor`, `fewerDecimals`, `moreDecimals`,
@@ -89,7 +90,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   exactly). Paints no residual border (the old outermost right/bottom strokes were clipped
   invisible — F5 receipt C).
 - `SheetHeaderCellWdgt.coffee` (F5) — one widget per HEADER cell (kind column/row/corner + its
-  index; 21 in all, direct sheet children, OUTSIDE the panel so a future scroll clip never
+  index; 16 on a fresh sheet, direct sheet children, OUTSIDE the panel so a future scroll clip never
   touches the frozen headers). Paints (via its `SheetHeaderCellAppearance` — the header's
   fill/edge painter and the edge-kind predicates) its fill (`Theme.spreadsheetHeaderFill`) and its own
   top+left edges (none along the sheet's outer top and left boundary); its
@@ -319,8 +320,9 @@ header cells); the engine's edges are NOT serialized or deep-copied. On **restor
 snapshot's chrome, DESTROY the derived chrome — panel, header cells — plus any stray such as
 what a mid-edit save carries under a cell (the overlay editor and the hidden scalar text; the caret
 beside them rides no copy and no save, `Widget.isLeftOutOfCopiesAndSaves`), re-attach the cells' back-ref and re-index them,
-then `_buildChromeNoSettle` to rebuild the chrome + re-home the cells into the fresh panel,
-and `_reconcileViewportNoSettle` to re-establish the viewport invariant for the RESTORED view
+ADOPT the formula bar and the two scroll bars (kept by the sweep, re-attached, never rebuilt), then the
+view funnel (`_reDeriveViewNoSettle`): rebuild the chrome + re-home the cells into the fresh panel, and
+`_reconcileViewportNoSettle` re-establishes the viewport invariant for the RESTORED view
 origin — visible cells re-placed at their slots, an off-viewport HIDDEN rich cell keeping its
 exemption, gaps filled; ONE path serves pre-F5 snapshots, whose cells are
 direct children, and post-F5 ones), then recommit every cell (rebuild `compiledFn`/`value`
@@ -383,7 +385,7 @@ time, so a saved or duplicated sheet wears the current look.
   DOCUMENT state, own-only-when-zoomed) multiplies all of those through the `_colW` / `_rowH` /
   `_headerW` / `_headerH` / `textInsetPx` readers every placement uses — a re-layout, never a picture
   scale (which blurs text under SWCanvas, measured). `setZoomFactor` re-derives chrome, viewport and
-  every visible cell's look, and ends at the viewport funnel, which announces (`markNonValueChange`):
+  every visible cell's look, and ends at the view funnel, whose scroll bars' arrange announces (`markNonValueChange`):
   the zoom menu's rows are views of `currentZoomFactor`, so a pinned one re-ticks; the menu is editor chrome, so a level chosen from it
   leaves the sheet the focus. Cells stay CONTENT (design doc §4.2); the finger is served by the
   formula bar and the zoom.
@@ -419,7 +421,7 @@ time, so a saved or duplicated sheet wears the current look.
 ## Phase 8 decisions / deviations (recorded also in the plan)
 
 - **Full viewport materialised at construction; deserialize/duplicate adopt the snapshot's cells.**
-  The constructor builds the chrome (`_buildChromeNoSettle`) + all 6×14 viewport `CellWdgt`s
+  The constructor builds the chrome (`_buildChromeNoSettle`, the two scroll bars among it) + all 5×10 viewport `CellWdgt`s
   (`_reconcileViewportNoSettle`; freefloating + absolute — they float-follow the sheet; F1 split
   the old `_buildGridNoSettle` into these two: cells follow the view origin, chrome doesn't).
   The deserialize/duplicate path SKIPS the constructor (`Object.create`), so the restored/copied
@@ -457,9 +459,21 @@ time, so a saved or duplicated sheet wears the current look.
   even where the clamp then moves nothing; a wheel at its limit commits nothing), and move by the same
   mover as the wheel and the keys (its clamp is the clamp); `sliderRangeForPin` answers whole columns or rows through
   `SliderRange.forScrolling` (the scale a viewport's bar uses too), undefined when everything fits.
-  ONE announcement serves every change of the origin or its range: `_reconcileViewportNoSettle`, the
-  funnel the mover, the arrange, the zoom, the restore and the constructor all end at, marks the sheet
+  ONE view funnel serves every change of the origin or its range, `_reDeriveViewNoSettle`, which the
+  mover, the arrange, the zoom, the restore and the constructor all end at: it clamps the origin (the
+  shared `_clampedViewOrigin`, which the mover's own check also uses: an origin left past the greatest
+  one by a grown or enlarged sheet is pulled back), rebuilds the chrome, reconciles the cells
+  (`_reconcileViewportNoSettle`) and arranges the two scroll bars, whose arrange announces
   (`markNonValueChange`), so a tracking slider re-reads it.
+- **The sheet presents the two scroll indicators every viewport shows**, and is still not a viewport
+  (the reasons above stand): it extends `ScrollIndicatorHostWdgt`, the one home of the presentation
+  (`docs/architecture/viewports-and-planes.md`), and answers its hooks — its bars run along the data region (`_scrollBarRunBox`, `_dataRegionBox`), an axis
+  overflows while whole cells do not fit, and the bars drive the two scroll pins. The chrome step builds
+  them when missing, above the cells panel (which goes in at index 0); a restore or a copy ADOPTS them.
+  Its page edge is a stroked line (`SheetAppearance.outlineIsStroked`), so its thin bars stand 2 px in. A
+  bar over the last row or column is a bar there, as on every pane; a click on a bar keeps to the bar
+  (`SliderWdgt`: a host's bar keeps its own click), so it selects no cell, and it leaves the editor
+  focus where it was: a bar is chrome, excluded from focus tracking like every host's.
 - **THE VIEWPORT INVARIANT** (re-established by `_reconcileViewportNoSettle` on every origin
   change and on restore): exactly one VISIBLE `CellWdgt` per on-screen address at the viewport
   rect of (address − origin); exactly one HIDDEN `CellWdgt` per OFF-screen widget-VALUED cell
@@ -493,11 +507,11 @@ time, so a saved or duplicated sheet wears the current look.
   every remaining column/row is fully visible and residual pixels are BACKDROP (owner
   decision 2); the origin clamp on the visible counts is the landing deviation — without it
   the partial count would address a column PAST the sheet edge there. `defaultViewportCols/
-  Rows` (6×14) only size the default open extent.
+  Rows` (5×10) only size the default open extent.
 - **FILL-class window content by DELETION**: the pre-F6 fixed-size overrides died; the
   default `FrameContentLayoutSpec` (grow 1, `canSetHeightFreely` true) + the BASE Widget
   sizing protocol are exactly right. The default open size is PINNED by `SpreadsheetApp`
-  as a CONTENT extent (446×280): the app opens the window at whatever outer extent the frame's
+  as a CONTENT extent (568×440 at 100%): the app opens the window at whatever outer extent the frame's
   live chrome needs to grant exactly that (`FrameWdgt.extentWrappingPayloadAt`), so the default
   grid is the same under any chrome.
 - **The resize seam is a `_reLayout` override** (the `StretchableWidgetContainerWdgt`
@@ -512,10 +526,10 @@ time, so a saved or duplicated sheet wears the current look.
 - **One clip for everything**: the sheet is a `ClippingWdgt` (crops
   the partial HEADERS, which live outside the panel); the panel's inherited clip crops the
   partial CELLS — both byte-invisible at the default size (suite-proven). The sheet gains
-  `minimumExtent` = headers + one cell (102×40).
+  `minimumExtent` = the formula bar, the headers and one cell (152×116 at 100%, `_leastExtent`).
 - **Nothing new serializes**: the viewport derives from `@bounds` (already document state) —
   a resized sheet round-trips through its bounds; a pre-F6 default-bounds snapshot restores
-  to 6×14 through the same derivations.
+  to 5×10 through the same derivations.
 
 ## Phase 2a decisions / deviations (recorded also in the plan)
 

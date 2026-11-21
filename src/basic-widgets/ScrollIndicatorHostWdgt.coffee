@@ -3,7 +3,8 @@
 # child of mine wired to a scroll pin of mine. What lives here is the PRESENTATION,
 # the same for every host: where a bar stands and how long it runs, how thick it is and when it shows,
 # the hover pass that fattens it, and the frames a press meets. What scrolls, and by how much, is my
-# subclass's (ViewportWdgt: its plane, through its stored offset): it builds my bars with the two
+# subclass's (ViewportWdgt: its plane, through its stored offset; SimpleSpreadsheetWdgt: its view
+# origin, by whole columns and rows, over its data region): it builds my bars with the two
 # actions they drive (_buildScrollBarsNoSettle), answers whether its content overflows along a bar's
 # axis (_scrollAxisOverflows), may narrow the box my bars run along (_scrollBarRunBox) and keep a
 # margin from that run's ends (_scrollBarRunMargin), and answers the scale a bar's thumb lives on
@@ -24,7 +25,7 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
   # My two bars are OVERLAY INDICATORS: THIN and untouchable while my content overflows, absent
   # when it does not, and fattened into real controls while a pointer hovers my scroll band.
   # Everything here is presentation — what can be SCROLLED is asked of my overflow, by my subclass's
-  # own query (a viewport's isScrollableNow), never of a bar's visibility.
+  # own query (a viewport's isScrollableNow, a sheet's own clamp), never of a bar's visibility.
   #   Visibility is a pure DERIVATION from overflow: no activity stamps, no clock, nothing
   # time-driven on any path. An indicator on an overflowing pane is therefore the same pixels at
   # rest as it is a second after a scroll, which is what makes a capture of one reproducible and
@@ -41,9 +42,9 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
   ]
 
   # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
-  # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay) or content (a dropped
-  # value control → framable). Only my actual bars match, so a content slider dropped into my content stays
-  # framable. See SliderWdgt.excludedFromEditorFocusTracking.
+  # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay, and its click its own)
+  # or content (a dropped value control → framable). Only my actual bars match, so a content slider
+  # dropped into my content stays framable. See SliderWdgt._isMyParentsScrollBar.
   isMyScrollBar: (aWdgt) ->
     aWdgt is @vBar or aWdgt is @hBar
 
@@ -266,6 +267,26 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     frame = @_barFrameAt bar, @_fullBarThickness()
     new Rectangle (bar.localPointToScreen frame.origin), (bar.localPointToScreen frame.corner)
 
+  # WHAT OF MY BARS A PRESS ARRIVING AT `screenPoint` MEETS: the button of the bar whose frame on
+  # arrival holds the point, else that bar itself (its track), else undefined. Only a bar I present
+  # (_barIsMineToPresent), that shows and that is intangible now — a THIN one, which the arrival
+  # fattens before the press is dispatched (buttonScreenBoxOnArrival); a fat bar or a plain one is
+  # met by the plain hit test. Asked in MY plane: the point is mapped into it (screenPointToMyPlane,
+  # the mapping my hover pass reads the pointer through) and tested against the frame and the thumb
+  # box my arrange derives there, so a tilted host answers for its bars' true footprint, where a
+  # screen box built from two mapped corners would be the axis-aligned box around it.
+  # MacroToolkit's aim check (_widgetAPressMeets) asks it of every host above a finger's press.
+  barPartMetOnArrivalAt: (screenPoint) ->
+    pos = @screenPointToMyPlane screenPoint
+    met = undefined
+    for bar in [@vBar, @hBar]
+      continue unless bar? and (@_barIsMineToPresent bar) and bar.visibleBasedOnIsVisibleProperty() and bar.indicatorIsIntangible?()
+      frame = @_barFrameAt bar, @_fullBarThickness()
+      continue unless frame.containsPoint pos
+      thumb = (bar.button.boxInSliderFrame frame.extent(), bar.trackThumbInset).translateBy frame.origin
+      met = if thumb.containsPoint pos then bar.button else bar
+    met
+
   # Does the frame a press meets one of my bars in have ROOM for the bar's thumb? That frame is the
   # bar at my full thickness, flush, the run's whole length (_barFrameAt), whatever look the bar
   # wears on screen: a thin indicator stops short of its side's ends, and the question is not asked
@@ -274,7 +295,7 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
   # host shorter than the corner reserve _barFrameAt leaves, the frame's length is not even
   # positive. Such a bar is not shown: it would be a sliver no pointer can work. The overflow it
   # would stand for still scrolls, since every scroll gesture asks my subclass's own query (a
-  # viewport's isScrollableNow), never a bar.
+  # viewport's isScrollableNow, a sheet's own clamp), never a bar.
   #   For a bar I PRESENT the room is measured along what I show: that frame's run less the margin
   # along my run at both ends (_scrollBarRunMargin) must hold the thumb. A thin bar runs along what I
   # show (_indicatorEndInsetFor), so a host with a margin and too short for this would hand its thin

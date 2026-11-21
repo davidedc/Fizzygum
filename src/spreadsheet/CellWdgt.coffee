@@ -1,6 +1,6 @@
 # CellWdgt — one VISIBLE spreadsheet cell, as a real widget (spec docs/specs/dataflow-engine-
 # spec.md §9.1, Phase 8 "widgetise the grid"). The sheet materialises ONE of these per visible
-# grid cell (the fixed 6×14 viewport); each is the VIEW of its SheetCellRecord (the model/dataflow
+# grid cell (the viewport, derived from the sheet's extent: 5×10 at the default open size); each is the VIEW of its SheetCellRecord (the model/dataflow
 # NODE, which is untouched by this phase — the dataflow layer operates on records, never widgets).
 #
 # This GENERALISES Phase 4's CellSocketWdgt (which existed only for RICH cells) to EVERY cell: a

@@ -692,30 +692,27 @@ class MacroToolkit
   #   A mouse has arrived by the time its press drains — its approach move ran the hover pass — so
   # the hit test reads the world the press meets. A finger arrives WITH its press:
   # ActivePointerWdgt.processPointerDown's position head runs the move pipeline for the down's own
-  # place before pressing, and that move's hover pass reaches every viewport above the widget under
-  # the point (ScrollIndicatorHostWdgt.hoverMoved → _updatePointerInScrollBand). A point within a fat bar's
-  # width of a viewport's right or bottom edge FATTENS both its indicators. A thin indicator is
+  # place before pressing, and that move's hover pass reaches every host of scroll indicators above
+  # the widget under the point (ScrollIndicatorHostWdgt.hoverMoved → _updatePointerInScrollBand). A point within a fat bar's
+  # width of a host's scroll edges (a viewport's right and bottom edges, a sheet's data region's)
+  # FATTENS both its indicators. A thin indicator is
   # intangible (SliderWdgt.indicatorIsIntangible: its catchesPointerAt answers false, its thumb's
   # too), so a hit test asked before that arrival answers for whatever lies under the bar, while the
   # press meets the FAT bar.
-  #   So for a touch press every viewport above the hit (anything answering barScreenFrameOnArrival)
-  # is asked, for each bar it presents (the bar is its own child, which is what
-  # ScrollIndicatorHostWdgt._barIsMineToPresent asks), shows, and holds intangible, whether the point lies in the
-  # frame that bar takes on arrival (barScreenFrameOnArrival). If it does, the press meets the bar's
-  # button when the point lies in the button's box on arrival (buttonScreenBoxOnArrival), the bar
-  # itself — its track — otherwise. When several viewports qualify the OUTERMOST wins: a viewport
-  # paints its bars after its contents, so its bar lies above everything inside it.
+  #   So for a touch press every host of scroll indicators above the hit is asked what of its bars
+  # the press meets on arrival (ScrollIndicatorHostWdgt.barPartMetOnArrivalAt: a thin bar it
+  # presents and shows, whose frame on arrival holds the point — its button when the point lies in
+  # the button's box on arrival, the bar itself, its track, otherwise). The host asks it in its OWN
+  # plane, so a tilted host answers for its bars' true footprint and not for the axis-aligned screen
+  # box around it. When several hosts answer the OUTERMOST wins: a host paints its bars after its
+  # contents, so its bar lies above everything inside it.
   _widgetAPressMeets: (place, isTouch) ->
     hit = @_topWdgtAtScreenPoint place
     return hit unless isTouch
     met = hit
     ancestor = hit
     while ancestor?
-      if ancestor.barScreenFrameOnArrival?
-        for bar in [ancestor.vBar, ancestor.hBar]
-          continue unless bar? and (bar.parent is ancestor) and bar.visibleBasedOnIsVisibleProperty() and bar.indicatorIsIntangible?()
-          continue unless (ancestor.barScreenFrameOnArrival bar).containsPoint place
-          met = if (ancestor.buttonScreenBoxOnArrival bar).containsPoint place then bar.button else bar
+      met = (ancestor.barPartMetOnArrivalAt place) ? met  if ancestor.barPartMetOnArrivalAt?
       ancestor = ancestor.parent
     met
 
@@ -1442,13 +1439,15 @@ class MacroToolkit
     @_aimingAt widget, "wheelOn", gesture, receiverTakesTheScroll: namesAScroller, strokeDirection: strokeDirection
 
   # Click a SliderWdgt's TRACK (its background, OUTSIDE the button) at a point a fraction along its
-  # length, to JUMP the slider button there. For a viewport's scrollbar — a ViewportWdgt's @vBar
-  # / @hBar (both SliderWdgts) — this scrolls the content to that position: SliderWdgt.pressBegan,
-  # when the slider's parent is a ViewportWdgt (or PromptWdgt), non-float-drags the button to the
-  # click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it there. `fraction`
+  # length, to JUMP the slider button there. For a host's scroll bar — the @vBar / @hBar (both
+  # SliderWdgts) of a host of scroll indicators, a viewport or a spreadsheet — this scrolls the host
+  # to that position: SliderWdgt.pressBegan, when the slider's parent asks for the jump
+  # (sliderTrackPressJumpsButton: every such host, and a prompt's rows panel), non-float-drags the
+  # button to the click point (ActivePointerWdgt.nonFloatDragWdgtFarAwayToHere), and a click leaves it
+  # there (a host's bar keeps the click itself, SliderWdgt.activated). `fraction`
   # is [fx, fy] of the slider's bounds — for a vertical scrollbar pass e.g. [0.5, 0.8] (80% down the
   # track); for a horizontal one [0.8, 0.5]. Queues input events — follow with `yield
-  # "waitNoInputsOngoing"`. A slider NOT parented to a viewport ignores the track click (it escalates
+  # "waitNoInputsOngoing"`. A slider whose parent asks for no jump ignores the track click (it escalates
   # the event) — that is the negative companion behaviour (sliderNotOnViewportBackground…). Composes
   # moveToAndClickAtFractionOf_InputEvents, so it verifies that the press lands on the slider or on
   # something inside it; sliderOrIdentifier may be a widget reference (e.g. doc.vBar) or a recorded
@@ -1463,14 +1462,14 @@ class MacroToolkit
   # updateTarget every frame the value changes — so if the slider has a controller target set (via
   # "set target"), it drives target[setter](value) LIVE as it is dragged. This is the controller-DRAG
   # sibling of clickOnSliderTrackAtFraction_InputEvents (which only JUMPS the button via a track click, and
-  # only when the slider is parented to a ViewportWdgt/PromptWdgt); a free-standing controller slider
+  # only when the slider's parent asks for the jump: a host of scroll indicators, a prompt's rows); a free-standing controller slider
   # responds to dragging its button, not to track clicks. The pointer goes from the centre of the THUMB A
   # PRESS MEETS to the `fraction` point, [fx, fy], of the FRAME A PRESS MEETS: the destination of the
   # drag along the track (for a vertical slider, vary fy; default sliders have smallestValueIsAtBottomEnd
   # false, so a larger fy = a larger value). For a slider that is a target where it is drawn (a plain
   # slider, a scroll indicator already fat) those are its button and its own bounds, read in its plane.
-  # For a THIN scroll indicator they are the thumb and the frame its viewport gives it on the pointer's
-  # arrival (_sliderFrameAndButtonAsPressed) -- flush with the viewport's edge and the whole run long,
+  # For a THIN scroll indicator they are the thumb and the frame its host gives it on the pointer's
+  # arrival (_sliderFrameAndButtonAsPressed) -- flush with the host's scroll edge and the whole run long,
   # where the bar drawn at rest stands in from that edge and stops short of its side's ends -- so the
   # drag carries the thumb the same distance whatever the thin look on screen. The press itself is placed
   # by sliderButtonPressPoint, which keeps that centre wherever a press there takes the button. Queues
@@ -1500,7 +1499,7 @@ class MacroToolkit
   #     openOwnMenuOf idiom (_exposedScreenPointOf);
   #   - a THIN scroll indicator's button is not: at rest it is intangible, and the pointer's arrival
   #     (a finger's own down, a mouse's approach) fattens the bar before the press is dispatched, so
-  #     the press meets the FAT thumb, wider and placed differently. Its box is the viewport's to
+  #     the press meets the FAT thumb, wider and placed differently. Its box is the host's to
   #     answer (ScrollIndicatorHostWdgt.buttonScreenBoxOnArrival, the derivation its arrange commits). Aimed at
   #     the thin thumb's centre, a press can land on the track beside the fat one, where it pages the
   #     bar and drags a thumb teleported under it instead of the one the verb meant to grab.

@@ -31,7 +31,7 @@
 #
 # SCOPE + DEVIATIONS (recorded in the plan's Phase-2a/2b/8 + §3-F F1/F6 notes):
 #   - SCROLL (F1) + RESIZE (F6): the LOGICAL sheet (sheetCols×sheetRows, 26×100) is larger
-#     than the viewport (DERIVED from the sheet's extent since F6 — default 6×14, partial
+#     than the viewport (DERIVED from the sheet's extent since F6 — default 5×10, partial
 #     edge cells when the granted extent isn't cell-quantized, backdrop past the sheet edge);
 #     the sheet owns its view origin (viewOriginCol/Row — cell-quantized, never
 #     sub-cell) and scrolls by WHEEL (the `scrolledBy` entry below, with the ViewportWdgt-style
@@ -39,8 +39,11 @@
 #     the origin minimally) and through its two PINS, "scroll column" and "scroll row", which a
 #     wire drives and a slider bound to them follows (`pins`). Deliberately NOT a
 #     ViewportWdgt: frozen headers, the origin-0 byte-identity constraint (an unscrolled sheet
-#     renders pixel-for-pixel as pre-F1), and cell-quantized steps don't fit its pixel model;
-#     scrollbar/indicator chrome stays banked.
+#     renders pixel-for-pixel as pre-F1), and cell-quantized steps don't fit its pixel model.
+#     It presents the two scroll indicators every viewport shows all the same, from the base
+#     it shares with ViewportWdgt (ScrollIndicatorHostWdgt): over its DATA REGION (never over
+#     the frozen headers or the formula bar), each bar driving and following one of the two
+#     pins, so a bar moves the view by whole columns or rows ("what I answer my base", below).
 #     THE VIEWPORT INVARIANT (maintained by _reconcileViewportNoSettle, re-established on
 #     restore whatever mix the snapshot carried): exactly one VISIBLE CellWdgt per on-screen
 #     address, at the viewport rect of (address − origin); exactly one HIDDEN CellWdgt per
@@ -79,10 +82,10 @@
 # eye) I take no entry -- my edit start, commit and clear, and my cells' drop and drag-out, refuse --
 # and the arrows, Tab, the wheel and the zoom still act.
 
-class SimpleSpreadsheetWdgt extends ClippingWdgt
+class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
 
-  # F6: the sheet CLIPS at its bounds, as a ClippingWdgt — ONE clip for everything. Partial edge cells stick
-  # past the cells panel's right/bottom edge and the panel's own clip crops them; but
+  # F6: the sheet CLIPS at its bounds, as a ClippingWdgt (my base is one) — ONE clip for
+  # everything. Partial edge cells stick past the cells panel's right/bottom edge and the panel's own clip crops them; but
   # partial-column/row HEADERS are direct sheet children OUTSIDE the panel (frozen), and
   # without a sheet-level clip they would paint past the sheet's edge into the window. At
   # the default size the clip crops nothing (chrome + cells tile the sheet rect exactly) —
@@ -161,7 +164,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # the header-cell index ("kind:index" → SheetHeaderCellWdgt), TRANSIENT — rebuilt on restore by
   # _reindexCellsNoSettle, never adopted from a snapshot — and the formula bar, which IS adopted:
   # it rides a snapshot or a copy as my child and is re-attached and re-synced, never rebuilt there
-  # (building its zoom button would open a settle inside the copy and restore notifications).
+  # (building its zoom button would open a settle inside the copy and restore notifications). My two
+  # scroll bars (my base's vBar and hBar) are adopted the same way and for the same reason: a slider
+  # settles as it is built.
   _cells: undefined
   _cellsPanel: undefined
   _headerCells: undefined
@@ -204,12 +209,12 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     # harmless: the derivations' Math.max 1 floor degrades gracefully below one cell.)
     @minimumExtent = @_leastExtent()
     @_applyExtent @defaultExtent()
-    # materialise the widget chrome, then the viewport's grid of cell widgets (NoSettle: the
-    # enclosing openFrameWith settles once — the DegreesConverterApp orphan-construction idiom;
-    # a deserialize/duplicate skips the constructor and restores/copies the cells instead, which
-    # _reindexCellsNoSettle then adopts through the same two calls — no double grid).
-    @_buildChromeNoSettle()
-    @_reconcileViewportNoSettle()
+    # materialise the widget chrome and my scroll bars, then the viewport's grid of cell widgets,
+    # then arrange the bars: my view funnel (NoSettle: the enclosing openFrameWith settles once — the
+    # DegreesConverterApp orphan-construction idiom; a deserialize/duplicate skips the constructor
+    # and restores/copies the cells and the bars instead, which _reindexCellsNoSettle then adopts
+    # through the same funnel — no double grid).
+    @_reDeriveViewNoSettle()
     # I hear the keyboard from the start and act on it while I am the editor focus, show and no
     # caret is live (processKeyDown). A copy and a restore are receivers
     # through the membership they carry (Widget's copy hook, the serializer's marker).
@@ -226,7 +231,10 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # A click anywhere in me makes ME the editor focus, not the cell or label it hit: what the
   # editing tools act on is my SELECTION, whichever way it moved (a click, the arrows, Enter, Tab),
   # and I hand them my selected cell's style (textStyleSubject). WorldWdgt._setEditorFocusNoSettle
-  # asks this of the widget a click or drop names and of its ancestors.
+  # asks this of the widget a click or drop names and of its ancestors. A press on my scroll bars
+  # is the one exception: a bar is chrome excluded from editor-focus tracking
+  # (SliderWdgt.excludedFromEditorFocusTracking), so it scrolls me and leaves the focus where it
+  # was, as the wheel and my window's title strip do.
   focusesAsAWhole: -> true
 
   # ...and, being the focus, I show my selection myself (the selected cell's ring), so I opt out of
@@ -299,12 +307,13 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   #   PARTIAL (ceil) — a partially-visible column/row counts as ON-SCREEN. Consumers:
   #     viewport MEMBERSHIP (the reconcile) and — via the origin-clamped _visibleCols/Rows
   #     below — the materialise loops, the header-chrome build/trim, and the hit-test.
-  #   FULL (floor) — only WHOLE columns/rows count. Consumers: the SCROLL CLAMPS
-  #     (_scrollByNoSettle), the wheel at-limit conditions, and scroll-follow
+  #   FULL (floor) — only WHOLE columns/rows count. Consumers: the SCROLL CLAMP
+  #     (_clampedViewOrigin), the wheel at-limit conditions, my scroll bars' overflow
+  #     (_scrollAxisOverflows) and their scales (sliderRangeForPin), and scroll-follow
   #     (_scrollToShowSelectionNoSettle: the selection must end up FULLY visible, so the
   #     overlay editor never mounts on a clipped cell). At the max origin every remaining
   #     column is fully visible and residual pixels show BACKDROP (owner decision 2).
-  # At the default size ceil == floor == 6/14 exactly (no residual pixels), so every
+  # At the default size ceil == floor == 5/10 exactly (no residual pixels), so every
   # derivation answers the retired constants and the default render is byte-identical.
   # PURITY: these read APPLIED geometry (@width()/@height()) — legal at their call sites
   # (reconcile/clamps/arrange run after the extent is committed); they must never feed a
@@ -324,6 +333,31 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   _visibleCols: -> Math.min @_viewportColsPartial(), @sheetCols - @viewOriginCol
   _visibleRows: -> Math.min @_viewportRowsPartial(), @sheetRows - @viewOriginRow
 
+  # my DATA REGION: from the headers' inner edges to my bottom-right corner, in my plane — the box
+  # the cells panel spans, and the one my scroll bars run along (_scrollBarRunBox)
+  _dataRegionBox: ->
+    (@position().add new Point @_headerW(), @_gridTop() + @_headerH()).corner @bottomRight()
+
+  # ── what I answer my base about my scroll indicators (ScrollIndicatorHostWdgt) ─────────────
+  # The presentation is my base's: where a bar stands, how thick it is, when it shows, the hover pass
+  # that fattens it, the frames a press meets, the arrange that announces my view. What I answer is
+  # what scrolls here: my bars are built driving my two scroll pins (_buildChromeNoSettle), whose
+  # scale I answer (sliderRangeForPin), and below, the box they run along and when each shows. My
+  # thickness, margin and colour are my base's defaults (the theme's fat width, none, the role's).
+  # Whether I can scroll is never a bar's: the wheel, the keys and the pins ask my own clamp.
+
+  # my bars run along my data region, so neither stands over a frozen header or the formula bar,
+  # and my scroll band is the data region's (a pointer over the zoom button or a header leaves the
+  # bars thin)
+  _scrollBarRunBox: ->
+    @_dataRegionBox()
+
+  # an axis overflows while my viewport shows fewer WHOLE columns (rows) than the logical sheet
+  # holds: exactly when its pin has a scale (sliderRangeForPin), so a bar shows exactly when there is
+  # a thumb to place
+  _scrollAxisOverflows: (bar) ->
+    if bar is @hBar then @sheetCols > @_viewportColsFull() else @sheetRows > @_viewportRowsFull()
+
   # ── the widgetised grid: panel + headers + one CellWdgt per visible cell (Phase 8 + F5/F1) ───
 
   # Materialise + RE-DERIVE the sheet's WIDGET CHROME from the current frame: the
@@ -334,22 +368,31 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # scroll relabels them in place, F1; cell-quantized scroll means they never move). The
   # header COUNT is _visibleCols/Rows (F6): a resize builds/destroys the difference, and near
   # the sheet edge the count is ORIGIN-dependent too (no header over backdrop) — hence
-  # _scrollByNoSettle re-runs this. Every piece is (re)PLACED absolutely from @position()
+  # every scroll re-runs this (my view funnel, _reDeriveViewNoSettle). My two SCROLL BARS are
+  # chrome too: built here once, over the panel (my base places them, at the funnel's end).
+  # Every piece is (re)PLACED absolutely from @position()
   # each pass (the _apply* equal-guards make the steady state free), which is what lets the
   # F6 _reLayout below subsume float-follow. Also re-homes every already-indexed cell into
   # the (fresh) panel — on the restore path the adopted cells (visible AND hidden rich, F1)
   # hang as direct children after the rescue, and the old panel is gone. The CELLS themselves
   # are materialised by _reconcileViewportNoSettle (F1 split this out of the old
   # _buildGridNoSettle: cells follow the view origin, chrome doesn't). IDEMPOTENT: every
-  # piece is keyed (panel field / "kind:index") and only built when missing — never a double
-  # grid. NoSettle: runs from the constructor before the sheet is placed (the enclosing
+  # piece is keyed (panel field / "kind:index" / bar field) and only built when missing —
+  # never a double grid. NoSettle: runs from the constructor before the sheet is placed (the enclosing
   # openFrameWith owns the one settle), inside the re-index's enclosing settle on
   # restore/duplicate, inside scroll's settle, and from the _reLayout arrange.
   _buildChromeNoSettle: ->
     unless @_cellsPanel?
       panel = new SheetCellsPanelWdgt
-      @_addNoSettle panel
+      # my LOWEST child: everything laid over the data region (my scroll bars) stays above the
+      # cells, also on a restore or a copy, where this fresh panel joins the bars I adopted
+      @_addNoSettle panel, atIndex: 0
       @_cellsPanel = panel
+    # my two scroll bars, wired to my two scroll pins by my base's builder: built ONCE, then adopted
+    # by a restore or a copy (_reindexCellsNoSettle keeps them, as it keeps the formula bar), so no
+    # slider, which settles as it is built, is built inside those two notifications (a restore of a
+    # sheet that carries none builds them there, as it builds a missing formula bar)
+    @_buildScrollBarsNoSettle "setViewOriginCol", "setViewOriginRow" unless @vBar?
     # the formula bar spans my top, the full width, and does not zoom (SheetFormulaBarWdgt)
     unless @_formulaBar?
       bar = new SheetFormulaBarWdgt
@@ -358,10 +401,10 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
       @_formulaBar = bar
     @_formulaBar._applyBounds @position(), new Point @width(), @_gridTop()
     @_formulaBar.syncNoSettle()
-    # the data region spans from the headers to my bottom-right corner (F6 — pre-F6 this was
-    # the fixed grid size, set once at build)
+    # the panel spans the data region: from the headers to my bottom-right corner, re-applied
+    # every pass, since the region follows my extent
     gridTop = @_gridTop()
-    @_cellsPanel._applyBounds (@position().add new Point @_headerW(), gridTop + @_headerH()), new Point (@width() - @_headerW()), (@height() - gridTop - @_headerH())
+    @_cellsPanel._applyBounds @_dataRegionBox()
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
     # (kind, topLeftOffset, extent, viewportSlot): the four loose geometry numbers are the two Point
@@ -421,14 +464,52 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     @_cells.set address, cell
     cell
 
+  # ── my view: the one funnel every change of it ends in ──────────────────────────────────────
+
+  # THE VIEW FUNNEL. Every change of my view origin, and of the range it runs over, ends here: the
+  # mover (_scrollByNoSettle: the wheel, the keys' scroll-follow, a scroll pin's delivery), my arrange
+  # (_reLayout: a resize), the zoom, a restore or a copy (_reindexCellsNoSettle), and my constructor.
+  # In order: my origin is held in the range it runs over (an origin past the greatest one, left so by
+  # a grow or a zoom-out, would show columns and rows past the sheet's end, and a file can carry one);
+  # my chrome re-derives, which reads the origin (header validity near the sheet edge), and builds my
+  # scroll bars the first time; my viewport's cells re-derive; and my bars are arranged
+  # (ScrollIndicatorHostWdgt._reLayoutScrollbars), which ANNOUNCES my view as its last statement. That
+  # one announcement is what earns my two scroll pins their `announces` (pins), and it is what
+  # re-ticks an open zoom menu, whose rows are views of currentZoomFactor. markNonValueChange: neither
+  # my origin nor my zoom is a value I deliver, and it is DARK while nothing re-reads me. An arrange
+  # (_reLayout) raises it inside the layout pass, which the dataflow's one-way law allows that verb
+  # alone (DataflowEngine's header; the bars' arrange states the measured cadence: a change born
+  # inside the layout pass is re-read one cycle later). ⚠ It is unguarded, and must stay so: an "only
+  # when my origin moved" test would leave a zoom menu showing the old level after a zoom that keeps
+  # the origin.
+  #   The origin is written only when the clamp moves it, so an unscrolled sheet keeps it a PROTOTYPE
+  # default (the own-only-when-scrolled idiom of viewOriginCol/Row). Inside the layout pass (a
+  # resize) a moved origin commits no open edit: a layout station must never mark a value stale, and
+  # the editor's cell, fully visible before the grow, still is after it.
+  _reDeriveViewNoSettle: ->
+    {col, row} = @_clampedViewOrigin @viewOriginCol, @viewOriginRow
+    @viewOriginCol = col unless col is @viewOriginCol
+    @viewOriginRow = row unless row is @viewOriginRow
+    @_buildChromeNoSettle()
+    @_reconcileViewportNoSettle()
+    @_reLayoutScrollbars()
+
+  # THE CLAMP my view origin is held by: `col`, `row` pulled into the range they run over, from 0 to
+  # the greatest origin, where my last WHOLE column and row stand at my viewport's right and bottom
+  # edges (the FULL counts). Two readers, one expression: the mover asks it of the origin it is
+  # asked for, and my view funnel of the origin I hold.
+  _clampedViewOrigin: (col, row) ->
+    col: Math.min (@sheetCols - @_viewportColsFull()), Math.max 0, col
+    row: Math.min (@sheetRows - @_viewportRowsFull()), Math.max 0, row
+
   # ── F1 scroll: the viewport reconcile (materialise / recycle) ────────────────────────────
 
-  # Re-establish THE VIEWPORT INVARIANT (see the header) for the current view origin — called
-  # after every origin change (wheel, keyboard scroll-follow, a scroll pin's delivery: all through
-  # _scrollByNoSettle), after every change of the range the origin runs over (a resize, through
-  # _reLayout; a zoom), at construction (origin 0), and on restore/duplicate for the RESTORED
-  # origin, whatever mix of visible + hidden-rich cells the snapshot carried. Being the one place
-  # all of those reach, it is also where my view is ANNOUNCED (its last statement).
+  # Re-establish THE VIEWPORT INVARIANT (see the header) for the current view origin — the third
+  # step of my view funnel (_reDeriveViewNoSettle), so it runs after every origin change (wheel,
+  # keyboard scroll-follow, a scroll pin's delivery: all through _scrollByNoSettle), after every
+  # change of the range the origin runs over (a resize, through _reLayout; a zoom), at construction
+  # (origin 0), and on restore/duplicate for the RESTORED origin, whatever mix of visible +
+  # hidden-rich cells the snapshot carried.
   #   pass 1 — every indexed cell: on-screen ⇒ show + place at the viewport rect of
   #     (address − origin); off-screen ⇒ the hidden-rich-cell EXEMPTION (a cell whose hosted
   #     widget IS the record's live value __hide()s in place — repaint-level, out of
@@ -484,17 +565,6 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
         slotCol += 1
       slotRow += 1
     @_reflowSpillOfRowNoSettle slotRow for slotRow in [0...visibleRows]
-    # ANNOUNCE MY VIEW, every time. Each change of my view origin and of the range it runs over ends
-    # here (the header above), so this one statement is what earns my two scroll pins their
-    # `announces` (pins), and it is what re-ticks an open zoom menu, whose rows are views of
-    # currentZoomFactor: a zoom reaches here too. markNonValueChange: neither my origin nor my zoom
-    # is a value I deliver, and it is DARK while nothing re-reads me. An arrange (_reLayout) raises
-    # it inside the layout pass, which the dataflow's one-way law allows this verb alone
-    # (DataflowEngine's header; ScrollIndicatorHostWdgt._reLayoutScrollbars, the precedent, has the
-    # measured cadence: a change born inside the layout pass is re-read one cycle later).
-    # ⚠ Keep it unguarded: an "only when my origin moved" test here would leave a zoom menu showing
-    # the old level after a zoom that keeps the origin.
-    world.dataflow.markNonValueChange @
     return
 
   # ── F6: the resize seam — the sheet's own children-arrange ───────────────────────────────
@@ -502,8 +572,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # _setWidthSizeHeightAccordingly, free height through _applyHeight); _applyExtent's
   # schedule-valve then enqueues me (I have children) and the settle engine re-lays me HERE,
   # in the same flush, at final geometry. Bounds FIRST (the InspectorWdgt case-law, enforced
-  # by check-relayout-bounds-first.js), then the whole chrome + viewport re-derive from the
-  # just-applied frame — every child placed ABSOLUTELY from @position()/@width()/@height(),
+  # by check-relayout-bounds-first.js), then my whole view re-derives from the just-applied frame
+  # (_reDeriveViewNoSettle: the origin held in its range, the chrome, the viewport's cells, my scroll
+  # bars) — every child placed ABSOLUTELY from @position()/@width()/@height(),
   # which subsumes float-follow for any move that arrives here (a plain move that doesn't
   # goes through _applyMoveBy's subtree translate as always; a hidden rich cell's notional
   # off-screen rect is left stale — never painted/hit, re-placed on scroll-in). IDEMPOTENT
@@ -516,27 +587,26 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
     if @_handleCollapsedStateShouldWeReturn() then return
     @_applyGrantedBounds newBoundsForThisLayout
-    @_buildChromeNoSettle()
-    @_reconcileViewportNoSettle()
+    @_reDeriveViewNoSettle()
     # super: the move/extent re-applies no-op via the equal-guards (bounds already applied);
     # corner-internal children (handles) re-place; _markLayoutAsFixed.
     super
 
   # Shift the view origin by whole columns/rows (cell-quantized — the sheet never scrolls
-  # sub-cell), clamped to the logical sheet, then reconcile the viewport and repaint (one
-  # sheet-level _changed() covers the moved cells and the relabelled frozen headers — the
-  # sheet's own rect contains them all).
+  # sub-cell), held in the range it runs over (_clampedViewOrigin), then re-derive my view and
+  # repaint (one sheet-level _changed() covers the moved cells and the relabelled frozen headers —
+  # the sheet's own rect contains them all). The mover asks the clamp ITSELF, before it writes: a
+  # move the clamp refuses (a delivery past the end, at the end) writes nothing, re-derives nothing
+  # and announces nothing, and my view funnel's own clamp then finds the origin in range.
   _scrollByNoSettle: (colDelta, rowDelta) ->
-    newCol = Math.min (@sheetCols - @_viewportColsFull()), Math.max 0, @viewOriginCol + colDelta
-    newRow = Math.min (@sheetRows - @_viewportRowsFull()), Math.max 0, @viewOriginRow + rowDelta
-    return if newCol is @viewOriginCol and newRow is @viewOriginRow
-    @viewOriginCol = newCol
-    @viewOriginRow = newRow
+    {col, row} = @_clampedViewOrigin @viewOriginCol + colDelta, @viewOriginRow + rowDelta
+    return if col is @viewOriginCol and row is @viewOriginRow
+    @viewOriginCol = col
+    @viewOriginRow = row
     # header VALIDITY is origin-dependent post-F6 (near the sheet edge a partial slot
-    # gains/loses its column — no header over backdrop), so re-run the idempotent chrome
-    # ensure/trim. At the default size the count is origin-invariant: a pure no-op pre-resize.
-    @_buildChromeNoSettle()
-    @_reconcileViewportNoSettle()
+    # gains/loses its column — no header over backdrop), so the funnel re-runs the idempotent
+    # chrome ensure/trim. At the default size the count is origin-invariant: a pure no-op pre-resize.
+    @_reDeriveViewNoSettle()
     @_changed()
     return
 
@@ -561,8 +631,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # Which column and which row of the logical sheet stand at my viewport's top-left (0-based, whole
   # cells): what the wheel and the keys' scroll-follow move, what a wire can DRIVE, and what a
   # slider bound to me FOLLOWS (SliderWdgt.reflectTarget reads the pin's getter and the scale
-  # sliderRangeForPin answers). BOTH ANNOUNCE, and a funnel earns the word: every change of my
-  # origin, and of the range it runs over, ends in _reconcileViewportNoSettle, which announces.
+  # sliderRangeForPin answers) — my own two scroll bars among them. BOTH ANNOUNCE, and a funnel earns
+  # the word: every change of my origin, and of the range it runs over, ends in my view funnel
+  # (_reDeriveViewNoSettle), whose last step, my bars' arrange, announces.
   pins: -> super().concat [
     new PinSpec "scroll column", "numerical", set: "setViewOriginCol", get: "getViewOriginCol", announces: true
     new PinSpec "scroll row",    "numerical", set: "setViewOriginRow", get: "getViewOriginRow", announces: true
@@ -594,8 +665,8 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # THE CORE of both scroll pins: move my origin along `axis` ("column" or "row") to `value`, a
   # number or the string spelling of one, and answer the column or row I show afterwards. I scroll
   # by WHOLE cells, so the value is rounded, and something that is no number moves nothing; the clamp
-  # is the mover's own (_scrollByNoSettle: 0 to the greatest origin), so a delivery past either end
-  # rests at that end. An edit in progress COMMITS before the scroll, so the overlay editor never
+  # is the mover's (_scrollByNoSettle asks _clampedViewOrigin: 0 to the greatest origin), so a
+  # delivery past either end rests at that end. An edit in progress COMMITS before the scroll, so the overlay editor never
   # moves mid-edit, and it commits whenever the asked origin differs from the shown one, even where
   # the clamp then moves nothing: a delivery past the end I already show commits an open edit, where
   # a wheel at its limit (scrolledBy) commits nothing. A delivery of the origin I show already does
@@ -689,7 +760,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # cell under a tilt (the 2026-07-17 tilted-selection bug; the raw-pointer lint now bans it in
   # handler bodies). _cellAtLocal answers VIEWPORT coords, which the view origin maps to
   # sheet-space (@selectedCol/Row are sheet-space — at origin 0 the two coincide, F1). A click
-  # elsewhere COMMITS an in-progress edit first (click-away commits). PUBLIC event entry: it
+  # elsewhere COMMITS an in-progress edit first (click-away commits). A click on one of my scroll
+  # bars never reaches here: it is the bar's (SliderWdgt.activated), so it selects no cell under the
+  # bar. PUBLIC event entry: it
   # opens the ONE layout settle for its work (the mount/teardown of the overlay editor happens
   # through NoSettle cores below — the layering discipline, like world.edit).
   activated: (pos) ->
@@ -732,7 +805,7 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
       steps = Math.max 1, Math.round((Math.abs(y) * WorldWdgt.preferencesAndSettings.wheelScaleY) / @_rowH())
       delta = if y > 0 then -steps else steps
       # already at the travel limit in the requested direction ⇒ this axis escalates
-      # (FULL counts, F6 — the same expressions as _scrollByNoSettle's clamps)
+      # (FULL counts, F6 — the same expressions as _clampedViewOrigin's)
       if (delta < 0 and @viewOriginRow <= 0) or (delta > 0 and @viewOriginRow >= @sheetRows - @_viewportRowsFull())
         escalate = true
       else
@@ -1179,10 +1252,12 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
 
   # ── zoom (R3) ───────────────────────────────────────────────────────────────────────────
 
-  # PUBLIC: lay me out again at `factor` times my sizes (one of ZOOM_LEVELS): chrome, viewport
-  # and every visible cell's look re-derive, and the selection stays in view. Every open zoom menu
-  # re-ticks — this one, a pinned copy, or one left open while a script zoomed — because the
-  # viewport's reconcile, which a zoom reaches, announces me (_reconcileViewportNoSettle).
+  # PUBLIC: lay me out again at `factor` times my sizes (one of ZOOM_LEVELS): my view (the origin
+  # held in its range — a zoom-out shows more whole cells, so the greatest origin falls —, chrome,
+  # viewport, scroll bars) and every visible cell's look re-derive, and the selection stays in view.
+  # My bars keep their width (the theme's, never zoomed). Every open zoom menu re-ticks — this one, a
+  # pinned copy, or one left open while a script zoomed — because my view funnel, which a zoom runs,
+  # announces me (_reDeriveViewNoSettle).
   setZoomFactor: (factor) ->
     @_settleLayoutsAfter => @_setZoomFactorNoSettle factor
 
@@ -1191,8 +1266,7 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     @_commitEditNoSettle() if @_editing
     @zoomFactor = factor
     @minimumExtent = @_leastExtent()
-    @_buildChromeNoSettle()
-    @_reconcileViewportNoSettle()
+    @_reDeriveViewNoSettle()
     @_cells.forEach (cellWdgt, address) =>
       record = @model.cellAt address
       @_reconcileCellNoSettle record, record.value if record? and cellWdgt.isVisible
@@ -1392,12 +1466,14 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # recompute RETAINS a widget-valued cell's restored widget by class match — a DERIVED
   # presenter is rebuilt from the value, a scalar repaints), and any stray CELL child that is
   # not its hosted widget (a mid-edit overlay editor that rode a subtree snapshot) is
-  # destroyed. Then _buildChromeNoSettle rebuilds the chrome + re-homes the adopted cells into
-  # the fresh panel, and _reconcileViewportNoSettle re-establishes the viewport invariant for
-  # the RESTORED view origin, whatever mix the snapshot carried (F1): visible cells re-place at
+  # destroyed. The formula bar and my two scroll bars are ADOPTED: kept by the sweep, never
+  # rebuilt here. Then my view funnel (_reDeriveViewNoSettle) holds the RESTORED view origin in
+  # its range, rebuilds the chrome (the fresh panel beneath the adopted bars) + re-homes the
+  # adopted cells into the panel, re-establishes the viewport invariant for that origin, whatever
+  # mix the snapshot carried (F1): visible cells re-place at
   # their slots, an off-viewport HIDDEN rich cell keeps its exemption (its record's derived
   # value is still undefined here — the predicate's undefined disjunct covers it), anything else recycles,
-  # and every on-screen gap fills. The transient edit state resets.
+  # and every on-screen gap fills — and arranges my bars. The transient edit state resets.
   _reindexCellsNoSettle: ->
     @_editing = false
     @_editCol = undefined
@@ -1407,17 +1483,19 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     @_headerCells = new Map
     # the formula bar is ADOPTED, like the cells: a copy or a snapshot carries it as my child (and
     # my handle to it), so it is re-attached and kept by the sweep below, and the chrome ensure
-    # re-syncs it
+    # re-syncs it. So are my two scroll bars: a copy or a snapshot carries them as my children, my
+    # handles to them and their wires to me, so the sweep keeps them and my base's arrange re-lays
+    # them; their tracking edges are declared by the add that brings me into a world
     @_formulaBar?.attachSheet this
     # rescue the data cells out of any snapshot chrome, up to direct children
     for child in @children.slice()
       if child instanceof SheetCellsPanelWdgt
         for inner in child.children.slice()
           @_addNoSettle inner if inner instanceof CellWdgt
-    # destroy everything that isn't a data cell or the adopted formula bar: old chrome (now empty
-    # of cells) + strays
+    # destroy everything that isn't a data cell, the adopted formula bar or one of my adopted scroll
+    # bars: old chrome (now empty of cells) + strays
     for child in @children.slice()
-      child._fullDestroyNoSettle() unless child instanceof CellWdgt or child is @_formulaBar
+      child._fullDestroyNoSettle() unless child instanceof CellWdgt or child is @_formulaBar or @isMyScrollBar child
     # adopt + index the snapshot's cells; sweep their stray children (a mid-edit editor)
     for child in @children.slice()
       if child instanceof CellWdgt
@@ -1428,10 +1506,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
         for grand in child.children.slice()
           grand._fullDestroyNoSettle() unless grand is child.hostedWidget
         @_cells.set child.address, child
-    # rebuild chrome + re-home the adopted cells, then re-establish the viewport invariant
-    # for the restored origin (see the method comment above)
-    @_buildChromeNoSettle()
-    @_reconcileViewportNoSettle()
+    # rebuild chrome + re-home the adopted cells, re-establish the viewport invariant for the
+    # restored origin, arrange the adopted bars (see the method comment above)
+    @_reDeriveViewNoSettle()
     return
 
   # after a deep-copy (the duplicate gesture → fullCopy → deepCopy): the copier runs this once the

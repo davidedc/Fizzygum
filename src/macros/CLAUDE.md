@@ -123,7 +123,9 @@ silently lands on something else changes the pixels, and a recapture would then 
   reads the world the press meets (`verifyPressLanding`): the press must land on the widget or on something
   inside it, or the test fails with **"AIM MISSED"** (recorded like a failed assertion, so the macro runs on).
   A finger press is judged as the finger meets it: its own arrival fattens a thin scroll indicator before it
-  presses, which `_widgetAPressMeets` accounts for through `ScrollIndicatorHostWdgt.barScreenFrameOnArrival`.
+  presses, which `_widgetAPressMeets` accounts for by asking the host what part of a bar the arrival meets there
+  (`ScrollIndicatorHostWdgt.barPartMetOnArrivalAt`, which maps the point into the host's own plane, so a tilted
+  host answers for its bars' true footprint).
   A wheel named for a SCROLLER (`wheelOn_InputEvents` on a widget that takes a scroll itself — under a mouse one
   answering `scrolledBy`, under a finger one claiming plain drags for scrolling) must also start a scroll the
   dispatch hands to THAT widget: the check asks the dispatch's own decision (`_scrollTakerAbove` →

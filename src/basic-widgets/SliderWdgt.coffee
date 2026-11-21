@@ -1,19 +1,36 @@
 # Sliders (and hence slider button widgets)
-# are also used in the ViewportWdgts .
+# are also the scroll bars every host of scroll indicators presents (ScrollIndicatorHostWdgt:
+# a viewport, a spreadsheet).
 
 # The orientation is auto-derived from my geometry (taller-than-wide = vertical);
 # a user-forced orientation existed once and was simplified away as uncommon.
 
 class SliderWdgt extends ControllerWdgt
 
-  # A slider is editor content when dropped alone (a value control you can select/align), but a
-  # viewport's scrollbar is CHROME and must NOT get the editor-focus SELECTION overlay (§5.D D-3/D21). The
-  # SAME class serves both, so I can't blanket-exclude -- instead I ASK my parent whether it owns me as a
-  # scrollbar (isMyScrollBar, which every host of scroll indicators answers: ScrollIndicatorHostWdgt's),
-  # dispatched via ?() so a parent that presents no indicators answers undefined. A content slider -- even one dropped INTO a viewport's content -- is never the viewport's
-  # vBar/hBar, so it stays framable; only the actual bars are excluded.
-  excludedFromEditorFocusTracking: ->
+  # Am I a scroll bar my parent presents? I ASK my parent whether it owns me as one (isMyScrollBar,
+  # which every host of scroll indicators answers: ScrollIndicatorHostWdgt's), dispatched via ?() so a
+  # parent that presents no indicators answers undefined. A content slider -- even one dropped INTO a
+  # viewport's content, or into a sheet's cell -- is never its host's vBar/hBar. The one question my
+  # chrome-ness (excludedFromEditorFocusTracking) and my click (activated) ask.
+  _isMyParentsScrollBar: ->
     @parent?.isMyScrollBar?(@) is true
+
+  # A slider is editor content when dropped alone (a value control you can select/align), but a
+  # host's scroll bar is CHROME: a press on it must neither take the editor focus nor get the
+  # editor-focus SELECTION overlay (the hand asks this of a press's ancestry,
+  # ActivePointerWdgt._excludedFromEditorFocusTrackingByAncestry), so it scrolls its host and leaves
+  # the focus where it was. The SAME class serves both, so I can't blanket-exclude: only the actual
+  # bars are excluded, and a content slider stays framable.
+  excludedFromEditorFocusTracking: ->
+    @_isMyParentsScrollBar()
+
+  # A click on a scroll bar is the bar's: a press on my track has already paged my host (pressBegan's
+  # jump), and nothing above me may take the click for one on whatever lies under me -- a spreadsheet
+  # would select the cell under its bar, a panel would come forward. A plain slider passes its click
+  # on, as every widget does (Widget.activated).
+  activated: ->
+    return if @_isMyParentsScrollBar()
+    super
 
   start: undefined
   stop: undefined
@@ -28,7 +45,7 @@ class SliderWdgt extends ControllerWdgt
   smallestValueIsAtBottomEnd: false
 
   # ── SCROLL-INDICATOR PRESENTATION (program ruling G4) ─────────────────────────────────────
-  # A viewport's scrollbar wears an indicator presentation: 'thin' (thumb only, untouchable) or
+  # A host's scroll bar wears an indicator presentation: 'thin' (thumb only, untouchable) or
   # 'fat' (the full control, under a hovering pointer). undefined on every OTHER slider — a value
   # control is not an indicator, and none of this touches it.
   indicatorMode: undefined
@@ -42,9 +59,10 @@ class SliderWdgt extends ControllerWdgt
   # class default alpha, opaque too), and the return from an indicator presentation.
   plainTrackAlpha: 1
   plainThumbAlpha: 1
-  # The presentation does not ride a file: my viewport RE-DERIVES it from its own overflow at the
-  # first arrange after a restore (which its _afterDeserialization schedules), exactly as it does on
-  # a freshly built world, so a snapshot carrying a mode could only ever disagree with it. Merged up
+  # The presentation does not ride a file: my host RE-DERIVES it from its own overflow at the
+  # first arrange after a restore (a viewport's _afterDeserialization schedules it, a sheet's restore
+  # runs it), exactly as it does on a freshly built world, so a snapshot carrying a mode could only
+  # ever disagree with it. Merged up
   # the chain by Serializer.transientsForClass, which ADDS to Widget's list.
   @serializationTransients: ["indicatorMode"]
 
@@ -101,7 +119,7 @@ class SliderWdgt extends ControllerWdgt
     else
       return "horizontal"
 
-  # Wear an indicator presentation (my viewport derives it; see
+  # Wear an indicator presentation (my host derives it; see
   # ScrollIndicatorHostWdgt._refreshScrollIndicators).
   # PRESENTATION ONLY: my value, my range and my wiring are untouched, which is exactly why the
   # bars stay SliderWdgts instead of becoming a second overlay family. The thin state paints the
@@ -113,7 +131,7 @@ class SliderWdgt extends ControllerWdgt
   # opaque groove, my thumb back in the button's look — and a pointer that stops on me again.
   #   The mode is also an input to my thumb's GEOMETRY (thumbInsetInTrack), so a flip that changes
   # the inset re-lays the thumb here, at the one door the mode changes through: a caller that has
-  # just laid me out for the old look (my viewport's _reLayoutScrollbars, my own _reactToBeingAdded)
+  # just laid me out for the old look (my host's _reLayoutScrollbars, my own _reactToBeingAdded)
   # never leaves a thumb sized for one look on a bar wearing the other. Nothing else may be trusted
   # to repair it — a duplicated viewport's bars have no reverse edge to re-read through.
   showAsScrollIndicator: (mode) ->
@@ -131,7 +149,7 @@ class SliderWdgt extends ControllerWdgt
   # The fill my track wears while I hold no colour of my own (CircleBoxyAppearance._fillColor), read
   # as I am painted: the scroll indicator's track role while I wear an indicator presentation (shown
   # faintly fat, not at all thin: my alpha), else a plain slider's opaque groove. A bar picked up off
-  # its viewport is a plain slider, so it shows the groove, never the indicator's ink at full alpha.
+  # its host is a plain slider, so it shows the groove, never the indicator's ink at full alpha.
   _surfaceFill: ->
     theme = WorldWdgt.theme
     if @indicatorMode? then theme.scrollIndicatorTrack else theme.sliderTrack
@@ -180,12 +198,12 @@ class SliderWdgt extends ControllerWdgt
 
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelfAndButton()
-    # An indicator presentation is something a VIEWPORT puts on the bar it HOLDS. Landing anywhere
-    # else — the hand, the desktop, a panel — I am a plain slider again, and a plain slider is a
+    # An indicator presentation is something a HOST of scroll indicators puts on the bar it HOLDS.
+    # Landing anywhere else — the hand, the desktop, a panel — I am a plain slider again, and a plain slider is a
     # target: a thin, pointer-through look must not survive being picked up, or the bar becomes a
     # widget on the desktop that nothing can ever click, with no scroll band left to hover it back.
     # public-call-sanctioned: showAsScrollIndicator IS the one door onto this presentation (my
-    # viewport comes through it too) and it settles nothing — it writes two alphas, re-lays my own
+    # host comes through it too) and it settles nothing — it writes two alphas, re-lays my own
     # thumb if the look changes its inset, and repaints.
     @showAsScrollIndicator undefined  unless whereTo.isMyScrollBar? @
     # (My tracking edges are re-declared by the add itself, for me and for every control in a
@@ -411,7 +429,7 @@ class SliderWdgt extends ControllerWdgt
   # for that, and then the press STOPS here; otherwise it goes on up (a slider sitting on a pane lets
   # a press on its track reach the pane).
   pressBegan: (pos) ->
-    # jump-drag policy is the OWNING CONTEXT's (viewport / prompt) — capability via ?(),
+    # jump-drag policy is the OWNING CONTEXT's (a host of scroll indicators / a prompt) — capability via ?(),
     # instead of `(parent instanceof ViewportWdgt) or (parent instanceof PromptWdgt)`
     # (type-test-elimination ε)
     if @button.parent == @ and @parent?.sliderTrackPressJumpsButton?()
