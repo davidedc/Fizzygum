@@ -475,8 +475,15 @@ design (`DATAFLOW_ERROR`, a formula that throws). And every `console.error` in `
 an ALL-CAPS token, held by `lib/gate-tokens-selftest.js` (run on every build): an error with no name is an
 assertion nothing could report by name, so the selftest refuses it when it is written, and the token it gets is
 then either gated or excused with one of two stated kinds (`by-design`, or `not-distinctive` — a word too common
-to match as a substring, which still fails as an error line). Each always-on assert exists because the
-screenshot suite structurally cannot see the violation:
+to match as a substring, which still fails as an error line). A CAUGHT error is one of these lines too, written
+where it is caught (`LAYOUT_ERROR`, `PAINT_ERROR`, `STEP_ERROR`, `INPUT_ERROR`), never deferred to a later cycle;
+every test is bracketed by start and end markers and one judge (`gate-tokens.js` `caughtErrorsWindow`) files each line
+under the test whose window it falls in, in every runner; a test that throws on purpose DECLARES the paint, step or
+input errors it expects (`expectsCaughtErrors`, never `LAYOUT_ERROR`), which are then excused in its window alone, and
+a declared error that never comes fails; and a rig that drives the world in one synchronous evaluate runs a fixed two
+world cycles before its verdict (`headless-driver.js` `cycledBeforeClose`), so whether a step or paint error occurs
+does not depend on load. Each always-on assert exists because the screenshot suite structurally cannot see the
+violation:
 - `NON_FINITE_GEOMETRY` / `NON_INTEGER_GEOMETRY` — `Widget._assertBoundsWellFormed`, see
   [`integer-pixel-placement-and-sizing.md`](integer-pixel-placement-and-sizing.md).
 - `POPUP_LARGER_THAN_WORLD` — `FrameWdgt._assertFitsInTheWorld`: a pop-up bigger than the world has rows

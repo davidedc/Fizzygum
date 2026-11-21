@@ -327,6 +327,11 @@ installSWCanvasExtensions = ->
           swCanvasRecordColdGlyphDraw()
         swCanvasEnsureAtlasForFont @_core?._font, @_core?._textPixelDensity
       catch err
+        # Caught so the draw, which has happened, is not blamed for its bookkeeping (thrown out
+        # of here, the paint catch would ban the widget that drew); said, because a text whose
+        # atlas is never requested, or a load counted in flight that never settles, stays as
+        # placeholder boxes or keeps every screenshot gate waiting, with nothing else to tell why.
+        console.error "SWCANVAS_TEXT_BOOKKEEPING_FAILED: a text was drawn, but its glyph bookkeeping threw: " + reportOfThrownValue(err)
       result
 
   # Override the `font` setter so EVERY `ctx.font = "..."` (back buffers AND the

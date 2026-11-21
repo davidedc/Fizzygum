@@ -23,9 +23,11 @@ ones layout drives or is driven by; `doOneCycle` runs others (macro-step pacing,
 the budgeted source-compile station) that are outside this doc's scope — read the method rather than treat this as
 the whole cycle:
 
-- **(a) surface deferred errors** — the errors pushed out of the *previous* cycle's repaint and settle
-  (`_showErrorsHappenedInRepaintingStepInPreviousCycle`, `_showLayoutErrorsFromPreviousCycle`), because neither
-  pass may report from inside itself.
+- **(a) surface deferred errors** — the IN-WORLD error console for the errors the *previous* cycle's repaint and
+  settle caught (`_showErrorsHappenedInRepaintingStepInPreviousCycle`, `_showLayoutErrorsFromPreviousCycle`),
+  because the console cannot be built inside either pass. The console LINE of each caught error is not deferred:
+  every catch (a settle's, a paint's, a step's, an input event's) writes its gated line where it catches, so a
+  consumer that never sees another cycle still sees it.
 - **(b) input + stepping** — `_playQueuedEvents` drains the *whole* event backlog this frame, returning only at a
   future-timed event; then the test replay, `progressFramePacedActions` (the frame-paced source-batch fetch that
   brings a lazy part in) and `_runChildrensStepFunction` (animation, stepping widgets); then
@@ -352,10 +354,11 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   re-arms it, the membership rule takes over — the opener is a desktop icon outside the desktop's
   consumption, the clock is consumed and proportionally tracks). The desktop's browser-resize
   reflow (`WorldWdgt._reLayoutDesktop`) is just the generic consumed-children loop + this corner
-  pass — the last `instanceof` placement dispatch died with the corner-spec dissolution arc. Since
-  a corner-armed child can sit in a CONSUMING holder, the fractional recorder
-  (`_rememberFractionalSituationInHoldingPanel`) refuses to shadow any spec that `ownsPlacement()`
-  — the seed drain fills only free-floating entrants.
+  pass — the last `instanceof` placement dispatch died with the corner-spec dissolution arc. A
+  consuming holder (the desktop, a stretchable page) consumes only FREE-FLOATING children
+  (`consumesFractionalGeometryOf` asks `isFreeFloating`), so a child whose spec owns its placement
+  (a corner-armed piece, a division cell attached "with horizontal layout") is never given a stretch
+  record: the holder's own arrange places it from its spec (a lone division cell fills a page).
 - **`StretchLayoutSpec`** — the one FOLLOWER (`ownsPlacement()` false): the child's proportional
   placement record in a fractional-consuming holder, as four EDGE fractions of the holder's box
   (extents derive from independently ROUNDED edges in `grantedBoundsWithin`, so abutting children

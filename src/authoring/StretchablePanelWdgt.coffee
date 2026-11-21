@@ -59,13 +59,16 @@ class StretchablePanelWdgt extends PanelWdgt
     edges.push new Rectangle w - 1, sideTop, w, sideBottom if edgeRight
     edges
 
-  # I re-lay my children from their proportional records (StretchLayoutSpecs, see
-  # _reLayout below) -- my COMPLETE child rule, asked by the __add seed and the world's
-  # drain stations (see Widget.consumesFractionalGeometryOf): layout-inert chrome
-  # (handles / carets / highlighters) is never a reflow subject, exactly as my arrange's
-  # childrenNotHandlesNorCarets excludes it.
+  # I re-lay my FREE-FLOATING children from their proportional records (StretchLayoutSpecs,
+  # see _reLayout below) -- my COMPLETE child rule, asked by the __add seed, the world's
+  # drain stations and my arrange (see Widget.consumesFractionalGeometryOf): layout-inert
+  # chrome (handles / carets / highlighters) is never a reflow subject, exactly as my
+  # arrange's childrenNotHandlesNorCarets excludes it, and a child whose spec OWNS its
+  # placement (a division cell, a corner knob: Widget.isFreeFloating) keeps no record -- the
+  # base pass my _reLayout's trailing super runs places it from its own spec (the division
+  # arrange, the corner pass), as the desktop's corner pass places its furniture.
   consumesFractionalGeometryOf: (child) ->
-    !child.isLayoutInert?()
+    !child.isLayoutInert?() and child.isFreeFloating()
 
   # A FRESH, EMPTY PAGE OF MY KIND: what my container builds in my place once I leave it
   # (StretchableWidgetContainerWdgt._reactToChildRemoved, which gives it the container's mode and
@@ -116,8 +119,9 @@ class StretchablePanelWdgt extends PanelWdgt
       # the granted path — see the imposer comment in Widget._moveInDesktopToFractionalPosition.
       for w in childrenNotHandlesNorCarets
         # the SAME membership rule the __add seed and the world drains ask (D10): a
-        # layout-inert overlay (highlighter) parked in me is not a reflow subject, and the
-        # gated recorder below would refuse it a spec anyway — skip, don't undefined-deref
+        # layout-inert overlay (highlighter) parked in me is not a reflow subject, and a
+        # child whose spec owns its placement is placed by the base pass below (super) —
+        # skip both, don't undefined-deref
         continue unless @consumesFractionalGeometryOf w
         # Hardening (§5b): a child that somehow lacks its proportional record — a stale/foreign child,
         # or one added mid-pass before the world's fill drain could seed it — must NOT abort my WHOLE

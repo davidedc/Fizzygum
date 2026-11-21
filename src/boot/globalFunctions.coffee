@@ -74,7 +74,7 @@ window.classNamed = (name) ->
 # The TEXT of anything a throw can carry -- an Error, a string, null and undefined, a Symbol (`"" + it`
 # throws), an object with no prototype (no toString: String throws), one whose toString throws -- and its
 # stack where it carries one (a string). Every place that writes a thrown value into text (the error log,
-# the layout and dataflow error lines, a sheet's error value, the source-edit replay's notes, the
+# the console line each catch writes, a sheet's error value, the source-edit replay's notes, the
 # harness's catches) reads it through these two, so no report of a throw can itself throw: a report that
 # throws inside a catch escapes the world's cycle and stops it.
 window.textOfThrownValue = (value) ->
@@ -92,6 +92,17 @@ window.stackOfThrownValue = (value) ->
   catch unreadable
     return undefined
   if typeof stack is "string" then stack else undefined
+
+# What a one-line REPORT of a throw writes, on every engine: what was thrown, then where. V8's stack opens with the
+# thrown value's own text ("TypeError: …" and then the frames), so there it is the stack alone; JavaScriptCore's (the
+# webkit legs) is the frames alone, which name no cause, so there it is the text, then the stack; a value carrying no
+# stack (a thrown string, null) is its text. Every catch's console line and the harness's report of a start step that
+# threw write a throw through it.
+window.reportOfThrownValue = (value) ->
+  whatThrew = textOfThrownValue value
+  whereItThrew = stackOfThrownValue value
+  if whereItThrew? and whereItThrew.indexOf(whatThrew) is 0 then whereItThrew
+  else whatThrew + (if whereItThrew? then "\n" + whereItThrew else "")
 
 window.allClassFunctions = ->
   result = []

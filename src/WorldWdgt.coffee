@@ -410,6 +410,9 @@ class WorldWdgt extends IconGridPanelWdgt
   iconsLayingInGridWrapCount: 5
 
   errorsWhileRepainting: undefined
+  # each distinct report of a paint throw this world has written to the console -> how many times it
+  # was thrown (_queueErrorForLaterReporting writes each one once); made at the first paint throw
+  paintErrorReportsWritten: undefined
   paintingWidget: undefined
   widgetsGivingErrorWhileRepainting: undefined
   # widgets whose step threw: the stepping loop passes them by until code changes give them another chance
@@ -419,8 +422,9 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # errors thrown by a _reLayout() DURING the recalculateLayouts flush. We can't build the
   # error console there: createErrorConsole uses the public, self-flushing geometry setters,
-  # which would re-enter recalculateLayouts and throw. So we stash them here and report them
-  # next cycle, outside the flush -- exactly like errorsWhileRepainting. (task #18)
+  # which would re-enter recalculateLayouts and throw. So we stash them here and show them in
+  # the world next cycle, outside the flush (the console line is written at the catch) --
+  # exactly like errorsWhileRepainting. (task #18)
   layoutErrorsToReport: undefined
 
   # this one is so we can left/center/right align in
@@ -1423,11 +1427,17 @@ class WorldWdgt extends IconGridPanelWdgt
       # And because the throwing _reLayout() never reached its trailing _markLayoutAsFixed(),
       # node is still layoutIsValid==false, so unless we settle it here the outer until-loop
       # would spin (and the stuck-detection would fire on a genuine _reLayout bug's error). So:
-      # settle + ban the offender (both layout-clean), then defer the softReset + reporting to the
-      # next cycle's drain, outside the flush. (task #18)
+      # settle + ban the offender (both layout-clean), then defer the softReset + the in-world
+      # report to the next cycle's drain, outside the flush. (task #18)
       node._markLayoutAsFixed()   # it threw before doing this itself; do it now so the settle converges
       node.__hide()          # ban from paint -- silent: clears caches only, no _invalidateLayout/flush
       @layoutErrorsToReport.push err
+      # REPORTED HERE, AT THE CATCH: a console line settles nothing, so it is safe inside the flush,
+      # and whoever listens -- a rig driving the world in one synchronous evaluate and closing at
+      # once, a runner filing the line under the test that threw -- hears it whatever happens next.
+      # Only the in-world report waits for the next cycle (_showLayoutErrorsFromPreviousCycle: its
+      # soft reset and the error console use self-settling setters).
+      console.error "LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: " + reportOfThrownValue(err)
     # the never-fire termination assert (see _recalculateLayoutsBody's header comment). Counted
     # OUTSIDE the try: this throw must propagate out of the flush, never be swallowed by the
     # per-_reLayout containment above.
@@ -1654,6 +1664,19 @@ class WorldWdgt extends IconGridPanelWdgt
     # next cycle, and add the offending widget to a
     # "banned" list
     @errorsWhileRepainting.push err
+    # The console hears it at once, here, the one home both paint catches go through -- ONCE per
+    # world for each distinct report: a throw no widget is blamed for (the world's own paint, its
+    # occlusion scan) bans no one, so it comes back on every damaged frame, twice (the damaged
+    # rect's paint, then the whole-screen retry), without end. Its repeats are counted in
+    # paintErrorReportsWritten, never printed; its first occurrence, the one a runner's judge reads,
+    # always is. The in-world log, shown next cycle (_showErrorsHappenedInRepaintingStepInPreviousCycle:
+    # no widget is built while painting), dedupes nothing: it appends every report until its Pause
+    # toggle stops it.
+    report = reportOfThrownValue err
+    @paintErrorReportsWritten ?= new Map
+    timesWritten = @paintErrorReportsWritten.get(report) ? 0
+    console.error "PAINT_ERROR: a widget's paint threw: " + report if timesWritten is 0
+    @paintErrorReportsWritten.set report, timesWritten + 1
     @_hideOffendingWidget()
 
   # The widget the blame names (the one whose full paint was running when the paint threw) is banned and
@@ -2231,6 +2254,10 @@ class WorldWdgt extends IconGridPanelWdgt
         event.processEvent()
 
     catch err
+      # The console hears it here, at the catch. This catch also carries a person's own code that
+      # throws (a console's Run, a script shortcut's press), which is why a test that runs such code
+      # on purpose declares INPUT_ERROR among the caught errors it expects.
+      console.error "INPUT_ERROR: handling an input event threw: " + reportOfThrownValue(err)
       # public-call-sanctioned: createErrorConsole stays public (its body drives the public
       # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
       # consciously pops it outside any pass.
@@ -2260,9 +2287,10 @@ class WorldWdgt extends IconGridPanelWdgt
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
-  # Drains layout errors stashed during the previous cycle's recalculateLayouts flush (see the
-  # catch in _recalculateLayoutsBody). Runs at cycle start, OUTSIDE the flush, so building the
-  # error console via the public setters is safe here. (task #18)
+  # Shows IN THE WORLD the layout errors stashed during the previous cycle's recalculateLayouts
+  # flush (see the catch in __reLayoutOneSettleNode, which has already written each one's
+  # console line). Runs at cycle start, OUTSIDE the flush, so building the error console via
+  # the public setters is safe here. (task #18)
   _showLayoutErrorsFromPreviousCycle: ->
     if @layoutErrorsToReport.length == 0 then return
     errorsToShow = @layoutErrorsToReport
@@ -2272,12 +2300,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # createErrorConsole (public setters). This is the deferred tail of that catch. (task #18)
     @_softResetWorld()
     for eachErr in errorsToShow
-      # Loud in the browser console too -- not only in the in-world error console. A _reLayout()
-      # that throws is a real bug, and CI / the smoke-apps app-launch gate key off console.error;
-      # without this a broken app would no longer freeze (good) but would also go undetected (bad).
       # public-call-sanctioned: createErrorConsole stays public ([A] forbids the _-form); discrete
       # error-report path, consciously popped.
-      console.error "LAYOUT_ERROR: a _reLayout() threw during recalculateLayouts: " + (stackOfThrownValue(eachErr) ? textOfThrownValue(eachErr))
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
@@ -2510,6 +2534,8 @@ class WorldWdgt extends IconGridPanelWdgt
       whichWidget.step()
     catch err
       @widgetsGivingErrorWhileStepping.push whichWidget
+      # the console hears it here, at the catch, as the error log does just below
+      console.error "STEP_ERROR: a widget's step threw: " + reportOfThrownValue(err)
       # public-call-sanctioned: createErrorConsole stays public (its body drives the public
       # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
       # consciously pops it outside any pass.
@@ -2555,9 +2581,11 @@ class WorldWdgt extends IconGridPanelWdgt
   # stations, and _reLayoutDesktop itself (see Widget.consumesFractionalGeometryOf):
   # layout-inert chrome (handles / carets / highlighters) is never a reflow subject, the
   # hand is world chrome, and desktop icons live in the icon grid -- _reLayoutDesktop
-  # never repositions them, so seeding them would store records nothing reads.
+  # never repositions them, so seeding them would store records nothing reads -- and a
+  # child whose spec owns its placement (the corner-armed clock: Widget.isFreeFloating)
+  # keeps no record: the corner pass places it.
   consumesFractionalGeometryOf: (child) ->
-    !child.isLayoutInert?() and child != @hand and !child.isDesktopIcon?()
+    !child.isLayoutInert?() and child.isFreeFloating() and child != @hand and !child.isDesktopIcon?()
 
   # Drain station for the __add fractional-record seeds: derive the proportional
   # record (a StretchLayoutSpec) of every widget that entered a consuming holder since the
@@ -2602,9 +2630,8 @@ class WorldWdgt extends IconGridPanelWdgt
       # reposition the consumed desktop children -- membership is the SAME
       # consumesFractionalGeometryOf rule the seed and the drains ask, so read-side and
       # seed-side exclusions (icons, chrome, the hand) cannot drift. A corner-ARMED child
-      # (the clock) has no stretch record, so only the harmless keep-within clamp touches
-      # it here before the corner pass below places it; the bin opener is an icon, outside
-      # the rule entirely.
+      # (the clock) is not consumed (its spec owns its placement): only the corner pass
+      # below places it; the bin opener is an icon, outside the rule entirely.
       if @consumesFractionalGeometryOf child
         if child.layoutSpec?.isStretchElement?()
           child._moveInDesktopToFractionalPosition()
@@ -3286,6 +3313,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # list never was, so it accumulated dead widgets for the whole life of the page. Its stepping twin likewise.
     @widgetsGivingErrorWhileRepainting = []
     @widgetsGivingErrorWhileStepping = []
+    # ...and the paint reports already written to the console, so a world that keeps itself through a load tells
+    # the console of a paint throw its new contents make, as a fresh world does (made again at the first one)
+    @paintErrorReportsWritten = undefined
     # the current-event time register (the event-time clock the input consumers read --
     # multi-click staleness, the drag-charging ring's linger): between events it is stale
     # by definition, and across a teardown the next world's event clock may even REWIND

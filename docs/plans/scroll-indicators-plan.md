@@ -24,7 +24,7 @@ Status:
 | U4b | A tilted window content's window keeps its size at its next arrange (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4b) |
 | U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4c) |
 | U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4d) |
-| U4e | A stretchable panel's arrange places a child whose spec owns its placement (added by the owner 2026-11-21) | open (§U4e) |
+| U4e | A stretchable panel's arrange places a child whose spec owns its placement, and a caught error's report no longer depends on load (added and widened by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4e) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
 | U7 | Close: this plan archived, or left open with what parked | open (§U7) |
@@ -1000,6 +1000,35 @@ ruled in the same unit. **Time box 4 h.**
 
 **If parked:** filed, with the log.
 
+**Landed 2026-11-21.** The page: a consuming holder (the desktop, a stretchable page) consumes only FREE-FLOATING
+children (`consumesFractionalGeometryOf` asks `isFreeFloating`), so a child whose spec owns its placement (a division
+cell attached "with horizontal layout", a corner-armed piece) is placed by its own spec by the holder's arrange (a lone
+cell fills the page); the recorder's now-unreachable `ownsPlacement` gate is deleted. Measured before: the menu sweep
+ALONE threw the page's two layout errors on every run (its Duplicate's copy, through the container's and the page's
+rows), unseen because the line came a cycle later; the new test failed 16 reads. The mechanism, three parts:
+- **Every catch speaks at once.** A settle's, a paint's, a step's and an input event's catch each write their gated
+  line where they catch (`LAYOUT_ERROR`, `PAINT_ERROR`, `STEP_ERROR`, `INPUT_ERROR`; one helper,
+  `reportOfThrownValue`, gives the message and the stack on every engine; a paint report prints once per world,
+  counted); before, a layout line waited a cycle and paint, step and input printed NONE (only the in-world console,
+  which no runner reads). The in-world console stays deferred (it cannot be built inside a pass). The dataflow drain
+  reports its stashed formula errors in its `finally`; the one silent SWCanvas catch speaks
+  (`SWCANVAS_TEXT_BOOKKEEPING_FAILED`).
+- **Every error reaches the test that caused it.** Every test prints start and end markers; one judge
+  (`scripts/lib/gate-tokens.js` `caughtErrorsWindow`) files each line under the test whose window it falls in, in every
+  runner (suite, single, sequence, paint audit), replacing the suite's polled "current test".
+- **A test that throws on purpose declares it** (`expectsCaughtErrors` + `caughtErrorsReason`, validated like
+  `pointerKinds`; `LAYOUT_ERROR` is never declarable): only its declared tokens are excused, in its own window, and a
+  declared error that never comes fails. The four deliberate throwers declare theirs.
+And a rig that drives the world in one synchronous evaluate runs a fixed two world cycles before it reads its verdict
+and closes (`headless-driver.js` `cycledBeforeClose`: the menu and pin sweeps, the census, the graph rig, both
+serialization rigs, the apps smoke), so whether a step or paint error OCCURS no longer depends on load either. The
+bite-proofs plant CAUGHT errors (a settle throw and a throwing stepper in the menu sweep; the pin sweep, the census; the
+suite gate's declared, stale and last-step cases, the last-step line filed under its own test with a test after it; the
+single, sequence and paint-audit runners). With the closing cycles they prove a DETERMINISTIC report, not the catch's
+own timing (a line deferred one cycle would reach them too). What the new reporting surfaced, across every suite and
+rig: one hidden error, a detached `BouncerWdgt` stepped by the world (fixed: its step does nothing with no parent; the
+world's stepping of detached widgets is filed). No pixel moved; no method added; `__reLayoutOneSettleNode` at its record.
+
 ---
 
 ### U5 — The spreadsheet's scroll is two pins
@@ -1170,6 +1199,7 @@ stop at its commit, which you propose and do not make."
 - [x] U4b: a tilted window content's window grows to the content's footprint at its next arrange (a hover highlight, a grip resize; measured 249 → 311 px tall); a window is to keep its size. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4b): an island claims space only from an asking container; as a window's content it forwards to its content in every mode, and a tilted nested window hides its grip as an upright one; `SystemTest_macroWindowKeepsItsSizeRoundATiltedContent`.
 - [x] U4c: "Pick up" on the payload of a TILTED Maker would run the Maker's reset outside a settle (the extraction is declared, not settled), so its payload's constructors lay the world out mid-reset. Read, unplayed. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4c): the pick-up's resolution settles the extraction (measured before: the Maker 600×400 → 52×129); the reuse branch keeps its declaration; `SystemTest_macroTiltedMakerKeepsItsSizeWhenItsPayloadIsPickedUp`.
 - [x] U4d: a window clips its content only at its own bounds, so a tilted content's ink covers the window's title and grip strips and takes their clicks; the window is to show its content only inside its body (owner's ruling). Detail: the plan's §U4d. — CLOSED 2026-11-21 (scroll-indicators loop, U4d): one per-child crop question on `ClippingWdgt`, answered by the viewport (its plane box) and the window (the box it gives its content), one climb for every clip-through; a hit inside an island lands only where the island shows; `SystemTest_macroWindowShowsItsContentOnlyInItsBody`.
+- [x] U4e: a stretchable panel's arrange throws (`grantedBoundsWithin is not a function`) on a child whose spec owns its placement: the recorder refuses such a spec, the grant assumes a stretch one. Seen once, in a gauntlet's menu sweep under load. Added to the loop by the owner. Detail: the plan's §U4e. — CLOSED 2026-11-21 (scroll-indicators loop, U4e; widened by the owner to the mechanism): a consuming holder consumes only free-floating children; every catch prints its line at once, filed under the test that caused it, a deliberate thrower declares it, and a synchronous rig cycles the world before its verdict; `SystemTest_macroStretchablePagePlacesAChildByItsOwnSpec`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

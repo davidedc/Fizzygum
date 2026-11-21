@@ -493,7 +493,10 @@ class DataflowEngine
       @_recalculatingDataflow = false
       @lastDrainPassCount = passCount
       @maxObservedPassCount = Math.max @maxObservedPassCount, passCount
-    @_reportStashedErrors()    # OUTSIDE the drain — building an error console may itself settle
+      # after the drain's flag is down, and in the finally, so a drain that ends by throwing
+      # (DATAFLOW_NONCONVERGENCE) still writes the DATAFLOW_ERROR lines of the formula errors it
+      # stashed before the throw
+      @_reportStashedErrors()
     return
 
   _drainOnePass: ->
@@ -671,7 +674,7 @@ class DataflowEngine
     stashed = @_errorsToReport
     @_errorsToReport = []
     stashed.forEach (each) ->
-      console.error "DATAFLOW_ERROR: a dataflowRecompute() threw: " + (stackOfThrownValue(each.error) ? textOfThrownValue(each.error))
+      console.error "DATAFLOW_ERROR: a dataflowRecompute() threw: " + reportOfThrownValue(each.error)
     return
 
   # ── GRAPH HELPERS ────────────────────────────────────────────────────────────────────────

@@ -2430,17 +2430,12 @@ class Widget extends TreeNode
   # ACTIVE spec there would shadow the container's own adoption (a stack child whose
   # layoutSpec is suddenly a stretch spec breaks every isStackElementActive path) — the old
   # field writes were inert on non-consuming parents, an armed spec is not, so the recorder
-  # carries the membership gate for every caller.
+  # carries the membership gate for every caller -- and a consumer consumes only
+  # free-floating children (consumesFractionalGeometryOf), so a spec that owns its placement
+  # is never shadowed by a record.
   _rememberFractionalSituationInHoldingPanel: (provisional = false) ->
     fig = @_enclosingIslandFigure()
     return if !fig.parent? or !fig.parent.consumesFractionalGeometryOf fig
-    # ⚠ Same doctrine, other axis: a spec that OWNS placement (a corner-armed desktop
-    # furniture piece -- the one owning kind a CONSUMING holder can host) must not be
-    # replaced by a stretch record either -- the arrange places the widget FROM that spec,
-    # and the __add seed fires for every consumed entrant, so without this gate the drain
-    # would disarm a corner knob one cycle after its creator armed it. (A stretch spec
-    # answers ownsPlacement() false, so re-records pass through untouched.)
-    return if fig.layoutSpec?.ownsPlacement()
     spec = fig.layoutSpec
     unless spec?.isStretchElement?()
       spec = new StretchLayoutSpec()
@@ -4025,7 +4020,9 @@ class Widget extends TreeNode
   # exclusions and the arrange's read exclusions cannot drift. True only for the two
   # consumers -- WorldWdgt (desktop reflow on browser resize, position-only) and
   # StretchablePanelWdgt (full proportional re-lay) -- each stating its COMPLETE child
-  # rule. Class-level query (type-test-elimination idiom -- no instanceof at the ask site).
+  # rule. Only FREE-FLOATING children (isFreeFloating) are consumed: a spec that owns its
+  # placement places its carrier by its own strategy. Class-level query
+  # (type-test-elimination idiom -- no instanceof at the ask site).
   consumesFractionalGeometryOf: (child) ->
     false
 
