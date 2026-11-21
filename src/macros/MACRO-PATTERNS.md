@@ -1700,8 +1700,8 @@ assertion a recapture after a regression silently stores two different hashes an
   so a "Duplicate" of the pinned menu (its own menu, through the hierarchy menu) toggles and unticks with the original.
   ⚠ **The row is ABSENT unless the promotion would really work** (`ControllerWdgt._canTrackWire`): the pin must be readable
   AND declare `announces` on its `PinSpec`, the controller must be able to render that pin (`SliderWdgt._canReflectPin` wants a
-  `SliderRange`, which today only a scroll frame answers), and it must not already be following another wire. So a macro that
-  expects the row must pick a target that qualifies — a scroll frame — and `@assertTopMenuItemStrings` is how to prove it is
+  `SliderRange`, which a scroll frame and a spreadsheet's two scroll pins answer), and it must not already be following another
+  wire. So a macro that expects the row must pick a target that qualifies — a scroll frame or a sheet — and `@assertTopMenuItemStrings` is how to prove it is
   there (or absent): `["Fires per event", "Follows it too", "Disconnect"]`, the plain labels. Which toggle is ON is the
   rows' TICK STATE, never their text (the tick is drawn): assert it by meaning, per row — the test folds each row into
   `"<label>: ticked" / ": unticked" / ": no tick"` from `row.ticks()` and `row.isTicked()` and asserts the joined string,

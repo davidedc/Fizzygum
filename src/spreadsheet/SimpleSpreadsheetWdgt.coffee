@@ -35,10 +35,12 @@
 #     edge cells when the granted extent isn't cell-quantized, backdrop past the sheet edge);
 #     the sheet owns its view origin (viewOriginCol/Row — cell-quantized, never
 #     sub-cell) and scrolls by WHEEL (the `scrolledBy` entry below, with the ViewportWdgt-style
-#     at-limit escalation) and by KEYBOARD scroll-follow (arrows past the viewport edge shift
-#     the origin minimally). Deliberately NOT a ViewportWdgt: frozen headers, the origin-0
-#     byte-identity constraint (an unscrolled sheet renders pixel-for-pixel as pre-F1), and
-#     cell-quantized steps don't fit its pixel model; scrollbar/indicator chrome stays banked.
+#     at-limit escalation), by KEYBOARD scroll-follow (arrows past the viewport edge shift
+#     the origin minimally) and through its two PINS, "scroll column" and "scroll row", which a
+#     wire drives and a slider bound to them follows (`pins`). Deliberately NOT a
+#     ViewportWdgt: frozen headers, the origin-0 byte-identity constraint (an unscrolled sheet
+#     renders pixel-for-pixel as pre-F1), and cell-quantized steps don't fit its pixel model;
+#     scrollbar/indicator chrome stays banked.
 #     THE VIEWPORT INVARIANT (maintained by _reconcileViewportNoSettle, re-established on
 #     restore whatever mix the snapshot carried): exactly one VISIBLE CellWdgt per on-screen
 #     address, at the viewport rect of (address − origin); exactly one HIDDEN CellWdgt per
@@ -135,7 +137,8 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # defaults, own-only-when-scrolled (the 6a idiom): an unscrolled sheet serializes byte-for-byte
   # as before F1, and a pre-F1 snapshot deserializes to origin 0 through the prototype (the
   # deserialize path skips the constructor). DOCUMENT state — a saved scrolled sheet restores
-  # scrolled — so deliberately NOT in @serializationTransients.
+  # scrolled — so deliberately NOT in @serializationTransients. Read and written from outside as my
+  # two scroll pins (`pins`); _scrollByNoSettle is their one writer.
   viewOriginCol: 0
   viewOriginRow: 0
 
@@ -421,9 +424,11 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # ── F1 scroll: the viewport reconcile (materialise / recycle) ────────────────────────────
 
   # Re-establish THE VIEWPORT INVARIANT (see the header) for the current view origin — called
-  # after every origin change (wheel, keyboard scroll-follow), at construction (origin 0), and
-  # on restore/duplicate for the RESTORED origin, whatever mix of visible + hidden-rich cells
-  # the snapshot carried.
+  # after every origin change (wheel, keyboard scroll-follow, a scroll pin's delivery: all through
+  # _scrollByNoSettle), after every change of the range the origin runs over (a resize, through
+  # _reLayout; a zoom), at construction (origin 0), and on restore/duplicate for the RESTORED
+  # origin, whatever mix of visible + hidden-rich cells the snapshot carried. Being the one place
+  # all of those reach, it is also where my view is ANNOUNCED (its last statement).
   #   pass 1 — every indexed cell: on-screen ⇒ show + place at the viewport rect of
   #     (address − origin); off-screen ⇒ the hidden-rich-cell EXEMPTION (a cell whose hosted
   #     widget IS the record's live value __hide()s in place — repaint-level, out of
@@ -479,6 +484,17 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
         slotCol += 1
       slotRow += 1
     @_reflowSpillOfRowNoSettle slotRow for slotRow in [0...visibleRows]
+    # ANNOUNCE MY VIEW, every time. Each change of my view origin and of the range it runs over ends
+    # here (the header above), so this one statement is what earns my two scroll pins their
+    # `announces` (pins), and it is what re-ticks an open zoom menu, whose rows are views of
+    # currentZoomFactor: a zoom reaches here too. markNonValueChange: neither my origin nor my zoom
+    # is a value I deliver, and it is DARK while nothing re-reads me. An arrange (_reLayout) raises
+    # it inside the layout pass, which the dataflow's one-way law allows this verb alone
+    # (DataflowEngine's header; ScrollIndicatorHostWdgt._reLayoutScrollbars, the precedent, has the
+    # measured cadence: a change born inside the layout pass is re-read one cycle later).
+    # ⚠ Keep it unguarded: an "only when my origin moved" test here would leave a zoom menu showing
+    # the old level after a zoom that keeps the origin.
+    world.dataflow.markNonValueChange @
     return
 
   # ── F6: the resize seam — the sheet's own children-arrange ───────────────────────────────
@@ -540,6 +556,69 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
     rowDelta = @selectedRow - (@viewOriginRow + rowsFull - 1) if @selectedRow > @viewOriginRow + rowsFull - 1
     @_scrollByNoSettle colDelta, rowDelta if colDelta isnt 0 or rowDelta isnt 0
     return
+
+  # ── my view origin as two PINS: "scroll column" and "scroll row" ──────────────────────────
+  # Which column and which row of the logical sheet stand at my viewport's top-left (0-based, whole
+  # cells): what the wheel and the keys' scroll-follow move, what a wire can DRIVE, and what a
+  # slider bound to me FOLLOWS (SliderWdgt.reflectTarget reads the pin's getter and the scale
+  # sliderRangeForPin answers). BOTH ANNOUNCE, and a funnel earns the word: every change of my
+  # origin, and of the range it runs over, ends in _reconcileViewportNoSettle, which announces.
+  pins: -> super().concat [
+    new PinSpec "scroll column", "numerical", set: "setViewOriginCol", get: "getViewOriginCol", announces: true
+    new PinSpec "scroll row",    "numerical", set: "setViewOriginRow", get: "getViewOriginRow", announces: true
+  ]
+
+  getViewOriginCol: -> @viewOriginCol
+
+  getViewOriginRow: -> @viewOriginRow
+
+  # The pin-setter contract (widget-authoring-guidelines, "The pin-setter contract") in its three
+  # parts, because a scroll builds and recycles my children: the public setter is the thin settle
+  # over the core, so a script's call returns to a settled sheet; the connector twin is where a
+  # WIRE's delivery lands (DataflowEngine._applyWireValue prefers it) and JOINS the drain's open
+  # settle, which the public wrapper refuses mid-drain; the core does the work. A setter and its
+  # twin are per pin (a PinSpec names its setter by string, and the engine the twin by the setter's
+  # name); the core is ONE, told the axis, so both pins refuse, round and commit alike.
+  setViewOriginCol: (col) ->
+    @_settleLayoutsAfter => @_setViewOriginAlongNoSettle "column", col
+
+  setViewOriginRow: (row) ->
+    @_settleLayoutsAfter => @_setViewOriginAlongNoSettle "row", row
+
+  _setViewOriginColConnector: (col) ->
+    @_settleLayoutsAfterOrJoinEnclosingPass => @_setViewOriginAlongNoSettle "column", col
+
+  _setViewOriginRowConnector: (row) ->
+    @_settleLayoutsAfterOrJoinEnclosingPass => @_setViewOriginAlongNoSettle "row", row
+
+  # THE CORE of both scroll pins: move my origin along `axis` ("column" or "row") to `value`, a
+  # number or the string spelling of one, and answer the column or row I show afterwards. I scroll
+  # by WHOLE cells, so the value is rounded, and something that is no number moves nothing; the clamp
+  # is the mover's own (_scrollByNoSettle: 0 to the greatest origin), so a delivery past either end
+  # rests at that end. An edit in progress COMMITS before the scroll, so the overlay editor never
+  # moves mid-edit, and it commits whenever the asked origin differs from the shown one, even where
+  # the clamp then moves nothing: a delivery past the end I already show commits an open edit, where
+  # a wheel at its limit (scrolledBy) commits nothing. A delivery of the origin I show already does
+  # nothing at all: no commit, no scroll, no announcement (a wired circuit must settle).
+  _setViewOriginAlongNoSettle: (axis, value) ->
+    value = parseFloat value  unless typeof value is "number"
+    return  if isNaN value
+    alongColumns = axis is "column"
+    delta = (Math.round value) - (if alongColumns then @viewOriginCol else @viewOriginRow)
+    if delta isnt 0
+      @_commitEditNoSettle() if @_editing
+      @_scrollByNoSettle (if alongColumns then delta else 0), (if alongColumns then 0 else delta)
+    if alongColumns then @viewOriginCol else @viewOriginRow
+
+  # The SCALE each scroll pin of mine lives on, for a slider bound to it (SliderWdgt.reflectTarget):
+  # whole columns or rows, the FULL ones my viewport shows of the logical sheet's (the counts the
+  # scroll clamps use), so the scale stops at the greatest origin and the thumb covers the share
+  # that shows (SliderRange.forScrolling). undefined along an axis where every column or row shows.
+  sliderRangeForPin: (pin) ->
+    switch pin.label
+      when "scroll column" then SliderRange.forScrolling @_viewportColsFull(), @sheetCols
+      when "scroll row" then SliderRange.forScrolling @_viewportRowsFull(), @sheetRows
+      else undefined
 
   # ── painting: the sheet paints only its PAGE EDGE (SheetAppearance, over its children) ──
   # Everything else is a child's: the cells panel spans the data region, the header cells fill
@@ -1101,7 +1180,9 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
   # ── zoom (R3) ───────────────────────────────────────────────────────────────────────────
 
   # PUBLIC: lay me out again at `factor` times my sizes (one of ZOOM_LEVELS): chrome, viewport
-  # and every visible cell's look re-derive, and the selection stays in view
+  # and every visible cell's look re-derive, and the selection stays in view. Every open zoom menu
+  # re-ticks — this one, a pinned copy, or one left open while a script zoomed — because the
+  # viewport's reconcile, which a zoom reaches, announces me (_reconcileViewportNoSettle).
   setZoomFactor: (factor) ->
     @_settleLayoutsAfter => @_setZoomFactorNoSettle factor
 
@@ -1117,9 +1198,6 @@ class SimpleSpreadsheetWdgt extends ClippingWdgt
       @_reconcileCellNoSettle record, record.value if record? and cellWdgt.isVisible
     @_scrollToShowSelectionNoSettle()
     @_changed()
-    # ANNOUNCE it, so every open zoom menu re-ticks — this one, a pinned copy, or one left open while
-    # a script zoomed. markNonValueChange: my zoom is not a value I deliver.
-    world.dataflow.markNonValueChange @
     return
 
   # the zoom menu's row action (SheetFormulaBarWdgt.openZoomMenu): slot 1 is the menu item,

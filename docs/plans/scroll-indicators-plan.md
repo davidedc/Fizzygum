@@ -25,7 +25,7 @@ Status:
 | U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4c) |
 | U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4d) |
 | U4e | A stretchable panel's arrange places a child whose spec owns its placement, and a caught error's report no longer depends on load (added and widened by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4e) |
-| U5 | The spreadsheet's scroll is two pins | open (§U5) |
+| U5 | The spreadsheet's scroll is two pins | CLOSED 2026-11-21 (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
 | U7 | Close: this plan archived, or left open with what parked | open (§U7) |
 
@@ -1065,6 +1065,30 @@ Check the predicted set by grep: a test whose screenshot shows a connection menu
 
 **If parked:** U6 parks with it.
 
+**Landed 2026-11-21.** The sheet advertises "scroll column" and "scroll row" (numerical, announcing). Their setters
+follow the pin-setter contract's trio (a plain self-settling setter would throw at the first thumb drag: a wire's
+delivery reaches it inside the drain's settle): `setViewOriginCol/Row` (public, self-settling), the `_…Connector` twin a
+delivery reaches, and one shared private core for both axes, which refuses a non-number, rounds to a whole cell, commits
+an open edit and moves by the same mover as the wheel and the keys (its clamp is the clamp). `sliderRangeForPin`
+answers whole columns or rows through `SliderRange.forScrolling(shown, whole)`, the one home of the scroll-range
+arithmetic, which the viewport's `_scrollRangeAlong` now ends in too (same expression and order); undefined when
+everything fits. ONE announcement: the funnel every origin or range change ends at, `_reconcileViewportNoSettle`, marks
+the sheet (`markNonValueChange`) at its recorded complexity; the zoom's own mark is deleted as redundant. The pin
+sweep drives both pins (`FIXTURES`). Corrections to the Fix text above: the setters are a trio, not "public and
+self-settling" alone; the range is a `SliderRange` factory, not U4's `_scrollRangeAlong` (which stayed in
+`ViewportWdgt`); the test's other mover is the keyboard (the wheel cannot play under a finger). Accepted, as ruled: a
+pin delivery commits an open edit whenever the asked origin differs from the shown one, even where the clamp then
+moves nothing (a wheel at its limit commits nothing), and a refused delivery announces nothing. No pixel moved
+(suite 453, finger 437). Proof: `SystemTest_macroSheetScrollPins` (both pointers, values only: a bound slider adopts the
+scale, script calls, a drag, the keys, an open edit committed, the columns, a zoom and a resize, the menu route, the
+clamps) failed on the product before this unit (no pins) and passes with zero careless end-of-cycle pushes; five
+plants each break it (the missing announcement, the range, the connector twin — by the page error a throw in the
+drain causes —, the commit, the rounding); the capstone, settle and revisit gates pass on it and the two sheet-scroll
+tests; followers clean. Filed (this plan's BACKLOG section): a throw that escapes the dataflow drain also escapes
+`WorldWdgt.doOneCycle`, which catches nothing there, and stops the world's cycle loop (the connector plant froze the
+page); a tracking slider's own drag is dropped against a stale record after "Follows it too" off then on (the engine's
+sink cutoff compares with a value the promotion never re-recorded; read).
+
 ---
 
 ### U6 — The spreadsheet presents its scroll indicators
@@ -1200,6 +1224,7 @@ stop at its commit, which you propose and do not make."
 - [x] U4c: "Pick up" on the payload of a TILTED Maker would run the Maker's reset outside a settle (the extraction is declared, not settled), so its payload's constructors lay the world out mid-reset. Read, unplayed. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4c): the pick-up's resolution settles the extraction (measured before: the Maker 600×400 → 52×129); the reuse branch keeps its declaration; `SystemTest_macroTiltedMakerKeepsItsSizeWhenItsPayloadIsPickedUp`.
 - [x] U4d: a window clips its content only at its own bounds, so a tilted content's ink covers the window's title and grip strips and takes their clicks; the window is to show its content only inside its body (owner's ruling). Detail: the plan's §U4d. — CLOSED 2026-11-21 (scroll-indicators loop, U4d): one per-child crop question on `ClippingWdgt`, answered by the viewport (its plane box) and the window (the box it gives its content), one climb for every clip-through; a hit inside an island lands only where the island shows; `SystemTest_macroWindowShowsItsContentOnlyInItsBody`.
 - [x] U4e: a stretchable panel's arrange throws (`grantedBoundsWithin is not a function`) on a child whose spec owns its placement: the recorder refuses such a spec, the grant assumes a stretch one. Seen once, in a gauntlet's menu sweep under load. Added to the loop by the owner. Detail: the plan's §U4e. — CLOSED 2026-11-21 (scroll-indicators loop, U4e; widened by the owner to the mechanism): a consuming holder consumes only free-floating children; every catch prints its line at once, filed under the test that caused it, a deliberate thrower declares it, and a synchronous rig cycles the world before its verdict; `SystemTest_macroStretchablePagePlacesAChildByItsOwnSpec`.
+- [x] U5: the spreadsheet's view origin has no pins, so no slider can drive or follow it; it is to get a "scroll column" and a "scroll row" pin. — CLOSED 2026-11-21 (scroll-indicators loop, U5): the two pins with the setter trio and one shared core, the range through `SliderRange.forScrolling`, one announcement at the viewport funnel; `SystemTest_macroSheetScrollPins`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

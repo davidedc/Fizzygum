@@ -25,3 +25,15 @@ class SliderRange
   size: undefined
 
   constructor: (@start, @stop, @size) ->
+
+  # THE SCALE OF A SCROLL along one axis, for a slider bound to it: `shown` of `whole` show at a
+  # time, both counted in the unit the scroller steps by (a viewport's pixels, a spreadsheet's whole
+  # columns or rows). The scale runs from 0 to what does not show, which is the greatest scroll
+  # position, and the thumb covers the share that shows. `undefined` when everything shows: there
+  # is nothing to scroll along the axis, and a zero-width scale divides by zero in the thumb's
+  # geometry (the ⚠ above). The one home of this arithmetic: every scroller answers its
+  # `sliderRangeForPin` through it.
+  @forScrolling: (shown, whole) ->
+    return undefined unless whole >= shown + 1
+    stop = whole - shown
+    new SliderRange 0, stop, shown / whole * stop

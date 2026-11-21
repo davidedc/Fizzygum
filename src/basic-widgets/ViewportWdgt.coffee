@@ -590,15 +590,14 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
   # One axis' scale: I can be scrolled along it exactly when my content overflows my viewport — the
   # same test that decides whether the bar shows at all — the scale runs from 0 to that overflow, and
-  # the thumb covers the visible fraction of it. `undefined` when there is nothing to scroll: a bar
-  # showing an empty scale means nothing, and a zero-width one divides by zero in the thumb geometry.
+  # the thumb covers the visible fraction of it, all in pixels (SliderRange.forScrolling, the
+  # arithmetic every scroller shares). `undefined` when there is nothing to scroll: a bar showing an
+  # empty scale means nothing, and a zero-width one divides by zero in the thumb geometry.
   _scrollRangeAlong: (viewport, content) ->
     # under 'never' there is no scale to live on — a bound external slider gets
     # the same "nothing to scroll" answer as the fitting case
     return undefined if @scrollPolicy is 'never'
-    return undefined unless content >= viewport + 1
-    stop = content - viewport
-    new SliderRange 0, stop, viewport / content * stop
+    SliderRange.forScrolling viewport, content
 
   # The runtime crop⇄scroll flip: validate, assign, then INVALIDATE inside a
   # settle — the flush re-lays me (my _reLayout is 'super; @_reLayoutChildren'),

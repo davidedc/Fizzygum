@@ -44,7 +44,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   the sheet's extent (F6: default 6×14, partial edge cells at a non-quantized granted size;
   the `_reLayout` arrange re-derives chrome + viewport on every resize)
   (`_reconcileViewportNoSettle` — F1 scroll: sheet-owned `viewOriginCol/Row`, wheel +
-  keyboard scroll-follow, the viewport invariant below), reconciles each cell's value into its
+  keyboard scroll-follow and two scroll pins, the viewport invariant below), reconciles each cell's value into its
   widget (`_reconcileCellNoSettle`), owns the single-cell selection (SHEET-space; cells render
   their own ring off the PUBLIC `isSelectedAddress`) and the EDIT STATE (standard-caret
   editing — the editor WIDGET lives on the editing cell and the standard `CaretWdgt` does the
@@ -383,8 +383,8 @@ time, so a saved or duplicated sheet wears the current look.
   DOCUMENT state, own-only-when-zoomed) multiplies all of those through the `_colW` / `_rowH` /
   `_headerW` / `_headerH` / `textInsetPx` readers every placement uses — a re-layout, never a picture
   scale (which blurs text under SWCanvas, measured). `setZoomFactor` re-derives chrome, viewport and
-  every visible cell's look, and announces (`markNonValueChange`): the zoom menu's rows are views of
-  `currentZoomFactor`, so a pinned one re-ticks; the menu is editor chrome, so a level chosen from it
+  every visible cell's look, and ends at the viewport funnel, which announces (`markNonValueChange`):
+  the zoom menu's rows are views of `currentZoomFactor`, so a pinned one re-ticks; the menu is editor chrome, so a level chosen from it
   leaves the sheet the focus. Cells stay CONTENT (design doc §4.2); the finger is served by the
   formula bar and the zoom.
 - **The formula bar** (`SheetFormulaBarWdgt`) is at the top of the grid (`_gridTop()`), never zoomed.
@@ -449,7 +449,17 @@ time, so a saved or duplicated sheet wears the current look.
   snapshot restores to origin 0 through the prototype) and DOCUMENT state (a saved scrolled
   sheet restores scrolled — NOT transients). Logical bounds `sheetCols`×`sheetRows` (26×100);
   the viewport is extent-DERIVED since F6 (the old `numCols`/`numRows` constants are retired
-  — `defaultViewportCols/Rows` only size the default open extent).
+  — `defaultViewportCols/Rows` only size the default open extent). The origin is also two PINS,
+  "scroll column" and "scroll row" (numerical, announcing), so a slider can drive or follow it: their
+  setters follow the pin-setter trio (`setViewOriginCol/Row`, public and self-settling; the
+  `_…Connector` twin a wire's delivery reaches inside the drain; the `_…NoSettle` core), round to a whole
+  cell, commit an open edit before they scroll (whenever the asked origin differs from the shown one,
+  even where the clamp then moves nothing; a wheel at its limit commits nothing), and move by the same
+  mover as the wheel and the keys (its clamp is the clamp); `sliderRangeForPin` answers whole columns or rows through
+  `SliderRange.forScrolling` (the scale a viewport's bar uses too), undefined when everything fits.
+  ONE announcement serves every change of the origin or its range: `_reconcileViewportNoSettle`, the
+  funnel the mover, the arrange, the zoom, the restore and the constructor all end at, marks the sheet
+  (`markNonValueChange`), so a tracking slider re-reads it.
 - **THE VIEWPORT INVARIANT** (re-established by `_reconcileViewportNoSettle` on every origin
   change and on restore): exactly one VISIBLE `CellWdgt` per on-screen address at the viewport
   rect of (address − origin); exactly one HIDDEN `CellWdgt` per OFF-screen widget-VALUED cell
@@ -461,7 +471,7 @@ time, so a saved or duplicated sheet wears the current look.
   (`_reconcileCellNoSettle`); a widget value committed to a cell with NO widget materialises a
   hidden one right there (widgets ride the TREE, not the model — losing the mount would lose
   the widget on save).
-- **Wheel + keyboard scroll-follow.** `scrolledBy:` on the sheet (the `ActivePointerWdgt.processWheel`
+- **Wheel + keyboard scroll-follow** (the third mover is a scroll pin's delivery, above). `scrolledBy:` on the sheet (the `ActivePointerWdgt.processWheel`
   climb — cells and the panel deliberately don't implement it) follows the `ViewportWdgt`
   model (axis suppression, invertWheel* prefs, per-axis at-limit ESCALATION) but quantizes to
   whole rows/cols; positive raw deltaY scrolls the view DOWN. Arrows clamp to the LOGICAL sheet
