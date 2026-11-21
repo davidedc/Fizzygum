@@ -16,7 +16,8 @@ A scrolling container decomposes into three responsibilities, each with an hones
    content. An invisible-in-effect composite: its color/alpha MIMIC the plane's, so its own
    painted rect lies under the plane, indistinguishable, wherever the plane shows (only the pop-up
    pair pins a true `alpha 0`); the `RectangularAppearance` is there for hit-testing parity. It
-   clips at its bounds, as every `ClippingWdgt` does, and owns three pieces of chrome: the contents
+   clips at its bounds, as every `ClippingWdgt` does, crops its contents panel further to its plane box
+   (its answer to the per-child crop, `_clipThroughForChild`), and owns three pieces of chrome: the contents
    panel and two `SliderWdgt` bars. `add` redirects any non-chrome child into the contents
    (chrome self-identifies via `attachesToViewportDirectly?()`). Scrolling never moves the
    plane: the offset is STORED TRUTH — two integer scalars `scrollOffsetX/Y`, frame-relative
@@ -46,9 +47,11 @@ A scrolling container decomposes into three responsibilities, each with an hones
    margin, in whole pixels, between its edge and the box its plane shows through (`_planeBox`: its
    box inset by the margin, its box itself at 0). The plane is cropped there wherever a walk knows
    where it shows: the two paint bodies paint the contents child inside the damage ∩ the plane
-   box, and the clip-through edge asks the viewport one question per child edge
-   (`clipIntoPlaneOfChild`: crop to the plane box, then express in the child's plane), which
-   hit-testing, damage and every visible-box query read. So in the margin the viewport's own rect
+   box, and the clip-through edge asks the viewport one question per child edge (its answer to
+   the per-child crop every clipping widget gives, `ClippingWdgt._clipThroughForChild`: crop to the
+   plane box, then express in the child's plane; a window answers the same question for its content,
+   cropping it to the box it gives its content), which hit-testing, damage and every visible-box query
+   read through one climb (`ClippingWdgt.clipThroughForDescendant`). So in the margin the viewport's own rect
    is what shows, a resident scrolled under it is neither painted nor hit, and the pointer there
    meets the viewport itself. What stands in the margin: the viewport's fill and border; its thin
    bars, which run along the plane box's side (their end inset is the margin where that is the
@@ -416,7 +419,7 @@ generic viewport is "viewport"; composites take their contents' name
   translation, for its contents only — so a plane's residents keep integer plane-local `@bounds`
   while their screen positions are derived, the same two-vocabulary law the islands introduced.
   `scrollTranslationOfChild(child)` stays the viewport's answer for the callers that need the
-  translation vector itself (`cornerRadiiFollowingMyOutline`, its own `add`); the clip-through edge asks `clipIntoPlaneOfChild`, which crops to the plane box and
+  translation vector itself (`cornerRadiiFollowingMyOutline`, its own `add`); the clip-through edge asks `_clipThroughForChild`, which crops to the plane box and
   then translates. ⚠ One rule this imposes on INPUT handlers:
   `escalateEvent` forwards its args verbatim, so a `pos` escalated across a plane boundary
   is still plane-local to the SENDER — a pos-consuming GESTURE handler (`activated`,

@@ -183,7 +183,10 @@ The island presents two different rectangles to two different audiences
   damage *after* mapping, in the flesh-out hook (`Widget::mapRectToScreen`).
 - **To the outer world** (`clippedThroughBounds` / `fullClippedBounds`): the **screen
   footprint** = `mapRect(slot box)` ∩ the ancestor screen-clip chain (`_screenFootprintForDamage`
-  ∩ `_ancestorScreenClip`). Larger than the slot box when scaled up ("ink overflow").
+  ∩ `_ancestorScreenClip`). Larger than the slot box when scaled up ("ink overflow"). The chain is the
+  same climb every widget's clip-through takes (`ClippingWdgt.clipThroughForDescendant`), so an
+  ancestor's per-child crop (a viewport's plane box, a window's content box) cuts an island's footprint
+  as it cuts any child's.
 
 Both cached methods have `SLOW*` oracle twins overridden in lockstep for the
 `doubleCheckCachedMethodsResults` gate, and report a disagreement, as every cached derivation does,
@@ -258,7 +261,9 @@ stack never stretches on a container resize.
   container (`layout.md` §4.3), which borrows `_setWidthSizeHeightAccordingly` as its width→height
   sizing and has no siblings to negotiate with: there the trio forwards to the content in every mode,
   so a window keeps the size it had round the upright content, and the tilt is ink that never claims
-  window space.
+  window space. The window shows that ink only inside the box it gives its content (its per-child crop,
+  `FrameWdgt._clipThroughForChild`): where the tilt crosses the title or grip strip it is cut, and the
+  strip's controls take the presses there.
 
 The **content→slot** hugging direction (`_reLayout` sync-settles a pending content, then
 `_reLayoutChildren` re-hugs) stays for all modes. Slot-set is `@bounds = newSlot` directly (the
@@ -339,7 +344,14 @@ Pointer events are **plane-mapped** before they reach a handler. The dispatcher
 `w.screenPointToMyPlane(@position())` maps the raw screen pointer down through each ancestor
 island's inverse transform, so a widget's bounds test, corner fall-through, and per-pixel
 surface test (`catchesPointerAt`) come out exact for free. Off every island `screenPointToMyPlane`
-returns the same point ⇒ byte-identical dormant.
+returns the same point ⇒ byte-identical dormant. A widget inside an island is hit only where the
+island SHOWS. The island cuts its children to its slot box alone (`TransformFrameWdgt.clipThrough`, a
+clip pure in their plane), so no clip above the island (a viewport's, a panel's edge, a window's box
+for its content) reaches them; `Widget.isPointerTargetAt`'s ancestor walk therefore asks each island it
+climbs past to test the point, carried into the island's own plane, against the box the island shows —
+its `clippedThroughBounds`, its turned footprint cut by every clip above it — not against its
+`clipThrough`, which is the slot box and hides nothing. The part of a tilted widget an ancestor cuts
+away is neither painted nor pressed.
 
 The island itself is invisible plumbing and never claims a hit: it declares `catchesPointerAt: ->
 false`, so `Widget.isPointerTargetAt` never selects the frame — a click descends into content

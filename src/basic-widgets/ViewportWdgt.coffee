@@ -34,7 +34,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # MY PLANE MARGIN: a fixed distance, in whole pixels, between my edge and the box my plane shows
   # through (_planeBox). My own fill and border and my indicators stand in it; my plane is cropped at
   # its inner edge wherever a walk knows where my plane shows: my two paint bodies, and the
-  # clip-through edge (clipIntoPlaneOfChild) that hit-testing, damage and every visible-box query
+  # clip-through edge (_clipThroughForChild) that hit-testing, damage and every visible-box query
   # read. My plane still counts it as padding around its content (_positionAndResizeChildren), so my
   # scroll range, my clamps and my caret follow are a marginless viewport's: at both ends of a scroll
   # the content rests at the margin's inner edge. It is MAPPING state, as my scroll offset is (the
@@ -400,8 +400,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
   # THE BOX MY PLANE SHOWS THROUGH: my box less my margin on every side (planeMargin), and my box
   # itself (the same object) while I keep none, so every walk that crops to it is then the stock
-  # walk. The ONE home of that box for the walks that crop: my paint crops my plane to it, and the
-  # clip-through edge crops to it (clipIntoPlaneOfChild).
+  # walk. The ONE home of that box for the walks that crop: the clip-through edge crops to it
+  # (_clipThroughForChild), and my paint crops my plane by that same answer.
   _planeBox: ->
     @boundingBox().insetBy @planeMargin
 
@@ -467,9 +467,10 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # so theirs is that clip cropped to the box, then expressed in their plane (a screen box B
   # constrains plane points p with p + t in B, so p in B - t). My bars and whatever else stands on me
   # directly show in place, uncropped. With no margin and no translation the same object goes
-  # through. PUBLIC: Widget's clipThrough and its uncached twin ask it, when I am their first clipping
-  # ancestor, for my direct child on their chain -- per child edge, as scrollTranslationOfChild is.
-  clipIntoPlaneOfChild: (clipSoFar, child) ->
+  # through. My answer to ClippingWdgt's question, for my contents: the clip-through walk asks it, when
+  # I am its first clipping ancestor, for my direct child on its chain -- per child edge, as
+  # scrollTranslationOfChild is (ClippingWdgt.clipThroughForDescendant) -- and so does my paint.
+  _clipThroughForChild: (clipSoFar, child) ->
     return clipSoFar unless child is @contents
     cropped = if @planeMargin is 0 then clipSoFar else clipSoFar.intersect @_planeBox()
     translation = @scrollTranslationOfChild child
@@ -484,9 +485,9 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # descending rect with its own plane-local bounds, so scrolled-out content prunes exactly
   # as clipped-out content does, and so does content under my margin (a cull that the crop leaves
   # empty paints nothing). Zero translation and no margin take the stock clipping path —
-  # dormancy — ClippingWdgt's body, through `super`. The crop here and the clip-through edge's
-  # (clipIntoPlaneOfChild) are two readers of the one box and must agree: a resident records the
-  # area it painted from the clip-through walk (_recordDrawnAreaForNextDamageRects).
+  # dormancy — ClippingWdgt's body, through `super`. The crop here IS the clip-through edge's answer
+  # (_clipThroughForChild), so the paint and the visible boxes read one box, as they must: a resident
+  # records the area it painted from the clip-through walk (_recordDrawnAreaForNextDamageRects).
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
     t = @_scrollTranslation()
     if t.x is 0 and t.y is 0 and @planeMargin is 0
@@ -497,7 +498,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         @_recordDrawnAreaForNextDamageRects()
       @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
       # my plane shows inside my plane box, through my translation; every other child in place
-      planeCull = (damagedPartOfFrame.intersect @_planeBox()).translateBy t.neg()
+      planeCull = @_clipThroughForChild damagedPartOfFrame, @contents
       @children.forEach (child) =>
         if child is @contents
           aContext.save()
@@ -517,8 +518,9 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     t = @_scrollTranslation()
     if t.x is 0 and t.y is 0 and @planeMargin is 0
       return super aContext, clippingRectangle, appliedShadow
-    # from here: ClippingWdgt's JustShadow body (kept in lockstep with it), with the contents
-    # child painted inside my plane box and through the scroll translation
+    # from here: ClippingWdgt's JustShadow body (in lockstep with it, step for step, but for the
+    # children's step: ClippingWdgt's ⚠ LOCKSTEP note), with the contents child painted inside my
+    # plane box and through the scroll translation, my other children in place
     clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       damagedPartOfFrame = @boundingBox().intersect clippingRectangle
@@ -528,7 +530,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
         # opaque short-circuit as in ClippingWdgt's: a fully opaque box's silhouette IS its box
         if @alpha != 1
-          shadowPlaneCull = (damagedPartOfFrame.intersect @_planeBox()).translateBy t.neg()
+          shadowPlaneCull = @_clipThroughForChild damagedPartOfFrame, @contents
           @children.forEach (child) =>
             if child is @contents
               aContext.save()

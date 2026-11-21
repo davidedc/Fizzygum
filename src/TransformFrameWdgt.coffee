@@ -826,15 +826,19 @@ class TransformFrameWdgt extends PanelWdgt
   screenAnchor: ->
     @localPointToScreen @transformSpec._anchorFor(@bounds)
 
+  # THE CLIP ABOVE ME, as it reaches me: my first clipping ancestor's clip-through, as that ancestor
+  # answers it for the child of its own I stand in (ClippingWdgt.clipThroughForDescendant) -- a
+  # window cuts it to the box it gives its content when I stand in that content (as the content, or
+  # inside a content that clips nothing), a viewport to its plane box when I stand in its plane. That
+  # ancestor is a ClippingWdgt, the only class that clips at its rectangle, so the question is sent
+  # unprobed. My world-facing face cuts my turned footprint by it (clippedThroughBounds below), the
+  # box the pointer's test of my descendants reads too (Widget.isPointerTargetAt, AM-I-UNHIDDEN).
   _ancestorScreenClip: ->
-    fp = @firstParentClippingAtBounds()
-    fp = world if !fp?
-    fp.clipThrough()
+    (@firstParentClippingAtBounds() ? world).clipThroughForDescendant @
 
+  # The uncached twin, in lockstep (the SLOW oracle's).
   _SLOWancestorScreenClip: ->
-    fp = @SLOWfirstParentClippingAtBounds()
-    fp = world if !fp?
-    fp.SLOWclipThrough()
+    (@SLOWfirstParentClippingAtBounds() ? world).SLOWclipThroughForDescendant @
 
   # child-facing clip terminal: the slot box only (plane-pure).
   clipThrough: ->

@@ -221,8 +221,7 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 
 ### `plans/scroll-indicators-plan.md` — one placement rule for a scroll indicator, the document's margin, and the spreadsheet's own
-AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b and U2b (added on the owner's word), U2, U3, U4, U4b and U4c are closed (the plan's ledger); U4b to U4e were added on the owner's word.
-- [ ] U4d: a window clips its content only at its own bounds, so a tilted content's ink covers the window's title and grip strips and takes their clicks; the window is to show its content only inside its body (owner's ruling). Detail: the plan's §U4d.
+AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b and U2b (added on the owner's word), U2, U3, U4, U4b, U4c and U4d are closed (the plan's ledger); U4b to U4e were added on the owner's word.
 - [ ] U5: the spreadsheet's view origin has no pins, so no slider can drive or follow it; it is to get a "scroll column" and a "scroll row" pin.
 - [ ] U6: the spreadsheet scrolls and shows no scroll indicator; it is to present the two bars every viewport shows.
 - [ ] A finger's scroll that starts on ANOTHER text of a document being edited ends the edit: the press is read as acting elsewhere (`stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere`) before the drag turns into a scroll (probed). Reachable, low. Detail: the plan's §U3.
@@ -231,6 +230,9 @@ AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in ex
 - [ ] U4e: a stretchable panel's arrange throws (`grantedBoundsWithin is not a function`) on a child whose spec owns its placement: the recorder refuses such a spec, the grant assumes a stretch one. Seen once, in a gauntlet's menu sweep under load. Added to the loop by the owner. Detail: the plan's §U4e.
 - [ ] A part picked out of a figure whose tilts cancel (a widget tilted −θ inside a panel tilted +θ) leaves an empty orphan island alive: the extraction builds an identity island the dissolve skips while it has no parent. Read; reachable by hand. Low. Detail: the plan's §U4c.
 - [ ] A tilted window content's own halo resize handles half-work (it floats free in its island, so it shows them; its window dictates its size): a corner drag (+40,+30) kept the width and lost the height (measured). An upright content offers none. Reachable, low. Detail: the plan's §U4d.
+- [ ] `FrameWdgt._clipThroughForChild` rebuilds the box a window gives its content on every call (~8 `_barSpec()` builds, 2 climbs), on every content paint and clip-cache miss under a window, every frame of a drag; nothing holds that box. Unmeasured. Low. Detail: the plan's §U4d.
+- [ ] A squeezed function or bar plot lays its x-axis 13 px below its own box, so a window that crops its content to its body cuts the axis away (seen in the "Plots and maps" dashboard's small plot windows). Reachable, low. Detail: the plan's §U4d.
+- [ ] A stretch panel squeezes a child window below its own chrome (a 3D plot window 79 px tall against 89 px of strips and border), so the window has no body and shows no content. Reachable, low. Detail: the plan's §U4d.
 - [ ] A tilted nested window is not height-stretchable by its outer window's grip where an upright one is: `FrameWdgt.contentsRecursivelyCanSetHeightFreely` recurses through `isFrame?`, which the island does not answer. Reachable, low. Detail: the plan's §U4b.
 - [ ] A tilted window content that leaves its island (its own "Attach", a destroy, a shortcut's bring-up) leaves its window an empty island: only the island is told. The page's case is filed under the editing residue. Read. Reachable, low.
 

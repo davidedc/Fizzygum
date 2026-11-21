@@ -17,7 +17,8 @@
 class FrameWdgt extends ClippingWdgt
 
   # A frame's content can transiently stick out of the frame (mid width/height
-  # negotiation, mid drop), so I clip at my bounds, as a ClippingWdgt. That base also
+  # negotiation, mid drop), so I clip at my bounds, as a ClippingWdgt, and my content at the
+  # box I give it (_clipThroughForChild), so it never covers my chrome. That base also
   # carries the _applyMoveBy whole-subtree move override -- the repaint path a parent stack
   # takes when it moves this frame as a tracking-container child.
 
@@ -2247,42 +2248,29 @@ class FrameWdgt extends ClippingWdgt
     return undefined unless radii? and Math.max(radii...) > 0
     radii
 
-  # My children's paint, intercepted at the content-recursion point ClippingWdgt owns (the
-  # ViewportWdgt idiom). With no rounded child clip it IS ClippingWdgt's body, reached through
-  # `super`; with one it is that body (kept in lockstep with it) with my children painted inside
-  # my outline.
-  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
-    radii = @_roundedChildClipRadii()
-    if !radii?
-      return super aContext, clippingRectangle, appliedShadow
-    damagedPartOfFrame = @boundingBox().intersect clippingRectangle
-    if !damagedPartOfFrame.isEmpty()
-      if aContext == world.worldCanvasContext
-        @_recordDrawnAreaForNextDamageRects()
-      @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
-      @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
+  # My children's paint is ClippingWdgt's, in both of its passes: it paints them inside my rounded
+  # outline while I answer one (ClippingWdgt._paintChildrenInsideMe), and each of them through the
+  # clip it shows through, which I answer for my content (below). (Painting children inside a rounded
+  # outline -- _paintChildrenInsideMyRoundedOutline and the helpers it calls -- is Widget's, shared
+  # with the other widget that cuts its children to its outline, a tool cell.)
 
-  # The shadow-pass twin. An OPAQUE frame's silhouette is its own box and paints no child
-  # (ClippingWdgt's short-circuit), so only a translucent frame has children to clip here — under the
-  # shadow offset this pass translates by, which the clip follows because it is traced under the
-  # context's own matrix.
-  _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
-    radii = @_roundedChildClipRadii()
-    if !radii? or @alpha == 1
-      return super aContext, clippingRectangle, appliedShadow
-    clippingRectangle = clippingRectangle.translateBy appliedShadow.offset.neg()
-    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
-      damagedPartOfFrame = @boundingBox().intersect clippingRectangle
-      if !damagedPartOfFrame.isEmpty()
-        aContext.save()
-        aContext.translate appliedShadow.offset.x * ceilPixelRatio, appliedShadow.offset.y * ceilPixelRatio
-        @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
-        @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfFrame, appliedShadow, radii
-        aContext.restore()
+  # ===== the box my CONTENT shows through =====
 
-  # (Painting my children inside my rounded outline -- _paintChildrenInsideMyRoundedOutline and the
-  # helpers it calls -- is Widget's, shared with the other widget that cuts its children to its
-  # outline, a tool cell.)
+  # THE CLIP MY CONTENT SHOWS THROUGH: the clip that reaches me, cut to the box I give my content --
+  # my body less my body margin and my docked bands, where my arrange seats a content that fills it
+  # (from _payloadOffset, my extent less my chrome across and down, _chromeWidth and _chromeHeight).
+  # So a content painting past its own box -- a tilted content's turned corners, a child standing
+  # out of a content that clips nothing -- never covers my strip, my grip strip, my border, my page
+  # gutter or a band, and is no pointer target there: the pointer agrees with the paint. An upright
+  # content lies in that box, so nothing of it is cut; my strip, my grip and my bands show in place.
+  # A frame shorter than its own chrome gives its content no box, and shows none of it. My answer to
+  # ClippingWdgt's question, which the clip-through walk asks (ClippingWdgt.clipThroughForDescendant)
+  # and my children's paint asks (Widget._paintChildrenOver).
+  _clipThroughForChild: (clipSoFar, child) ->
+    return clipSoFar unless child is @contents
+    regionOrigin = @position().add @_payloadOffset()
+    regionCorner = regionOrigin.add new Point @width() - @_chromeWidth(), @height() - @_chromeHeight()
+    clipSoFar.intersect new Rectangle regionOrigin, regionCorner
 
   # ===== my page's SELECTION RING, in my page gutter (window-page-gutter plan D3, D8) =====
   # While I keep a gutter around a PAGE, the editor-selection ring of my page lies OUTSIDE the page,
@@ -2344,10 +2332,9 @@ class FrameWdgt extends ClippingWdgt
 
   # My body's own paint (my appearance: my fill), then -- in the normal pass, while the world names me
   # the host of the selection ring (WorldWdgt.editorSelectionRingHost) -- my page's ring, over that
-  # fill and under my children. Both of my paint paths reach here before they paint my children: the
-  # rounded child clip's (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow above) and
-  # ClippingWdgt's. The shadow pass never paints the ring: a selection is no part of my
-  # silhouette.
+  # fill and under my children. My paint (ClippingWdgt's) reaches here before it paints my children,
+  # inside my rounded outline or not. The shadow pass never paints the ring: a selection is no part
+  # of my silhouette.
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     super
     return if appliedShadow? or world?.editorSelectionRingHost() isnt @

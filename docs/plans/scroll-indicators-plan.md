@@ -23,7 +23,7 @@ Status:
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | CLOSED 2026-11-21 (§U4) |
 | U4b | A tilted window content's window keeps its size at its next arrange (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4b) |
 | U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4c) |
-| U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | open (§U4d) |
+| U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4d) |
 | U4e | A stretchable panel's arrange places a child whose spec owns its placement (added by the owner 2026-11-21) | open (§U4e) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
@@ -949,6 +949,27 @@ offering an upright content's none); their resize half works under its window's 
 
 **If parked:** the overhang stays, filed.
 
+**Landed 2026-11-21.** The per-child crop is ONE question every clipping widget answers,
+`ClippingWdgt._clipThroughForChild` (pass-through by default; a viewport crops its plane to its plane box and
+translates it, U2's answer under its role-neutral name; a window crops its content to the box it gives its content,
+`FrameWdgt._clipThroughForChild`), reached by ONE climb, `ClippingWdgt.clipThroughForDescendant` (and its SLOW twin),
+which `Widget.clipThrough`, its oracle and the island's two screen clips all take; FrameWdgt's two paint overrides are
+deleted (ClippingWdgt's bodies paint a child through the hook). Two gaps a tilted content opened are closed: the
+island's screen clip (`_ancestorScreenClip`) now climbs through every ancestor's crop, so U2's record that it "skips
+the edge step (unreachable)" no longer holds; and a widget inside an island is hit only where the island SHOWS
+(`Widget.isPointerTargetAt` tests the point, carried into the island's plane, against its `clippedThroughBounds`),
+which also fixes a defect older than this plan: a tilted widget's hidden part took presses under any clip.
+`FrameWdgt` 168 → 167 methods (its ceiling lowered); `Widget#clipThrough`'s complexity record (17) deleted, the
+method now 7; no raise. Measured before the change: the new test's twelve reads failed under both pointers. The one
+reference that moved, predicted and shown to the owner, who accepted it: `SystemTest_macroStretchChildHandleResizeSurvivesReflow`
+(two shots, mouse and finger, dpr 1 and 2): in the "Plots and maps" dashboard's squeezed plot windows the function and
+bar plots lose the x-axis they draw 13 px below their own box, and a 3D plot window squeezed below its own chrome (79
+px against 89) shows no content; both causes filed. Proof: `SystemTest_macroWindowShowsItsContentOnlyInItsBody` (six
+legs) passes under both pointers with zero careless end-of-cycle pushes; six plants each break their own reads; the
+capstone, settle (cached-vs-SLOW armed) and revisit gates and the paint audit pass; followers clean. Corrections to the
+reading above: no tilted reference moved (the predicted kind was wrong; one upright case moved), and the two reads
+meant to compare an incremental paint with a whole one were removed (the crop cannot make them differ).
+
 ### U4e — A stretchable panel's arrange places a child whose spec owns its placement
 
 **Added by the owner 2026-11-21**, from U4b's gauntlet. **Needs U4d CLOSED or PARKED.** Research first:
@@ -1148,6 +1169,7 @@ stop at its commit, which you propose and do not make."
 - [x] U4: the scroll-indicator presentation lives in `ViewportWdgt` alone; it is to move to a base class both scrollers extend, pixel-neutral. — CLOSED 2026-11-21 (scroll-indicators loop, U4): `ScrollIndicatorHostWdgt extends ClippingWdgt` holds it, `ViewportWdgt` extends it and answers two hooks and the builder's two actions; proven by the resolution map and a statics probe; no pixel moved.
 - [x] U4b: a tilted window content's window grows to the content's footprint at its next arrange (a hover highlight, a grip resize; measured 249 → 311 px tall); a window is to keep its size. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4b): an island claims space only from an asking container; as a window's content it forwards to its content in every mode, and a tilted nested window hides its grip as an upright one; `SystemTest_macroWindowKeepsItsSizeRoundATiltedContent`.
 - [x] U4c: "Pick up" on the payload of a TILTED Maker would run the Maker's reset outside a settle (the extraction is declared, not settled), so its payload's constructors lay the world out mid-reset. Read, unplayed. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4c): the pick-up's resolution settles the extraction (measured before: the Maker 600×400 → 52×129); the reuse branch keeps its declaration; `SystemTest_macroTiltedMakerKeepsItsSizeWhenItsPayloadIsPickedUp`.
+- [x] U4d: a window clips its content only at its own bounds, so a tilted content's ink covers the window's title and grip strips and takes their clicks; the window is to show its content only inside its body (owner's ruling). Detail: the plan's §U4d. — CLOSED 2026-11-21 (scroll-indicators loop, U4d): one per-child crop question on `ClippingWdgt`, answered by the viewport (its plane box) and the window (the box it gives its content), one climb for every clip-through; a hit inside an island lands only where the island shows; `SystemTest_macroWindowShowsItsContentOnlyInItsBody`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 

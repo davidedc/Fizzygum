@@ -80,8 +80,13 @@ const METHOD_CEILINGS = {
   // are gone. Lowered 170 -> 168 on 2026-11-21 for the scroll indicators' U3: a document keeps its margin itself, so
   // no viewport stands between a window and the page whose ring it paints (_visibleBoxOnMyPage's translation climb
   // went, its island test folded into hostsSelectionRingOf), and the ring's reach is one derived theme value
-  // (Theme.pageSelectionOutlineReach) the window and a viewport both read (_pageSelectionRingReach went)
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 168 },
+  // (Theme.pageSelectionOutlineReach) the window and a viewport both read (_pageSelectionRingReach went). Lowered
+  // 168 -> 167 on 2026-11-21 for the scroll indicators' U4d: a window shows its content only inside the box it gives
+  // it by answering the one per-child clip question every clipping container answers (_clipThroughForChild, declared
+  // on ClippingWdgt, whose paint now paints a rounded frame's children inside its outline), so the window's two
+  // child-paint overrides went (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow and its JustShadow
+  // twin)
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 167 },
 };
 
 const COMPLEXITY_CEILING = 15;
@@ -163,7 +168,6 @@ const RECORDED = {
   'Widget#_insertAddersSuchThat': 18,
   'Widget#_reLayout': 19,
   'Widget#_resolveStandingFigureNoSettle': 21,
-  'Widget#clipThrough': 17,
   'Widget#cornerRadiiFollowingMyOutline': 17,
   'Widget#subWidgetsMergedPreferredBounds': 16,
   'Widget.functionLiteralReading': 25,

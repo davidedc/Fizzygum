@@ -3,10 +3,17 @@
 # skips my whole subtree, and my stroke and selection overlay paint AFTER my children, over
 # anything that reaches my edge. The base of every widget that clips at its rectangle: the panel
 # family, the viewport, the frame, the inspector, the spreadsheet grid, the vertical stack, and
-# the clipping box demo.
+# the clipping box demo. Each child of mine shows through the clip I answer for it
+# (_clipThroughForChild): in place, unless I show it through a box or a plane of my own -- a
+# viewport its plane, a window its content.
 
 class ClippingWdgt extends Widget
 
+  # I clip at my rectangle, and I am the only class that does: a widget answering true here IS a
+  # ClippingWdgt. The clip-through walk relies on it -- it sends the first ancestor that answers true
+  # (TreeNode.firstParentClippingAtBounds) my clipThroughForDescendant with no probe (Widget.clipThrough
+  # and its uncached twin, TransformFrameWdgt._ancestorScreenClip and its twin) -- so no other class
+  # declares it. (A save never writes it: it is never a widget's own field.)
   clipsAtRectangularBounds: true
 
   # used for example:
@@ -91,6 +98,48 @@ class ClippingWdgt extends Widget
     @checkFullClippedBoundsCache = WorldWdgt.geometryVersion
     @cachedFullClippedBounds = result
 
+  # ===== the clip each of my children shows through =====
+
+  # THE CLIP ONE OF MY CHILDREN SHOWS THROUGH, in that child's own plane. `clipSoFar` is the clip that
+  # reaches me, in my plane. My children show in place, so theirs is that clip, the same object. A
+  # container that shows a child through a box or a plane of its own answers for that child: a
+  # viewport for its contents (its plane box, through its scroll translation), a window for its
+  # content (the box it gives it). Asked of me only by myself: by the clip-through walk, per child edge,
+  # through its public door (clipThroughForDescendant below), and by my children's paint
+  # (Widget._paintChildrenOver), so the paint, every visible box, damage and the pointer read one answer.
+  _clipThroughForChild: (clipSoFar, child) ->
+    clipSoFar
+
+  # THE CLIP `descendant` SHOWS THROUGH WHERE IT REACHES ME, as its first clipping ancestor: my own
+  # clip-through, as I answer it for the child of mine `descendant` stands in. Widget.clipThrough asks
+  # it, and so does a transform island for the clip above it (TransformFrameWdgt._ancestorScreenClip).
+  # PUBLIC.
+  clipThroughForDescendant: (descendant) ->
+    @_clipThroughForChild @clipThrough(), @_myChildOnTheChainOf descendant
+
+  # The uncached twin, which the SLOW oracles read (Widget.SLOWclipThrough, TransformFrameWdgt's
+  # _SLOWancestorScreenClip): the same question over my uncached clip-through. PUBLIC.
+  SLOWclipThroughForDescendant: (descendant) ->
+    @_clipThroughForChild @SLOWclipThrough(), @_myChildOnTheChainOf descendant
+
+  # The child of mine on `descendant`'s ancestor chain (`descendant` itself when it is my child): the
+  # edge its clip-through crosses into my subtree. A widget that clips nothing can stand between
+  # `descendant` and me, so the climb runs past it.
+  _myChildOnTheChainOf: (descendant) ->
+    child = descendant
+    child = child.parent while child.parent? and child.parent isnt @
+    child
+
+  # My children's paint, over the damaged part of me: inside my rounded outline while I cut my
+  # children to one (_roundedChildClipRadii, a rounded frame's), else over that rectangle; either way
+  # each child through the clip it shows through (Widget._paintChildrenOver). Both of my paint bodies
+  # below paint my children here.
+  _paintChildrenInsideMe: (aContext, damagedPartOfMe, appliedShadow) ->
+    radii = @_roundedChildClipRadii?()
+    if radii?
+      @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfMe, appliedShadow, radii
+    else
+      @_paintChildrenOver aContext, damagedPartOfMe, appliedShadow
 
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
@@ -121,8 +170,15 @@ class ClippingWdgt extends Widget
   # ⚠ LOCKSTEP: ViewportWdgt overrides BOTH this method and _fullPaintIntoAreaOrBlitFromBackBufferJustShadow
   # below with hand-copied bodies that paint the contents child inside the viewport's plane box and
   # through its scroll translation (a viewport that neither translates nor keeps a margin reaches
-  # these bodies through `super`). FrameWdgt does the same for its rounded child clip (the clip-off
-  # path reaches them through `super`). An edit to either body here must be mirrored in both.
+  # these bodies through `super`). What stays in step is every step but the children's: the cull to
+  # my box, the drawn-area record, my own paint and, in the shadow pass, the offset cull, the
+  # translate, the nothing-to-draw check and the opaque short-circuit -- an edit to one of those here
+  # must be mirrored there. The children's step agrees in value, not in text: here it is
+  # _paintChildrenInsideMe, there the viewport paints each child itself, its contents through the
+  # translation and the clip it answers for them (_clipThroughForChild), the rest in place -- the same,
+  # because a viewport cuts its children to no rounded outline and shows every child but its contents
+  # in place. A viewport that ever answered _roundedChildClipRadii, or a crop for another child, would
+  # have to paint that in its own bodies too.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
 
     # a PanelWdgt has the special property that all of its children
@@ -154,8 +210,7 @@ class ClippingWdgt extends Widget
       # this draws the background of the Panel itself
       @paintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
 
-      @children.forEach (child) =>
-        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+      @_paintChildrenInsideMe aContext, damagedPartOfFrame, appliedShadow
 
   _fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     # the culling rect moves OPPOSITE the paint (a pixel at P shows the shadow of
@@ -186,9 +241,11 @@ class ClippingWdgt extends Widget
         # its children are inside. Hence, if the Panel is fully opaque, then
         # since we are just drawing the shadow, we can just
         # draw the shadow of the Panel itself and skip all of the children.
+        # A translucent one silhouettes its children as it paints them, under the shadow offset
+        # this pass translates by (a rounded outline's clip follows it: it is traced under the
+        # context's own matrix).
         if @alpha != 1
-          @children.forEach (child) =>
-            child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
+          @_paintChildrenInsideMe aContext, damagedPartOfFrame, appliedShadow
 
         aContext.restore()
 

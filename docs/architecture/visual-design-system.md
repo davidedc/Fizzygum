@@ -337,6 +337,11 @@ widget picture, the shortcut badge), and share its rules:
   `Widget._paintChildrenInsideMyRoundedOutline` family).
 - A clipping widget whose outline must be painted OVER its content sets `strokesOverChildren` on its
   `BoxyAppearance`: the outline is then stroked once, after the children, instead of with the fill.
+- A frame shows its CONTENT only inside the box it gives its content (its body between its title strip
+  and its grip strip, less any docked band, the band's inset and the frame's margin;
+  `FrameWdgt._clipThroughForChild`), and its chrome in place: a
+  tilted content's ink, or a content that draws past its own box, is cut where it would cross the
+  strips, which keep their look and their presses.
 - A frame clips its children to its RECTANGLE, so content laid flush against a rounded corner shows its
   own pixels outside the curve unless something stops it. Two mechanisms exist: a flush child can take
   the host's corner radii on its own background (per-corner fill — enough only for content whose corner

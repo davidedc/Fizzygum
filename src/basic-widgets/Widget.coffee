@@ -489,8 +489,8 @@ class Widget extends TreeNode
   # DOES-MY-SURFACE-STOP-IT (catchesPointerAt), AM-I-EVEN-MATERIAL (ephemerals — highlights,
   # pinout markers, drag affordances — are reconciler-owned overlays, non-interactable by
   # definition; the isEphemeral() capability replaced the two former per-marker predicates),
-  # AM-I-A-PICTURE and AM-I-UNCUT (asked last, because they walk my ancestors: see below).
-  # CaretWdgt overrides the whole thing to false, with its own reason.
+  # AM-I-A-PICTURE, AM-I-UNCUT and AM-I-UNHIDDEN (asked last, because they walk my ancestors: see
+  # below). CaretWdgt overrides the whole thing to false, with its own reason.
   isPointerTargetAt: (aPoint) ->
     return false unless @clippedThroughBounds().containsPoint(aPoint) and
       @visibleBasedOnIsVisibleProperty() and
@@ -511,15 +511,25 @@ class Widget extends TreeNode
     # ancestor's OWN notch does: the pointer agrees with the paint. Each such ancestor tests the
     # point in its own plane with its own shape test (the one its notch answers with), the point
     # carried there through the screen by the same plane mappings that brought it from the screen
-    # to me. With no such ancestor (no rounded frame or tool cell above me), one walk up, no mapping.
+    # to me.
+    # AM-I-UNHIDDEN: inside a transform island (an ancestor that rotates or scales the plane of the
+    # child the walk came up through: it answers rotationDegreesOfChildPlane and maps that plane) my
+    # clipped bounds stop at the island's slot box: the island cuts its children to that box alone, a
+    # clip pure in their plane (TransformFrameWdgt.clipThrough), so no clip above the island reaches
+    # them -- a window's box for its content, a panel's edge, a viewport's. Each such island tests
+    # the point, carried into its own plane the same way, against the box it SHOWS (its
+    # clippedThroughBounds: its turned footprint cut by every clip above it), as its paint is cut: a
+    # press where my ink is hidden meets whatever shows there.
+    # With no such ancestor (no rounded frame, tool cell or island above me), one walk up, no mapping;
+    # with some, the screen point is found once, at the first of them.
     screenPoint = undefined
+    pointIn = (widget) => widget.screenPointToMyPlane (screenPoint ?= @localPointToScreen aPoint)
     childOnMyPath = @
     ancestor = @parent
     while ancestor?
       return false if ancestor._showsChildAsAPicture? childOnMyPath
-      if ancestor._roundedChildClipRadii?()?
-        screenPoint ?= @localPointToScreen aPoint
-        return false unless ancestor.appearance.shapeContainsPoint ancestor.screenPointToMyPlane screenPoint
+      return false if ancestor._roundedChildClipRadii?()? and !ancestor.appearance.shapeContainsPoint pointIn ancestor
+      return false if ancestor.rotationDegreesOfChildPlane? and ancestor.mapsPlaneOfChild(childOnMyPath) and !ancestor.clippedThroughBounds().containsPoint pointIn ancestor
       childOnMyPath = ancestor
       ancestor = ancestor.parent
     true
@@ -1484,15 +1494,8 @@ class Widget extends TreeNode
   SLOWclipThrough: ->
     if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @SLOWisInCollapsedSubtree()
       return Rectangle.EMPTY
-    firstClipping = @SLOWfirstParentClippingAtBounds()
-    if !firstClipping?
-      firstClipping = world
-    upstream = firstClipping.SLOWclipThrough()
-    # the plane edge — kept in lockstep with clipThrough below
-    if firstClipping.clipIntoPlaneOfChild?
-      edgeChild = @
-      edgeChild = edgeChild.parent while edgeChild.parent? and edgeChild.parent != firstClipping
-      upstream = firstClipping.clipIntoPlaneOfChild upstream, edgeChild
+    # the clip that reaches me, asked as clipThrough below asks it, over the uncached walk
+    upstream = (@SLOWfirstParentClippingAtBounds() ? world).SLOWclipThroughForDescendant @
     if @clipsAtRectangularBounds
       @boundingBox().intersect upstream
     else
@@ -1663,26 +1666,14 @@ class Widget extends TreeNode
       @cachedClipThrough = Rectangle.EMPTY
       result = @cachedClipThrough
     else
-      firstParentClippingAtBounds = @firstParentClippingAtBounds()
-      if !firstParentClippingAtBounds?
-        firstParentClippingAtBounds = world
-      firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
-      # the plane edge (paint-time scroll, plan §3.2): the upstream clip lives in the clipping
-      # parent's plane. A parent that shows the subtree I reach it through in a plane of its own (a
-      # viewport: its contents, inside its plane box and through its scroll translation) answers
-      # that clip as it reaches that subtree, in the subtree's plane (ViewportWdgt.clipIntoPlaneOfChild).
-      # The edge is the clipping parent's DIRECT child on my ancestor chain (a non-clipping widget
-      # can sit between me and it), so climb to it before asking. A parent that answers nothing, or
-      # a child it shows in place: same object through.
-      if firstParentClippingAtBounds.clipIntoPlaneOfChild?
-        edgeChild = @
-        edgeChild = edgeChild.parent while edgeChild.parent? and edgeChild.parent != firstParentClippingAtBounds
-        firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipIntoPlaneOfChild firstParentClippingAtBoundsClipThroughBounds, edgeChild
+      # the clip that reaches me: my first clipping ancestor's clip-through, as that ancestor answers it
+      # for the subtree I reach it through, in that subtree's plane (ClippingWdgt.clipThroughForDescendant:
+      # a viewport answers it inside its plane box and through its scroll translation, a window cuts
+      # it to the box it gives its content; a child shown in place gets the same object through). Sent
+      # unprobed: only a ClippingWdgt clips at its rectangle, so that ancestor, or the world, is one.
+      upstream = (@firstParentClippingAtBounds() ? world).clipThroughForDescendant @
       @checkClipThroughCache = WorldWdgt.geometryVersion
-      if @clipsAtRectangularBounds
-        @cachedClipThrough = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds
-      else
-        @cachedClipThrough = firstParentClippingAtBoundsClipThroughBounds
+      @cachedClipThrough = if @clipsAtRectangularBounds then @boundingBox().intersect upstream else upstream
       result = @cachedClipThrough
 
     if world.doubleCheckCachedMethodsResults
@@ -3263,10 +3254,13 @@ class Widget extends TreeNode
     ]
     squares.some (square) -> area.intersect(square).isNotEmpty()
 
-  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours.
+  # Paint my children over `rectangle`, which goes down as the clipping rectangle each child honours,
+  # cut to the clip that child shows through where I answer it (ClippingWdgt._clipThroughForChild, the
+  # question the clip-through walk asks too: a window's content paints only inside the box the window
+  # gives it).
   _paintChildrenOver: (aContext, rectangle, appliedShadow) ->
-    @children.forEach (child) ->
-      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, rectangle, appliedShadow
+    @children.forEach (child) =>
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, (@_clipThroughForChild?(rectangle, child) ? rectangle), appliedShadow
 
   # Paint my children over `rectangle` with the context clipped to it AND to my outline: the
   # rectangle in the context's device pixels (the space every appearance scope clips in), my outline

@@ -359,8 +359,9 @@ the layer that owns the fact:
   `CanvasGlassTopWdgt` …).
 - **`Widget.isPointerTargetAt(aPoint)`** — the whole question `ActivePointerWdgt.topWdgtUnderPointer`
   asks: clipped bounds ∧ shown ∧ not collapsed ∧ `catchesPointerAt` ∧ not ephemeral, then, on one walk
-  up my ancestors, no ancestor shows the child I came up through as a PICTURE and no ancestor's rounded
-  child clip cuts the point away. Override only to remove yourself from targeting entirely; `CaretWdgt`
+  up my ancestors, no ancestor shows the child I came up through as a PICTURE, no ancestor's rounded
+  child clip cuts the point away, and, inside a transform island, the point (carried into the island's
+  plane) lies in the box the island shows, its `clippedThroughBounds` (`transforms.md` §7). Override only to remove yourself from targeting entirely; `CaretWdgt`
   is the one class that does.
 - **"this child of mine is a picture, not a target"** — `_showsChildAsAPicture: (child) -> …` on the
   PARENT, answered for the child the walk comes up through: nothing in that child's subtree is then a
