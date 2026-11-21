@@ -114,19 +114,24 @@ class TransformFrameWdgt extends PanelWdgt
   # RE-HOMED WITH A FRAME INSIDE: a frame that is my sole content -- directly, or through islands
   # nested in me, each the sole content of the one around it -- takes its look from the container
   # it really lives in, seen THROUGH its sole-content islands (FrameWdgt.isInternal reads
-  # Widget._parentThroughIslands, which climbs sugar and explicit islands alike). Re-homing me
-  # changes that container, but only the ROOT of an add hears _reactToBeingAdded -- here, me -- so
-  # the frame inside would keep the skin of the home I left (a tilted window dwell-embedded into a
-  # panel would go on wearing the window look, though it is now a card). So I re-derive its skin
-  # myself, for the one frame that classifies through me: its look-through figure is me or an
-  # island around me.
-  # Not while the hand carries me, exactly like the frame's own re-derivation: the skin settles on
-  # release. The materialize homes me EMPTY before my content moves in, and the content then hears
-  # its own add, so nothing reaches a frame twice there.
+  # Widget._parentThroughIslands, which climbs sugar and explicit islands alike), and offers its grip
+  # by the attachment of the figure it really is (FrameWdgt.offersAResizeHandle reads
+  # Widget._enclosingIslandFigure). Re-homing me changes both, but only the ROOT of an add hears
+  # _reactToBeingAdded -- here, me -- so the frame inside would keep the skin and the grip of the home
+  # I left (a tilted window dwell-embedded into a panel would go on wearing the window look, though it
+  # is now a card; one taken out of a window onto the desktop would go on hiding a grip it now owns).
+  # So I re-derive both myself, for the one frame that classifies through me: its look-through figure
+  # is me or an island around me.
+  # Its grip re-asks wherever I land, the hand included, as the frame's own does on its own add
+  # (FrameWdgt._reactToBeingAdded). Its skin not while the hand carries me, exactly like the frame's
+  # own re-derivation: the skin settles on release. The materialize homes me EMPTY before my content
+  # moves in, and the content then hears its own add, so nothing reaches a frame twice there.
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
+    frame = @_frameClassifyingThroughMe()
+    frame?.resizer?.updateVisibility()
     return if whereTo is world?.hand
-    @_frameClassifyingThroughMe()?._deriveAndSetSkin()
+    frame?._deriveAndSetSkin()
 
   # The ONE frame that classifies through me (FrameWdgt.isInternal looks through sole-content
   # islands): a frame that is my sole content -- directly, or through islands nested in me, each

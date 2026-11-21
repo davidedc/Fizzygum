@@ -221,12 +221,15 @@ H1/Arc2-4/W1-W2/A/C1/O1/O2/O4a landed; O4 attribution + correction DONE 2026-07-
 - [ ] §5 F3: dirty-rect DOM present — deprioritized, not landed
 
 ### `plans/scroll-indicators-plan.md` — one placement rule for a scroll indicator, the document's margin, and the spreadsheet's own
-AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b and U2b (added on the owner's word), U2, U3 and U4 are closed (the plan's ledger); U4b and U4c were added on the owner's word.
+AUTHORED 2026-11-19 from the owner's rulings of that day (the plan's §1); in execution by its loop (`Fizzygum-tests/.scratch/scroll-indicators-loop/`); U1, U1b and U2b (added on the owner's word), U2, U3, U4 and U4b are closed (the plan's ledger); U4b, U4c and U4d were added on the owner's word.
+- [ ] U4d: a window clips its content only at its own bounds, so a tilted content's ink covers the window's title and grip strips and takes their clicks; the window is to show its content only inside its body (owner's ruling). Detail: the plan's §U4d.
 - [ ] U5: the spreadsheet's view origin has no pins, so no slider can drive or follow it; it is to get a "scroll column" and a "scroll row" pin.
 - [ ] U6: the spreadsheet scrolls and shows no scroll indicator; it is to present the two bars every viewport shows.
 - [ ] A finger's scroll that starts on ANOTHER text of a document being edited ends the edit: the press is read as acting elsewhere (`stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere`) before the drag turns into a scroll (probed). Reachable, low. Detail: the plan's §U3.
 - [ ] A payload released over a scrolled viewport's FAT bar (a carry with no button held: the "Pick up" row, then a click) lands in the plane displaced by the scroll offset: `ViewportWdgt.add` forwards it unmapped. Seen through U2's plant 4 (236 px off). Reachable, low. Detail: the plan's §U2.
-- [ ] U4b: a tilted window content's window grows to the content's footprint at its next arrange (a hover highlight, a grip resize; measured 249 → 311 px tall); a window is to keep its size. Added to the loop by the owner. Detail: the plan's §U4b.
+- [ ] An inert child (a highlight, a drag outline) added inside a tracking island re-lays every tracking ancestor (`Widget._invalidateLayout` does not ask `isLayoutInert`): idempotent, one per hover over an island target. Reachable, low. Detail: the plan's §U4b.
+- [ ] A stretchable panel's arrange throws (`grantedBoundsWithin is not a function`) on a child whose spec owns its placement: the recorder refuses such a spec, the grant assumes a stretch one. Seen once, in a gauntlet's menu sweep under load. Reachable, medium. Detail: the plan's "BACKLOG detail".
+- [ ] A tilted nested window is not height-stretchable by its outer window's grip where an upright one is: `FrameWdgt.contentsRecursivelyCanSetHeightFreely` recurses through `isFrame?`, which the island does not answer. Reachable, low. Detail: the plan's §U4b.
 - [ ] U4c: "Pick up" on the payload of a TILTED Maker would run the Maker's reset outside a settle (the extraction is declared, not settled), so its payload's constructors lay the world out mid-reset. Read, unplayed. Added to the loop by the owner. Detail: the plan's §U4c.
 - [ ] A tilted window content that leaves its island (its own "Attach", a destroy, a shortcut's bring-up) leaves its window an empty island: only the island is told. The page's case is filed under the editing residue. Read. Reachable, low.
 

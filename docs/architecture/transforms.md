@@ -253,6 +253,12 @@ stack never stretches on a container resize.
   island's measure ignores `availW`. So the coupled island measures as a fixed figure, and the
   `footprint` default reaches the mainstream case (a halo-rotated image in a document is a sugar =
   tracking island).
+- The gate answers an ASKING container only (`_claimsSpaceFromMyContainer`, its one condition). As a
+  WINDOW's content (its attachment spec frame-content-active) the island is sized by a DICTATING
+  container (`layout.md` §4.3), which borrows `_setWidthSizeHeightAccordingly` as its width→height
+  sizing and has no siblings to negotiate with: there the trio forwards to the content in every mode,
+  so a window keeps the size it had round the upright content, and the tilt is ink that never claims
+  window space.
 
 The **content→slot** hugging direction (`_reLayout` sync-settles a pending content, then
 `_reLayoutChildren` re-hugs) stays for all modes. Slot-set is `@bounds = newSlot` directly (the
@@ -532,7 +538,11 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
 
 Related look-throughs: `_parentThroughIslands` (container-side, for classification like
 `FrameWdgt.isInternal` / bin residency) and `_dropPolicyProxy` (payload-side, so a tilted
-window is seen as a window by drop policy). Full serialization internals:
+window is seen as a window by drop policy). A window's grip asks the figure too
+(`FrameWdgt.offersAResizeHandle`: the window floats free inside its island, but the island wears
+the attachment the window wears upright, so a tilted nested window hides its grip as an upright one
+does, and a tilted window on the desktop keeps it; a re-homed island re-asks it,
+`TransformFrameWdgt._reactToBeingAdded`). Full serialization internals:
 `docs/architecture/serialization-duplication-reference.md`.
 
 ---

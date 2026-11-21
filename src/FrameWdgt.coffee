@@ -1243,14 +1243,20 @@ class FrameWdgt extends ClippingWdgt
     @barsOwnWidth = @desiredExtent.x
     @desiredExtent = new Point @desiredExtent.x, @height()
 
-  # Do I offer a resize grip right now? Not while I stand in a window in view mode: its arrangement is
-  # not there to be changed, whatever mode I am in myself. Expanded, otherwise, always. Collapsed I AM
-  # my bar, so my grip offers the bar's width, and only while the bar has room for it beside its pieces:
-  # they outrank it (owner ruling, docs/archive/collapsed-bar-grip.md), so a narrower bar shows them and
-  # no grip, which also leaves nothing covered that a tap on the strip must reach (ruling C17). My
-  # resizer's own visibility asks this, and so does my grip strip (_gripStripSide). A pure read:
-  # my arrange re-asks it as a collapsed width lands.
+  # Do I offer a resize grip right now? Not while a host places me, seen through the transform islands
+  # I am the sole content of (_enclosingIslandFigure): tilted or scaled, I float free inside my island,
+  # but the island wears the attachment I wear upright, so a window that is a window's content is sized
+  # by that window either way and answers as it does upright (my resizer asks my own attachment too,
+  # HandleWdgt.wouldShow, which inside an island is always free; an island re-homed with me inside
+  # re-asks, TransformFrameWdgt._reactToBeingAdded). Not while I stand in a window in view mode: its
+  # arrangement is not there to be changed, whatever mode I am in myself. Expanded, otherwise, always.
+  # Collapsed I AM my bar, so my grip offers the bar's width, and only while the bar has room for it
+  # beside its pieces: they outrank it (owner ruling, docs/archive/collapsed-bar-grip.md), so a narrower
+  # bar shows them and no grip, which also leaves nothing covered that a tap on the strip must reach
+  # (ruling C17). My resizer's own visibility asks this, and so does my grip strip (_gripStripSide). A
+  # pure read: my arrange re-asks it as a collapsed width lands.
   offersAResizeHandle: ->
+    return false unless @_enclosingIslandFigure().isFreeFloating()
     return false if @_standsInAWindowInViewMode()
     return true unless @contents?.collapsed
     @width() >= @shortestBarKeepingMyGrip()

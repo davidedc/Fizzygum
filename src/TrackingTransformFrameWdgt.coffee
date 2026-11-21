@@ -55,10 +55,12 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # child bounds is naturally idempotent, uses NO public setter and NO _invalidateLayout (FLOWRULE forbids
   # scheduling layout mid-pass), and does not climb. A parent re-fit for the slot change needs no
   # wiring HERE in any mode: a re-hug that changes the slot is a FRAME change, so the engine's
-  # frame-change up-edge re-fits my container, which re-reads my claim (derived from the slot) —
-  # for 'slot' islands that re-fit is a no-op by construction (claim == slot ⊆ what the parent
-  # already fit). _refreshIslandBuffer rebuilds the buffer
-  # from @bounds every composite, so it grows to the new slot and the content no longer clips. Setting
+  # frame-change up-edge re-fits my container, which re-reads my answer to it — my claim (derived
+  # from the slot) where it ASKS for space, my content's own answer where it DICTATES (a window's
+  # content: _claimsSpaceFromMyContainer below); for 'slot' islands in an asking container that
+  # re-fit is a no-op by construction (claim == slot ⊆ what the parent already fit).
+  # _refreshIslandBuffer rebuilds the buffer from @bounds every composite, so it grows to the new
+  # slot and the content no longer clips. Setting
   # @bounds directly is the established island slot-set idiom (wrapContent / _materializeSugarIslandNoSettle
   # both do it) — _applyExtent would no-op here (the fixed-figure _applyExtentBase override early-returns).
   # The cache-break + fullChanged mirror what a transform change does. (The original R3 "Option A" —
@@ -135,6 +137,10 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # slotOffset. Without this the transparency family bypassed the claim machinery and the D1
   # flip would never reach the mainstream case (a halo-rotated image in a document IS a sugar =
   # tracking island).
+  # The gate answers an ASKING container only: as a WINDOW's content I am sized by a DICTATING
+  # container, which borrows _setWidthSizeHeightAccordingly as its width→height sizing and has no
+  # siblings to negotiate space with, so there I answer the trio for my content in every mode
+  # (_claimsSpaceFromMyContainer below, the gate's one condition).
   # _applyExtent is DELIBERATELY NOT gated (owner correction): a DICTATING container
   # (stretchable panel fractions, window content sizing) owns its children's geometry — its
   # "contents stretch" contract holds in every mode; claimsSpace governs space NEGOTIATION and
@@ -172,18 +178,29 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
     content._applyExtent aPoint
     @_reLayoutChildren true    # ARRANGE-driven re-fit: undefined the anchor so the render stays glued to the slot (F1)
 
+  # Do I claim space from my container? The MODE GATE's one condition, asked by the three methods below: only in
+  # a coupled mode ('footprint', 'sweep'), and only where my container ASKS. As a WINDOW's content (my attachment
+  # spec frame-content-active, the capability query FrameWdgt._positionAndResizeChildren asks too) I am sized by a
+  # DICTATING container (docs/architecture/layout.md §4.3), which has no siblings to negotiate space with, so I
+  # answer for my content in every mode: the tilt is ink, never a claim on the window. (The window measures my
+  # slot at its first placement, through preferredExtent; a claim answered at its later arranges would grow it at
+  # its first re-layout after the tilt.)
+  _claimsSpaceFromMyContainer: ->
+    @transformSpec.claimsSpace != "slot" and !@layoutSpec?.isFrameContentActive?()
+
   # Path B (the width→height container protocol a vertical stack drives its tracking-container children
   # through, VerticalStackPanelWdgt._positionAndResizeChildren): size my content to the width by
   # ITS OWN width→height policy (text wrap / clock square / ratio) and HAND BACK the resulting height —
   # in my plane that IS my slot height after the re-hug (the slot being content-coincident), = the
   # content height. EVERY _setWidthSizeHeightAccordingly override must return its height (the historical
-  # break point — see Widget._setWidthSizeHeightAccordingly's contract comment). Only the stack arrange
-  # calls this — never my own _reLayout — so no stale-extent guard is needed.
+  # break point — see Widget._setWidthSizeHeightAccordingly's contract comment). The stack's arrange
+  # calls this, and the window's as its width→height sizing of its content (Path B) — never my own
+  # _reLayout — so no stale-extent guard is needed.
   _setWidthSizeHeightAccordingly: (newWidth) ->
     content = @_soleContent()
     return super newWidth if @transformSpec.isIdentity() or !content?
-    if @transformSpec.claimsSpace != "slot"
-      # coupled (MODE GATE above): FIXED FIGURE — report the CLAIMED height, touch nothing.
+    if @_claimsSpaceFromMyContainer()
+      # claiming (MODE GATE above): FIXED FIGURE — report the CLAIMED height, touch nothing.
       # A stack advances its row cursor by the RETURNED height for container-classified
       # (_reLayoutChildren?) children, so this is where the reserved AABB/sweep height comes
       # from; the slot box is then parked at claimedOrigin + slotOffset by the base
@@ -196,13 +213,15 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
 
   # Keep MEASURE and ARRANGE coherent: report what my content would take at the offered width (the
   # arrange sizes it exactly so, via _setWidthSizeHeightAccordingly above). This transparent
-  # forward is 'slot'-only (MODE GATE above): a COUPLED island measures via super — the base's
-  # claim-reporting preferredExtentForWidth, which also maintains the @_lastClaimedExtent reflow
-  # memo (read by _reflowIfClaimChangedNoSettle, itself gated on claimsSpace != 'slot' — so the
-  # 'slot' forward's memo bypass here stays safe).
+  # forward answers where I claim nothing ('slot', or a window's content: MODE GATE above): a
+  # CLAIMING island measures via super — the base's claim-reporting preferredExtentForWidth, which
+  # also maintains the @_lastClaimedExtent reflow memo (read by _reflowIfClaimChangedNoSettle). The
+  # forward's memo bypass stays safe: under 'slot' that reflow returns before it reads the memo, and
+  # as a window's content my window never reads my claim, while the memo, undefined at every re-hug
+  # (_reLayoutChildren above), can at worst false-fire an idempotent re-lay of the window.
   preferredExtentForWidth: (availW) ->
     content = @_soleContent()
-    return super availW if @transformSpec.isIdentity() or !content? or @transformSpec.claimsSpace != "slot"
+    return super availW if @transformSpec.isIdentity() or !content? or @_claimsSpaceFromMyContainer()
     content.preferredExtentForWidth availW
 
   # The stack min-clamps a child's measured extent to its getMinimumExtent (VerticalStackPanelWdgt.
@@ -213,5 +232,5 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # perturb my own slot commits.
   getMinimumExtent: ->
     content = @_soleContent()
-    return super() if @transformSpec.isIdentity() or !content? or @transformSpec.claimsSpace != "slot"
+    return super() if @transformSpec.isIdentity() or !content? or @_claimsSpaceFromMyContainer()
     content.getMinimumExtent()

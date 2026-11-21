@@ -419,7 +419,10 @@ The framework's containers split by *who owns the geometry*:
 
 `_applyExtent` — the extent-impose path — is **never mode-gated**. A DICTATING container forwards its imposed extent
 to its content unconditionally: `TrackingTransformFrameWdgt._applyExtent` forwards to the content in *every*
-claimsSpace mode (§5). Space *negotiation* is moddable; participation in *dictated* sizing is not.
+claimsSpace mode (§5). Space *negotiation* is moddable; participation in *dictated* sizing is not. A window's
+width→height sizing of its content borrows the stack's verb (`_setWidthSizeHeightAccordingly`), so a transformed
+content answers that verb by its attachment: as a window's content it forwards to its content in every mode and
+claims nothing (`TrackingTransformFrameWdgt._claimsSpaceFromMyContainer`).
 
 ---
 

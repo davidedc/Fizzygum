@@ -21,8 +21,9 @@ Status:
 | U2b | A window whose content leaves it keeps its size and shows its default content, by any door (added by the owner 2026-11-20) | CLOSED 2026-11-20 (§U2b) |
 | U3 | The document keeps its margin itself; a viewport paints its plane's selection ring | CLOSED 2026-11-21 (§U3) |
 | U4 | The indicator presentation gets a home both scrollers extend (a lift, pixel-neutral) | CLOSED 2026-11-21 (§U4) |
-| U4b | A tilted window content's window keeps its size at its next arrange (added by the owner 2026-11-21) | open (§U4b) |
+| U4b | A tilted window content's window keeps its size at its next arrange (added by the owner 2026-11-21) | CLOSED 2026-11-21 (§U4b) |
 | U4c | "Pick up" on a tilted Maker's payload resets the Maker inside a settle (added by the owner 2026-11-21) | open (§U4c) |
+| U4d | A window shows its content only inside its body (added by the owner 2026-11-21) | open (§U4d) |
 | U5 | The spreadsheet's scroll is two pins | open (§U5) |
 | U6 | The spreadsheet presents its scroll indicators | open (§U6) |
 | U7 | Close: this plan archived, or left open with what parked | open (§U7) |
@@ -334,12 +335,13 @@ D10's last sentence ("its overlay scroll indicator over the items' right edge is
 ## 4. Units
 
 ### U-order
-U1 → U1b → U2 → U2b → U3 → U4 → U4b → U4c → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
+U1 → U1b → U2 → U2b → U3 → U4 → U4b → U4c → U4d → U5 → U6 → U7. U2b (added by the owner) stands before U3, which changes how a
 document sits in its window. U1b needs U1 alone (it restores a step of U1's test) and nothing after
 it needs it; it stands before U3 so that a document's way out of its window can be played in a test. U2 edits
 `_barFrameAt` after U1 did. U3 needs U2's mechanism. U4 lifts what U1–U3
 left (if U2 or U3 PARKED, U4 lifts the code as it stands). U4b and U4c (added by the owner) fix two defects of a
-tilted window's content that U2b filed; they need no indicator unit and stand after U4, which was ready first. U5 is
+tilted window's content that U2b filed; they need no indicator unit and stand after U4, which was ready first. U4d
+(added by the owner) needs U4b: the window keeps its size round a tilted content before it crops it. U5 is
 independent of U1–U4: its range helper is its own (§U4's Landed paragraph). U6 needs U4 and U5.
 
 ---
@@ -849,15 +851,37 @@ grows the window, whatever starts it: the hover highlight a menu gesture adds (U
 `layout.md` §4.3 (and the owner's 2026-07-17 correction it records): a window DICTATES its content's size; a
 content's claim governs only the containers that ask for one.
 
-**Fix (recommended by the research; the product question below decides it).** An island claims space only where it
-is asked for a claim, and as a window's content it forwards the window's size to its content, as its 'slot' mode
-already does: one private predicate on `TrackingTransformFrameWdgt` in place of three copies of the gate.
-
-**Open for the owner (D-1):** a window whose content is tilted keeps the content's untransformed box, its tilted
-ink overhanging and clipped at the window's edge (the research's recommendation; today's first placement), or grows
-to the tilted footprint (today's later arranges). Shown with pictures before the fix.
+**The owner's ruling (2026-11-21, fix A, after pictures of the options).** A window whose content is tilted keeps the
+size it had round the upright content, at every arrange: the tilt is ink, never a claim on the window. An island
+claims space only where it is asked for a claim; as a window's content it forwards the window's size to its content,
+as its 'slot' mode already does: one private predicate on `TrackingTransformFrameWdgt` in place of three copies of the
+gate. (The ink then overhangs the window's chrome as it does right after a tilt today: U4d's ruling crops it.) A
+consequence derived from the same ruling: a tilted nested window hides its grip, as an upright one does — the outer window dictates
+its size, so the grip would be a half-dead control (measured: a drag kept its height and lost its width).
 
 **If parked:** today's growth stays, filed.
+
+**Landed 2026-11-21.** `TrackingTransformFrameWdgt._claimsSpaceFromMyContainer` is the mode gate's one condition
+(a coupled mode, and an ASKING container): as a window's content (its attachment frame-content-active) the island
+forwards the stack-protocol trio to its content in every mode, so the window sizes the content's untransformed box at
+every arrange; three copies of the gate are gone. The grip: `FrameWdgt.offersAResizeHandle` asks the attachment of
+the figure the window really is, through the islands it is the sole content of (`_enclosingIslandFigure`), so a tilted
+nested window hides its grip as an upright one does, and a tilted window on the desktop keeps it; an island re-homed
+with a window inside re-asks its grip (`TransformFrameWdgt._reactToBeingAdded`, as the frame's own add does). The
+measurement, on the product before this unit: every door read of the new test failed, under both pointers (the
+window 252×249 → 252×311 after a menu row, 252×343 after a further turn). Corrections to the reading above: the
+highlight was one trigger among many — any arrange of the window after the tilt grew it (a grip tap, a widget
+carried over, a further turn, a resize); the island's FIRST placement measured its slot, every later arrange its
+claim. One reference moved, predicted and accepted with the ruling: `SystemTest_macroIslandLensWindowHeightLock`
+image_3, the window resized while wrapped now locked to the clock's own square (251×288) as the control image_1,
+where it showed the claim's height with an empty band (251×365); recaptured, mouse and finger, dpr 1 and 2.
+`SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent` L11 tilted reads the outer window's extent with no
+menu open again. Proof: `SystemTest_macroWindowKeepsItsSizeRoundATiltedContent` (seven legs, one door each, every
+expected value the chrome read on the UPRIGHT fixture; the grip's visibility against the upright one's, with a
+desktop twin) passes under both pointers with zero careless end-of-cycle pushes; six plants each fail their own legs;
+the capstone, settle and revisit gates pass on it, its host and the lens test; followers clean. Filed (this plan's
+BACKLOG section): an inert child added inside a tracking island re-lays every tracking ancestor; a tilted nested
+window is not height-stretchable by its outer window's grip where an upright one is.
 
 ### U4c — "Pick up" on a tilted Maker's payload resets the Maker inside a settle
 
@@ -871,6 +895,28 @@ the world out mid-reset. U2b's note: settling the extraction changes every tilte
 is weighed against that.
 
 **If parked:** filed, as U2b left it.
+
+### U4d — A window shows its content only inside its body
+
+**Added by the owner 2026-11-21**, after U4b's options picture
+(`Fizzygum-tests/.scratch/scroll-indicators-loop/u4b/options-tilted-content-in-a-window.png`: today, A, C, D, E, F at
+15° and 45°). **Needs U4b CLOSED. Time box 3 h.** Research first: `Fizzygum-tests/.scratch/scroll-indicators-loop/u4d/`.
+
+**The defect.** A window clips its content only at its own bounds, so a tilted content's ink paints over the window's
+title and grip strips, over its own close and collapse buttons, and takes the clicks there. A window keeps its size
+round a tilted content (U4b), so the overhang stays.
+
+**The owner's ruling (option F; the options weighed for architecture fit).** The window shows its CONTENT only inside
+its BODY, the box an upright content is given, and its chrome in place: the same per-child crop a viewport makes of
+its plane (`ViewportWdgt.clipIntoPlaneOfChild`, U2's), which painting, damage and hit-testing all read, so a click on
+the cut ink reaches the chrome. An upright content is exactly its body, so nothing upright changes. Weighed and set
+aside: C (the window grows to the tilted footprint: against a window DICTATING its content's size, `layout.md` §4.3,
+and possible only for a window on the desktop); D (the content shrinks until its footprint fits: FORBIDDEN by the
+affine plan §4.9, the cyclic constraint); E (the picture scaled to fit: a container-imposed transform, against the
+affine plan's per-widget knob; banked as a per-widget opt-in if ever wanted); A alone (the chrome stays covered).
+Its cost: a tilted content's corners are cut where they cross the strips, its own controls included.
+
+**If parked:** the overhang stays, filed.
 
 ---
 
@@ -1039,7 +1085,16 @@ stop at its commit, which you propose and do not make."
 - [x] A Maker whose payload leaves it (the "Pick up" row; by reading "Destroy" too, any Maker kind) shrinks to its fresh payload: a Docs Maker goes 600×400 to 68×211 (measured), though `MakerDocumentWdgt._resetToDefaultContents` says its extent stays put. Reachable, medium. Detail: the plan's §U1b. — CLOSED 2026-11-20 (scroll-indicators loop, U2b): the Maker's reset captures the fresh payload's placement, and keeps its mode; `SystemTest_macroWindowWhoseContentLeavesShowsItsDefaultContent`.
 - [x] U3: a document's scroll indicator lies 11 px from its window's edge, over its items' right edge; the document is to keep its 8 px as its viewport's margin, and a viewport is to paint its plane's selection ring. — CLOSED 2026-11-21 (scroll-indicators loop, U3): the document is a pane keeping `documentItemSpacing` as its `planeMargin`, bare or windowed; a viewport hosts and paints its plane's ring; a margin click selects the page; `SystemTest_macroDocumentKeepsItsMargin`, `SystemTest_macroViewportPaintsItsPlanesRing`.
 - [x] U4: the scroll-indicator presentation lives in `ViewportWdgt` alone; it is to move to a base class both scrollers extend, pixel-neutral. — CLOSED 2026-11-21 (scroll-indicators loop, U4): `ScrollIndicatorHostWdgt extends ClippingWdgt` holds it, `ViewportWdgt` extends it and answers two hooks and the builder's two actions; proven by the resolution map and a statics probe; no pixel moved.
+- [x] U4b: a tilted window content's window grows to the content's footprint at its next arrange (a hover highlight, a grip resize; measured 249 → 311 px tall); a window is to keep its size. Added to the loop by the owner. — CLOSED 2026-11-21 (scroll-indicators loop, U4b): an island claims space only from an asking container; as a window's content it forwards to its content in every mode, and a tilted nested window hides its grip as an upright one; `SystemTest_macroWindowKeepsItsSizeRoundATiltedContent`.
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
-(none yet)
+**A stretchable panel's arrange throws on a child whose spec owns its placement** (seen once, 2026-11-21, in the
+menu sweep of U4b's gauntlet under its wave's load; the sweep alone, four times, clean; the log is
+`Fizzygum-tests/.scratch/scroll-indicators-loop/u4b/menusweep-inwave-layout-error.log`). `StretchablePanelWdgt._reLayout`
+(`src/authoring/StretchablePanelWdgt.coffee` ~:129-136) asks `_rememberFractionalSituationInHoldingPanel` for a
+stretch record and then grants `w.layoutSpec.grantedBoundsWithin`; the recorder (`Widget.coffee` ~:2443) refuses a
+spec that OWNS placement (a corner-armed piece, "the one owning kind a CONSUMING holder can host"), so the grant meets
+a spec with no `grantedBoundsWithin`: `LAYOUT_ERROR: … grantedBoundsWithin is not a function`, which aborts the panel's
+whole pass. The arrange is to place an owning child from its own spec, as the recorder's comment says; which sweep
+action puts a corner-armed piece in a stretchable panel, and why only under load, is unmeasured.
