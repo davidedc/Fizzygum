@@ -321,7 +321,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
-- [ ] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium.
 - [ ] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn.
 - [ ] U11: `WorldWdgt.loadWorldSnapshot` stays at complexity 67 because its split adds methods to a class at its method ceiling — medium.
 - [ ] U12: `WorldInventory.takeInventory` stays at complexity 129 because a split's child above 15 could not be recorded — medium.
@@ -341,6 +340,7 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] Filed by U4: `Fizzygum/CLAUDE.md` says the dependency finder regex-scans for `new X`; it reads `new X` only in a class-body field initialiser, never in a method body — an instruction file states a wider claim than the code (plan §U4) — small.
 - [ ] Filed by U7: `close()` on the bin's own window does nothing and says nothing (it would file the window into the bin inside it; only the close button's path puts the bin away); `SystemTest_macroFoldersAndTheBinStayInEditMode` ends with that call under a comment saying it puts the bin away (plan §U7) — small.
 - [ ] Filed by U8: `SystemTest_macroScrollPanelCaretBroughtIntoViewWhenMoved`'s finger leg never brings the caret back — its finger image_4 equals image_3, with no caret, against its claim; measure why (the swipe ending the edit?) before choosing a finger drive or a declaration (plan §U8) — small.
+- [ ] Filed by U9: `fg vmtruth` reads INVALID under machine load: a burst of a test's destroyed widgets, uncollected at the next sweep, fills the prelude's pin cap; every pinned one clears at tier 2 — find what holds them before choosing a fix (plan §U9) — medium.
 
 ### Gate audit 2026-11-16 — residue (no plan doc; detail in `archive/backlog-open-items-detail.md`)
 - [ ] **No audit has looked for shapes chosen only to quiet a non-ratchet gate** — search the session transcripts and git for each gate's quiet-fix spelling (an `if X?` guard, a stub, a deletion, a tier rename, a new exemption) and re-judge each find on its merits — medium.

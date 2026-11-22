@@ -54,6 +54,10 @@ class InspectorWdgt extends ClippingWdgt
   detail: undefined
   # the detail pane's text widget, adopted from @detail once it is built
   textWidget: undefined
+  # the member my code pane last loaded (selectionFromList), by name: the pane's undo history is that
+  # member's, so a load of it again is a step of that history, and a load of any other starts the
+  # history afresh. A re-filter, which empties the pane, leaves it as it is.
+  lastLoadedMember: undefined
   # the free-floating resize handle. Stays undefined for the duration of its own add
   # (see the note at its assignment), so it must declare undefined, not a value.
   resizer: undefined
@@ -559,10 +563,10 @@ class InspectorWdgt extends ClippingWdgt
   _sourceForFieldMember: (selected) ->
     undefined
 
-  selectionFromList: (selected) ->
-    if selected == undefined then return
-
-    val = @inspectedObject[selected]
+  # What my code pane shows of a member, which selectionFromList loads into it: a function's source,
+  # read where my subject holds it, or a field's recorded source, else its value.
+  _paneTextOfMember: (memberName) ->
+    val = @inspectedObject[memberName]
 
     # A function shows the source of the member my subject HAS, read where it is held: the first link
     # of my subject's prototype chain that holds the member decides.
@@ -576,9 +580,9 @@ class InspectorWdgt extends ClippingWdgt
     # its constructor's source where the class writes one, else its compiled text.
     if Utils.isFunction(val)
       holder = @inspectedObject
-      holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, selected
+      holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, memberName
       if holder? and !isAClassPrototype holder
-        ownSource = Widget.keptSourceOf(val) ? InspectorWdgt._recordedStaticSourceOf holder, selected
+        ownSource = Widget.keptSourceOf(val) ? InspectorWdgt._recordedStaticSourceOf holder, memberName
         val = ownSource if ownSource?
       else if (source = Class.memberRecordOf val)?
         val = source
@@ -586,7 +590,7 @@ class InspectorWdgt extends ClippingWdgt
     else
       # a field shows its recorded source where there is one, else its own VALUE -- an undefined
       # field reads "undefined", whatever its subject's constructor holds under the same name
-      if (fieldSource = @_sourceForFieldMember selected)?
+      if (fieldSource = @_sourceForFieldMember memberName)?
         txt = fieldSource
       else if !val?
         txt = "undefined"
@@ -595,12 +599,22 @@ class InspectorWdgt extends ClippingWdgt
       else
         # a value with no prototype has no toString of its own: it reads as Object's does
         txt = if Utils.isFunction val.toString then val.toString() else Object::toString.call val
+    txt
+
+  selectionFromList: (selected) ->
+    if selected == undefined then return
 
     cnts = @detail.textWdgt
-    cnts.setText txt
-    # every load of a member's source starts the pane's history afresh, the same member's reload included
-    # (it replaces unsaved typing with the saved source): no undo or redo brings back a text from before it
-    cnts.forgetUndoHistory()
+    cnts.setText @_paneTextOfMember selected
+    # the pane's undo history is the member's it was built in: a load of ANOTHER member starts it afresh,
+    # so no undo or redo brings back a text of the member selected before, which a save would write into
+    # this one; a RELOAD of the member it last loaded (its row clicked again: the saved source put back
+    # over unsaved typing) is a step of that history, so the undo chord brings the typing back
+    if selected is @lastLoadedMember
+      cnts.pushUndoState cnts.text.length
+    else
+      cnts.forgetUndoHistory()
+    @lastLoadedMember = selected
     # `constructor`'s code is shown, never edited: it is my subject's class itself, which a save
     # would replace (Class.refuseTheConstructor)
     cnts.isEditable = selected isnt "constructor"

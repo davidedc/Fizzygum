@@ -472,7 +472,9 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   (`preventDefault` + `setData`) only while the edited text has something selected, so otherwise the
   browser's default stands and the clipboard keeps what it held. A text its owner loads with ANOTHER
   subject's text (a sheet's formula bar another edit's, an inspector's pane another member's source)
-  forgets its undo and redo history (`StringWdgt.forgetUndoHistory`).
+  forgets its undo and redo history (`StringWdgt.forgetUndoHistory`). Reloaded with the SAME subject's text
+  (an inspector's member clicked again), it keeps the history and records the reload as one more undo step
+  (`StringWdgt.pushUndoState`), so the undo chord brings back the typing the reload replaced.
 - ONE rule says whether a keystroke that is no verb may TYPE, `CaretWdgt.keystrokeMayType`, asked by
   the caret and by a spreadsheet's type-to-edit: with neither Ctrl nor Cmd held, or as AltGr on a PC.
   Windows reports AltGr as Ctrl+Alt, so a one-character key with Ctrl and Alt and no Win key types

@@ -21,7 +21,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U6 | Three checks get a witness of their own | CLOSED 2026-11-22 (§U6) |
 | U7 | The world steps what is attached; a row with nothing to load says so | CLOSED 2026-11-22 (§U7) |
 | U8 | The caret's margin includes the border | CLOSED 2026-11-22 (§U8) |
-| U9 | A re-click keeps a member's undo history | not started |
+| U9 | A re-click keeps a member's undo history | CLOSED 2026-11-22 (§U9) |
 | U10 | Six self-called helpers take their own tier | not started |
 | U11 | `loadWorldSnapshot` is its phases | not started |
 | U12 | `takeInventory` is its walks | not started |
@@ -610,6 +610,29 @@ brings the typing back; select another member, Cmd+Z brings nothing back. Plant:
 **Predicted pixel set.** Inspector churn where a test's inspector inspects an inspector (a new `InspectorWdgt`
 member): name them at Prepare; else EMPTY. **Audit.** ratchet §2 row 19.
 
+**Landed 2026-11-22.** Re-clicking the member an object inspector's pane shows reloads its saved source AND keeps the
+pane's undo history, the reload recorded as one more undo step (`StringWdgt.pushUndoState`), so Cmd+Z brings back the
+typing the reload replaced; selecting another member still forgets the history. The member last loaded is a field
+(`lastLoadedMember`, one writer, compared by name: the list reaches the inspector through names, and a row's identity
+changes with every re-filter); the member-to-text table moves verbatim into `_paneTextOfMember`, the twin of
+`_emptyPaneText`. Corrected at research: the plan's guard alone does not bring the typing back (a programmatic
+`setText` pushes no undo state, so Cmd+Z would show the state below the reload), and the moved table scores 20 (it sat
+at nesting 0), so it is a new record born of the split. Ruled (for the owner's second look): a re-filter keeps
+`lastLoadedMember` (it empties the pane read-only; the next load decides — the same name pushes, another forgets).
+Proof: `SystemTest_macroFormulaBarUndoStaysInItsEdit` step 4 types, re-clicks the same member and brings the typing
+back with Cmd+Z, and the existing `isNumeric` Cmd+Z shows another member's history starts fresh; three plants (every
+load forgets; the reload records nothing; another member forgets nothing) each fail exactly its own Cmd+Z. Ratchets:
+`InspectorWdgt#selectionFromList`'s record (21) is deleted (it measures 3); `InspectorWdgt#_paneTextOfMember` is
+recorded at 20, dated, born of the split. Pixels: none.
+Filed (measured at the gauntlet, nothing this unit reaches): `fg vmtruth` reads INVALID under machine load. At 6
+shards on a loaded box (load ~14 on 16 cores), shard 0's first two sweeps find ~200 widgets that
+`SystemTest_macroAJavaScriptParseErrorIsToldBesideTheHand` (the shard's first test) destroyed still alive after the
+forced GC; they fill the prelude's pin cap (`MAX_PINNED` 200) and the rest are dropped unconfirmed, while every pinned one
+clears 0 RETAINED at tier 2. Two of four suite runs; none of six runs of the shard's first three tests alone. A
+hypothesis to measure, not a fact: a timer starved under load still holds the test's widgets at the next reset — a
+short-lived retaining edge tier 2, at shard end, cannot see. Find what holds them before choosing between a fix at the
+holder and the cap.
+
 ### U10 — Six self-called helpers take their own tier
 
 **Stands today.** `buildSystem/public-api-allowlist.txt` (verified) keeps public, with the reason "[S] / [G] forbid
@@ -897,6 +920,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U7: two dev-menu rows throw when clicked before anything is serialised, excused in the menu sweep's `KNOWN` table; the bouncer's `return unless @parent?` guards the stepping defect filed in this file — small. — CLOSED 2026-11-22 (gate-contortions loop, U7): the rows inform and return; the entries are gone.
 - [x] The world steps every registered stepper, attached or not: a detached widget and a never-attached copy of a stepping widget keep stepping and stay in the set. Reached by the menu sweep (a detached bouncer threw). Medium-low. Detail: the plan's §U4e. — CLOSED 2026-11-22 (gate-contortions loop, U7): `WorldWdgt._stepsMember` — the world steps a member only while on the world or the hand; the bouncer's guard is gone.
 - [x] W5 follow-up — a caret at the right edge of a padless scrolling viewport (a loose string in a scroll panel) has its last column under the 1 px border; `scrollCaretIntoView`'s margin should include the border. → "W5 follow-up — a caret at a padless viewport's edge under its border" — CLOSED 2026-11-22 (gate-contortions loop, U8): the border joins the caret's trigger and rest (`Theme.borderWidth`, `_borderWidthOverMyEdge`); both caret tests recaptured.
+- [x] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium. — CLOSED 2026-11-22 (gate-contortions loop, U9): the reload records itself as an undo step; another member forgets.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

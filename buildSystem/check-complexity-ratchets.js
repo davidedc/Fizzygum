@@ -142,7 +142,11 @@ const RECORDED = {
   'FrameWdgt#_positionAndResizeChildren': 48,
   'FrameWdgt#preferredExtentForWidth': 20,
   'GlassBoxBottomWdgt#_reLayoutSelf': 17,
-  'InspectorWdgt#selectionFromList': 21,
+  // recorded 2026-11-22 at 20, born of the split that takes InspectorWdgt#selectionFromList (21) off the record: the
+  // table of what an inspector's code pane shows for each kind of member, one branch per kind, moved whole out of the
+  // door that loads it, so the load's undo rule (a reload of the member it last loaded is a
+  // step of the pane's history, another member starts it afresh) reads plainly
+  'InspectorWdgt#_paneTextOfMember': 20,
   'LCLCodePreprocessor#_avoidLastArgumentInvocationOverflowing': 29,
   'LCLCodePreprocessor#_completeImplicitFunctionPasses': 17,
   'LCLCodePreprocessor#_preprocess': 33,

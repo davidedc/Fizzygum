@@ -563,9 +563,10 @@ class StringWdgt extends ControllerWdgt
   # AN UNDO HISTORY BELONGS TO THE TEXT IT WAS BUILT IN. An owner that LOADS me with a subject's text tells me
   # so, and I forget the undo and the redo I kept, so neither brings back a text from before the load: a sheet's
   # formula bar at the start of every edit, whatever cell it edits (SheetFormulaBarWdgt.beginEditNoSettle), and
-  # an inspector's code pane at every load of a member's source (InspectorWdgt.selectionFromList), the same
-  # member's reload included, which replaces unsaved typing with the saved source. Only the loader knows it
-  # loaded: a setText keeps my history, since the caret's own typing and its undo and redo set my text through it.
+  # an inspector's code pane at every load of ANOTHER member's source (InspectorWdgt.selectionFromList, whose
+  # reload of the member it last loaded pushes the reloaded text as an undo state instead, pushUndoState, so an
+  # undo brings back the typing the reload replaced). Only the loader knows it loaded: a setText keeps my history
+  # and pushes no state, since the caret's own typing and its undo and redo set my text through it.
   forgetUndoHistory: ->
     @undoHistory = []
     @redoHistory = []
