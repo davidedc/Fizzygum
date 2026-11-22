@@ -2477,10 +2477,20 @@ miss. Each swipe is queued only once the one before it has drained (the pump del
 `MacroToolkit._deliverHeldSwipe`) and reads the box as the pane shows then — a swipe that scrolled an enclosing pane moved
 this one on the screen — and every swipe after the first is aim-checked against the pane; so a finger wheel MUST be
 followed by `yield "waitNoInputsOngoing"` before anything else is queued (`queueInputEvent` throws otherwise). **A wheel notch has no reach limit
-and a finger does, so a delta longer than one swipe is delivered as successive CLAMPED swipes** —
+and a finger does, so a delta longer than one swipe is delivered as successive EVEN swipes** —
 `_touchScrollBy` queues the first and the pump the rest (bounded by `@maxScrollSwipes`), each leg SHIFTED to fit inside the box
-rather than shortened, until the whole delta is spent or the box is exhausted (where the at-edge
-escalation — `docs/architecture/viewports-and-planes.md` — takes over). Witness:
+rather than shortened, until the whole delta is spent or the swipe bound is reached. Each leg is an even share
+of what remains over the fewest swipes that carry it (`_swipeLegWithin`, the reach floored to whole pixels),
+never the reach with a sliver left over: a stroke that ends within `grabDragThreshold` of its press is a TAP —
+a click on whatever it lands on (a caret placed in text, a list row selected, a button fired). Every leg of a
+split is at least half the reach, so none is a tap while the reach exceeds twice the threshold; a delta needing
+more swipes than the bound leaves is divided by the swipes left, so each leg is then the full reach. A wheel
+whose whole delta is within the threshold goes out as that one short drag — a tap, as a person's finger would
+make it — so a macro that means a scroll asks for more. Each swipe is a
+stroke of its own, so each latches afresh (the direction latch, `docs/architecture/viewports-and-planes.md`):
+the travel a swipe carries past its pane's clamp is dropped, so a delta that overshoots lands the pane
+exactly on its clamp, and once that pane is at its clamp the next swipe goes to an enclosing pane that
+can still move that way, if there is one. Witness:
 `macroFingerPlainDragScrollsWhereMouseLifts`; both `wheelOn_InputEvents` and
 `syntheticEventsWheel_InputEvents` translate this way.
 

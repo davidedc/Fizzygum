@@ -1256,7 +1256,8 @@ class MacroToolkit
   # latched pane's step, and one that RELEASES outside it scrolls nothing at all — ViewportWdgt's
   # per-frame arm and its collapse flush both gate on boundsContainPoint. The pair is SHIFTED, never
   # shortened, so the distance travelled — and therefore the scroll — is the one asked for; a delta
-  # longer than the box itself is all a single drag can carry, and it goes on in further swipes.
+  # longer than the box itself is more than a single drag can carry, so it is split evenly across as
+  # many swipes as carry it (_swipeLegWithin).
   # Each swipe is a stroke of its own, so each LATCHES afresh (ViewportWdgt's direction latch): the
   # travel one swipe carries past its pane's clamp is dropped, and the next swipe goes to a pane
   # around it once that one is at its clamp that way — the wheel's at-edge rule, swipe by swipe.
@@ -1285,7 +1286,7 @@ class MacroToolkit
     held = @heldSwipes
     box = @_swipeBoxOf held.pane
     aim = @_aimInsideBox held.aim, box
-    leg = @_swipeLegWithin held.remaining, box
+    leg = @_swipeLegWithin held.remaining, box, held.swipesLeft
     if (leg.x is 0 and leg.y is 0) or held.swipesLeft is 0
       @heldSwipes = undefined
       @currentPointerTarget = held.park
@@ -1382,17 +1383,37 @@ class MacroToolkit
     clamp = (value, low, high) -> Math.max low, (Math.min high, value)
     new Point (clamp aim.x, box[0].x, box[1].x), (clamp aim.y, box[0].y, box[1].y)
 
-  # How much of `remaining` ONE swipe can carry: all of it when no box bounds the gesture, else as
-  # much as fits between the box's own edges on each axis. A wheel notch has no reach limit and a
-  # finger does — one swipe cannot travel further than the pane it is inside — so a delta bigger
-  # than the pane is delivered the way a person delivers it, in successive swipes.
-  _swipeLegWithin: (remaining, box) ->
+  # How much of `remaining` the NEXT swipe carries: all of it when no box bounds the gesture or one
+  # swipe can carry it, else an EVEN share — `remaining` over the fewest swipes that carry it (the
+  # most any axis needs: its |component| over the REACH, the whole pixels between the box's own
+  # edges), rounded to a whole pixel. A wheel notch has no reach limit and a finger does — one swipe
+  # cannot travel further than the pane it is inside — so a delta bigger than the pane is delivered
+  # the way a person delivers it, in successive swipes.
+  #   Even, never filled to the reach: a greedy split leaves a last leg of whatever is over, which can
+  # be a few pixels, and a stroke that ends within grabDragThreshold of its press is not a swipe but a
+  # TAP — a click on whatever it lands on (a caret placed in text, a list row selected, a button
+  # fired). Split evenly, every leg of a split is at least half the reach, so none is a tap while the
+  # reach exceeds twice the threshold (a box of 19 px or more on the scrolled axis); a pane smaller
+  # than that cannot be swiped without taps. The reach is FLOORED because a pane on a scaled or tilted
+  # plane has a fractional box, and a fractional reach rounds into extra swipes, short legs and taps.
+  #   The share is recomputed from what remains at every swipe (_queueNextSwipe), so the legs sum to
+  # the delta exactly, and a pane no clamp stops lands where any split would land it. That holds
+  # within `swipesLeft` (the wheel's bound, maxScrollSwipes): a delta needing more swipes than are
+  # left is divided by the swipes left instead, so every leg is the full reach — the most the bound
+  # can carry.
+  #   A wheel whose WHOLE delta is within grabDragThreshold has no swipe to give — a person's finger
+  # cannot scroll that little in one stroke either. It goes out as the one short drag it is, which the
+  # hand reads as a tap; a macro that means a scroll under a finger asks for more than the threshold.
+  _swipeLegWithin: (remaining, box, swipesLeft) ->
     return remaining unless box?
-    reach = (span) -> Math.max 1, span - (2 * MacroToolkit.scrollSwipeMarginPx)
-    clamp = (want, span) ->
-      limit = reach span
-      if want > limit then limit else if want < -limit then -limit else want
-    new Point (clamp remaining.x, (box[1].x - box[0].x)), (clamp remaining.y, (box[1].y - box[0].y))
+    reach = (span) -> Math.max 1, Math.floor(span - (2 * MacroToolkit.scrollSwipeMarginPx))
+    reachX = reach box[1].x - box[0].x
+    reachY = reach box[1].y - box[0].y
+    swipesNeeded = Math.max Math.ceil(Math.abs(remaining.x) / reachX), Math.ceil(Math.abs(remaining.y) / reachY)
+    return remaining if swipesNeeded <= 1
+    swipes = Math.max 1, (Math.min swipesNeeded, (swipesLeft ? swipesNeeded))
+    share = (want, limit) -> Math.max (-limit), (Math.min limit, Math.round(want / swipes))
+    new Point (share remaining.x, reachX), (share remaining.y, reachY)
 
   # Where a drag of `travel` must START on one axis for BOTH its ends to sit inside [spanStart,
   # spanEnd], given the caller aimed at `from`: `from` itself whenever the drag already fits, else

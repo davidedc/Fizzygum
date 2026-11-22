@@ -321,7 +321,7 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
 - [ ] Owner question (gate-contortions U14): does layering rule [A] get a per-method marker for a member that drives another widget's public setter at event time, or do `bringTextAndCaretToState`, `actOn` and the `InertIconHolderWdgt` sizing stay public with reasons that say what they are (plan §U14) — small.
-- [ ] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium.
+- [ ] U16b: `fg vmtruth` reads INVALID under machine load — a burst of a test's destroyed widgets, uncollected at the next sweep, fills the pin cap; find what holds them (owner-added; plan §U16b) — medium.
 - [ ] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first.
 - [ ] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium.
 - [ ] Filed by U2: `check-part-edges` does not read `world.parts.ensureLoaded("p").then ->` as a guard, so a correct await of a lazy part fails as `UNGUARDED_CLASS_REF` — whether its scanner should read it is a rule change for the owner (plan §U2) — small.
@@ -334,7 +334,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] Filed by U4: `Fizzygum/CLAUDE.md` says the dependency finder regex-scans for `new X`; it reads `new X` only in a class-body field initialiser, never in a method body — an instruction file states a wider claim than the code (plan §U4) — small.
 - [ ] Filed by U7: `close()` on the bin's own window does nothing and says nothing (it would file the window into the bin inside it; only the close button's path puts the bin away); `SystemTest_macroFoldersAndTheBinStayInEditMode` ends with that call under a comment saying it puts the bin away (plan §U7) — small.
 - [ ] Filed by U8: `SystemTest_macroScrollPanelCaretBroughtIntoViewWhenMoved`'s finger leg never brings the caret back — its finger image_4 equals image_3, with no caret, against its claim; measure why (the swipe ending the edit?) before choosing a finger drive or a declaration (plan §U8) — small.
-- [ ] Filed by U9: `fg vmtruth` reads INVALID under machine load: a burst of a test's destroyed widgets, uncollected at the next sweep, fills the prelude's pin cap; every pinned one clears at tier 2 — find what holds them before choosing a fix (plan §U9) — medium.
 - [ ] Filed by U11: the gauntlet's `refs` leg runs at its 420 s alarm inside wave B (348, 357, 416, 401 s on 2026-11-22, then killed at 420 and passed alone) — its own comment in `buildSystem/legs.js` says to keep the headroom generous (plan §U11) — small.
 
 ### Gate audit 2026-11-16 — residue (no plan doc; detail in `archive/backlog-open-items-detail.md`)

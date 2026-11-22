@@ -28,7 +28,8 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U13 | A type test says it is one, or the question names a capability | CLOSED 2026-11-22 (§U13) |
 | U14 | A low-level method that sizes or drives another widget: [A] against [U] | CLOSED 2026-11-22 (§U14; three PARKED for the owner) |
 | U15 | The list-row verb scrolls one way | CLOSED 2026-11-22 (§U15) |
-| U16 | Two documents reach their clamp under a finger | not started |
+| U16 | Two documents reach their clamp under a finger | CLOSED 2026-11-22 (§U16) |
+| U16b | `fg vmtruth` measures something under load (owner-added 2026-11-22, filed by U9) | not started |
 | U17 | A menu row is found, not fetched | not started |
 | U18 | A capture that does not verify is UNSTABLE | not started |
 | U19 | Close | not started |
@@ -915,6 +916,66 @@ the audit's count). If the fix changes the translation of EVERY finger wheel, ev
 move: measure, and if that set is not empty, each diff must be the clamp reached.
 **Park when.** The cause is a product drag-scroll defect whose fix moves mouse references. **Audit.** runtime S2.
 
+**Landed 2026-11-22.** No product change. The "19 px short at 736" was measured on
+2026-08-27 against code since replaced — `d7e1bab3` (the direction latch replaced the at-edge hand-off) and `69984919`
+(a swipe's leftover travel is paid at its own release, and each swipe is queued only after the last has drained) — so
+"cannot re-aim between swipes" no longer held. A probe on the day's build (the declarations lifted for its run only;
+finger, dpr 1 and 2) measured the wrap test's +2000 wheel as 8 swipes landing 755 = its clamp, and the document test's
+FOUR wheels (not one) landing 360, 770, 1111 (its clamp) and 0 (its clamp), exactly as the mouse's; every identity pair
+the tests assert held under a finger. Both tests' `pointerKinds` / `mouseOnlyReason` go and their finger references
+are captured (no finger reference had ever been committed: nothing to restore); `MACRO-PATTERNS.md`'s paragraph on a
+translated wheel states what holds (a wheel ends when its delta is spent or the swipe bound is reached; each swipe
+latches afresh; travel past a clamp is dropped). Proof: both tests pass under a finger at dpr 1 and 2; a plant that
+bounds a translated wheel to one swipe fails each test's identity assertion under a finger and leaves the mouse green.
+Looking at the captured finger references against the mouse ones found ONE translation defect (fix (2)): the
+toolkit split a translated wheel GREEDILY, so a remainder could be a sliver — the document test's +600 became swipes of
+297, 297 and 6, and a 6 px "swipe" is within `grabDragThreshold` (7): a TAP, which put a caret in the shot. Over the
+whole finger suite there were three such slivers (that one, two in
+`SimpleDocumentRemovingLastParagraphUpdatesScrollbarAndLeavesViewportAtEndOfDocument`, whose committed finger
+references had a stray caret and, after the tap, a paragraph ~715 px from where the mouse puts it).
+`MacroToolkit._swipeLegWithin` now gives each swipe an even share of what remains, dividing by the smaller of the
+swipes still needed and the swipes still left (so at the bound each leg is the full reach again) over a reach floored
+to whole pixels: within the bound the total is exact, the swipe count and every landing are unchanged, and each leg is
+at least half the reach, so no leg of a multi-swipe wheel is a tap while the reach exceeds twice the threshold (a box
+of 19 px or more); a whole wheel within the threshold stays one short drag, and none exists in the suite. Ratchets: none. Pixels: the two tests' finger references (26, new) and
+`RemovingLastParagraph…`'s finger image_2, 4, 5, 6, 7 at dpr 1 and 2 (10), each now byte-identical to its MOUSE
+reference; no mouse reference moves.
+
+### U16b — `fg vmtruth` measures something under load (owner-added 2026-11-22; filed by U9)
+
+**Stands today.** The VM-truth gate (`Fizzygum-tests/scripts/vm-truth-gate.js`, the gauntlet's wave-C leg; doctrine
+`Fizzygum/docs/architecture/world-lifetime-and-inventory.md` §6) runs the suite with
+`scripts/audit-preludes/vm-truth-prelude.js`: at each reset it forces a GC, and every widget destroyed one teardown
+earlier that is still alive becomes a tier-1 SUSPECT, PINNED (a strong reference tier 2 subtracts) for the shard-end
+heap snapshot to judge. The pin array is capped (`MAX_PINNED = 200`, page lifetime); past it the prelude drops
+suspects, and a dropped suspect was never answered, so the run is INVALID (exit 2). Measured on 2026-11-22 (U9's
+gauntlet and reruns, `Fizzygum-tests/.scratch/gate-contortions-loop/u9/`): at 6 shards on a loaded machine (1-min load
+~14 on 16 cores), shard 0's first two sweeps found ~200 widgets that the shard's first test,
+`SystemTest_macroAJavaScriptParseErrorIsToldBesideTheHand`, destroyed (menus, text, sliders, frame bars) still alive
+after the forced GC; they filled the cap, the rest were dropped, and every pinned one cleared 0 RETAINED at tier 2.
+Two of four suite runs read INVALID that way; fg's serial retry and the other runs read OK (13–95 suspects per shard,
+all cleared); the shard's first three tests alone (`vm-truth-gate.js 1 --tests=…`) raised 0 suspects in 6 of 6. A
+gate that reads INVALID under ordinary load is a gate the gauntlet passes only on a retry: it measures nothing then.
+**Hypothesis, not a fact:** a timer the test armed (or a promise reaction, a pending event) still holds its widgets
+at the next reset because the load starved it — a short-lived retaining edge that tier 2, at shard end, can no longer
+see. Other candidates: the forced GC under memory pressure not completing a full mark, or conservative stack scanning
+(the prelude's own header measured an inline sweep leaving 20781 corpses alive against 40 deferred).
+**The fix.** (1) MEASURE what holds the burst: reproduce it (the full suite at 6 shards under load, or a planted load:
+heavy cycles per `Fizzygum-tests/DETERMINISM.md`'s playbook) with a snapshot taken AT the sweep that raises the burst
+(not at shard end), and read the retainer paths of a sample (`scripts/heap-forensics.js` is the localisation tool).
+(2) If something holds them (a timer, a listener, a promise): that is an object-lifetime finding — fix it at the
+holder (a teardown that cancels what the test armed), class A. If nothing does (the collector simply had not got to
+them): the instrument is wrong for this load — the sweep must give the collector its chance (e.g. a second forced GC
+before raising a suspect) or tier 2 must be able to answer every suspect without a fixed cap; that is a change to a
+gate's mechanism, not its rule, and stays inside "every suspect is answered" (the gate's own invariant). Never raise
+the cap as the answer by itself: a cap that a burst can fill is the defect.
+**Ratchets.** None expected. **Proof.** The burst reproduced and explained by a measured retainer path (or its
+absence); after the fix, the reproduction reads OK with every suspect answered; the gate's own self-test
+(`vm-truth-gate-selftest-headless.js`) still bites; a planted retention (the self-test's) still fails it.
+**Predicted pixel set.** EMPTY (an instrument or a teardown; no paint).
+**Park when.** The cause is a product teardown whose fix needs a product decision, or the reproduction cannot be made
+to happen on demand within the time box (park with the measurements). **Audit.** — (found by this loop).
+
 ### U17 — A menu row is found, not fetched
 
 **Stands today.** `src/macros/MacroToolkit.coffee`, `_menuRowScrolledIntoView` (line 1944): `viewport.setScrollY
@@ -1051,6 +1112,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U14: five methods stay public and a `setExtent` sits in a constructor because layering rule [A] has no per-method marker: the canonical NoSettle shape where it exists, else the owner rules — medium. — CLOSED 2026-11-22 (gate-contortions loop, U14): three land; three parked for the owner (the open item above).
 - [x] U15: the list-row macro verb keeps a drag, nudges and a wheel so old shots keep their offsets; a class-inspector test changed its example class so a row shows — medium, a recapture. — CLOSED 2026-11-22 (gate-contortions loop, U15): drag for reach, one wheel for precision, a named fault, the click.
 - [x] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim. — CLOSED 2026-11-22 (gate-contortions loop, U15): no nudge loop remains; a row not whole after the one wheel is the verb's named fault.
+- [x] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium. — CLOSED 2026-11-22 (gate-contortions loop, U16): measured — both reach their clamp under a finger today; declarations lifted, finger references captured; the toolkit's translated wheel splits evenly (no sliver leg that taps), and `SimpleDocumentRemovingLastParagraph…`'s 10 finger references that carried such a tap are recaptured.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 
