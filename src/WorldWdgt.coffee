@@ -1727,7 +1727,10 @@ class WorldWdgt extends IconGridPanelWdgt
     @numberOfDuplicatedDamageRects = 0
 
   
-  addHighlightingWidgets: ->
+  _addHighlightingWidgets: ->
+    # nosettle-sanctioned: a call outside any pass — doOneCycle runs me once a frame, after its layout
+    # flush and before its paint, never inside a settle, so the stale highlighter's fullDestroy settles
+    # on its own, as each add below does, and the world is settled again before _repaintDamagedRects
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
       target = eachHighlightingWidget.wdgtThisWdgtIsHighlighting
       if @widgetsToBeHighlighted.has target
@@ -1767,7 +1770,7 @@ class WorldWdgt extends IconGridPanelWdgt
 
   # Reconcile the drag-embed AFFORDANCE overlays (charging ring / armed label / lock badge) to the
   # hand's declarative *Declared slots — created/moved/destroyed once per cycle just before paint, the
-  # same declare-and-reconcile shape as addHighlightingWidgets. All are EPHEMERALS (isEphemeral ->
+  # same declare-and-reconcile shape as _addHighlightingWidgets. All are EPHEMERALS (isEphemeral ->
   # hit-test-excluded, shadow-free, snapshot-excluded). docs/specs/drag-embed-interaction-spec.md §11-12.
   addDragAffordanceWidgets: ->
     # charging ring — the DragChargingRingWdgt computes its own fill from the declared linger origin
@@ -2438,7 +2441,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # Option-C arc folded it into the flush; this arc folds it into the per-event in-place settle.)
 
     @pinouts?.reconcile()
-    @addHighlightingWidgets()
+    @_addHighlightingWidgets()
     @_updateEditorSelectionOverlay()
     @addDragAffordanceWidgets()
 
@@ -3222,7 +3225,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # / island descendants) does NOT empty these declare/current/being structures — they keep DEAD
     # references to the just-destroyed targets + overlays. Tearing down with a highlight still active
     # (e.g. nothing ever called turnOffHighlight) leaks those dead refs into whatever comes next, and
-    # the reconciler (addHighlightingWidgets) then touches a destroyed target and mis-renders. Found
+    # the reconciler (_addHighlightingWidgets) then touches a destroyed target and mis-renders. Found
     # via the R2 highlight-tracking test, which deliberately leaves its highlight on to exercise this.
     # On the LOAD path it is worse than a dead ref: with the declaration surviving, the next cycle's
     # reconciler RE-MATERIALISES a HighlighterWdgt as a world child, so the restored desktop carries

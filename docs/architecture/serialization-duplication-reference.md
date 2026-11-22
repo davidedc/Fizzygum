@@ -148,7 +148,7 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   `CaretWdgt` answers true). Both are the WORLD's, standing under a parent — for its place, its
   plane and its clip — and no part of it: an EPHEMERAL overlay is built by a reconciler from
   live state (a highlight is parented INTO its target's transform island or scrolled pane,
-  `WorldWdgt.addHighlightingWidgets`), and the CARET is the world's one edit, parked under the
+  `WorldWdgt._addHighlightingWidgets`), and the CARET is the world's one edit, parked under the
   edited text's parent (`WorldWdgt._editTearingAndAddingCaretWith`; `world.caret` is the only
   field that holds it). Such a widget is not in the in-structure set — the closure above and a
   world snapshot's roots (§11) take every subtree as a copy or a save carries it,

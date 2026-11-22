@@ -22,7 +22,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U7 | The world steps what is attached; a row with nothing to load says so | CLOSED 2026-11-22 (§U7) |
 | U8 | The caret's margin includes the border | CLOSED 2026-11-22 (§U8) |
 | U9 | A re-click keeps a member's undo history | CLOSED 2026-11-22 (§U9) |
-| U10 | Six self-called helpers take their own tier | not started |
+| U10 | Six self-called helpers take their own tier | CLOSED 2026-11-22 (§U10) |
 | U11 | `loadWorldSnapshot` is its phases | not started |
 | U12 | `takeInventory` is its walks | not started |
 | U13 | A type test says it is one, or the question names a capability | not started |
@@ -652,6 +652,22 @@ A member a macro or a rig calls by name is not self-only: leave it, and say so i
 **Predicted pixel set.** Inspector churn for the classes whose member lists a test shows (`ViewportWdgt` and its
 subclasses, `WorldWdgt`, `TransformFrameWdgt`): name them at Prepare. **Audit.** static C1 (the [S] and [G] six).
 
+**Landed 2026-11-22.** Eight self-called helpers take the `_` tier and the eight allowlist lines that excused them as
+end-user API go. `ViewportWdgt._scrollX`/`_scrollY` move only the offset (every caller re-lays the contents and bars;
+the user surface is `setScrollX`/`setScrollY`, `scrollTo`, `scrollToBottom`); with them private, the [S] chain that held
+`_autoScroll`/`_startAutoScrolling` public is gone, so those two need no marker either (`_autoScroll`'s synchronous
+re-fit keeps a plain comment saying why). `WorldWdgt._addHighlightingWidgets` takes `nosettle-sanctioned` with its
+reason (doOneCycle runs it once a frame between its layout flush and its paint, never inside a settle, so the stale
+highlighter's `fullDestroy` settles on its own). `TransformFrameWdgt._wrapContent` is a settle wrap over
+`_wrapContentNoSettle` (the bounds write and the add), the `_buildAndConnectChildren` shape. The harness's
+`AutomatorPlayer._runAllSystemTestsAtSpeed` and `_startTestPlayingWithSlideIntro` take `public-call-sanctioned` each
+(their callees are the run's and a test's one start, public because the startup actions, the runners and the loader
+call them by name). Corrected at research: `scrollX`/`scrollY` have 17 self-call sites in 7 methods, not one; none of
+the eight is forbidden its `_` form by [A]. Ratchets: none moved (`BASELINE_U_QUERY` stays 102 — the eight were
+allowlisted effectful candidates, never in the query count); [S] sanctioned 41 → 43. Pixels: none (no test shows the
+member lists of these classes). Docs follow the tree (viewports-and-planes, layout, the serialization reference, the
+drag-embed spec, MACRO-PATTERNS, DETERMINISM).
+
 ### U11 — `loadWorldSnapshot` is its phases
 
 **Stands today.** `src/WorldWdgt.coffee`, `loadWorldSnapshot` (line 2780, about 200 lines), recorded at 67. Its own
@@ -921,6 +937,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] The world steps every registered stepper, attached or not: a detached widget and a never-attached copy of a stepping widget keep stepping and stay in the set. Reached by the menu sweep (a detached bouncer threw). Medium-low. Detail: the plan's §U4e. — CLOSED 2026-11-22 (gate-contortions loop, U7): `WorldWdgt._stepsMember` — the world steps a member only while on the world or the hand; the bouncer's guard is gone.
 - [x] W5 follow-up — a caret at the right edge of a padless scrolling viewport (a loose string in a scroll panel) has its last column under the 1 px border; `scrollCaretIntoView`'s margin should include the border. → "W5 follow-up — a caret at a padless viewport's edge under its border" — CLOSED 2026-11-22 (gate-contortions loop, U8): the border joins the caret's trigger and rest (`Theme.borderWidth`, `_borderWidthOverMyEdge`); both caret tests recaptured.
 - [x] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium. — CLOSED 2026-11-22 (gate-contortions loop, U9): the reload records itself as an undo step; another member forgets.
+- [x] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U10): eight helpers take the `_` tier; three markers.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

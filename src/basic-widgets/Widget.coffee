@@ -2935,7 +2935,7 @@ class Widget extends TreeNode
     return [damageBox,sl,st,al,at,w,h]
 
   # EPHEMERAL capability (owner's term). An ephemeral is a transient overlay owned wholly by the
-  # per-cycle reconciler (WorldWdgt.addHighlightingWidgets / PinoutsOverlay.reconcile): it is
+  # per-cycle reconciler (WorldWdgt._addHighlightingWidgets / PinoutsOverlay.reconcile): it is
   # hit-test-excluded (never steals hoverEntered / clicks / drops — ActivePointerWdgt.topWdgtUnderPointer),
   # casts no shadow (skipsAddShadowManagement below), and is left out of every copy and save, at any depth
   # (isLeftOutOfCopiesAndSaves below). Capability, not a type test (type-test-elimination convention): reads

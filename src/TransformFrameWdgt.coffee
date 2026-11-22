@@ -79,7 +79,7 @@ class TransformFrameWdgt extends PanelWdgt
     # chain past it, like any other non-accepting widget).
     @_acceptsDrops = false
     if contentWidget?
-      @wrapContent contentWidget
+      @_wrapContent contentWidget
 
   # LENS (§5.4 family): my name is my content's — a window bar / inspector title / console
   # title naming me should name the DISPLAYED thing, not the invisible plumbing. An empty
@@ -193,12 +193,21 @@ class TransformFrameWdgt extends PanelWdgt
   activated: (pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     @escalateEvent "activated", pos, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
 
+  # My constructor's one settle around the wrap below: wrap via the NoSettle core, settle ONCE
+  # (orphan-settledness: `new X()` returns settled; built inside a flush, I am still an orphan, so
+  # the settle defers). The pair is not named _buildAndConnectChildren: it adopts the one widget it
+  # is handed rather than building children, and a base constructor (TrackingTransformFrameWdgt
+  # extends me) calling the canonical name would run a subclass's own pair instead
+  # (widget-authoring-guidelines §3.3).
+  _wrapContent: (contentWidget) ->
+    @_settleLayoutsAfter => @_wrapContentNoSettle contentWidget
+
   # Wrap an existing widget: the slot box becomes the widget's current bounds (the
   # untransformed footprint), and the widget becomes the island's single free-
   # floating child, keeping its absolute position (virtual ≡ screen at identity).
-  wrapContent: (contentWidget) ->
+  _wrapContentNoSettle: (contentWidget) ->
     @bounds = new Rectangle contentWidget.left(), contentWidget.top(), contentWidget.right(), contentWidget.bottom()
-    @add contentWidget
+    @_addNoSettle contentWidget
     @
 
   # my single wrapped content subtree (handles/carets are chrome, never content)
@@ -420,7 +429,7 @@ class TransformFrameWdgt extends PanelWdgt
 
   # the parent's arrange sizes leaf children to their reported (claimed) extent; a non-identity
   # island IGNORES that so @bounds stays the SLOT box (Phases 1-2 build the buffer + composite
-  # from it — the slot box is fixed by wrapContent, never stretched). Identity islands size normally.
+  # from it — the slot box is fixed by _wrapContentNoSettle, never stretched). Identity islands size normally.
   _applyExtentBase: (aPoint) ->
     return if @_claimsFixedFigure()
     super aPoint

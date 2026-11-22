@@ -34,7 +34,7 @@ A scrolling container decomposes into three responsibilities, each with an hones
    extends above/left of the origin for content overhanging it (the D2 island-overhang
    reachability, which is why the offset is measured from the FRAME origin). Every offset write
    goes through the one funnel `_writeScrollOffset` (clamped by the movement cores
-   `scrollX`/`scrollY`, which refuse under `'never'`; the offset is MAPPING state, so the
+   `_scrollX`/`_scrollY`, which refuse under `'never'`; the offset is MAPPING state, so the
    funnel breaks the `geometryVersion`-keyed caches exactly as a bounds write does), the
    getters read the fields, the bars are wired through the public pin vocabulary, and every
    scroll path announces at `_reLayoutScrollbars`. The caret follow (`scrollCaretIntoView`,
@@ -301,7 +301,7 @@ Float-dragging a viewport's contents scrolls it too — the gesture beside the b
 (opt-in `isScrollingByfloatDragging`). A stroke has ONE drag-scroll step, on the pane that takes
 the stroke (`ViewportWdgt.takeStrokeScrollFrom`): while its stroke lasts and nothing is
 being float-dragged, the step samples the hand's position each frame (mapped into that pane's own
-plane) and moves the offset by the delta through `scrollX`/`scrollY` — the same funnel the bars
+plane) and moves the offset by the delta through `_scrollX`/`_scrollY` — the same funnel the bars
 and the wheel write through. The stroke ENDS at its own event: the pane keeps the press, so it is
 told the ending (`pressEnded` at the release, `pressCancelled` otherwise), and that is where the
 step pays the tail the frames did not sample — end point minus press point — never in a later
@@ -409,7 +409,7 @@ does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` /
 The construct family is role-named: `ViewportWdgt`, `ScrolledPaneWdgt`,
 `PopUpRowsViewportWdgt`, `VerticalStackViewportWdgt`, `TextAreaWdgt`,
 `DocumentViewportWdgt`, and the already-role-named `ListWdgt`/`ToolbarWdgt`. "Scroll"
-survives only where it names actual scrolling (`scrollX`, the scroll pins,
+survives only where it names actual scrolling (`_scrollX`, the scroll pins,
 `_reLayoutScrollbars`, `isMyScrollBar`). ⛔ "Frame" belongs to other constructs (the window
 `FrameWdgt`, the island `TransformFrameWdgt`) and never names this family. Colloquials: a
 generic viewport is "viewport"; composites take their contents' name

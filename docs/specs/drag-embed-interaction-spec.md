@@ -98,7 +98,7 @@ how much the destination has to lose.
 | Drag threshold 7px (also the linger radius we reuse) | `PreferencesAndSettings.coffee:54` (`grabDragThreshold`) |
 | Wheel routing: to first `scrolledBy`-implementing widget on the climb from the cursor hit — **no drag gate**, so wheel-during-drag already scrolls the destination today (the carried widget rides on the hand, outside the world tree, and cannot swallow it) | `ActivePointerWdgt.processWheel` `:721-726` |
 | Wheel scroll-chaining: an inner panel at its limit escalates the wheel to an outer scroll panel (can move the candidate away from under a stationary cursor) | `ViewportWdgt.wheel`, `ViewportWdgt.coffee:812-823` (`escalateEvent 'wheel'`) |
-| **EPHEMERALS** (owner's term; in code: the highlighting/pinouting overlay system): declarative sets `world.widgetsToBeHighlighted`/`widgetsToBePinouted`, reconciled ONCE PER CYCLE just before paint — diff-based create / reposition-if-target-bounds-changed / destroy-when-undeclared | `WorldWdgt.addHighlightingWidgets` `:1272-1292` + `addPinoutingWidgets` `:1245-1269` (homepage-EXCLUDED, debug-only), called at `WorldWdgt.coffee:1442-1444` immediately before `updateBroken()` |
+| **EPHEMERALS** (owner's term; in code: the highlighting/pinouting overlay system): declarative sets `world.widgetsToBeHighlighted`/`widgetsToBePinouted`, reconciled ONCE PER CYCLE just before paint — diff-based create / reposition-if-target-bounds-changed / destroy-when-undeclared | `WorldWdgt._addHighlightingWidgets` `:1272-1292` + `addPinoutingWidgets` `:1245-1269` (homepage-EXCLUDED, debug-only), called at `WorldWdgt.coffee:1442-1444` immediately before `updateBroken()` |
 | Ephemeral properties: hit-test-EXCLUDED via marker predicates (→ non-interactable, click-through, can never steal hoverEntered/drops); shadow-free (`skipsAddShadowManagement -> true` — "not anything material"); world children added last (always on top); lifecycle wholly reconciler-owned | `ActivePointerWdgt.coffee:105-106` (`!m.wdgtThisWdgtIsHighlighting?`/`!m.wdgtThisWdgtIsPinouting?`) · `HighlighterWdgt.coffee:21-26` |
 | Producer API precedent: declare/undeclare only — `turnOnHighlight`/`turnOffHighlight` mutate the desired set, nothing touches the overlay directly (menu "represents a widget" hover-highlight is the existing consumer) | `Widget.coffee:1845-1855` · `MenuItemWdgt.coffee:6` |
 | Text-ephemeral precedent: the pinout readout is a `StringWdgt` overlay anchored at `target.right()+10, top()` | `WorldWdgt.coffee:1261-1267` |
@@ -393,7 +393,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 | ~~Refused-landing nudge~~ | **DROPPED with §8** — it was to be neither an ephemeral nor a widget of its own, but a transient movement of the real landed widget (2-frame quantized) | Moot: a refused release lands where it was released, unnudged (§7) |
 
 Implementation note (when code opens up): the drag ephemerals are PRODUCT features — they must follow the
-`addHighlightingWidgets` shipped path, NOT the homepage-excluded `addPinoutingWidgets` debug path.
+`_addHighlightingWidgets` shipped path, NOT the homepage-excluded `addPinoutingWidgets` debug path.
 
 ## §12 — Engineering + determinism notes
 

@@ -56,7 +56,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   #           both bars and escalates every wheel, so it is behaviorally a
   #           plain panel with nothing to flip.
   # 'never' — behave as a plain cropping panel: every scroll path refuses at
-  #           the movement cores (scrollX/scrollY), the bars never show, the
+  #           the movement cores (_scrollX/_scrollY), the bars never show, the
   #           wheel always escalates, and no scroll gesture engages (a press
   #           passes on through me to a pane around me, as a notch does). Contents
   #           sizing is DELIBERATELY unchanged — the contents panel still
@@ -539,7 +539,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
   # The pin-setter contract (widget-authoring-guidelines §11): every delivery passes ONE argument,
   # the value.
-  #   ⚠ CLAMPED, through the same `scrollX`/`scrollY` every other scroll path uses. The predecessor
+  #   ⚠ CLAMPED, through the same `_scrollX`/`_scrollY` every other scroll path uses. The predecessor
   # moved the content raw, which could commit an over-scrolled state no gesture can produce (the
   # defect `scrollTo`'s own comment records). It also matters now that the bars are really wired: a
   # bar that is hidden because there is nothing to scroll still holds its constructed default, and
@@ -547,7 +547,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   setScrollX: (num) ->
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
-    if @scrollX @scrollOffsetX - num
+    if @_scrollX @scrollOffsetX - num
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
     @_reLayoutScrollbars()
@@ -556,7 +556,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   setScrollY: (num) ->
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
-    if @scrollY @scrollOffsetY - num
+    if @_scrollY @scrollOffsetY - num
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
     @_reLayoutScrollbars()
@@ -1007,7 +1007,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @_writeScrollOffset newX, newY
 
   # ViewportWdgt scrolling by floatDragging:
-  scrollX: (steps) ->
+  _scrollX: (steps) ->
     # under 'never' every scroll path refuses HERE, at the movement core: the
     # pin setters, scrollTo/scrollToBottom, the edge auto-scroll and the
     # momentum glide all route through this pair, and callers read the boolean
@@ -1030,13 +1030,13 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # of a real mis-scrolled-slide bug. SampleSlideApp is the sole caller.
   #
   # CLAMPED like every other scroll path: the request is expressed as deltas and routed through
-  # scrollX/scrollY, so a target past the content's edge stops AT the edge -- a raw move here let a
+  # _scrollX/_scrollY, so a target past the content's edge stops AT the edge -- a raw move here let a
   # too-far request commit an over-scrolled state no gesture can produce, with the contents frame
   # no longer covering the viewport (the arrange's own fit rule). After a real scroll, re-fit
   # contents + scrollbars, the standard post-scroll pair.
   scrollTo: (whereTo) ->
-    scrolledX = @scrollX @scrollOffsetX - whereTo.x
-    scrolledY = @scrollY @scrollOffsetY - whereTo.y
+    scrolledX = @_scrollX @scrollOffsetX - whereTo.x
+    scrolledY = @_scrollY @scrollOffsetY - whereTo.y
     if scrolledX or scrolledY
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
@@ -1044,7 +1044,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
 
   scrollToBottom: ->
-    if @scrollY -100000
+    if @_scrollY -100000
       # layout-apply-sanctioned: scroll-input handler, determinism-exempt (residuals-audit fam 1)
       # — the same moved-gated post-scroll arrange every other scroll path runs (scrollTo, the
       # pin setters, the drag step); the non-content-sizing arrange folds the offset into its
@@ -1052,8 +1052,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
       @_positionAndResizeChildren()
     @_reLayoutScrollbars()
   
-  scrollY: (steps) ->
-    # 'never' refuses at the core — see scrollX (which also explains the sign and the
+  _scrollY: (steps) ->
+    # 'never' refuses at the core — see _scrollX (which also explains the sign and the
     # integer-offset rounding).
     return false if @scrollPolicy is 'never'
     newY = Math.round @scrollOffsetY - steps
@@ -1156,7 +1156,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         [step, offset, clamp] = [travel.x, each.scrollOffsetX, Math.max 0, each.contents.width() - each.width()]
       else
         [step, offset, clamp] = [travel.y, each.scrollOffsetY, Math.max 0, each.contents.height() - each.height()]
-      # scrollX/scrollY's own sign: a step toward the content's end (negative) needs room before the
+      # _scrollX/_scrollY's own sign: a step toward the content's end (negative) needs room before the
       # clamp, a step back toward its start (positive) needs offset to give back
       return each  if (step < 0 and offset < clamp) or (step > 0 and offset > 0)
     alongTheAxis[0] ? candidates[0]
@@ -1250,11 +1250,11 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         if @_dragScrollsHorizontally()
           deltaX = endPos.x - oldPos.x
           if deltaX isnt 0
-            scrolledNow = (@scrollX deltaX) or scrolledNow
+            scrolledNow = (@_scrollX deltaX) or scrolledNow
         if @_dragScrollsVertically()
           deltaY = endPos.y - oldPos.y
           if deltaY isnt 0
-            scrolledNow = (@scrollY deltaY) or scrolledNow
+            scrolledNow = (@_scrollY deltaY) or scrolledNow
         oldPos = endPos
       wasScrollDragging = false
       scrolledNow
@@ -1279,16 +1279,16 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
               wasScrollDragging = true
               newPos = @screenPointToMyPlane world.hand.position()
               # Travel past my clamp is DROPPED, not handed on: the stroke is mine alone (the latch),
-              # so a step scrollX/scrollY cannot take simply ends there.
+              # so a step _scrollX/_scrollY cannot take simply ends there.
               if @_dragScrollsHorizontally()
                 deltaX = newPos.x - oldPos.x
                 if deltaX isnt 0
-                  scrolled = @scrollX deltaX
+                  scrolled = @_scrollX deltaX
                   scrollbarJustChanged ||= scrolled
               if @_dragScrollsVertically()
                 deltaY = newPos.y - oldPos.y
                 if deltaY isnt 0
-                  scrolled = @scrollY deltaY
+                  scrolled = @_scrollY deltaY
                   scrollbarJustChanged ||= scrolled
               oldPos = newPos
           else
@@ -1313,11 +1313,11 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
             if @_dragScrollsHorizontally()
               deltaX = deltaX * friction
               if deltaX isnt 0
-                scrollbarJustChanged ||= @scrollX Math.round deltaX
+                scrollbarJustChanged ||= @_scrollX Math.round deltaX
             if @_dragScrollsVertically()
               deltaY = deltaY * friction
               if deltaY isnt 0
-                scrollbarJustChanged ||= @scrollY Math.round deltaY
+                scrollbarJustChanged ||= @_scrollY Math.round deltaY
       if scrollbarJustChanged
         # layout-apply-sanctioned: scroll-input (drag-scroll frame, release flush, momentum glide),
         # determinism-exempt (residuals-audit fam 1)
@@ -1326,7 +1326,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   
   # During a float-drag, if I want the dragged widget and the pointer is in my edge band, I
   # auto-scroll. ActivePointerWdgt calls this instead of testing `newWdgt instanceof
-  # ViewportWdgt` and driving the wantsDropOfChild / edge / startAutoScrolling logic itself.
+  # ViewportWdgt` and driving the wantsDropOfChild / edge / _startAutoScrolling logic itself.
   # (type-test-elimination campaign)
   maybeStartAutoScrollForDraggedWidget: (widgetBeingFloatDragged, pointerPosition) ->
     # a 'never' viewport accepts the drop but does not creep toward it
@@ -1336,9 +1336,9 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
       # resident of a scrolled pane / island), so map the pointer into MY plane for the band
       # test — the identity (same object) for an un-nested viewport
       if !@boundingBox().insetBy(WorldWdgt.theme.scrollBarsThickness * 3).containsPoint @screenPointToMyPlane pointerPosition
-        @startAutoScrolling()
+        @_startAutoScrolling()
 
-  startAutoScrolling: ->
+  _startAutoScrolling: ->
     # The edge auto-scroll is wall-clock driven (the Date.now() settle below
     # plus per-frame increments), but unlike the momentum glide in
     # takeStrokeScrollFrom it is NOT suppressed while a test plays: it is a
@@ -1360,34 +1360,35 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     world.steppingWdgts.add @
     @_scrollStep = =>
       # mapped like every per-frame hand sample (identity for an un-nested viewport) — the
-      # band test and autoScroll's delta arithmetic below both run in MY plane
+      # band test and _autoScroll's delta arithmetic below both run in MY plane
       pos = @screenPointToMyPlane hand.position()
       inner = @boundingBox().insetBy inset
       if @boundsContainPoint(pos) and
         !inner.containsPoint(pos) and
         hand.isThisPointerFloatDraggingSomething()
-          @autoScroll pos  unless Date.now() - startedAt < 500
+          @_autoScroll pos  unless Date.now() - startedAt < 500
       else
         @_stopScrollStep()
     @_scrollStep.autoScrolls = true
 
-  autoScroll: (pos) ->
+  _autoScroll: (pos) ->
     inset = WorldWdgt.theme.scrollBarsThickness * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false
     if area.containsPoint(pos)
-      scrollbarJustChanged ||= @scrollY inset - (pos.y - @top())
+      scrollbarJustChanged ||= @_scrollY inset - (pos.y - @top())
     area = @topLeft().extent new Point inset, @height()
     if area.containsPoint(pos)
-      scrollbarJustChanged ||= @scrollX inset - (pos.x - @left())
+      scrollbarJustChanged ||= @_scrollX inset - (pos.x - @left())
     area = (new Point(@right() - inset, @top())).extent new Point inset, @height()
     if area.containsPoint(pos)
-      scrollbarJustChanged ||= @scrollX -(inset - (@right() - pos.x))
+      scrollbarJustChanged ||= @_scrollX -(inset - (@right() - pos.x))
     area = (new Point(@left(), @bottom() - inset)).extent new Point @width(), inset
     if area.containsPoint(pos)
-      scrollbarJustChanged ||= @scrollY -(inset - (@bottom() - pos.y))
+      scrollbarJustChanged ||= @_scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
-      # layout-apply-sanctioned: scroll-input (edge auto-scroll), determinism-exempt (residuals-audit fam 1)
+      # scroll input (the edge auto-scroll), determinism-exempt (residuals-audit fam 1): the re-fit
+      # of the contents and the bars every scroll path runs after it scrolls, here once the view moved
       @_positionAndResizeChildren()
       @_reLayoutScrollbars()
   
@@ -1479,7 +1480,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         @escalateEvent 'scrolledBy', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
-        @scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY
+        @_scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY
     if x != 0
       # similar to the vertical case, escalate the scroll in case
       # we are in a nested Viewport situation ('never' escalates too — see
@@ -1490,7 +1491,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         @escalateEvent 'scrolledBy', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
-        @scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX
+        @_scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX
 
     if scrollbarJustChanged
       # layout-apply-sanctioned: scroll-input (wheel), determinism-exempt (residuals-audit fam 1)

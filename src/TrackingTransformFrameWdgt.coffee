@@ -61,7 +61,7 @@ class TrackingTransformFrameWdgt extends TransformFrameWdgt
   # re-fit is a no-op by construction (claim == slot ⊆ what the parent already fit).
   # _refreshIslandBuffer rebuilds the buffer from @bounds every composite, so it grows to the new
   # slot and the content no longer clips. Setting
-  # @bounds directly is the established island slot-set idiom (wrapContent / _materializeSugarIslandNoSettle
+  # @bounds directly is the established island slot-set idiom (_wrapContentNoSettle / _materializeSugarIslandNoSettle
   # both do it) — _applyExtent would no-op here (the fixed-figure _applyExtentBase override early-returns).
   # The cache-break + fullChanged mirror what a transform change does. (The original R3 "Option A" —
   # let an asymmetric grow re-centre the figure via the undefined slot-centre anchor — was superseded by the

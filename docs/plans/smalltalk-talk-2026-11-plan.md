@@ -336,7 +336,7 @@ stink counts and sanctions by its member (2026-11-11): U2's timer is read the sa
 - **`ViewportWdgt.scrolledBy(xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg)`:**
   1. normalises deltas (`WorldWdgt.preferencesAndSettings.normalizedWheelDeltas`);
   2. escalates at the scroll ends;
-  3. otherwise calls `@scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY`.
+  3. otherwise calls `@_scrollY y * WorldWdgt.preferencesAndSettings.wheelScaleY`.
 - **Demo menu actions:** `src/demos/DemoMenus.coffee` (lazy `demos` part) includes `throwAnError`,
   `createCalculatingPatchNode`, `createDiffingPatchNode`, `createRegexSubstitutionPatchNodeWdgt`,
   `createFanout`, `makeBouncingParticle`, and more.

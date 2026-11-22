@@ -40,7 +40,7 @@ the whole cycle:
   `hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()` (`src/ActivePointerWdgt.coffee`), which
   reads the *settled* geometry paint will read → `_drainPendingFractionalReRecords()`, which re-records against
   that same settled geometry.
-- **(d) overlay reconcilers + paint** — `pinouts?.reconcile()`, `addHighlightingWidgets()`,
+- **(d) overlay reconcilers + paint** — `pinouts?.reconcile()`, `_addHighlightingWidgets()`,
   `_updateEditorSelectionOverlay()`, `addDragAffordanceWidgets()`, then **`_repaintDamagedRects()`** repaints the
   damage rectangles of an already-settled world.
 

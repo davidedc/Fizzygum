@@ -785,7 +785,7 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
   # at-limit ESCALATION (a sheet inside a future scroll surface must not swallow its wheel) —
   # but QUANTIZED to whole rows/cols (the cell-quantized deviation from its pixel model): the
   # delta maps to pixels via wheelScale*, then to at least one whole cell step. POST-inversion
-  # sign convention (matches ViewportWdgt.scrollY, where positive steps move the CONTENT
+  # sign convention (matches ViewportWdgt._scrollY, where positive steps move the CONTENT
   # down): y > 0 scrolls the view UP (origin decreases), y < 0 down; x likewise left/right —
   # so a raw POSITIVE deltaY (invertWheelY on) scrolls the view DOWN, as documented on
   # MacroToolkit.wheelOn_InputEvents. An in-progress edit COMMITS first (commit-before-scroll,

@@ -1148,7 +1148,7 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Edge auto-scroll while dragging** (`macroListWdgtAutoScrollsNearDraggedEdge`): a ViewportWdgt auto-scrolls when a
   float-dragged morph it `wantsDropOfChild` is held near an edge band (≈`scrollBarsThickness*3`). Build a list overflowing BOTH ways,
   `pickUp` a rectangle (don't drop), then `@syntheticEventsMouseMove_InputEvents (a point in an edge band), "no button", …` and
-  yield generously. MUST hold long enough that the auto-scroll's 500ms `Date.now()` settle (kept by its step, `startAutoScrolling`) elapses and the scroll CLAMPS — via a
+  yield generously. MUST hold long enough that the auto-scroll's 500ms `Date.now()` settle (kept by its step, `_startAutoScrolling`) elapses and the scroll CLAMPS — via a
   NON-scaled numeric `yield N` (real-time settle, speed-independent), so it's deterministic at every speed and needs no speed metadata.
   ⚠ A fixed hold is not enough on its own: the scroll moves a fixed step per FRAME, so a hold of N ms clamps only while frames
   come fast enough (at ~128 ms a cycle every 2.5 s hold stops short). After the hold, keep holding — `yield 100` in a bounded
@@ -1192,7 +1192,7 @@ assertion a recapture after a regression silently stores two different hashes an
   relaxes). Build the fixture DIRECTLY (`doc.addNormalParagraph "…"` + `doc.add clock`): the test targets the
   SCROLL/FLOW/CLIP of mixed content, not the drop GESTURE (covered by macroIconDroppedIntoDocumentFlows — and dragging several
   oversized clocks by hand is needless flakiness: a mis-grabbed big clock leaks onto the desktop). `@wheelOn_InputEvents doc, delta`
-  scrolls (positive = down; `ViewportWdgt.scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
+  scrolls (positive = down; `ViewportWdgt._scrollY` clamps at the travel limits, so the top/bottom shots are deterministic). The
   clocks freeze (`new Date 2011,10,30,10,8,37`: every hand off the axes) during playback, so a LIVE dynamic widget is a safe screenshot fixture (precedent:
   macroAnalogClockInspectEdit). Interleave a tall text paragraph BEFORE and AFTER the clocks so the narrow-document scroll positions
   (top / oversized-clock-clipped / bottom-with-trailing-text) are distinct. Then `doc.setExtent` to near-fullscreen (a fixture-state
@@ -1461,7 +1461,7 @@ assertion a recapture after a regression silently stores two different hashes an
   its contract is the same saturation rule as (3); (2) RELEASE TRUNCATION — the step samples the hand per FRAME, so the pointer-path tail
   that plays in the mouse-up's frame was never scrolled; the release FLUSH, paid when the release is told to the pane
   (`ViewportWdgt.pressEnded`), makes the held-drag total exactly release − press, even when the release and the next press
-  share one frame; (3) MID-RANGE PATH-DEPENDENCE — `scrollX`/`scrollY` clamp against the PREVIOUS frame's
+  share one frame; (3) MID-RANGE PATH-DEPENDENCE — `_scrollX`/`_scrollY` clamp against the PREVIOUS frame's
   contents union while `_positionAndResizeChildren` re-derives it each frame, so a mid-range pan endpoint shifts a few pixels with
   event-into-frame batching. (3) is inherent: write drag-to-scroll macros by the SATURATION RULE — every pan axis either
   SATURATES (drag well past the clamp; the saturated state is the clamp's unique fixed point) or is exactly ZERO. And press

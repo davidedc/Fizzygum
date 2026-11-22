@@ -6,10 +6,10 @@
 # supposed to click/drag/interact with).
 #
 # These widgets are transparently/automatically added/removed by the
-# addHighlightingWidgets function in doOneCycle -- one of the per-cycle
+# _addHighlightingWidgets function in doOneCycle -- one of the per-cycle
 # reconciler steps that all run before the @_repaintDamagedRects() call.
 #
-# That addHighlightingWidgets function RECONCILES: it only adds/modifies/removes
+# That _addHighlightingWidgets function RECONCILES: it only adds/modifies/removes
 # the HighlighterWdgts that are new, need to change position, or need to go away
 # (i.e. they are not blindly recreated each frame). That is load-bearing, not an
 # optimisation: a steady highlight must emit ZERO damage (a per-frame recreate

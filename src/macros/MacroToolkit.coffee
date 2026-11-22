@@ -1311,7 +1311,7 @@ class MacroToolkit
 
   # THE DRAG A WHEEL MEANS: the screen vector a finger travels to scroll what the wheel deltas would.
   # A drag moves the content WITH the finger — ViewportWdgt's scroll-drag step feeds its own
-  # per-frame delta straight to scrollY/scrollX — while a wheel's delta reaches those same cores
+  # per-frame delta straight to _scrollY/_scrollX — while a wheel's delta reaches those same cores
   # through the wheel's minor-axis squelch, its invert preferences and its scale, so the drag vector
   # is exactly the normalized, scaled deltas the wheel would have applied. Asking
   # PreferencesAndSettings for the normalization rather than restating it keeps one statement of
@@ -1879,7 +1879,7 @@ class MacroToolkit
   # depth 1).
   #   The band is the viewport's own: inside its bounds but outside its box inset by three scroll-bar
   # thicknesses — the box ViewportWdgt.maybeStartAutoScrollForDraggedWidget arms the creep outside of,
-  # and autoScroll scrolls by how far into it the pointer is. A depth that leaves the point outside that
+  # and _autoScroll scrolls by how far into it the pointer is. A depth that leaves the point outside that
   # band is a fault to raise, naming the viewport and the side, never a hover that silently scrolls
   # nothing. The band test runs in the viewport's own plane, as the product's does, and the point is
   # then carried to the screen. A destination for a hover or a carried payload, not a press, so it sets
