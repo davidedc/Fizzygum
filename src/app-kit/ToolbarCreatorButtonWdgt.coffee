@@ -3,7 +3,7 @@ class ToolbarCreatorButtonWdgt extends CreatorButtonWdgt
   activated: (ignored, ignored2, ignored3, ignored4, ignored5, ignored6, ignored7, partOfDoubleClick) ->
     if partOfDoubleClick
       return
-    windowToBePlaced = @createWidgetToBeHandled()
+    windowToBePlaced = @_createWidgetToBeHandled()
     # the new window is a WORLD child placed beside ME, and I live on a toolbar's scrolled
     # plane — emit my corner through the plane→screen map (identity when unscrolled/untilted,
     # rounded because screen-family values may be fractional under tilt), never the raw

@@ -124,8 +124,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
   # the Document/Folder click handlers and the Script "edit script" action: guard against a
   # dead / already-containing referent, un-hide it, find its grabbable root (or the referent
   # itself when it sits directly in the bin), and spawn that next to this shortcut.
-  # Public, not _-tier: it drives other widgets' public settling API. [call-separation A]
-  bringUpReferencedWidget: ->
+  _bringUpReferencedWidget: ->
     if @referencedWidget.destroyed
       @inform "The referenced item\nis dead!"
       return
@@ -149,7 +148,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
     # building content; _reactToBeingAdded is not, since it fires INSIDE the add's own settle.
     @referencedWidget.whenReadyToBeBroughtUp => @_bringUpReferencedWidgetNow()
 
-  # nosettle-exempt: not a _NoSettle twin — this is the second half of bringUpReferencedWidget,
+  # nosettle-exempt: not a _NoSettle twin — this is the second half of _bringUpReferencedWidget,
   # split out so the content-readiness seam above has something to call back into. It settles
   # exactly as the undivided method did, through spawnNextTo.
   _bringUpReferencedWidgetNow: ->
@@ -169,7 +168,7 @@ class ShortcutWdgt extends DesktopLinkWdgt
       # fractional bookkeeping from an earlier desktop/storage life, which the fill-only
       # seed respects -- re-derive at the spawned position explicitly.
       whatToBringUp._rememberFractionalSituationInHoldingPanel()
-      # nosettle-sanctioned: the second half of the public bringUpReferencedWidget, never inside a
+      # nosettle-sanctioned: the second half of _bringUpReferencedWidget, never inside a
       # settle (see the exemption above) -- the re-title settles on its own, as spawnNextTo does.
       whatToBringUp.setTitle? @label.text
 

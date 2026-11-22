@@ -45,13 +45,19 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   closeFromContainerFrame: (containerWindow) ->
     @hideLog()
 
-  addText: (newLog) ->
+  # My log grows by newLog, below a rule, in one settle (showUpWithError).
+  _appendToLog: (newLog) ->
+    @_settleLayoutsAfter => @_appendToLogNoSettle newLog
+
+  # The non-settling core of _appendToLog: my text pane is my own sub-part, so its text core runs inside
+  # my settle.
+  _appendToLogNoSettle: (newLog) ->
     if @textWidget.text.length != 0
       existingLog = @textWidget.text
     else
       existingLog = ""
 
-    @textWidget.setText existingLog + "\n\n-----------------------------------------\n\n" + newLog
+    @textWidget._setTextNoSettle existingLog + "\n\n-----------------------------------------\n\n" + newLog
 
 
   showUpWithError: (err) ->
@@ -75,7 +81,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
       stack = stackOfThrownValue err
       if stack?
         toBeAddedToLog += "\n\nStack:\n" + stack
-      @addText toBeAddedToLog
+      @_appendToLog toBeAddedToLog
 
     if !@parent.isVisible
       @parent.show()

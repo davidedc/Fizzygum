@@ -4,7 +4,7 @@ class GrayscalePaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new GrayscalePalettePatchProgrammingIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new GrayPaletteWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm

@@ -4,7 +4,7 @@ class TextBoxCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new TextIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcheroo = new TextWdgt "insert text here"
     switcheroo.isEditable = true
     switcheroo.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP

@@ -4,7 +4,7 @@ class VideoPlayCreatorButtonWdgt extends ExternalLinkCreatorButtonWdgt
 
   createAppearance: -> new VideoPlayIconAppearance @
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcheroo = new SimpleVideoLinkWdgt
     switcheroo._applyBounds @position(), new Point 330, 65
     return switcheroo

@@ -4,5 +4,5 @@ class TextToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createAppearance: -> new TextToolbarIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     @_buildToolWindow new TextToolbarWdgt

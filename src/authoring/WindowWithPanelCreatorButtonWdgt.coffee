@@ -10,7 +10,7 @@ class WindowWithPanelCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new WindowWithScrollingPanelIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new ViewportWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm

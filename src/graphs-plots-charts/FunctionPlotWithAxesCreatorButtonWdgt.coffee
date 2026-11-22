@@ -4,7 +4,7 @@ class FunctionPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new FunctionPlotIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleFunctionPlotWdgt)
     switcherooWm._applyExtent new Point 200, 200
 

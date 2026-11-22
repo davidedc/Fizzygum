@@ -41,7 +41,7 @@ This arc is the **UI + the lifecycle areas**; the edges/GC are arc (b); the crea
 ## 2. Current-state truth (first verified 2026-07-18; the shortcut, folder and storage bullets re-verified against src 2026-08-18)
 
 - **Shortcuts (visible) EXIST:** `WidgetHolderWithCaptionWdgt` (`isDesktopIcon`) → `DesktopLinkWdgt`
-  → `ShortcutWdgt` (+ Document/Folder/Script subclasses); `bringUpReferencedWidget()`
+  → `ShortcutWdgt` (+ Document/Folder/Script subclasses); `_bringUpReferencedWidget()`
   re-summons (the R3 residue rename off `bringUpTarget`, landed with §4.3's execution).
   (Referent link = `referencedWidget` — the rename off the overloaded `@target` LANDED, but through the
   connector campaign's P9 (`34adb216`, 2026-08-16), not through arc (b);

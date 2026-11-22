@@ -299,7 +299,7 @@ by the world at every flip).
 `CreatorWdgt.activated` asks `ToolbarWdgt.hostWindowOf @`, then takes one of two paths:
 
 - **Docked: `_placeIntoMyHost(host)`.** Into `host.contents` when it `acceptsSmartPlacedWidgets`, otherwise
-  nowhere. Decided BEFORE `createWidgetToBeHandled`: a refused copy tells the person why, so a widget that cannot
+  nowhere. Decided BEFORE `_createWidgetToBeHandled`: a refused copy tells the person why, so a widget that cannot
   be placed must never be made.
 - **Floating: `_placeForThePerson()`.** Into the topmost window whose content `acceptsSmartPlacedWidgets`, else
   beside the tool on the desktop.
@@ -357,7 +357,7 @@ event stream, with no timer.
   map its key in `stockSourceForToolKey`, and build a `CodeInjectingSimpleRectangularButtonWdgt` with that key and an
   icon face built in `toolbarGlyph` in `_toolbarItems`, into a field of its own that `_tools` lists (the strip and the
   edit marks both come from `_tools`). Nothing else: holders, take-up, transfers and the refresh are keyed generically.
-- **A creator.** Subclass `CreatorButtonWdgt` (or `CreatorWdgt`) and answer `createWidgetToBeHandled`. Placement
+- **A creator.** Subclass `CreatorButtonWdgt` (or `CreatorWdgt`) and answer `_createWidgetToBeHandled`. Placement
   is the base's; never search for a target yourself.
 - **A subject-less action.** Its own `activated`; answer no `hasSomethingToActOn` (or `true`, as Templates does).
 - **A toolbar.** Subclass `ToolbarWdgt`: `_toolbarItems` (literal `new X` forms) and `dockSide` when not `'left'`.

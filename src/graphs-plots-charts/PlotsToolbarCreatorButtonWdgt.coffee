@@ -4,6 +4,6 @@ class PlotsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createAppearance: -> new AllPlotsIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     @_buildToolWindow new PlotsToolbarWdgt
 

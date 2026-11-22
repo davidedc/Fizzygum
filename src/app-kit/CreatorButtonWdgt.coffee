@@ -18,7 +18,7 @@ class CreatorButtonWdgt extends CreatorWdgt
     @appearance = @createAppearance()
 
   grabbedWidgetSwitcheroo: ->
-    return @createWidgetToBeHandled()
+    return @_createWidgetToBeHandled()
 
   # otherwise the glassbox bottom will answer on drags
   # and will just pick up the button and move it,

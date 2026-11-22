@@ -4,7 +4,7 @@ class ColorPaletteNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new ColorPalettePatchProgrammingIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new ColorPaletteWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm

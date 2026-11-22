@@ -4,7 +4,7 @@ class ScatterPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new ScatterPlotIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleScatterPlotWdgt)
     switcherooWm._applyExtent new Point 200, 200
 

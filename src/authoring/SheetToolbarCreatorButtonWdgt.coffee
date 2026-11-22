@@ -8,5 +8,5 @@ class SheetToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createAppearance: -> new SpreadsheetIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     @_buildToolWindow new SheetToolbarWdgt

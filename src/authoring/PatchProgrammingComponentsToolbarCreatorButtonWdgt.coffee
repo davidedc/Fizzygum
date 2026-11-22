@@ -4,7 +4,7 @@ class PatchProgrammingComponentsToolbarCreatorButtonWdgt extends ToolbarCreatorB
 
   createAppearance: -> new PatchProgrammingComponentsIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     # the ONE patch-programming list (§5.C): this floating toolbar shares
     # PatchProgrammingWdgt's docked one, incl. the text-box creator
     @_buildToolWindow new PatchProgrammingToolbarWdgt

@@ -14,7 +14,9 @@ class GlassBoxTopWdgt extends CreatorWdgt
   # the lid of a tool cell (GlassBoxBottomWdgt)
   colloquialName: -> "tool cell lid"
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
+    # nosettle-sanctioned: fullCopy has no NoSettle core; a lid's copy is made at event time (a click on
+    # its cell, CreatorWdgt.activated), outside any pass
     widgetToBeHandled = @parent.children[0].fullCopy()
     # refused (Widget.fullCopy has told the person why): nothing to hand over
     return undefined unless widgetToBeHandled?

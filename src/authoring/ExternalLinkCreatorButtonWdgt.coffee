@@ -4,7 +4,7 @@ class ExternalLinkCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new ExternalLinkIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcheroo = new SimpleLinkWdgt
     switcheroo._applyBounds @position(), new Point 330, 65
     return switcheroo

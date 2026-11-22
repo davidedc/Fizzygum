@@ -1,4 +1,4 @@
-# A CREATOR: a toolbar tool that makes a widget when clicked (createWidgetToBeHandled, my
+# A CREATOR: a toolbar tool that makes a widget when clicked (_createWidgetToBeHandled, my
 # subclasses') and places it where the toolbar I stand in works for (ToolbarWdgt.hostWindowOf):
 #   - DOCKED on a window, I work for that window: the widget goes into my host's content when that
 #     content takes a click-placed widget, and otherwise NOWHERE -- I make nothing at all, so a host
@@ -33,14 +33,14 @@ class CreatorWdgt extends Widget
   # refused tells the person why, so a widget that cannot be placed must never be made.
   _placeIntoMyHost: (host) ->
     return unless host.contents?.acceptsSmartPlacedWidgets?()
-    widgetToBePlaced = @createWidgetToBeHandled()
+    widgetToBePlaced = @_createWidgetToBeHandled()
     # none made (a copy refused, and told): nothing to place
     return unless widgetToBePlaced?
     host.contents.smartPlace widgetToBePlaced, @
 
   # FLOATING: the topmost window that takes a click-placed widget, else the desktop beside me.
   _placeForThePerson: ->
-    widgetToBePlaced = @createWidgetToBeHandled()
+    widgetToBePlaced = @_createWidgetToBeHandled()
     # none made (a copy refused, and told): nothing to place
     return unless widgetToBePlaced?
 

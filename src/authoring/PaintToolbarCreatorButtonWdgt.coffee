@@ -8,5 +8,5 @@ class PaintToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createAppearance: -> new SprayCanIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     @_buildToolWindow new PaintToolbarWdgt

@@ -4,7 +4,7 @@ class WorldMapCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new LittleWorldIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcheroo = new SimpleWorldMapIconWdgt
     switcheroo._applyExtent new Point 240, 125
     switcheroo.setColor Color.create 183, 183, 183

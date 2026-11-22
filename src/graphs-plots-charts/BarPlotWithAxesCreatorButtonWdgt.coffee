@@ -4,7 +4,7 @@ class BarPlotWithAxesCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new BarPlotIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new PlotWithAxesWdgt(new ExampleBarPlotWdgt)
     switcherooWm._applyExtent new Point 200, 200
 

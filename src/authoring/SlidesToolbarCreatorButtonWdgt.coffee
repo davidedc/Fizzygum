@@ -4,6 +4,6 @@ class SlidesToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createAppearance: -> new SlidesToolbarIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     @_buildToolWindow new SlidesToolbarWdgt
 

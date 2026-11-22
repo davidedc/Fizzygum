@@ -13,6 +13,6 @@ class DocumentShortcutWdgt extends ShortcutWdgt
     if doubleClickInvocation
       return
 
-    @bringUpReferencedWidget()
+    @_bringUpReferencedWidget()
 
 

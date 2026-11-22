@@ -31,5 +31,5 @@ class FolderShortcutWdgt extends ShortcutWdgt
     if doubleClickInvocation
       return
 
-    @bringUpReferencedWidget()
+    @_bringUpReferencedWidget()
 

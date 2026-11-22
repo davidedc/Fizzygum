@@ -31,4 +31,4 @@ class ScriptShortcutWdgt extends ShortcutWdgt
     menu
 
   editScript: ->
-    @bringUpReferencedWidget()
+    @_bringUpReferencedWidget()

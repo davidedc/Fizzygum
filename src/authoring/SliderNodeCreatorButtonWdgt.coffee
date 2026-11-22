@@ -4,7 +4,7 @@ class SliderNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new SliderNodeIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWdgt = new SliderWdgt 1, 100, 50, 10, smallestValueIsAtBottomEnd: true
     return switcherooWdgt
 

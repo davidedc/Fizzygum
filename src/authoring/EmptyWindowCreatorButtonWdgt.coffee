@@ -4,7 +4,7 @@ class EmptyWindowCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new EmptyWindowIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt()
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm

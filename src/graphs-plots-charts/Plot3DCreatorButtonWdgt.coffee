@@ -7,7 +7,7 @@ class Plot3DCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new Plot3DIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new Example3DPlotWdgt
     switcherooWm._applyExtent new Point 200, 200
     return switcherooWm

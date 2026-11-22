@@ -4,5 +4,5 @@ class UsefulTextSnippetsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdg
 
   createAppearance: -> new TemplatesIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     return TemplatesWindowWdgt.create()

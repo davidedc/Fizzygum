@@ -358,7 +358,7 @@
     <p style="margin:0 0 10px"><strong>2 · Not every call site CAN await.</strong> An app is the easy
     case: <code>launch</code> is fire-and-forget, invoked by reflection with its result ignored. A
     creator button is not — both the click and the drag path consume
-    <code>createWidgetToBeHandled()</code>'s <em>return value</em> synchronously, so there is no seam
+    <code>_createWidgetToBeHandled()</code>'s <em>return value</em> synchronously, so there is no seam
     to defer through. The resolution is partition, not cleverness: put the button <em>in</em> the part
     it creates from, and its mere existence proves the part is loaded. Likewise, if every item of a
     palette belongs to one part, move the palette and its opener in too — filtering its contents would
@@ -393,7 +393,7 @@
 
     <p style="margin:0"><strong>4 · A folder is a door, and that is a third moment.</strong> Desktop
     icons are drawn at boot; a folder's contents are not drawn until it is opened, and
-    <code>bringUpReferencedWidget</code> is fire-and-forget, so it <em>can</em> await. So the Examples folder
+    <code>_bringUpReferencedWidget</code> is fire-and-forget, so it <em>can</em> await. So the Examples folder
     fills itself on first open, buying a tier the desktop cannot have — the art only that folder draws
     stays out of the boot image entirely. At <b>boot</b>: the folder, empty; no icon, no art, no app
     class. On <b>open</b>: <code>examples-icons</code>, and the five openers are built — still no app.

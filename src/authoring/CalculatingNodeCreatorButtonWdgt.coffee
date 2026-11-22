@@ -4,7 +4,7 @@ class CalculatingNodeCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new CalculatingNodeIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcherooWm = new FrameWdgt new CalculatingPatchNodeWdgt
     switcherooWm._applyExtent new Point 260, 265
     return switcherooWm

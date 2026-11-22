@@ -4588,7 +4588,7 @@ class Widget extends TreeNode
   findRootForGrab: ->
     return @findFirstLooseWidget()
 
-  # Asked by ShortcutWdgt.bringUpReferencedWidget before I am shown: do I owe myself any
+  # Asked by ShortcutWdgt._bringUpReferencedWidget before I am shown: do I owe myself any
   # CONTENT first? Almost nothing does — a widget resting in storage is already whole — so the
   # default runs the callback INLINE. That is correctness rather than economy: going through a
   # promise regardless would defer every shortcut click by a microtask, moving the open a whole

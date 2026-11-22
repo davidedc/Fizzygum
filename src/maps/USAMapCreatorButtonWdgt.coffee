@@ -7,7 +7,7 @@ class USAMapCreatorButtonWdgt extends CreatorButtonWdgt
 
   createAppearance: -> new LittleUSAIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
     switcheroo = new SimpleUSAMapIconWdgt
     switcheroo._applyExtent new Point 230, 145
     switcheroo.setColor Color.create 183, 183, 183

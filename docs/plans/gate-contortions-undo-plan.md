@@ -26,7 +26,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U11 | `loadWorldSnapshot` is its phases | CLOSED 2026-11-22 (§U11) |
 | U12 | `takeInventory` is its walks | CLOSED 2026-11-22 (§U12) |
 | U13 | A type test says it is one, or the question names a capability | CLOSED 2026-11-22 (§U13) |
-| U14 | A low-level method that sizes or drives another widget: [A] against [U] | not started |
+| U14 | A low-level method that sizes or drives another widget: [A] against [U] | CLOSED 2026-11-22 (§U14; three PARKED for the owner) |
 | U15 | The list-row verb scrolls one way | not started |
 | U16 | Two documents reach their clamp under a finger | not started |
 | U17 | A menu row is found, not fetched | not started |
@@ -819,6 +819,38 @@ explain "The picture's constructor settles too". [A] is the one layering rule wi
 (grep the macros for `OverflowChevron`). **Predicted pixel set.** Inspector churn for renamed members; the overflow
 row's picture must not move (size, then shoot, in that order). **Audit.** static C1 (the [A] five), C5.
 
+**Landed 2026-11-22 (three of six; three parked).** Corrected at research: two of the five allowlist reasons were
+FALSE — `createWidgetToBeHandled` has 26 definitions (not 5) and none calls `addMany` / `setExtent`, and
+`bringUpReferencedWidget`'s driving had moved into the already-`_` `_bringUpReferencedWidgetNow` (`466ba9a6`), so its
+public half drove no [A] name. Landed: `ErrorsLogViewerWdgt._appendToLog`, a settle wrap over `_appendToLogNoSettle` (the
+pane's `_setTextNoSettle`, the whole of what that `SimpleTextWdgt`'s `setText` runs); `_createWidgetToBeHandled`, the
+creator family's build hook (a `_` hook is the house form for an override protocol), with [G]'s own marker in the two
+bodies that then call a settling wrapper (`GlassBoxTopWdgt`'s `fullCopy`, which has no NoSettle core, at event time;
+the Elastic creator titling the fresh orphan window it built); `ShortcutWdgt._bringUpReferencedWidget`, a plain
+rename. Three allowlist lines go (20 → 17). Ratchets: none moved ([U] counts unallowlisted members only). Pixels: none.
+**Parked for the owner: one question for three members.** `CaretWdgt.bringTextAndCaretToState`, the
+content-property tools' `actOn`, and `InertIconHolderWdgt`'s constructor sizing each drive ANOTHER widget's public
+setter at event time, outside any pass, where that widget's own settle is the point, and none has a canonical shape:
+- `bringTextAndCaretToState` (undo/redo restore): its target's text door is polymorphic
+  (`FizzytilesCodeWdgt.setText` redraws its canvas after `super`), so `@target._setTextNoSettle` would stop an undo in a
+  fizzytiles pane redrawing; and the restore is a sequence of two settles — the text settles first, then the caret's
+  scroll-follow runs on the settled geometry (the order `insert` keeps); one settle round both cores moves that pass
+  before the container re-fits.
+- `actOn` (the tools' act hook): its subject is duck-typed across a widget (`StringWdgt`, which has cores) and a plain
+  style object (`SheetCellStyle`, whose setters re-style through `SimpleSpreadsheetWdgt.restyleCell`, which settles the
+  attached sheet itself); a tool-side settle round the act would nest the sheet's own settle.
+- `InertIconHolderWdgt`: its fitted sizing sits in the constructor only because [A] keeps `setExtent` out of
+  `_takePictureOf`; the caller cannot size first either (`_miniatureOf` is `_`-tier too, and the macros that hand a
+  widget with children would need the private fit).
+The quiet fix in each — `@_settleLayoutsAfter => other._xNoSettle …` in a `_` method — passes every gate by
+re-spelling the public setter's body so [A] cannot read its name: rejected. **The question: does rule [A] get a
+per-method marker in [G]'s form (a required, checkable reason: "drives another widget's public setter at event
+time, outside any pass, where that widget's own settle is the point"), so these become `_` methods with the call
+marked; or do they stay public, each allowlist reason saying what the member is (an undo/redo restore of two
+settles; the tool family's act hook, a subclass-override protocol; the constructor's sizing) — which amends the [U]
+header sentence that public means end-user surface?** Both options move no pixel. Until then their code and allowlist
+lines stand as they are.
+
 ### U15 — The list-row verb scrolls one way
 
 **Stands today.** `src/macros/MacroToolkit.coffee`, `bringInViewAndClickOnListItem_InputEvents_Macro` (about line
@@ -998,6 +1030,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U11: `WorldWdgt.loadWorldSnapshot` stays at complexity 67 because its split adds methods to a class at its method ceiling — medium. — CLOSED 2026-11-22 (gate-contortions loop, U11): six phase cores; the ceiling +6, dated.
 - [x] U12: `WorldInventory.takeInventory` stays at complexity 129 because a split's child above 15 could not be recorded — medium. — CLOSED 2026-11-22 (gate-contortions loop, U12): its steps + `InventoryWalker`; real offences prove every walk.
 - [x] U13: six type tests in disguise: a soak on `updateVisibility`, one on `_materializedBySugar`, and `isDivider`, `isGlassBoxWrapper`, `isGlassBoxLid`, `isLayoutChrome` — small each. — CLOSED 2026-11-22 (gate-contortions loop, U13): a verb, a query, two capability names, a field, a hook.
+- [x] U14: five methods stay public and a `setExtent` sits in a constructor because layering rule [A] has no per-method marker: the canonical NoSettle shape where it exists, else the owner rules — medium. — CLOSED 2026-11-22 (gate-contortions loop, U14): three land; three parked for the owner (the open item above).
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

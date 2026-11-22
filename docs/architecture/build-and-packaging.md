@@ -203,8 +203,8 @@ those parts in `optionalParts`, and the icon is drawn behind `canEverProvideClas
 still has a name so that the next door has to choose deliberately.)
 
 ⚠ **A lazy part needs an entry point that CAN await, and not every call site can.** A creator button
-cannot: `CreatorWdgt.activated` and `Widget.grabbedWidgetSwitcheroo`
-both consume `createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there is no seam to defer
+cannot: `CreatorWdgt.activated` and `CreatorButtonWdgt.grabbedWidgetSwitcheroo`
+both consume `_createWidgetToBeHandled()`'s RETURN VALUE synchronously, so there is no seam to defer
 through. The resolution is partition, not cleverness — put the button in the part it creates from
 (`maps` owns `USAMapCreatorButtonWdgt`), so the button's mere EXISTENCE proves its part is loaded and
 a core toolbar can filter it with a plain `if USAMapCreatorButtonWdgt?`. An app is the easy case by
@@ -302,7 +302,7 @@ the `whenAllLoaded` callback rather than in a tidier `_populate` helper, because
 methods from the await it depends on is indistinguishable from an unguarded one.
 
 ⚠ **A FOLDER IS A DOOR, and that is a third moment worth having.** Desktop icons are drawn at boot;
-a folder's contents are not drawn until it is opened, and `ShortcutWdgt.bringUpReferencedWidget`
+a folder's contents are not drawn until it is opened, and `ShortcutWdgt._bringUpReferencedWidget`
 is fire-and-forget, so it can await. `ExamplesFolderWindowWdgt` therefore fills itself on first open,
 which buys a tier the desktop cannot have — the art that ONLY that folder draws
 (`examples-icons`, 9.5 KB of C-F glyph) stays out of the boot image entirely:
@@ -317,7 +317,7 @@ which buys a tier the desktop cannot have — the art that ONLY that folder draw
 dashboards, the generic shortcut frame) are drawn by desktop icons and by
 `FolderWindowWdgt`/`BinOpenerWdgt` at boot, so they are core whatever the folder does.
 ⚠ BEING SHOWN is what obliges the folder to fill itself, not the ritual that showed it, so it has
-TWO entry points. `bringUpReferencedWidget` (the shortcut click) awaits `whenReadyToBeBroughtUp` *before*
+TWO entry points. `_bringUpReferencedWidget` (the shortcut click) awaits `whenReadyToBeBroughtUp` *before*
 showing it, which is why that path never flashes an empty folder; and a `step` catches every other
 way it reaches the tree — in practice the BIN, since deleting the folder's shortcut makes it
 unreachable, drains it there, and opening the bin paints it with no shortcut left to ever fill it.

@@ -4,7 +4,7 @@ class WindowsToolbarCreatorButtonWdgt extends ToolbarCreatorButtonWdgt
 
   createAppearance: -> new WindowsToolbarIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
-  createWidgetToBeHandled: ->
+  _createWidgetToBeHandled: ->
 
     switcherooWm = @_buildToolWindow new WindowsToolbarWdgt
     readmeWindow = InfoDocs.createNextTo "windowsToolbar", switcherooWm

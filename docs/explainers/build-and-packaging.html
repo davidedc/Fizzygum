@@ -200,7 +200,7 @@
     than a conditional copied into every door, and the same shape the reflective layer uses.</p>
     <p style="margin:0 0 8px"><b>2 · Not every call site <em>can</em> await.</b> An app is easy — its
     <code>launch</code> is fire-and-forget. A creator button is not: both the click and the drag path
-    consume its <code>createWidgetToBeHandled()</code> <em>return value</em> synchronously, so there
+    consume its <code>_createWidgetToBeHandled()</code> <em>return value</em> synchronously, so there
     is no seam to defer through. The fix is partition, not cleverness — put the button in the part it
     creates from, and its very existence proves the part is loaded.</p>
     <p style="margin:0"><b>3 · On a precompiled tree the part needs the META-SYSTEM first.</b>
