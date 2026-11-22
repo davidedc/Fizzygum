@@ -1411,10 +1411,15 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     fb = @contents.top() + @scrollOffsetY + @height() - @planeMargin
     fl = @contents.left() + @scrollOffsetX + @planeMargin
     fr = @contents.left() + @scrollOffsetX + @width() - @planeMargin
-    # how far past that box's edge the caret comes to stand, on either axis, so some of what
-    # surrounds it shows too: my margin and the padding a caller set around my content
-    # (setContents), my layout inset
-    marginAroundCaret = @planeMargin + (@extraPadding ? 0)
+    # the ring of that box my own border covers: the border I paint over my edge lies in my margin
+    # while my margin is as wide as it, and over my plane's outer ring where it is narrower (a
+    # viewport on the desk, keeping no margin), so a caret that reaches into that ring is not in view
+    borderOverMyPlane = Math.max 0, @_borderWidthOverMyEdge() - @planeMargin
+    # how far inside that box the caret comes to stand once followed, on either axis, so some of
+    # what surrounds it shows too: my margin and the padding a caller set around my content
+    # (setContents), my layout inset -- and never less than keeps the caret clear of my border,
+    # so the next pass finds it in view
+    marginAroundCaret = Math.max @planeMargin + (@extraPadding ? 0), borderOverMyPlane
     # DIRECT, deliberately UN-clamped offset writes (the follow's one licence — the movement
     # cores clamp to the content frame, but a caret at the very end of the content needs the
     # window to overshoot by that margin). What the arrange below makes of an overshoot depends on
@@ -1424,13 +1429,13 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     # reached by moving the plane un-clamped; a content-sizing plane (a stack, a document, a text)
     # is framed from its measure alone, so the clamp takes the overshoot away and a caret on the
     # content's last lines comes to rest where the content ends.
-    if caretWidget.top() < ft
+    if caretWidget.top() < ft + borderOverMyPlane
       @_writeScrollOffset @scrollOffsetX, (Math.round @scrollOffsetY - (ft - caretWidget.top() + marginAroundCaret))
-    else if caretWidget.bottom() > fb
+    else if caretWidget.bottom() > fb - borderOverMyPlane
       @_writeScrollOffset @scrollOffsetX, (Math.round @scrollOffsetY + (caretWidget.bottom() - fb + marginAroundCaret))
-    if caretWidget.left() < fl
+    if caretWidget.left() < fl + borderOverMyPlane
       @_writeScrollOffset (Math.round @scrollOffsetX - (fl - caretWidget.left() + marginAroundCaret)), @scrollOffsetY
-    else if caretWidget.right() > fr
+    else if caretWidget.right() > fr - borderOverMyPlane
       @_writeScrollOffset (Math.round @scrollOffsetX + (caretWidget.right() - fr + marginAroundCaret)), @scrollOffsetY
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()

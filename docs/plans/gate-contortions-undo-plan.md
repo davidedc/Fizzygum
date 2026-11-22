@@ -20,7 +20,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U5 | One answer on `Widget`, asked plainly | CLOSED 2026-11-22 (§U5) |
 | U6 | Three checks get a witness of their own | CLOSED 2026-11-22 (§U6) |
 | U7 | The world steps what is attached; a row with nothing to load says so | CLOSED 2026-11-22 (§U7) |
-| U8 | The caret's margin includes the border | not started |
+| U8 | The caret's margin includes the border | CLOSED 2026-11-22 (§U8) |
 | U9 | A re-click keeps a member's undo history | not started |
 | U10 | Six self-called helpers take their own tier | not started |
 | U11 | `loadWorldSnapshot` is its phases | not started |
@@ -573,6 +573,26 @@ the viewport's inner box at the right clamp; plant: the old margin.
 densities, plus any test whose caret sits at a bordered viewport's clamp: measure with the fix in and explain each.
 That BACKLOG line closes here. **Audit.** runtime S10.
 
+**Landed 2026-11-22.** A scrolling viewport keeps the caret clear of the border it paints over its own edge. No width
+was declared anywhere (the appearance strokes `lineWidth = 1`; `_indicatorEdgeInset` wrote `+ 1`): `Theme.borderWidth`
+names it, beside `frameBorderWidth`, and `ScrollIndicatorHostWdgt._borderWidthOverMyEdge` asks it through the soft
+probe the indicators use — the indicator inset reads it (pixel-neutral) and so does `ViewportWdgt.scrollCaretIntoView`,
+where `borderOverMyPlane = max(0, border − planeMargin)` widens the trigger at all four edges and floors the rest.
+Nothing moves where there is no border or the margin or padding already clears it. Corrected at research: the margin
+lives only in `scrollCaretIntoView` (`CaretWdgt`'s band clamp stands aside in a viewport), and the defect was in a
+second test, `SystemTest_macroScrollPanelCaretBroughtIntoViewWhenMoved` (the caret's top row under the top border,
+mouse). Proof: value assertions in both tests (the caret's edge 1 px inside the panel's edge at the walk, at the clamp,
+and for a string flush with a panel's top); a plant keeping the old rest reads 0 at each, one keeping the old trigger
+reads 0 at the flush-top case, and the scroll-indicators border plant still fails its test through the shared helper.
+Ruled: the horizontal test walks 11 steps, so its image_3 follows the caret mid-string as its prose claims. Ruled
+(for the owner's second look): a caret flush with the top of a bare viewport whose content fits it scrolls that
+content 1 px (the follow's overshoot stands, and the panel shows its thin indicator until scrolled back); the test
+states it. Pixels,
+exactly as predicted: `SystemTest_macroEditingStringInScrollablePanelCaretAlwaysVisible` image_3 and image_4 (both
+pointers, both densities) and `SystemTest_macroScrollPanelCaretBroughtIntoViewWhenMoved` image_4 (mouse, both
+densities) — 10 references, each the caret 1 px clear of the border. Filed: the vertical test's finger leg never
+brings the caret back (its finger image_4 equals image_3, with no caret). Ratchets: none.
+
 ### U9 — A re-click keeps a member's undo history
 
 **Stands today.** `src/meta-tools/InspectorWdgt.coffee`, `selectionFromList` (record 21 in
@@ -876,6 +896,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U6: three checks take their expected value from the rule they judge, or dodge a finger failure: the serialization rig's pane list, the thumb-highlight test, the pointer-cancel test's mouse-only declaration — small. — CLOSED 2026-11-22 (gate-contortions loop, U6): the literal list both ways, the painted thumb against a pointer-kind witness, the cancel test under a finger.
 - [x] U7: two dev-menu rows throw when clicked before anything is serialised, excused in the menu sweep's `KNOWN` table; the bouncer's `return unless @parent?` guards the stepping defect filed in this file — small. — CLOSED 2026-11-22 (gate-contortions loop, U7): the rows inform and return; the entries are gone.
 - [x] The world steps every registered stepper, attached or not: a detached widget and a never-attached copy of a stepping widget keep stepping and stay in the set. Reached by the menu sweep (a detached bouncer threw). Medium-low. Detail: the plan's §U4e. — CLOSED 2026-11-22 (gate-contortions loop, U7): `WorldWdgt._stepsMember` — the world steps a member only while on the world or the hand; the bouncer's guard is gone.
+- [x] W5 follow-up — a caret at the right edge of a padless scrolling viewport (a loose string in a scroll panel) has its last column under the 1 px border; `scrollCaretIntoView`'s margin should include the border. → "W5 follow-up — a caret at a padless viewport's edge under its border" — CLOSED 2026-11-22 (gate-contortions loop, U8): the border joins the caret's trigger and rest (`Theme.borderWidth`, `_borderWidthOverMyEdge`); both caret tests recaptured.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

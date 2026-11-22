@@ -40,7 +40,10 @@ A scrolling container decomposes into three responsibilities, each with an hones
    scroll path announces at `_reLayoutScrollbars`. The caret follow (`scrollCaretIntoView`,
    refusing `'never'` at its own gate) writes offsets directly and deliberately UN-clamped:
    the arrange's window merge then grows the frame and the tail clamp normalizes, so the
-   follow's margin overshoot sticks — the one licensed bypass of the cores' clamp.
+   follow's margin overshoot sticks — the one licensed bypass of the cores' clamp. The follow keeps the caret clear
+  of the border the viewport strokes over its own edge: the part of it that lies over the plane
+  (`max(0, border − planeMargin)`, the border's width from `_borderWidthOverMyEdge`) widens what counts as out of
+  view at all four edges and floors the margin the caret comes to rest at.
 
    **The plane margin.** A viewport's `planeMargin` (0 unless it is given one; a document keeps
    `documentItemSpacing`) is a fixed
@@ -181,9 +184,9 @@ a 1px sliver no pointer can work. The pane still scrolls, since scrollability is
 WHERE A THIN INDICATOR STANDS is one derived rule, with no dial per kind of viewport: clear of the
 LINE at the viewport's edge, and short of its side's ends.
 - Across its axis it stands `scrollIndicatorEdgeClearance` (1 px of paper) in from the line
-  (`_indicatorEdgeInset`). The line is the 1 px border the viewport's appearance
-  strokes over its own edge, where it strokes one (`outlineIsStroked`, asked through the soft
-  probe the selection ring uses: a plain panel on the desk, a patch node's text box, a spreadsheet's
+  (`_indicatorEdgeInset`). The line is the border the viewport's appearance strokes over its own edge,
+  `Theme.borderWidth` (1) wide, where it strokes one (`_borderWidthOverMyEdge`: `outlineIsStroked`, asked through
+  the soft probe the selection ring uses: a plain panel on the desk, a patch node's text box, a spreadsheet's
   page edge), so the
   indicator lies 2 px in from the edge; where it strokes none (a window's whole content, a folder's
   pane, an inspector's panes, a document, a pop-up's rows) the line is the edge itself, and the

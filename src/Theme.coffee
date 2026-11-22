@@ -826,6 +826,12 @@ class Theme
     # the glyph box a menu row shows its icon in (MenuItemWdgt), and so the box a picture taken
     # for a row is fitted into (InertIconHolderWdgt, the overflow chevron's tool miniatures).
     @menuRowGlyphSize = 24
+    # the width of the BORDER a body strokes along its outline -- a panel's, a viewport's, a
+    # button's, a card's: the ring its 1 px line occupies inside the body's edge, one logical pixel
+    # at every dpr (the hairline RectangularAppearance._paintBorder and BoxyAppearance stroke).
+    # What a viewport shows keeps clear of it where the viewport paints one over its own edge
+    # (ScrollIndicatorHostWdgt._borderWidthOverMyEdge): its thin indicators, and the caret it follows.
+    @borderWidth = 1
     # the width of a frame's BORDER: the ring its 1 px outline occupies along its edges (the crisp
     # hairline BoxyAppearance strokes over the frame's content). The frame's strip, its payload and
     # its docked bands all lie INSIDE it, so it is also how far a strip's pieces and background sit

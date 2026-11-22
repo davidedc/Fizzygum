@@ -108,19 +108,24 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
       WorldWdgt.theme.scrollIndicatorThickness
 
   # How far in from my edge the indicators lie. A thin one stands clear of the LINE at my edge by
-  # the theme's clearance: where my appearance strokes a border along my outline, over my children,
-  # that border is the line and the indicator stands one pixel further in; where it strokes none
-  # (a window's pane, whose line is its window's border just past my edge; a document) the line is
+  # the theme's clearance: where I paint a border over my edge, that border is the line and the
+  # indicator stands its width further in (_borderWidthOverMyEdge); where I paint none the line is
   # my edge itself. A fat one lies flush, because its bar is my scroll band itself: the strip the
   # hover pass watches (_updatePointerInScrollBand) and the frame every press is aimed into
   # (buttonScreenBoxOnArrival). The inset moves the thin bar across its axis only, and a thin bar
-  # is no target, so the corner reserve, the hover band and every hit area are unmoved by it. The
-  # border is asked of my appearance through the soft probe, as the selection ring asks it
-  # (Widget._drawSelectionOverlay): an appearance that does not answer strokes no outline.
+  # is no target, so the corner reserve, the hover band and every hit area are unmoved by it.
   _indicatorEdgeInset: ->
     return 0 if @_pointerInScrollBand
-    clearance = WorldWdgt.theme.scrollIndicatorEdgeClearance
-    if @appearance?.outlineIsStroked?() is true then clearance + 1 else clearance
+    WorldWdgt.theme.scrollIndicatorEdgeClearance + @_borderWidthOverMyEdge()
+
+  # THE BORDER I PAINT OVER MY OWN EDGE, its width across: the theme's border width where my
+  # appearance strokes a line along my outline, over my children; none where it strokes none (a
+  # window's pane, whose line is its window's border just past my edge; a document). Asked of my
+  # appearance through the soft probe the selection ring asks (Widget._drawSelectionOverlay): an
+  # appearance that does not answer strokes no outline. My thin indicators stand clear of it
+  # (_indicatorEdgeInset), and so does the caret a viewport follows (ViewportWdgt.scrollCaretIntoView).
+  _borderWidthOverMyEdge: ->
+    if @appearance?.outlineIsStroked?() is true then WorldWdgt.theme.borderWidth else 0
 
   # How far a bar of mine stops short of each end of its run (_barFrameAt): a THIN indicator I
   # present, by the theme's end inset, and by the margin along my run where that is the larger
