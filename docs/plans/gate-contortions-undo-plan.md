@@ -15,7 +15,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 |---|---|---|
 | U1 | A firing ratchet says what its number holds back and when a raise is the answer | CLOSED 2026-11-22 (§U1) |
 | U2 | Every other gate names its quiet fix as the wrong answer | CLOSED 2026-11-22 (§U2) |
-| U3 | The words say what is true again | not started |
+| U3 | The words say what is true again | CLOSED 2026-11-22 (§U3) |
 | U4 | Three spellings a gate's blind spot chose | not started |
 | U5 | One answer on `Widget`, asked plainly | not started |
 | U6 | Three checks get a witness of their own | not started |
@@ -329,6 +329,26 @@ row. Ratchets: none.
 
 **Ratchets.** None. **Proof.** `check-doc-narration.js`, `fg build` (a `#` comment inside a method body is code),
 the gauntlet. **Predicted pixel set.** EMPTY. **Audit.** ratchet §2 rows 27 and 29; static C8 and §3.
+
+**Landed 2026-11-22.** (1) `Fizzygum-tests/CLAUDE.md`'s macro-tests paragraph has its cut facts back, each true of
+today's code: "there" (where the optional fields live), the three caught-error token names, the determinism clause
+("SWCanvas + the event queue are deterministic and matching is on the raw-pixel `dataHash`, not on anything else in
+the filename"), "a real disagreement about the pixels, not a staleness artifact", and "there is no backend axis: the
+harness page IS the SWCanvas page" (+206 B, 66073 of 67015: no raise); and "Three more fields" counts them true,
+"Four" (two declarations, two fields each). (2) The handle tests and the rounded-box test
+name `catchesPointerAt` again, in words true of the code: `HandleWdgt` has no override, and `Widget.catchesPointerAt`
+answers `HandleAppearance`'s shape, the whole box — so the wording before the census reword ("it declares
+catchesPointerAt over its whole box") was false too and is not restored; the same strings' other stale facts (the
+painted "striped triangle", drifted line numbers, `nonFloatDragging`'s receiver call, the handle count, a false
+`topWdgtUnderPointer` gloss) are rewritten with them. Four sites in three tests; no gate reads test prose for member names. (3) `layering-naming-convention.md` §2.5
+has THREE settle-thunk shapes: shape 2 is back to its definition, and shape 3, "a settle round a non-twin self core",
+holds the pick-up's figure resolution and the settles of that shape (several verbs over one core, a menu verb's
+narrow core, a deferred-settle entrypoint's settling branch, a sequence, one settled step of a longer method). (4) The
+four `public-call-sanctioned` reasons about `createErrorConsole` say why it is public (macros and rigs build the
+console with it; its body drives the public setters [A] keeps out of a `_` form); the copied `layout-apply-sanctioned`
+reason on `ViewportWdgt._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle`, a method [F] does not judge, is gone.
+Filed: about 21 settle thunks fit none of the three shapes; three more `layout-apply-sanctioned` markers sit in methods
+[F] does not judge (a stale-marker rule for [F] is a rule change). Ratchets: none.
 
 ### U4 — Three spellings a gate's blind spot chose (parts INDEPENDENT)
 
@@ -766,6 +786,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] **A firing gate says how to go quiet, never when the quiet fix is wrong** — ratchets steered sessions to inline helpers, home code by a ceiling, make a CLAUDE.md line false; many gates have a cheap quiet fix that is a contortion; each should print why it exists and when a raise or sanction is right — medium. — CLOSED 2026-11-22 (gate-contortions loop, U1 + U2): every firing gate prints what its finding means from one module, `buildSystem/lib/gate-advice.js` — a budget when a raise is the answer, an invariant or a convention its quiet fixes as wrong and the right answer — and each bite-proof holds it to that advice (`lib/prove-rules.js` `advised`); the classes are `lint-and-static-checks.md` §3b.
+- [x] U3: four facts cut from `Fizzygum-tests/CLAUDE.md` by byte count, three tests' prose that stopped naming `catchesPointerAt`, a layering-doc shape bent to hold one site, two stale sanction pointers — small. — CLOSED 2026-11-22 (gate-contortions loop, U3): the facts restored where true, the tests name `catchesPointerAt` in words true of the code, §2.5 has a third shape, the two pointers corrected.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

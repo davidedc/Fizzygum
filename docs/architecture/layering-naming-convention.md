@@ -116,7 +116,7 @@ marks the *property* "nothing downstream settles" and is twin-optional (a struct
 twin, e.g. `_addInPseudoRandomPositionNoSettle`). *(The `_settleLayoutsAfterBatch` nested-absorbing tier is deleted —
 zero callers; reintroduce from git history if ever needed.)*
 
-**The TWO sanctioned settle-thunk shapes** (what may legitimately sit inside a `_settleLayoutsAfter` thunk,
+**The THREE sanctioned settle-thunk shapes** (what may legitimately sit inside a `_settleLayoutsAfter` thunk,
 answering "why isn't the thunk always a `*NoSettle` core?"):
 1. **The public wrapper** — `foo: -> @_settleLayoutsAfter => @_fooNoSettle args`: a public mutation verb over its
    OWN core; `check-thin-wraps.js` enforces this exact pairing whenever a `_<name>NoSettle` twin exists.
@@ -127,16 +127,27 @@ answering "why isn't the thunk always a `*NoSettle` core?"):
    polymorphic hook. Confined to the re-parent gestures, `ActivePointerWdgt.grab` (`_beforeBeingGrabbed`,
    `_reactToBeingGrabbed`, the trailing `_reactToChildGrabbed`) and `.drop` (its re-fits), where the body is an
    inherent SEQUENCE of settles (grab hand-rolls its own), so a `_<name>NoSettle` restructure is impossible
-   without re-entering the flush guard; and the pick-up's figure resolution, `Widget._resolvePickUpFigure`, round
-   the self-core that DISPATCHES the hook: `_pickOutRotatedFigureNoSettle` takes a tilted figure's part out of its
-   holder, whose `_reactToChildRemoved` it so dispatches — the settle is round that notification, reached through
-   the core that causes it. (`Widget.pickUp` is a grab that centres the widget under the hand, and
+   without re-entering the flush guard. (`Widget.pickUp` is a grab that centres the widget under the hand, and
    opens no settle of its own.) A `_before<Event>` hook needs its settle as much as a `_reactTo<Event>` one: a
    hook that builds (a constructor that settles) has no settle to defer to outside one, and lays the world out in
    the middle of the build. Fenced from three sides:
    [J] (static), the notification-settle runtime audit (dynamic), and rule [T] (a subject that double-settles
-   on `@`-self). Anything not matching either shape is a smell — see `check-layering.js` [T] and
-   `check-call-separation.js` [S].
+   on `@`-self).
+3. **A settle round a non-twin self core** — `bar: -> @_settleLayoutsAfter => @_fooNoSettle args`, or a thunk
+   that runs several such cores in turn (with the plain field write that picks what they do): each core is MY
+   OWN and settle-free, but none is `bar`'s twin, so `check-thin-wraps.js`, which pairs twins, does not read it.
+   Several verbs over one core that takes what tells them apart (`CaretWdgt`'s jump verbs over `_jumpToNoSettle`,
+   `FrameWdgt.setTitle` over `_retitleNoSettle`); a menu-dispatched verb whose core takes only what it needs
+   (`FrameWdgt.dockAtSide` over `_reSideMyDockNoSettle`); the settling branch of a deferred-settle entrypoint
+   (`_moveToDeferredSettle` over `_moveToNoSettle`, rule [O]); a sequence (`SimpleSpreadsheetWdgt.acceptCellEdit`
+   commits the edit, then moves the selection); and one settled step of a longer method (`WorldWdgt.resetWorld`
+   round `_teardownWorldStructureNoSettle`). The pick-up's figure resolution is one: `Widget._resolvePickUpFigure`
+   settles round `_pickOutRotatedFigureNoSettle`, which takes a tilted figure's part out of its holder and so
+   dispatches the holder's `_reactToChildRemoved`; a holder that builds there (a window's default content, a
+   Maker's fresh payload) needs that settle open, or each fresh constructor lays the whole world out mid-build.
+
+Anything not matching one of the three shapes is a smell — see `check-layering.js` [T] and
+`check-call-separation.js` [S].
 
 **Sibling on the SETTLE axis — the reactive-connector lane.**
 `_settleLayoutsAfterOrJoinEnclosingPass` is `_settleLayoutsAfter` minus the MUTATION-WINDOW throw —
@@ -392,7 +403,7 @@ were falsified — is in the archived plans, indexed in `docs/archive/INDEX.md`:
 - **`all-constructors-settle-plan.md`** — why the notification-settle audit PERMITS an orphan-receiver
   `_settleLayoutsAfter` reached from a callback (§5.2), superseding the model that required a constructor to reach
   `@_addNoSettle` directly.
-- **`public-private-call-separation-plan.md`** — the rationale behind the TWO sanctioned settle-thunk shapes (§2.5),
+- **`public-private-call-separation-plan.md`** — the rationale behind the first two sanctioned settle-thunk shapes (§2.5),
   answering "why isn't the thunk always a `*NoSettle` core?"; the arc also fixed this convention's own churn cost
   (a rename of an inspected class's method forces a benign reference recapture).
 - **`container-regularization-plan.md`** — the scorecard whose row F floated the one mode-flagged mega-container

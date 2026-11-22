@@ -2261,9 +2261,9 @@ class WorldWdgt extends IconGridPanelWdgt
       # throws (a console's Run, a script shortcut's press), which is why a test that runs such code
       # on purpose declares INPUT_ERROR among the caught errors it expects.
       console.error "INPUT_ERROR: handling an input event threw: " + reportOfThrownValue(err)
-      # public-call-sanctioned: createErrorConsole stays public (its body drives the public
-      # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
-      # consciously pops it outside any pass.
+      # public-call-sanctioned: createErrorConsole is public API (macros and rigs build the console
+      # with it; its body drives the public setExtent/setBounds and the settling add, which [A] and [G]
+      # keep out of a _-form); this discrete error-recovery path consciously pops it outside any pass.
       @_softResetWorld()
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
@@ -2284,8 +2284,9 @@ class WorldWdgt extends IconGridPanelWdgt
       resolvingFunction.call()
 
   _showErrorsHappenedInRepaintingStepInPreviousCycle: ->
-    # public-call-sanctioned: createErrorConsole stays public ([A] forbids the _-form — see its
-    # public-api-allowlist entry); this discrete error-report path consciously pops it.
+    # public-call-sanctioned: createErrorConsole is public API (macros and rigs build the console
+    # with it; its body drives the public setExtent/setBounds and the settling add, which [A] and [G]
+    # keep out of a _-form); this discrete error-report path consciously pops it.
     for eachErr in @errorsWhileRepainting
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
@@ -2303,8 +2304,9 @@ class WorldWdgt extends IconGridPanelWdgt
     # createErrorConsole (public setters). This is the deferred tail of that catch. (task #18)
     @_softResetWorld()
     for eachErr in errorsToShow
-      # public-call-sanctioned: createErrorConsole stays public ([A] forbids the _-form); discrete
-      # error-report path, consciously popped.
+      # public-call-sanctioned: createErrorConsole is public API (macros and rigs build the console
+      # with it; its body drives the public setExtent/setBounds and the settling add, which [A] and [G]
+      # keep out of a _-form); this discrete error-report path consciously pops it.
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
@@ -2539,9 +2541,9 @@ class WorldWdgt extends IconGridPanelWdgt
       @widgetsGivingErrorWhileStepping.push whichWidget
       # the console hears it here, at the catch, as the error log does just below
       console.error "STEP_ERROR: a widget's step threw: " + reportOfThrownValue(err)
-      # public-call-sanctioned: createErrorConsole stays public (its body drives the public
-      # setExtent/moveTo/add — rule [A] forbids the _-form); this discrete error-recovery path
-      # consciously pops it outside any pass.
+      # public-call-sanctioned: createErrorConsole is public API (macros and rigs build the console
+      # with it; its body drives the public setExtent/setBounds and the settling add, which [A] and [G]
+      # keep out of a _-form); this discrete error-recovery path consciously pops it outside any pass.
       @_softResetWorld()
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err

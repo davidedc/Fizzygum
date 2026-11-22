@@ -750,7 +750,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # Children re-fits my contents+scrollbars synchronously, riding that outer settle. (end-of-cycle-flush-drawdown.)
   _showResizeAndMoveHandlesAndLayoutAdjustersNoSettle: ->
     super
-    @_reLayoutChildren() # layout-apply-sanctioned: public content-change endpoint -- see add() (OVERVIEW §11 PROOF 2)
+    @_reLayoutChildren()
 
   
   setContents: (aWdgt, extraPadding = 0) ->
