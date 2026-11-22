@@ -625,7 +625,7 @@ Every gate, rule and token, by class:
 | `check-doc-narration.js` `BACKLOG_ITEM_TOO_LONG` | C, one answer | detail that belongs in the plan: it moves there |
 | every token of `GATE_TOKENS` (`Fizzygum-tests/scripts/lib/gate-tokens.js`), and the runners' `UNTOKENIZED_CONSOLE_ERROR` and `UNCAUGHT_PAGE_ERROR` | A | the world is wrong: geometry, layout, paint, step, input, storage, lifetime, boot (a stale allowlist entry's one answer is to delete it). `PAINT_ERROR`, `STEP_ERROR` and `INPUT_ERROR` are excused only in a test whose subject throws on purpose (`expectsCaughtErrors`, with its reason) |
 | `NOT_GATED` (`DATAFLOW_ERROR`, `FIZZYGUM_USE_SWCANVAS`) | none | not a gate: a green run emits it, or the word is too common to match |
-| the macro discipline: `AIM MISSED`, the `pointerKinds` declaration | B | an aim that names no meaning; a test declared mouse-only whose subject is no mouse mechanism |
+| the macro discipline: `AIM MISSED`, `MENU ROW OUT OF VIEW`, the `pointerKinds` declaration | B | an aim that names no meaning; a press aimed at a menu row its pop-up does not show (bring it in first: `bringMenuRowIntoView_InputEvents_Macro`); a test declared mouse-only whose subject is no mouse mechanism |
 | every gauntlet leg (`fg gauntlet` lists them; `refs` also runs `check-doc-narration.js`, classed above) and the presuite's `fracplane` rider | A | a wrong pixel, a broken settle, a leak, a nondeterminism, a part, menu or pin that does not work |
 | `fg fuzz` | none | not a gate: a read that does not wait for its screenshot, fixed at the read, never by a recapture |
 

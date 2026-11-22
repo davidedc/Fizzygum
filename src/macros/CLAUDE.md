@@ -126,6 +126,14 @@ silently lands on something else changes the pixels, and a recapture would then 
   presses, which `_widgetAPressMeets` accounts for by asking the host what part of a bar the arrival meets there
   (`ScrollIndicatorHostWdgt.barPartMetOnArrivalAt`, which maps the point into the host's own plane, so a tilted
   host answers for its bars' true footprint).
+  One aim is refused outright, at queue time, before anything is queued: an aim at a widget a pop-up's rows CLIP —
+  one that does not show WHOLE, a row past or across the fold of an over-tall menu, which the locators find in the tree
+  — throws **"MENU ROW OUT OF VIEW"** (`_refuseAnAimAtAClippedMenuRow`, the first line of `_aimingAt`), naming the row
+  and how far past which edge of the shown rows it reaches. WHOLE is the rule a list row is held to too
+  (`assertListItemInView`): a person's press is aimed at the row's centre, and a clipped row shows only part of itself —
+  a row wholly past the fold, not its centre at all. Nothing scrolls a menu behind the macro's back: the step brings the
+  row into view first, `bringMenuRowIntoView_InputEvents_Macro row`, as a person scrolls to it (handed no row, it
+  throws MENU ROW MISSING).
   A wheel named for a SCROLLER (`wheelOn_InputEvents` on a widget that takes a scroll itself — under a mouse one
   answering `scrolledBy`, under a finger one claiming plain drags for scrolling) must also start a scroll the
   dispatch hands to THAT widget: the check asks the dispatch's own decision (`_scrollTakerAbove` →
@@ -249,7 +257,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `getTextMenuItemsFromMenu` (every such row, in order; never throws), `rowOfMenuStandingFor menu, widget` (a row that NAMES a widget —
   a hierarchy menu's, a chooser's, a wire's — found by that widget, `MenuItemWdgt.representedWidget`; it throws a named
   error on no row or several) and its query twin `rowsOfMenuStandingFor` (every such row, in order; never throws, so a
-  step can ask whether a menu offers a widget at all); plus the SCREEN-family pair for widgets on any MAPPED
+  step can ask whether a menu offers a widget at all) — all four answer rows WHERE THEY ARE and scroll nothing, so a row
+  past the fold of an over-tall menu is answered past the fold, and a step brings it into view before pressing it
+  (`bringMenuRowIntoView`, L3; a press at it otherwise throws MENU ROW OUT OF VIEW, rule 4); plus the SCREEN-family pair for widgets on any MAPPED
   plane — inside an affine island OR a resident of a SCROLLED pane (paint-time scroll: a plane's widgets
   never move when it scrolls, so their plane-local geometry sits offset-pixels away from the pixels) —
   `screenPointAtFractionOf` and its action twin `moveToAndClickAtScreenFractionOf_InputEvents` (the plane-local
@@ -292,7 +302,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `popUpIsShown menu` being the query they share,
   `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see
   (stacked duplicate handles paint near-identically), `assertListItemInView` — a list's named row shows whole in
-  its pane (recorded like a failed press check: the macro runs on), `assertScreenshotsIdentical` — MANDATORY for every
+  its pane (recorded like a failed press check: the macro runs on), `assertMenuRowInView` — its menu twin, a row (or
+  a prompt's button) shows whole in the rows its pop-up shows, `assertScreenshotsIdentical` — MANDATORY for every
   within-test byte-equality claim: call it right after the
   later shot with both full image names, earlier first). Menu READERS: `tickedRowLabelOfMenu` — the
   plain label of a menu's one ticked row, read from the rows' tick STATE (the tick is drawn, never
@@ -308,6 +319,11 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   precision only if the row does not show whole, then `assertListItemInView` — a fault, never a retry),
   `bringInViewAndClickOnListItem` (that, then the click, on a list you NAME — a test holding two inspectors passes
   the one it means; the top-inspector verb is this one applied to `topInspectorList()`),
+  `bringMenuRowIntoView row` (a menu row the locators answered, brought into view through the input queue: ONE wheel
+  over the pop-up's rows by the delta that CENTRES the row — the list wheel's rule, `_centringDelta`; a finger run
+  swipes the rows — then `assertMenuRowInView`, never a retry; a row already showing takes no wheel and no cycle. Hold
+  the menu from BEFORE it: a finger's swipes end in pointer-ups, which clear `getMostRecentlyOpenedMenu`'s fresh set.
+  The shared verbs below that press rows say it before each press),
   `openOwnMenuAtFractionOf` (right-click a widget at a fraction and land in its OWN menu, stepping through the
   hierarchy menu by the widget's own row where one opens instead),
   `setControllerTargetToWidgetProperty` (controller, target WIDGET, pin label — "Connect" → "Connect to" → the
@@ -350,7 +366,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `# macro-private-call-sanctioned: <reason>`, which is for test ORACLES only. Public setters self-settle, so
   sizing/positioning before OR after `world.add` both work; for measure-then-size, attach first and let `setWidth`
   settle so the wrapped height is readable.
-- **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`. Capture a popup
+- **`getMostRecentlyOpenedMenu()` is fresh-only** — every mouseUp clears `world.freshlyCreatedPopUps`, and so does a
+  finger's swipe, which `bringMenuRowIntoView` makes of its wheel. Capture a popup
   reference right after it opens and drive its later items via `@moveToItemOfMenuAndClick_InputEvents` (a prompt's
   buttons via `@clickPromptButton_InputEvents prompt, "OK"`). And "fresh" means BUILT, not shown: a pop-up joins that set
   in its constructor, so the menu assertions hold the menu to `popUpIsShown`, and a step reading it directly asserts

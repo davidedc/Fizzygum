@@ -574,6 +574,12 @@ class MacroToolkit
   # which a reference recapture would then bake in. So every verb that KNOWS the widget it aims at
   # states it, and the press it queues is checked against it when the queue drains, immediately
   # before the press is processed (AimCheckInputEvent).
+  #   One aim is refused outright, at queue time, before anything is queued: an aim at a widget a
+  # pop-up's rows CLIP — one that does not show WHOLE, a row past or across the fold of an over-tall
+  # menu — throws MENU ROW OUT OF VIEW (_refuseAnAimAtAClippedMenuRow), and the macro brings the row
+  # into view first (bringMenuRowIntoView_InputEvents_Macro), as a person scrolls to it. WHOLE is
+  # the condition, the one assertListItemInView holds a list row to: a person's press is aimed at
+  # the row's centre, and a row the rows clip shows only part of itself, often not its centre.
 
   # RUN AN AIMING GESTURE whose press must land on `target` (on it, or on any widget inside it).
   # The expectation is set only when `target` is a widget and none is pending already, so an
@@ -582,14 +588,34 @@ class MacroToolkit
   # nothing (a zero-length scroll) or threw — so it can never land on a later, unrelated press.
   # Answers whatever the gesture answers, so a verb whose body runs inside this queues and returns
   # exactly what it would without it. `setBy` names the verb in the failure message; `opts` is
-  # handed to the expectation (_expectNextPressOn).
+  # handed to the expectation (_expectNextPressOn). A widget target a pop-up's rows clip is refused
+  # first, whatever is pending: no expectation brings the rest of it into view.
   _aimingAt: (target, setBy, gesture, opts = {}) ->
+    @_refuseAnAimAtAClippedMenuRow target, setBy  if @_isWidgetTarget target
     return gesture() if @pendingAimExpectation? or not @_isWidgetTarget target
     expectation = @_expectNextPressOn target, setBy, opts
     try
       gesture()
     finally
       @pendingAimExpectation = undefined  if @pendingAimExpectation is expectation
+
+  # REFUSE AN AIM AT A WIDGET A POP-UP'S ROWS CLIP (_menuRowOutOfView): a row past the fold is in
+  # the tree, so every locator finds it, but the rows show it only in part or not at all — a row
+  # wholly past the fold has its centre in a pixel the rows viewport clips away, where a press lands
+  # on whatever lies behind the menu. The rule is WHOLE, as for a list row: an aim names the row, and
+  # a row that shows only in part is brought into view before a press as a person brings it, never
+  # pressed in the sliver that happens to show. Throws a named error saying which verb aimed, at
+  # which row of which pop-up, and how far past which edge of the rows it shows it reaches; answers
+  # nothing otherwise.
+  _refuseAnAimAtAClippedMenuRow: (target, setBy) ->
+    out = @_menuRowOutOfView target
+    return  unless out?
+    where =
+      if out.dy isnt 0
+        "#{Math.abs out.dy} px past the #{if out.dy > 0 then 'bottom' else 'top'} edge of the rows it shows (row #{out.rowTop}..#{out.rowBottom}, shown #{out.boxTop}..#{out.boxBottom}, on screen)"
+      else
+        "#{Math.abs out.dx} px past the #{if out.dx > 0 then 'right' else 'left'} edge of the rows it shows (row #{out.rowLeft}..#{out.rowRight}, shown #{out.boxLeft}..#{out.boxRight}, on screen)"
+    throw new Error "MENU ROW OUT OF VIEW: the press set up by #{setBy} aims at '#{out.label}' of #{out.popUp}, which does not show whole: it reaches #{where} — bring it into view first (bringMenuRowIntoView_InputEvents_Macro)"
 
   # Set the expectation the next press consumes, replacing any pending one; answers it, so a caller
   # can tell later whether it is still the pending one. `opts.receiverTakesTheScroll` (default
@@ -1952,38 +1978,52 @@ class MacroToolkit
     world.openPopUps.forEach (eachPopUp) -> highest = Math.max highest, eachPopUp.instanceNumericID
     highest
 
-  # THE ROW LOCATORS' LAST STEP: hand back the row the caller named, at a place the caller can
-  # actually reach it. A pop-up taller (or wider) than the world does not grow past it — its rows
-  # viewport caps itself at the world less the frame's chrome (PopUpRowsViewportWdgt's measure) and
-  # scrolls the remainder — so a row past the fold is fully present in the rows panel (the locators
-  # walk the TREE, which scrolling never moves) yet lies OUTSIDE the viewport's visible box. Its
-  # centre is then a screen pixel the viewport clips away, and the click every caller aims there
-  # lands on whatever sits behind the menu: the submenu never opens and the macro unravels a step
-  # later on the menu that isn't there.
-  #   A user reaches such a row by scrolling it into view first, so the toolkit does the same —
-  # minimally (the row is brought just inside the nearer edge, a row taller than the box aligned to
-  # its top), and through the viewport's own public scroll pin, `setScrollY`/`setScrollX`: the very
-  # setters a scrollbar drag drives, which clamp at the movement cores and re-lay the content and
-  # bars exactly as a gesture does. Never a raw offset write.
-  #   The scroll is CONDITIONAL on the row being out of view, and that is the point: a row inside
-  # the box takes no scroll at all, so every menu that fits behaves as it always has.
-  _menuRowScrolledIntoView: (theItem) ->
-    return theItem unless theItem?
-    foundViewport = theItem.parentThatIsA PopUpRowsViewportWdgt
-    return theItem unless foundViewport?
-    viewport = foundViewport[0]
-    return theItem unless viewport.isScrollableNow()
-    # both boxes expressed on the SCREEN, since the row's plane is the scrolled one and the
-    # viewport's is not — localPointToScreen is what carries the scroll translation between them
-    rowTopLeft = theItem.localPointToScreen new Point theItem.left(), theItem.top()
-    rowBottomRight = theItem.localPointToScreen new Point theItem.right(), theItem.bottom()
+  # WHERE A WIDGET OF A POP-UP'S ROWS LIES AGAINST THE ROWS THE POP-UP SHOWS — for a widget those rows
+  # CLIP. A pop-up taller (or wider) than the world does not grow past it — its rows viewport caps
+  # itself at the world less the frame's chrome (PopUpRowsViewportWdgt's measure) and scrolls the
+  # remainder — so a row past the fold is fully present in the rows panel (the locators walk the TREE,
+  # which scrolling never moves) yet lies wholly or partly OUTSIDE the viewport's visible box. A row
+  # wholly past the fold has its centre in a screen pixel the viewport clips away, and a press aimed
+  # there lands on whatever sits behind the menu: the submenu never opens and the macro unravels a
+  # step later on the menu that isn't there; a row across the fold shows only part of itself.
+  #   Answers undefined when the widget shows WHOLE — it lies in no pop-up's rows, or in rows that do
+  # not scroll, or wholly inside their box (the rows viewport itself always does). Otherwise answers
+  # { viewport, popUp, label, rowTop, rowBottom, rowLeft, rowRight, boxTop, boxBottom, boxLeft,
+  # boxRight, dy, dx }: the rows viewport and its pop-up, the widget's label (a row's, or a prompt
+  # button's face), the widget's and the rows' spans on the SCREEN, and how far each scroll offset must
+  # move to bring the widget just inside (_scrollDeltaBringingIntoView: positive past the end). Both
+  # boxes are carried to the screen, since the widget's plane is the scrolled one and the viewport's is
+  # not — localPointToScreen is what carries the scroll translation between them. A pure read, which
+  # moves nothing: the aim check's refusal, the wheel that brings a row into view and the assertion
+  # that it did all ask it. Handed no widget at all (a row a step looked up and did not find), it
+  # THROWS a named fault (MENU ROW MISSING) rather than answer "in view" for a row that is not there.
+  _menuRowOutOfView: (widget) ->
+    unless @_isWidgetTarget widget
+      throw new Error "MENU ROW MISSING: a menu row to bring into view or to check is #{widget}, not a widget — find it with getTextMenuItemFromMenu or rowOfMenuStandingFor, which throw naming the rows the menu has"
+    found = widget.parentThatIsA PopUpRowsViewportWdgt
+    return undefined  unless found?
+    viewport = found[0]
+    return undefined  if viewport is widget or not viewport.isScrollableNow()
+    rowTopLeft = widget.localPointToScreen new Point widget.left(), widget.top()
+    rowBottomRight = widget.localPointToScreen new Point widget.right(), widget.bottom()
     boxTopLeft = viewport.localPointToScreen new Point viewport.left(), viewport.top()
     boxBottomRight = viewport.localPointToScreen new Point viewport.right(), viewport.bottom()
-    deltaY = @_scrollDeltaBringingIntoView rowTopLeft.y, rowBottomRight.y, boxTopLeft.y, boxBottomRight.y
-    deltaX = @_scrollDeltaBringingIntoView rowTopLeft.x, rowBottomRight.x, boxTopLeft.x, boxBottomRight.x
-    viewport.setScrollY viewport.getScrollY() + deltaY  if deltaY != 0
-    viewport.setScrollX viewport.getScrollX() + deltaX  if deltaX != 0
-    theItem
+    dy = @_scrollDeltaBringingIntoView rowTopLeft.y, rowBottomRight.y, boxTopLeft.y, boxBottomRight.y
+    dx = @_scrollDeltaBringingIntoView rowTopLeft.x, rowBottomRight.x, boxTopLeft.x, boxBottomRight.x
+    return undefined  if dy is 0 and dx is 0
+    viewport: viewport
+    popUp: viewport.parent
+    label: widget.labelString ? widget.faceWidget?.text ? widget.toString()
+    rowTop: rowTopLeft.y
+    rowBottom: rowBottomRight.y
+    rowLeft: rowTopLeft.x
+    rowRight: rowBottomRight.x
+    boxTop: boxTopLeft.y
+    boxBottom: boxBottomRight.y
+    boxLeft: boxTopLeft.x
+    boxRight: boxBottomRight.x
+    dy: dy
+    dx: dx
 
   # How far one axis' scroll offset must move so the span [rowStart, rowEnd] lies inside the window
   # [boxStart, boxEnd]: nothing when it already does; otherwise just enough to bring the overshooting
@@ -1997,15 +2037,18 @@ class MacroToolkit
 
   # ── ROWS BY THEIR EXACT LABEL ─────────────────────────────────────────────────────────────────
   # The same pair, and the same rule, as the rows found by the widget they stand for (below): a
-  # QUERY that never throws, and a finder that names what went wrong.
+  # QUERY that never throws, and a finder that names what went wrong. Both answer rows WHERE THEY
+  # ARE and move nothing: a row past the fold of an over-tall menu is answered past the fold, a press
+  # aimed at it is refused (MENU ROW OUT OF VIEW, _refuseAnAimAtAClippedMenuRow), and a step says
+  # bringMenuRowIntoView_InputEvents_Macro on it first, as a person scrolls to it.
 
-  # Every row of theMenu labelled exactly theLabel, in row order — a QUERY: it scrolls nothing and
-  # never throws, so a step can ask whether a menu offers a row at all, or how many it offers.
+  # Every row of theMenu labelled exactly theLabel, in row order — a QUERY: it never throws, so a
+  # step can ask whether a menu offers a row at all, or how many it offers.
   getTextMenuItemsFromMenu: (theMenu, theLabel) ->
     return [] unless theMenu?
     theMenu.collectAllChildrenBottomToTopSuchThat (item) -> item.labelString? and item.labelString == theLabel
 
-  # THE row of theMenu labelled exactly theLabel, brought into view if the menu's rows scroll.
+  # THE row of theMenu labelled exactly theLabel, where it is (scrolled into view or not).
   # THROWS a named error when no row has that label — listing the labels the menu does have — or
   # when several do: a click there would land on whichever one a search met first. A missing or
   # ambiguous row is a broken step, never one to skip.
@@ -2018,15 +2061,19 @@ class MacroToolkit
       labels = ("\"#{each.labelString}\"" for each in labelled)
       problem = if rows.length is 0 then "has no row labelled" else "has #{rows.length} rows labelled"
       throw new Error "#{theMenu} #{problem} \"#{theLabel}\" (its rows: #{if labels.length then labels.join ', ' else 'none'})"
-    @_menuRowScrolledIntoView rows[0]
+    rows[0]
 
   # Move to and click a menu item by its label, in a SPECIFIC menu you already hold a reference
   # to. Prefer this over moveToItemOfTopMenuAndClick_InputEvents whenever you interact with a popup more
   # than once (e.g. click a submenu row, THEN a row of the menu you came from): getMostRecentlyOpenedMenu
   # reads world.freshlyCreatedPopUps, which EVERY pointer-up clears (ActivePointerWdgt.processPointerUp), so it
   # is only valid for the FIRST interaction after a popup opens. Capture the popup reference while it is
-  # still fresh (right after it opens) and drive its later items through this method. ⚠ A PROMPT's OK,
-  # Close, Cancel and Don't save are BUTTONS, not rows: press them with clickPromptButton_InputEvents.
+  # still fresh (right after it opens) and drive its later items through this method — bringing a row
+  # into view counts as an interaction too: under a finger its wheel is swipes, each ending in a
+  # pointer-up. ⚠ A PROMPT's OK, Close, Cancel and Don't save are BUTTONS, not rows: press them with
+  # clickPromptButton_InputEvents.
+  # A row the menu's rows clip is refused (MENU ROW OUT OF VIEW): bring it into view first
+  # (bringMenuRowIntoView_InputEvents_Macro, on the row getTextMenuItemFromMenu answers).
   moveToItemOfMenuAndClick_InputEvents: (theMenu, theLabel) ->
     theItem = @getTextMenuItemFromMenu theMenu, theLabel
     @moveToAndClick_InputEvents theItem
@@ -2043,18 +2090,18 @@ class MacroToolkit
   # the menu lists something else: a test names the WIDGET it means instead, the one it built or
   # holds. Assert the wording itself only where the wording is the point (assertTopMenuItemStrings).
 
-  # Every row of theMenu standing for theWidget, in row order — a QUERY: it scrolls nothing and
-  # never throws, so a step can ask whether a menu offers a widget at all (a hierarchy menu has a
-  # row for each ancestor; a plain context menu has none), or assert that a chooser leaves one out.
+  # Every row of theMenu standing for theWidget, in row order — a QUERY: it never throws, so a step
+  # can ask whether a menu offers a widget at all (a hierarchy menu has a row for each ancestor; a
+  # plain context menu has none), or assert that a chooser leaves one out.
   rowsOfMenuStandingFor: (theMenu, theWidget) ->
     return [] unless theMenu? and theWidget?
     theMenu.collectAllChildrenBottomToTopSuchThat (item) -> item.representedWidget?() is theWidget
 
-  # THE row of theMenu standing for theWidget, brought into view if the menu's rows scroll (as the
-  # label verbs bring theirs). THROWS a named error when no row stands for it — naming the widgets
-  # the menu's rows do name — or when several do (a controller wired twice into one widget, on two
-  # pins: name such a wire row by its exact label instead). A missing row is a broken step, never
-  # one to skip.
+  # THE row of theMenu standing for theWidget, where it is (as the label finder answers its row: a
+  # press at a row the rows clip is refused, so bring it into view first). THROWS a named error when
+  # no row stands for it — naming the widgets the menu's rows do name — or when several do (a
+  # controller wired twice into one widget, on two pins: name such a wire row by its exact label
+  # instead). A missing row is a broken step, never one to skip.
   rowOfMenuStandingFor: (theMenu, theWidget) ->
     unless theMenu?
       throw new Error "no menu to find the row standing for #{theWidget} in"
@@ -2064,7 +2111,7 @@ class MacroToolkit
       labels = ("\"#{each.labelString}\"" for each in named)
       problem = if rows.length is 0 then "has no row standing for" else "has #{rows.length} rows standing for"
       throw new Error "#{theMenu} #{problem} #{theWidget} (its rows naming a widget: #{if labels.length then labels.join ', ' else 'none'})"
-    @_menuRowScrolledIntoView rows[0]
+    rows[0]
 
   # Move to and click the row of theMenu standing for theWidget (rowOfMenuStandingFor: it throws on
   # no row or several). The press is verified like every widget-aimed press, and a finger run taps
@@ -2086,10 +2133,11 @@ class MacroToolkit
   # labelString is a row's.
 
   # The button of `prompt` labelled `theLabel` ("OK", "Close", "Cancel", "Don't save"), looked for
-  # among the prompt's own buttons (PromptWdgt.buttonsRow) and nowhere else in it, and brought into
-  # view if the prompt's rows scroll (_menuRowScrolledIntoView, which serves any widget of a pop-up's
-  # rows). THROWS when the prompt has no such button — naming the labels it does have — exactly as a
-  # row verb fails on a label its menu lacks: a missing button is a broken step, never one to skip.
+  # among the prompt's own buttons (PromptWdgt.buttonsRow) and nowhere else in it, and answered where
+  # it is: a press at a button the prompt's rows clip is refused like one at a clipped menu row
+  # (_menuRowOutOfView serves any widget of a pop-up's rows), and bringMenuRowIntoView_InputEvents_Macro
+  # brings it in. THROWS when the prompt has no such button — naming the labels it does have — exactly
+  # as a row verb fails on a label its menu lacks: a missing button is a broken step, never one to skip.
   # Queues nothing. A macro holds a prompt's button by its field instead (prompt.okButton,
   # prompt.dismissButton — never closeButton, which is the window strip's × on a pinned prompt; a
   # save-shortcut prompt's dontSaveButton, cancelButton, okButton).
@@ -2099,7 +2147,7 @@ class MacroToolkit
     unless button?
       labels = ("\"#{each.faceWidget?.text}\"" for each in buttons)
       throw new Error "#{prompt} has no button labelled \"#{theLabel}\" (its buttons: #{if labels.length then labels.join ', ' else 'none'})"
-    @_menuRowScrolledIntoView button
+    button
 
   # Move to and click the button of `prompt` labelled `theLabel` — OK delivers the prompt's value and
   # closes the prompt unless it is pinned; Close / Cancel dismiss it. The press is verified
@@ -2180,6 +2228,16 @@ class MacroToolkit
     return  if v? and @_listRowShowsWhole v
     found = if v? then "row #{v.label.top()}..#{v.label.bottom()}, pane #{v.paneTop}..#{v.paneBottom}" else "no such row"
     world.automator.player.recordMacroAssertion false, "LIST ROW NOT IN VIEW: row '#{listItemString}' of #{list} after its scroll", "whole in the pane", found
+
+  # Assert that a menu row (any widget of a pop-up's rows: a prompt's button too) shows WHOLE in the
+  # rows its pop-up shows: the promise bringMenuRowIntoView makes, checked where it is made. Like
+  # assertListItemInView it records only a FAULT and the macro runs on — its next press at the row is
+  # refused anyway (MENU ROW OUT OF VIEW). Pushes no input events and does not yield. A toolkit method
+  # for the same reason as the menu assertions above.
+  assertMenuRowInView: (row) ->
+    out = @_menuRowOutOfView row
+    return  unless out?
+    world.automator.player.recordMacroAssertion false, "MENU ROW NOT IN VIEW: '#{out.label}' of #{out.popUp} after its scroll", "whole in the rows", "row #{out.rowTop}..#{out.rowBottom}, shown #{out.boxTop}..#{out.boxBottom} (x #{out.rowLeft}..#{out.rowRight}, shown #{out.boxLeft}..#{out.boxRight})"
 
   # Assert that two screenshots ALREADY TAKEN in this test are byte-identical — the explicit
   # form of the no-op / round-trip idiom (undo restores the pre-edit pixels, collapse →
@@ -2398,13 +2456,37 @@ class MacroToolkit
   # further than the pane is tall (measured: 228px of a 21,000px class-member list per pixel, under a
   # 141px pane), so the window can step right over a row that falls between two of its stops. A wheel
   # notch scrolls by CONTENT pixels, so it carries the window the distance that centres the row in the
-  # pane. A row already whole, or no such row, queues nothing.
+  # pane (_centringDelta). A row already whole, or no such row, queues nothing.
   wheelListTowardItem_InputEvents: (list, listItemString) ->
     v = @_listRowVisibility list, listItemString
     return  unless v? and not @_listRowShowsWhole v
-    delta = Math.round ((v.label.top() + v.label.bottom()) - (v.paneTop + v.paneBottom)) / 2
+    delta = @_centringDelta v.label.top(), v.label.bottom(), v.paneTop, v.paneBottom
     return  if delta is 0
     @wheelOn_InputEvents v.list, delta
+
+  # THE DELTA THAT CENTRES the span [start, end] in the window [boxStart, boxEnd] on one axis: how far
+  # the window must move for its middle to sit on the span's middle, to the whole pixel — positive when
+  # the span's middle lies past the window's. The one rule both wheels that bring a row into view
+  # scroll by (a list's, wheelListTowardItem_InputEvents; a menu's, wheelMenuTowardRow_InputEvents), so
+  # a row lands well inside its box even where a finger's swipes land a few pixels short of the wheel,
+  # and the press after it aims well inside the row.
+  _centringDelta: (start, end, boxStart, boxEnd) ->
+    Math.round ((start + end) - (boxStart + boxEnd)) / 2
+
+  # THE WHEEL THAT BRINGS A MENU ROW INTO VIEW, for a row its pop-up's rows clip (_menuRowOutOfView):
+  # ONE wheel over the rows (wheelOn_InputEvents — so a finger run swipes them, and the wheel is checked
+  # to be one those rows take themselves), by the delta that centres the row in their box
+  # (_centringDelta, the list wheel's rule). Sideways, only as far as the row needs
+  # (_scrollDeltaBringingIntoView): rows span the menu's width, so centring one across it means nothing.
+  # Answers whether it queued anything — a row that shows whole, or a widget in no scrolling rows,
+  # takes no wheel — so the macro verb waits only when there is something to wait for. Handed no row
+  # (undefined: a lookup that found nothing), it throws MENU ROW MISSING (_menuRowOutOfView).
+  wheelMenuTowardRow_InputEvents: (row) ->
+    out = @_menuRowOutOfView row
+    return false  unless out?
+    deltaY = if out.dy is 0 then 0 else @_centringDelta out.rowTop, out.rowBottom, out.boxTop, out.boxBottom
+    @wheelOn_InputEvents out.viewport, deltaY, out.dx
+    true
 
   # CLICK THE ROW OF `list` THAT STANDS FOR `listItemString` — found by identity (_listRowOf), so a
   # row whose rendered name is ellipsized is still the row it names.
@@ -2495,10 +2577,30 @@ class MacroToolkit
 
     macroSubroutines = new Set
 
+    # The verbs below that press menu rows bring each row into view before pressing it
+    # (bringMenuRowIntoView_InputEvents_Macro, which takes no wheel and no cycle for a row that already
+    # shows), on the menu captured BEFORE the wheel: under a finger the wheel is swipes, each ending in a
+    # pointer-up, and every pointer-up clears the fresh pop-ups getMostRecentlyOpenedMenu reads.
+    macroSubroutines.add Macro.fromString """
+      bringMenuRowIntoView_InputEvents_Macro = (row) ->
+        # BRING A MENU ROW INTO VIEW THROUGH THE INPUT QUEUE: one wheel over the pop-up's rows, by the
+        # delta that centres the row (wheelMenuTowardRow_InputEvents; a finger run swipes the rows), then
+        # the row must show whole (assertMenuRowInView), never a second try. A row that already shows
+        # takes no wheel and no cycle. The locators find a row wherever it is and scroll nothing, and a
+        # press aimed at a row the rows clip is refused (MENU ROW OUT OF VIEW), so a step reaching past
+        # the fold says so with this first, on the row it is about to press, holding the menu from
+        # before the wheel.
+        if @wheelMenuTowardRow_InputEvents row
+          yield "waitNoInputsOngoing"
+        @assertMenuRowInView row
+    """
+
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
         clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
-        @moveToItemOfTopMenuAndClick_InputEvents "Inspect"
+        devMenu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu devMenu, "Inspect")
+        @moveToItemOfMenuAndClick_InputEvents devMenu, "Inspect"
         yield "waitNoInputsOngoing"
     """
 
@@ -2544,7 +2646,9 @@ class MacroToolkit
       clickMenuItemOfWidget_InputEvents_Macro = (whichWidget, whichItem) ->
         @openMenuOf_InputEvents whichWidget
         yield "waitNoInputsOngoing"
-        @moveToItemOfTopMenuAndClick_InputEvents whichItem
+        menu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, whichItem)
+        @moveToItemOfMenuAndClick_InputEvents menu, whichItem
         yield "waitNoInputsOngoing"
     """
 
@@ -2560,6 +2664,7 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
         menu = @getMostRecentlyOpenedMenu()
         if (@rowsOfMenuStandingFor menu, theWidget).length > 0
+          bringMenuRowIntoView_InputEvents_Macro (@rowOfMenuStandingFor menu, theWidget)
           @moveToRowOfMenuStandingForAndClick_InputEvents menu, theWidget
           yield "waitNoInputsOngoing"
     """
@@ -2577,17 +2682,27 @@ class MacroToolkit
     # finds the row the same way the chooser builds it (CommandPanelWdgt.rowLabelOfValue), so either
     # spelling names the same row. Afterwards, acting on the controller (clicking a palette, dragging a
     # slider) calls target[setter](value). Each menu is captured fresh from getMostRecentlyOpenedMenu()
-    # right after it opens (every mouseUp clears world.freshlyCreatedPopUps).
+    # right after it opens (every mouseUp clears world.freshlyCreatedPopUps), and each row brought into
+    # view before its press — "Connect" lies past the fold of a slider's and a text's over-tall menu.
     macroSubroutines.add Macro.fromString """
       setControllerTargetToWidgetProperty_InputEvents_Macro = (controllerWidget, targetWidget, propertyLabel, controllerMenuFraction = [0.5, 0.5]) ->
         openOwnMenuAtFractionOf_InputEvents_Macro controllerWidget, controllerMenuFraction
-        @moveToItemOfTopMenuAndClick_InputEvents "Connect"
+        ownMenu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu ownMenu, "Connect")
+        @moveToItemOfMenuAndClick_InputEvents ownMenu, "Connect"
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Connect to"
+        gestures = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu gestures, "Connect to")
+        @moveToItemOfMenuAndClick_InputEvents gestures, "Connect to"
         yield "waitNoInputsOngoing"
-        @moveToRowOfTopMenuStandingForAndClick_InputEvents targetWidget
+        targets = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@rowOfMenuStandingFor targets, targetWidget)
+        @moveToRowOfMenuStandingForAndClick_InputEvents targets, targetWidget
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), (CommandPanelWdgt.rowLabelOfValue propertyLabel)
+        properties = @getMostRecentlyOpenedMenu()
+        propertyRow = CommandPanelWdgt.rowLabelOfValue propertyLabel
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu properties, propertyRow)
+        @moveToItemOfMenuAndClick_InputEvents properties, propertyRow
         yield "waitNoInputsOngoing"
     """
 
@@ -2599,11 +2714,17 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       bindControllerTo_InputEvents_Macro = (controllerWidget, targetWidget, controllerMenuFraction = [0.5, 0.5]) ->
         openOwnMenuAtFractionOf_InputEvents_Macro controllerWidget, controllerMenuFraction
-        @moveToItemOfTopMenuAndClick_InputEvents "Connect"
+        ownMenu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu ownMenu, "Connect")
+        @moveToItemOfMenuAndClick_InputEvents ownMenu, "Connect"
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Bind ⇄"
+        gestures = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu gestures, "Bind ⇄")
+        @moveToItemOfMenuAndClick_InputEvents gestures, "Bind ⇄"
         yield "waitNoInputsOngoing"
-        @moveToRowOfTopMenuStandingForAndClick_InputEvents targetWidget
+        targets = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@rowOfMenuStandingFor targets, targetWidget)
+        @moveToRowOfMenuStandingForAndClick_InputEvents targets, targetWidget
         yield "waitNoInputsOngoing"
     """
 
@@ -2621,9 +2742,13 @@ class MacroToolkit
     macroSubroutines.add Macro.fromString """
       disconnectControllerWire_InputEvents_Macro = (controllerWidget, targetWidget, controllerMenuFraction = [0.5, 0.5]) ->
         openOwnMenuAtFractionOf_InputEvents_Macro controllerWidget, controllerMenuFraction
-        @moveToRowOfTopMenuStandingForAndClick_InputEvents targetWidget
+        ownMenu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@rowOfMenuStandingFor ownMenu, targetWidget)
+        @moveToRowOfMenuStandingForAndClick_InputEvents ownMenu, targetWidget
         yield "waitNoInputsOngoing"
-        @moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), "Disconnect"
+        wireMenu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu wireMenu, "Disconnect")
+        @moveToItemOfMenuAndClick_InputEvents wireMenu, "Disconnect"
         yield "waitNoInputsOngoing"
     """
 

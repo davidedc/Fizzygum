@@ -30,8 +30,9 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U15 | The list-row verb scrolls one way | CLOSED 2026-11-22 (§U15) |
 | U16 | Two documents reach their clamp under a finger | CLOSED 2026-11-22 (§U16) |
 | U16b | `fg vmtruth` measures something under load (owner-added 2026-11-22, filed by U9) | CLOSED 2026-11-22 (§U16b) |
-| U17 | A menu row is found, not fetched | not started |
+| U17 | A menu row is found, not fetched | CLOSED 2026-11-22 (§U17) |
 | U18 | A capture that does not verify is UNSTABLE | not started |
+| U18b | [A] gets a counted per-method marker; U14's three parked members take their tier (owner-ruled 2026-11-22) | not started |
 | U19 | Close | not started |
 
 ## 0. Orientation
@@ -1019,6 +1020,27 @@ own offsets). Each diff must be the menu's scroll offset.
 **Park when.** The measured set exceeds 30 tests (the unit does not fit its box: park with the set, for the owner to
 schedule), or a test of the set fails for a reason other than the missing scroll. **Audit.** runtime S1.
 
+**Landed 2026-11-22.** Measured first: with the rescue made a census (`rescue-census.js`), it moved a menu in 28 tests
+under the mouse and 27 under a finger (union 28) — under the park line; none would press a clipped row after the edit.
+The three locators answer the row and touch nothing; a press aimed at a row a pop-up's rows viewport does not show
+WHOLE is a named fault at the one aim check, `_aimingAt` (`MENU ROW OUT OF VIEW`, naming the row and how far below or
+above the rows it lies — "whole", the list check's rule, since a press aims at a row's centre); a new verb,
+`bringMenuRowIntoView_InputEvents_Macro`, wheels the rows ONCE by the delta that centres the row (the list wheel's rule,
+one shared helper) through the input queue, so a finger run translates it, then asserts the row whole — never a retry,
+and it queues nothing when the row already shows; the shared verbs capture the menu before the wheel (a finger's
+swipes end in pointer-ups that clear the fresh pop-ups). Every test of the set brings its row in before its press (22
+at their own sites, 4 through the shared verbs; two read only the rows' own plane or a tick before their shot and need
+no edit), and `MACRO-PATTERNS.md` and the test-authoring skill stop teaching a locator as a scroll. A new value-only
+test, `AMenuRowPastTheFoldIsPressedOnlyOnceInView`, pins it on both pointers. Proof: a plant making the wheel a no-op
+fails exactly the tests that call the verb (mouse 27, finger 26); plants removing the refusal, putting the rescue back
+in a locator, or wheeling half the delta each fail the new test by its own line. Pixels: 7 shots in 3 tests, the same
+on both pointers (HoppingBetweenSubMenus image_1, 2 — the menu centred one row further and its cascade opened at the
+lower press point; InspectorCodePaneRunsAgainstItsSubject image_1, 3 and TextRunRowsReflectSelection image_1, 2, 3 —
+the row under the resting pointer hovered, a tooltip, a dialog button's hover shade), each looked at, recaptured (28
+references). Ratchets: none ([U] 101). Filed: `SystemTest_macroStringWdgtAndTextWdgtResizingInLayout` calls
+`togglefittingSpecWhenBoundsTooSmall()` directly on a reason no longer true (a 440 px world whose menus could not
+scroll): the new verb reaches that row the user's way.
+
 ### U18 — A capture that does not verify is UNSTABLE
 
 **Stands today.** `Fizzygum-tests/scripts/capture-macro-test-references.js` (about lines 232–290): `const MAX_RETRIES
@@ -1037,6 +1059,50 @@ mismatch reads UNSTABLE and exits non-zero; a measured-nothing run is retried; a
 **Predicted pixel set.** EMPTY. It may surface tests that are unstable today, which is its purpose: each is FILED
 with its two hashes (`DETERMINISM.md` has the playbook), never recaptured until stable.
 **Left out (R7):** `lib/shards.js`'s retry and the gauntlet's serial retry. **Audit.** runtime S4.
+
+### U18b — [A] gets a counted per-method marker; U14's three parked members take their tier (owner-ruled 2026-11-22)
+
+**Stands today.** Layering rule [A] (`buildSystem/check-layering.js`, `A_PUBLIC_SETTER` / `A_TEXT_SETTER`) forbids a
+low-level `_` method from calling a public self-settling setter directly; it judges `_` methods only. It is the one
+layering rule with no per-method marker ([F] `layout-apply-sanctioned`, [G] `nosettle-sanctioned`, [H]
+`early-return-sanctioned`, [S] `public-call-sanctioned` each have one). So three members that must drive ANOTHER
+widget's public setter at event time stay PUBLIC on `public-api-allowlist.txt` ("[A] forbids the _-form"), against
+[U]'s "public = end-user surface", and [A] sees none of their bodies: `CaretWdgt.bringTextAndCaretToState` (undo/redo:
+the target's polymorphic `setText` — `FizzytilesCodeWdgt` redraws its canvas after `super` — then the caret's move on
+the settled text), the content-property tools' `actOn` (a duck-typed subject: a `StringWdgt` or a `SheetCellStyle`,
+whose setters re-style through `SimpleSpreadsheetWdgt.restyleCell`, which settles the sheet itself), and
+`InertIconHolderWdgt`'s fitted sizing (in its constructor only because [A] keeps `setExtent` out of `_takePictureOf`).
+Evidence and the rejected quiet fix: §U14. The runtime backstop (`Widget._settleLayoutsAfter` throws when a public
+setter of an attached widget is reached mid-flush) is untouched by everything below.
+**Owner ruling (2026-11-22):** option (a) WITH GUARDS — [A] gets a per-method marker, and its use is held by two
+guards so a new exemption can never arrive quietly.
+**The fix.** (1) `check-layering.js` [A]: a call on a line carrying `# public-setter-sanctioned: <reason>` (a reason
+required, as [G]'s) is excused; everything else in the method is still judged. (2) GUARD 1, a counted budget: the
+number of `public-setter-sanctioned` markers is held at a ceiling (3 at landing), a class-C ratchet — a new use needs a
+dated, reasoned raise of the number in the same change. (3) GUARD 2, the stale marker: a marker on a line that calls
+no public setter [A] recognises fails the build. (4) The three members take the `_` tier with the call marked (the
+undo restore also moves its own caret jump to `@_settleLayoutsAfter => @_gotoSlotNoSettle …`; `actOn`'s
+`SliderInCell` override takes [G]'s marker for `enterSource` as §U14 states); `InertIconHolderWdgt` sizes in
+`_takePictureOf` (size, then shoot: the same calls in the same order), and the chevron's marker sentence about it
+follows. Three allowlist lines go. (5) Each new rule and guard is planted and seen failing by its own line in
+`check-layering-selftest.js` (the build's first gate proves every rule bites). (6) Docs: `lint-and-static-checks.md`
+§5 (the markers table), `layering-naming-convention.md`, the gate's advice row (`buildSystem/lib/gate-advice.js`),
+`toolbars.md` where it names `actOn`.
+**Corrected at research (2026-11-22, before any edit).** No markerless route exists for any of the three (the
+§2.5 shape-3 route needs the caller's OWN core: the caret's target is not its part — the world builds the caret beside
+an existing text; a tool's subject may be a `SheetCellStyle` with no cores, made fresh per ask; the icon holder never
+adds or copies what it pictures). The marked CALLS number five, not three: the undo restore's `setText`, the
+`setFontSize` of the increase and decrease tools and the `setFontName` of format-as-code (`actOn` overrides), the icon
+holder's `setExtent` — ruled: each font tool's ladder picks the value and ONE marked setter call follows (the act is
+"set the next size", repeated today in every branch; 17 identical markers otherwise), statement for statement, same
+complexity. [G]'s marker does NOT require a reason today (it matches the bare token and excuses its line downward;
+`lint-and-static-checks.md` §5 says otherwise): the new marker takes [D]'s required-reason form, and a marker without
+a reason excuses nothing. Two allowlist lines go, not three (the icon sizing never had one).
+**Ratchets.** The new marker budget (5 — the five marked calls), dated; [U]'s allowlist 17 → 15. **Proof.** The self-test plants (an
+unmarked call fires A; a marked one passes; a fourth marker fails the budget; a marker with no setter fails stale);
+`fg build`; the suite (no behaviour change: same calls, same order). **Predicted pixel set.** EMPTY (the overflow row's
+picture: size, then shoot, unchanged). **Park when.** A guard cannot be stated as a rule the self-test can plant.
+**Audit.** static C1, C5 (U14's parked half).
 
 ### U19 — Close
 
@@ -1136,6 +1202,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium. — CLOSED 2026-11-22 (gate-contortions loop, U16): measured — both reach their clamp under a finger today; declarations lifted, finger references captured; the toolkit's translated wheel splits evenly (no sliver leg that taps), and `SimpleDocumentRemovingLastParagraph…`'s 10 finger references that carried such a tap are recaptured.
 - [x] U16b: `fg vmtruth` reads INVALID under machine load — a burst of a test's destroyed widgets, uncollected at the next sweep, fills the pin cap; find what holds them (owner-added; plan §U16b) — medium. — CLOSED 2026-11-22 (gate-contortions loop, U16b): every suspect pinned and answered (no cap), the sweep after a stackless collection.
 - [x] The `vmtruth` leg's pin cap is within reach of a green suite: a shard's spreadsheet tests leave 139 to 200+ uncollected (all UNRETAINED) cells at a sweep; past 200 a page it reads INVALID — medium: fg's serial retry absorbs it. → "The vmtruth leg's pin cap is within reach of a green suite" — CLOSED 2026-11-22 (gate-contortions loop, U16b): the same defect: the cap is gone (gate-contortions U16b).
+- [x] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first. — CLOSED 2026-11-22 (gate-contortions loop, U17): pure locators, a named fault, one centring wheel; 28 tests bring their row in.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

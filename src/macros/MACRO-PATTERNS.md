@@ -55,8 +55,10 @@ assertion a recapture after a regression silently stores two different hashes an
   SUBTRACTS the shift before resolving the slot (`:791`) — re-click the same `[0.40,0.5]` under right vs the original left placement
   (image_4). Set alignment through the REAL context menu — for a `world.add`-ed widget in dev mode the morph menu is TOP-LEVEL (no
   hierarchy-menu step, `Widget.buildContextMenu`); items carry a leading glyph, which is part of the EXACT label
-  (`"∸ Align center"` / `"→ Align right"`): `@openMenuOf_InputEvents txt` → `@moveToItemOfMenuAndClick_InputEvents
-  (@getMostRecentlyOpenedMenu()), "∸ Align center"`. Build an editable multi-line TextWdgt (`\n` via `String.fromCharCode 10`)
+  (`"∸ Align center"` / `"→ Align right"`): `@openMenuOf_InputEvents txt` → `menu = @getMostRecentlyOpenedMenu()` →
+  `bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, "∸ Align center")` (a TextWdgt's menu is taller
+  than the world and its alignment rows lie past the fold: see "Reach a row in an OVER-TALL menu") →
+  `@moveToItemOfMenuAndClick_InputEvents menu, "∸ Align center"`. Build an editable multi-line TextWdgt (`\n` via `String.fromCharCode 10`)
   with DISTINCT per-line widths so the shift is obvious. GOTCHAS: `isEditable = true`; extent WIDE enough that the longest line
   FITS (else a click opens the "edit:" prompt, not an inline caret); settle (`yield "waitNoInputsOngoing"`) after each alignment
   change before the screenshot (the caret re-shows on the next paint via `gotoSlot`, blink frozen in playback). (Beware: TextWdgt
@@ -431,8 +433,9 @@ assertion a recapture after a regression silently stores two different hashes an
   prompt). `@colloquialName()` answers the name of whatever it ran against, so "Show selection" showing "Desktop" proves the
   receiver. Assert the rows BY MEANING: the labels of the rows whose `target is` the text, joined into one string
   (`assertValuesEqual` compares arrays by identity, so compare a joined string). GOTCHAS: a text's full menu is taller than
-  the screen and SCROLLS — bring its last row into view before a shot (`@getTextMenuItemFromMenu menu, "Connect"` scrolls
-  the row it finds), or the run rows are below the fold; dismissing a menu ENDS editing, so re-click into the text before
+  the screen and SCROLLS — bring its last row into view before a shot (`bringMenuRowIntoView_InputEvents_Macro
+  (@getTextMenuItemFromMenu menu, "Connect")`: one wheel over the rows; the locator itself answers the row where it is and
+  scrolls nothing), or the run rows are below the fold; dismissing a menu ENDS editing, so re-click into the text before
   Meta+a, or select-all routes nowhere and the selected menu silently equals the unselected one.
 - **An inspector's code pane runs against its subject** (`macroInspectorCodePaneRunsAgainstItsSubject`): the pane's text sits in
   a `TextAreaWdgt` that takes over its children's menus, nested in the inspector, so a press in the pane opens dev mode's
@@ -484,7 +487,9 @@ assertion a recapture after a regression silently stores two different hashes an
   (`SystemTest_macroHandleAttachShowsNoTargetsMessage`, whose plant, a message built and dropped, passed its title checks).
 - **Finding a row: by its EXACT label, or by the WIDGET it stands for.** A WORDING row ("Duplicate", "→← Shrink to fit",
   "Layout in stack") is named by its exact label, any leading glyph included — `moveToItemOfMenuAndClick_InputEvents` /
-  `getTextMenuItemFromMenu` (the row itself: it throws a named error, listing the menu's labels, on no row or several) and
+  `getTextMenuItemFromMenu` (the row itself, where it is — it scrolls nothing, so a row past the fold of an over-tall
+  menu is brought into view before its press, see "Reach a row in an OVER-TALL menu"; it throws a named error, listing
+  the menu's labels, on no row or several) and
   `getTextMenuItemsFromMenu` to ASK (an array; never throws — "does the menu offer it", "how many"). A row that NAMES a widget — a hierarchy menu's row, the "new parent" chooser's (a widget's
   "Attach"), the "target" chooser's (a handle's "Attach", a controller's "Connect to"), the "bind with" chooser's, a
   controller's wire row — reads that widget's HUMAN name (`Widget.rowName`: "Rectangle", "Window", "Desktop" for the world;
@@ -529,7 +534,9 @@ assertion a recapture after a regression silently stores two different hashes an
   the clicked point and covers the sibling triggers, so click each world-menu sibling at its LEFT
   (`@moveToAndClickAtFractionOf_InputEvents sibling, [0.3,0.5]`, further left `[0.1,0.5]` for deeper hops); descend with a
   centre click. Do NOT re-grab a hopped-to submenu via `getMostRecentlyOpenedMenu()` — a hop's deferred auto-close re-clears
-  the fresh-popup set; find items directly by their exact label, `world.topWdgtSuchThat (w) -> w.labelString is "Demo"`.
+  the fresh-popup set; capture each menu while it is fresh and find its items by their exact label in THAT menu
+  (`@getTextMenuItemFromMenu worldMenu, "Demo"`), never by a whole-world tree hunt; the make-a-widget menu is taller than
+  the world, so its "Layout tests" is brought into view first (`bringMenuRowIntoView_InputEvents_Macro`).
 - **Menu cascade auto-close on mouse-DOWN** (`macroMenusCloseOnMouseDownOutside`): an open menu (and any submenu) is dismissed
   by a mouse-DOWN on a NON-menu area (the hand's `cleanupMenuWdgts` tears down unpinned popups in
   `world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren`). The dismissal is on the DOWN, not the up, so capture it with
@@ -649,13 +656,21 @@ assertion a recapture after a regression silently stores two different hashes an
 - **Reach a row in an OVER-TALL menu** (`macroOverTallMenuScrollsToReachItsLastRow`): a pop-up is bounded to the world
   and SCROLLS its rows, so a menu with more rows than fit is capped at the world's height and grows a vertical
   scrollbar (`PopUpRowsViewportWdgt.preferredExtentForWidth` caps the rows' hug at the world minus the frame's own
-  chrome, and the frame sizes itself from that measure). ⚠ **A macro must scroll before clicking a row near the bottom
-  of a long menu** — `@wheelOn_InputEvents menu, 400` — because the item is LOCATED by a tree walk (which finds it
-  wherever it is, on-world or not) but CLICKED at its coordinates, which must be on-world; an unscrolled click lands on
-  the desktop, which merely dismisses the menu. Prefer a wheel delta far larger than the overflow so the menu lands at
-  its travel limit whatever its exact row count — then the test asserts "scrolled to the end" rather than becoming a
-  tripwire for anyone who adds an unrelated menu row. Which menus overflow at the 960×440 harness: `TextWdgt` (40 rows)
-  and `StringWdgt` (36) do; `SimpleTextWdgt`/`TitleWdgt` (33) clear it by ~23px.
+  chrome, and the frame sizes itself from that measure). ⚠ **A macro brings a row past the fold into view before
+  pressing it** — `bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, "<label>")` (or
+  `(@rowOfMenuStandingFor menu, widget)`), on the menu captured before it — because the row is LOCATED by a tree walk
+  (which finds it wherever it is, in view or not, and scrolls nothing) but PRESSED at its centre; a press aimed at a
+  row that does not show WHOLE is refused with **MENU ROW OUT OF VIEW**, naming the row and how far past which edge of
+  the shown rows it reaches (WHOLE, as for a list row: a clipped row shows only part of itself, a row past the fold not
+  its centre at all). The verb is one wheel over the rows by the delta that centres the row, then
+  `assertMenuRowInView`; it queues nothing for a row that already shows, so a step may say it for any row it presses.
+  A test whose SUBJECT is the scrolling wheels the menu itself (`@wheelOn_InputEvents menu, 3000`: a delta far larger
+  than the overflow lands the menu at its travel limit whatever its exact row count, so the test asserts "scrolled to
+  the end" rather than becoming a tripwire for anyone who adds an unrelated menu row) and reads the row's own screen
+  bounds inside the rows viewport's as its value. Which menus overflow is the world's height against their rows': at
+  the 1920×880 harness with its 44 px rows, a `TextWdgt`'s own menu ("Bold" lies just past its fold), a slider's
+  ("Connect" past it), a paragraph's and the world's Demo menu all do. The verb's contract — found where it is,
+  refused while clipped, pressed once in view, in both directions — is `macroAMenuRowPastTheFoldIsPressedOnlyOnceInView`.
 - **Popup repositioned to stay on-screen** (`macroMenuRepositionsToStayOnScreen`): a popup is never clipped by the
   world edge — it is shifted to stay fully visible. `FrameWdgt.popUp` puts the popup's top-left at the requested
   point, then `@_moveWithin world` (→ `Widget._moveWithin`, `:1337`) CLAMPS it into the world
@@ -1105,8 +1120,10 @@ assertion a recapture after a regression silently stores two different hashes an
   acting through `toggleSoftWrap`, which a lone text specialises — wrap OFF sets panel `isTextLineWrapping` false +
   `softWrap = false` (`softWrap` replaced the retired `maxTextWidth`), wrap ON sets both back, plus re-homing the panel's
   contents to the panel origin. The bare-TextWdgt no-menu drift does NOT apply here either: the
-  merged in-panel menu OPENS for synthetic right-clicks, so drive the REAL row by its exact label
-  (`moveToItemOfMenuAndClick … "Soft wrap"`) and assert its tick from the row itself (`row.isTicked()` before
+  merged in-panel menu OPENS for synthetic right-clicks, so drive the REAL row by its exact label, brought into view
+  first since the merged menu is taller than the world and "Soft wrap" lies past its fold
+  (`bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, "Soft wrap")`, then
+  `moveToItemOfMenuAndClick … "Soft wrap"`) and assert its tick from the row itself (`row.isTicked()` before
   unwrapping; `row.ticks() and not row.isTicked()` after). Toggling OFF while scrolled at the END collapses the content to its
   unbounded logical rows (width = LONGEST line, `TextWdgt::_reLayoutSelf`) → it fits vertically → the view re-anchors at the
   TOP with the V-bar swapped for an H-bar (thumb at the LEFT: the x offset was never touched); toggling ON re-wraps tall
@@ -1721,10 +1738,14 @@ assertion a recapture after a regression silently stores two different hashes an
   (`@moveToItemOfMenuAndClick_InputEvents @getMostRecentlyOpenedMenu(), …`); the shared verbs below already do.
   Grouping keeps the second gesture free of menu height, which is now a readability question rather than a correctness
   one: a pop-up too big for the world is bounded to it and SCROLLS its rows (`PopUpRowsViewportWdgt.preferredExtentForWidth`),
-  so a row past the fold is reached with the wheel instead of being lost. ⚠ **A macro must therefore scroll before
-  clicking a row near the bottom of a long menu** — `@wheelOn_InputEvents menu, <delta>` — because the item is located by
-  a tree walk (which finds it wherever it is) but CLICKED at its coordinates (which must be on-world). See
-  `macroOverTallMenuScrollsToReachItsLastRow`. ⚠ The `"Connect"` row deliberately does NOT pass
+  so a row past the fold is reached with the wheel instead of being lost. ⚠ **A hand-rolled chain therefore brings
+  "Connect" into view before pressing it** — a slider's and a text's own menus are taller than the world and "Connect"
+  lies past their fold: `menu = @getMostRecentlyOpenedMenu()`, `bringMenuRowIntoView_InputEvents_Macro
+  (@getTextMenuItemFromMenu menu, "Connect")`, `@moveToItemOfMenuAndClick_InputEvents menu, "Connect"` (the menu captured
+  before the wheel, which under a finger is swipes ending in pointer-ups) — because the row is located by a tree walk
+  (which finds it wherever it is) but PRESSED at its centre, and a press at a row that does not show whole is refused
+  (MENU ROW OUT OF VIEW); the shared verbs do this at every row they press. See `macroOverTallMenuScrollsToReachItsLastRow` and
+  `macroAMenuRowPastTheFoldIsPressedOnlyOnceInView`. ⚠ The `"Connect"` row deliberately does NOT pass
   `closesUnpinnedPopUps: false`, i.e. it REPLACES its parent menu rather than stacking on it: `openTargetSelector`
   enumerates world widgets, so a menu left standing would list its own `MenuItem`/`Text` children as plausible targets
   (caught only because three tests assert the chooser's contents BY STRING).
@@ -1859,7 +1880,9 @@ assertion a recapture after a regression silently stores two different hashes an
   narrows); the StringWdgt cell honours its own menu (reached through the cell's row of its hierarchy menu, by the widget) —
   "∸ Align center" (`StringWdgt.alignCenter:342`), "⍿ Align middle" (`.alignMiddle:351`), "→← Shrink to fit"
   (`.togglefittingSpecWhenBoundsTooSmall:1155`, inherited by TextWdgt) — the leading glyph decorations are part of each EXACT
-  label, so click via `@moveToItemOfMenuAndClick_InputEvents menu, "∸ Align center"`; and caret editing keeps working in a
+  label, so click via `@moveToItemOfMenuAndClick_InputEvents menu, "∸ Align center"` once
+  `bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, "∸ Align center")` has brought it into view
+  (the string's own menu is taller than the world, its alignment rows past the fold); and caret editing keeps working in a
   cell (`@moveToAndClickAtFractionOf_InputEvents` → `@repeatSpecialKey_InputEvents "Shift+ArrowRight", 3` → overtype). FIXTURE
   GOTCHAS: create the widgets through the REAL demo/test menus (`world.create` floats them on the hand, a mouse-down drops them;
   the demo StringWdgt is `isEditable=true` unlike direct construction) and author the drop spots so the texts OVERLAP the
