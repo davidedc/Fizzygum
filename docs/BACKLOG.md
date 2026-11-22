@@ -323,7 +323,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
-- [ ] U4: four platform calls respelled for unresolved-sends (one dropped a Duplicator hardening), eleven `new (window["X"])` sites, and `isDesktopShortcut`, alive only for two rigs — small.
 - [ ] U5: `isVisuallyTransformed` duplicates a private twin made so a macro could call it; `boxPresentedToOverlays` has its default written at four readers — small, inspector churn.
 - [ ] U6: three checks take their expected value from the rule they judge, or dodge a finger failure: the serialization rig's pane list, the thumb-highlight test, the pointer-cancel test's mouse-only declaration — small.
 - [ ] U7: two dev-menu rows throw when clicked before anything is serialised, excused in the menu sweep's `KNOWN` table; the bouncer's `return unless @parent?` guards the stepping defect filed in this file — small.
@@ -343,6 +342,8 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] Filed by U3: about 21 `_settleLayoutsAfter` thunks fit none of the three sanctioned settle-thunk shapes (other-object receivers, empty or invalidate-only thunks, the layout-spec `@element._settleLayoutsAfter` setters) — each is a smell or a fourth shape (plan §U3) — small.
 - [ ] Filed by U3: three `layout-apply-sanctioned` markers sit in `_`-tier methods rule [F] does not judge (`FrameWdgt._reactToChildCollapsed`, `_reactToChildUnCollapsed`, `StretchablePanelWdgt._reLayout`); a stale-marker rule for [F], as thin-wraps has, is a rule change for the owner (plan §U3) — small.
 - [ ] Filed by U3: `Fizzygum-tests/CLAUDE.md`'s cross-engine bullet says `AutomatorLoader.loadImagesOfTest` matches references by `/SWCanvas/`; it matches by name, pixel ratio, pointer kind and OS — the instruction file states a false fact (plan §U3) — small.
+- [ ] Filed by U4: `DemoMenus.createFridgeMagnets` builds through `world.parts.launch("FridgeMagnetsWdgt")`, a class the code knows named by a string; under `whenAllLoaded ["fizzytiles"]` it would run inline where `launch` defers — the owner's call (plan §U4) — small.
+- [ ] Filed by U4: `Fizzygum/CLAUDE.md` says the dependency finder regex-scans for `new X`; it reads `new X` only in a class-body field initialiser, never in a method body — an instruction file states a wider claim than the code (plan §U4) — small.
 
 ### Gate audit 2026-11-16 — residue (no plan doc; detail in `archive/backlog-open-items-detail.md`)
 - [ ] **No audit has looked for shapes chosen only to quiet a non-ratchet gate** — search the session transcripts and git for each gate's quiet-fix spelling (an `if X?` guard, a stub, a deletion, a tier rename, a new exemption) and re-judge each find on its merits — medium.

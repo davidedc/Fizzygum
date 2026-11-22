@@ -146,13 +146,14 @@ class Duplicator
 
   # A buffer is DATA, copied as an Array is: an ArrayBuffer byte for byte, and a view onto one (a typed
   # array, a DataView) rebuilt over the COPY of its buffer, at the same offset and length, by its own
-  # kind's constructor. The buffer goes through the identity bookkeeping, so views that share one buffer
-  # in the original share one buffer in the copy, as they did -- and so a view copies its WHOLE buffer,
-  # however small the view.
+  # kind's constructor -- its PROTOTYPE's, so a `constructor` property written onto the view does not
+  # choose what the copy is. The buffer goes through the identity bookkeeping, so views that share one
+  # buffer in the original share one buffer in the copy, as they did -- and so a view copies its WHOLE
+  # buffer, however small the view.
   _copyBuffer: (original) ->
     return @_copyWithIdentity original, (=> original.slice 0) unless NativeValueKinds.isBufferView original
     bufferOfTheCopy = @_duplicate original.buffer
-    Kind = original.constructor
+    Kind = Object.getPrototypeOf(original).constructor
     @_copyWithIdentity original, =>
       if Kind.BYTES_PER_ELEMENT?
         new Kind bufferOfTheCopy, original.byteOffset, original.length

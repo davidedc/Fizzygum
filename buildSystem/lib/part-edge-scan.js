@@ -25,10 +25,11 @@
  *     the argument leaves every other caller's answer exactly what it was.
  * `declaredRequires(parts, partName)` is the parts.json half of the same question: which other parts
  * a part's `requires` lets it name unguarded (one level, and only what has ARRIVED when it runs).
- * A reference is read off a line's bare code (lib/coffee-mask.js): prose may name any class, and a class
- * NAME as data is the sanctioned indirection for a lazy part. `stringLiteralsOf(record)` is its
- * complement — the contents of the line's literals, comments excluded — for a scan that has to
- * read a name used AS data (a member dispatched by name).
+ * A reference is read off a line's bare code (lib/coffee-mask.js): prose may name any class, and a literal
+ * holds data, never a reference -- a name that ARRIVES as data has no symbol to guard, while a class the
+ * code knows is named bare, under its guard or its await (check-part-edges.js, the blind spot).
+ * `stringLiteralsOf(record)` is that bare view's complement — the contents of the line's literals,
+ * comments excluded — for a scan that has to read a name used AS data (a member dispatched by name).
  */
 
 // The contents of each literal on a line (a record of lib/coffee-mask.js): every run of literal text with its

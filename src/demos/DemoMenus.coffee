@@ -414,38 +414,38 @@ class DemoMenus
   # page (FIZZYGUM_EAGER_ALL_PARTS) it always is.
   create2DAxis: ->
     world.parts.whenAllLoaded ["plots"], ->
-      vertAxis = new (window["AxisWdgt"])
+      vertAxis = new AxisWdgt
       vertAxis.setExtent new Point 40, 300
       world.create vertAxis
 
   createExampleScatterPlot: ->
     world.parts.whenAllLoaded ["plots"], ->
-      exampleScatterPlot = new (window["ExampleScatterPlotWdgt"])
+      exampleScatterPlot = new ExampleScatterPlotWdgt
       exampleScatterPlot.setExtent new Point 300, 300
       world.create exampleScatterPlot
 
   createExampleScatterPlotWithAxes: ->
     world.parts.whenAllLoaded ["plots"], ->
-      exampleScatterPlot = new (window["ExampleScatterPlotWdgt"])
-      plotWithAxesWdgt = new (window["PlotWithAxesWdgt"]) exampleScatterPlot
+      exampleScatterPlot = new ExampleScatterPlotWdgt
+      plotWithAxesWdgt = new PlotWithAxesWdgt exampleScatterPlot
       plotWithAxesWdgt.setExtent new Point 300, 300
       world.create plotWithAxesWdgt
 
   createExampleFunctionPlot: ->
     world.parts.whenAllLoaded ["plots"], ->
-      exampleFunctionPlot = new (window["ExampleFunctionPlotWdgt"])
+      exampleFunctionPlot = new ExampleFunctionPlotWdgt
       exampleFunctionPlot.setExtent new Point 300, 300
       world.create exampleFunctionPlot
 
   createExampleBarPlot: ->
     world.parts.whenAllLoaded ["plots"], ->
-      exampleBarPlot = new (window["ExampleBarPlotWdgt"])
+      exampleBarPlot = new ExampleBarPlotWdgt
       exampleBarPlot.setExtent new Point 300, 300
       world.create exampleBarPlot
 
   createExample3DPlot: ->
     world.parts.whenAllLoaded ["plots"], ->
-      example3DPlot = new (window["Example3DPlotWdgt"])
+      example3DPlot = new Example3DPlotWdgt
       example3DPlot.setExtent new Point 300, 300
       world.create example3DPlot
 

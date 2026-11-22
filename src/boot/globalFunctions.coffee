@@ -45,7 +45,7 @@ window.fizzygumPartIsEagerHere = (spec) ->
 
 # IS THIS NAME A FIZZYGUM CLASS? The ONE answer: the class it names, or undefined. Every site that
 # turns a NAME into a class asks it -- a file's record classes, id counters and app keys, a launcher's
-# app, a part's door -- because such a name is DATA, and a plain `window[name]` answers it wrongly
+# app, PartsRegistry.launch's argument -- because such a name is DATA, and a plain `window[name]` answers it wrongly
 # three ways: it finds INHERITED properties (`constructor`, `toString`, `__proto__`), runs the
 # browser's ACCESSORS (`location`), and finds every NATIVE global (`Object`, `Array`) -- each of
 # which a file record can name, and each of which would pass the snapshot loader's pre-teardown
@@ -695,7 +695,7 @@ createWorldAndStartStepping = ->
     #     always saw;
     #   - on index.html the class is absent, this is a no-op, and the singleton is instead built on
     #     first use by the doors that await the part (WorldWdgt.popUpDemoTestMenu,
-    #     WorldWdgt.createDemoAnalogClock), which name the class as data to construct it.
+    #     WorldWdgt.createDemoAnalogClock), which build it under their whenAllLoaded.
     # A build that does not ship `demos` at all simply never gets one, as before.
     window.demoMenus = new DemoMenus  if DemoMenus?
     world.removeSpinnerAndFakeDesktop()

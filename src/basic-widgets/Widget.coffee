@@ -4974,11 +4974,11 @@ class Widget extends TreeNode
   # `world.parts.isAvailable` asks "did this artifact ship it at all" (a `lean` build did not, and
   # there is genuinely nothing to open), and the await handles "here, but not yet".
   #
-  # ⚠⚠ 2. The class is named as a STRING. buildSystem/check-part-edges.js requires a guard wherever
-  # core names a part-owned class as a SYMBOL, and the correct guard for a lazy part does not exist
-  # -- so the gate's own sanctioned escape applies: name it as DATA (`window["InspectorWdgt"]`)
-  # after the load, exactly as PartsRegistry.launch does. Read that gate's "ONE DELIBERATE BLIND
-  # SPOT" note before changing this back to a bare identifier.
+  # ⚠⚠ 2. The class is named inside the whenAllLoaded callback. buildSystem/check-part-edges.js
+  # requires a guard wherever core names a part-owned class, and for a lazy part the await IS the
+  # guard: the gate reads every line indented under `whenAllLoaded [...]` as guarded by it. It reads
+  # one line at a time, so a closure built ABOVE the await and called from inside it reads as
+  # unguarded -- which is why each door builds its widget under the await.
   #
   # An inspector also reads class MEMBER MAPS, which exist only once the class source text has been
   # ingested -- and on a `sources: "lazy"` build that has deliberately not happened yet. So the part
@@ -4990,27 +4990,27 @@ class Widget extends TreeNode
   # by cycle, ../Fizzygum-tests/DETERMINISM.md), across the ~15 tests that open one.
   spawnInspector: (inspectee) ->
     return unless world.parts.isAvailable "meta-tools"
-    openTheInspector = ->
-      # door-callback law (PartsRegistry's header), guarding here rather than at the
-      # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
-      # layer) — one guard at the acting site covers both waits
-      return if inspectee.destroyed
-      # the inspector the inspectee calls for: a class's prototype gets its class inspector
-      inspector = new (window["InspectorWdgt"].inspectorClassFor inspectee) inspectee
-      world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
     world.parts.whenAllLoaded ["meta-tools"], ->
+      openTheInspector = ->
+        # door-callback law (PartsRegistry's header), guarding here rather than at the
+        # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
+        # layer) — one guard at the acting site covers both waits
+        return if inspectee.destroyed
+        # the inspector the inspectee calls for: a class's prototype gets its class inspector
+        inspector = new (InspectorWdgt.inspectorClassFor inspectee) inspectee
+        world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
       if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
   # The console does NOT read the class member maps, so it needs the part but not the reflective
-  # layer. See spawnInspector above for why the guard is part-level and the class named as data.
+  # layer. See spawnInspector above for why the guard is part-level and the console is built under
+  # the await.
   createConsole: ->
     return unless world.parts.isAvailable "meta-tools"
-    openTheConsole = =>
+    world.parts.whenAllLoaded ["meta-tools"], =>
       # door-callback law (PartsRegistry's header): I can die while the part is in flight
       return if @destroyed
-      consoleWdgt = new (window["ConsoleWdgt"]) @
+      consoleWdgt = new ConsoleWdgt @
       world.openFrameWith consoleWdgt, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
-    world.parts.whenAllLoaded ["meta-tools"], openTheConsole
 
   spawnNextTo: (widgetToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?

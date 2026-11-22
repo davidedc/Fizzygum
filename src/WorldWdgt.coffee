@@ -3514,7 +3514,7 @@ class WorldWdgt extends IconGridPanelWdgt
   # await entirely.
   createDemoAnalogClock: ->
     world.parts.whenAllLoaded ["demos"], ->
-      window.demoMenus ?= new (window["DemoMenus"])
+      window.demoMenus ?= new DemoMenus
       window.demoMenus.analogClock()
 
   # THE DOOR into the demo family's "Test menu", from the world menu AND from any widget's context
@@ -3532,16 +3532,17 @@ class WorldWdgt extends IconGridPanelWdgt
   # SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly, whose fixture is a RectangleWdgt).
   # The widget being inspected arrives through the ARGUMENTS instead.
   #
-  # ⚠ 3. The singleton is built HERE on first use, naming the class as DATA (`window["DemoMenus"]`)
-  # -- the check-part-edges blind spot that exists for exactly this. On a page that forces every
-  # part eager (the harness, index-sw.html) startWorld already built it, whenAllLoaded runs inline,
-  # and this whole path stays byte-identical to what the suite has always measured.
+  # ⚠ 3. The singleton is built HERE on first use, inside the whenAllLoaded callback, naming the
+  # class outright: check-part-edges reads that await as the guard of every line indented under it.
+  # On a page that forces every part eager (the harness, index-sw.html) startWorld already built it,
+  # whenAllLoaded runs inline, and this whole path stays byte-identical to what the suite has always
+  # measured.
   popUpDemoTestMenu: (widgetOpeningThePopUp, targetWidget) ->
     world.parts.whenAllLoaded ["demos"], ->
       # door-callback law (PartsRegistry's header): both subjects can die during the fetch,
       # and a menu built for a corpse dispatches its every row at a destroyed widget
       return if widgetOpeningThePopUp?.destroyed or targetWidget?.destroyed
-      window.demoMenus ?= new (window["DemoMenus"])
+      window.demoMenus ?= new DemoMenus
       window.demoMenus.testMenu widgetOpeningThePopUp, targetWidget
 
   popUpDemoMenu: (widgetOpeningThePopUp) ->

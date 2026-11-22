@@ -100,7 +100,7 @@ The sketch here originally proposed a `*ReferenceWdgt` family (`ShortcutReferenc
 names the launcher a reference, which the landed doctrine explicitly denies (a launcher spawns
 independent instances — the ShortcutWdgt header's contrast, protected by the P9 `@target` →
 `referencedWidget` de-overload), and `ShortcutReference` is redundant ("shortcut" already means
-widget-reference here: `isDesktopShortcut`, `isShortcutTo`, the "create shortcut" row).
+widget-reference here: `isShortcutTo`, the "create shortcut" row).
 
 **✅ EXECUTED 2026-08-19 — as landed (owner-ratified short role names):**
 | was | is |

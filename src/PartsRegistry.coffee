@@ -252,10 +252,11 @@ class PartsRegistry
   whenOptionalPartsLoaded: (partNames, thenDo) ->
     @whenAllLoaded (eachName for eachName in partNames when @isAvailable eachName), thenDo
 
-  # ensureLoaded + construct. `new (classNamed className)` deliberately names the class as DATA:
-  # buildSystem/check-part-edges.js cannot see through it, which is the point -- core is not
-  # allowed to name a part's class as a symbol it needs already defined, and this is the sanctioned
-  # way to construct one anyway.
+  # ensureLoaded + construct, for a class NAME that is data -- one this code does not know, handed in
+  # by its caller -- so `new (classNamed className)` asks boot for the class by that name once its
+  # part is in. buildSystem/check-part-edges.js cannot see through it, and need not: there is no
+  # symbol to name. Code that knows the class names it bare under `whenAllLoaded`, the await the gate
+  # reads as the guard of every line indented under it.
   launch: (className) ->
     part = @_partOf className
     return Promise.resolve new (classNamed className) unless part?

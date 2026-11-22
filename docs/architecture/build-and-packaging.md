@@ -81,8 +81,10 @@ Plus two properties that are **not** the same question:
 `buildSystem/check-part-edges.js` fails the build on an unguarded core reference to a part-owned class —
 and to a MEMBER a part installs onto a class it does not own (the harness's `*TestSupport.installOnto
 <CoreClass>`), where an existence test on the member itself (`@m?()`) is a guard too.
-⚠ A *lazy* part is different: its entry point must await `world.parts.ensureLoaded`, because a guard answers
-"is it here?" and a lazy part needs "get it here".
+⚠ A *lazy* part is different: its entry point must await its part, because a guard answers "is it here?" and a
+lazy part needs "get it here". `world.parts.whenAllLoaded ["thePart"], ->` is the await `check-part-edges.js` reads
+as the guard, for every line indented under it, so the class is named bare there; a closure built above the await
+and called from inside it reads as unguarded (the gate reads one line at a time).
 
 A part's `dirs` may span both repos. `harness` owns the tests repo's harness sources AND `src/macros`:
 the macro engine and toolkit are started only by the harness (`AutomatorPlayer._startTheTestsMacro`) and

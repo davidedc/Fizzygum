@@ -16,7 +16,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U1 | A firing ratchet says what its number holds back and when a raise is the answer | CLOSED 2026-11-22 (§U1) |
 | U2 | Every other gate names its quiet fix as the wrong answer | CLOSED 2026-11-22 (§U2) |
 | U3 | The words say what is true again | CLOSED 2026-11-22 (§U3) |
-| U4 | Three spellings a gate's blind spot chose | not started |
+| U4 | Three spellings a gate's blind spot chose | CLOSED 2026-11-22 (§U4) |
 | U5 | One answer on `Widget`, asked plainly | not started |
 | U6 | Three checks get a witness of their own | not started |
 | U7 | The world steps what is attached; a row with nothing to load says so | not started |
@@ -389,6 +389,27 @@ serialization rigs for part 3; `fg parts` and `fg menusweep` for part 2 (the doo
 new check with a plant that restores `original.constructor`. **Predicted pixel set.** EMPTY for parts 1 and 2;
 part 3 removes a `ShortcutWdgt` member: name the inspector-churn tests that show a shortcut's member list, if any.
 **Audit.** static C3, C4, C9.
+
+**Landed 2026-11-22.** (1) `check-unresolved-sends`' `BUILTINS` gains `startsWith`, `trimStart` and `getPrototypeOf`,
+BARE: a name is keyed only where Fizzygum also defines it, and Fizzygum defines neither `is` nor `getPrototypeOf`
+(`BUILTINS_KEYED_NOTHING_TO_UNMASK` refuses the keyed form). `Deserializer` writes `startsWith`, `Class` writes
+`trimStart()`, and `Duplicator._copyBuffer` rebuilds a view by its PROTOTYPE's constructor, so a `constructor`
+property written onto a view does not choose its copy's kind (on the old line a Float32Array carrying
+`constructor = Uint8Array` copied as a Uint8Array of its first four bytes). `SerializationError`'s `-0` arm is deleted: a Map
+stores a `-0` key as `0`, so the arm never ran, and no `Object.is` call is left to want a table entry. The
+serialization rig's `duplicate.aViewWithItsOwnConstructorKeepsItsKind` (a typed array and a DataView, each carrying an
+own `constructor`) holds it; the plant restoring `original.constructor` fails exactly that check. (2) The nine
+`new (window["X"])` sites that sit under their `whenAllLoaded` name the class bare; `Widget.spawnInspector` and
+`createConsole` build their widget INSIDE the callback (a closure built above the await reads as unguarded: the gate
+reads one line at a time) — not `classNamed "X"`, which is for a name that arrives as data. `check-part-edges.js`'
+rule 2 and blind-spot paragraph, `lib/part-edge-scan.js`, `PartsRegistry.launch`'s comment, `build-and-packaging.md`,
+the boot explainer and `Fizzygum/CLAUDE.md` say the same; per the owner's ruling (the talk constrains nothing) the talk
+plan's quoted door and its gate table follow the tree. A one-off probe on the dev `index.html` opened each of the ten
+doors with its part lazy. (3) `ShortcutWdgt.isDesktopShortcut` and its false comment are gone; the rigs ask
+`isShortcutTo`, the one any-shortcut line `referencedWidget`. Corrected at research: `Object.is` cannot be keyed; the
+`-0` arm is dead code; eight rig lines, one serialization rig. Filed: `DemoMenus.createFridgeMagnets` builds through
+`world.parts.launch("FridgeMagnetsWdgt")`, a known class by a string (moving it changes defer-vs-inline timing).
+Ratchets: none.
 
 ### U5 — One answer on `Widget`, asked plainly (parts INDEPENDENT)
 
@@ -787,6 +808,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 
 - [x] **A firing gate says how to go quiet, never when the quiet fix is wrong** — ratchets steered sessions to inline helpers, home code by a ceiling, make a CLAUDE.md line false; many gates have a cheap quiet fix that is a contortion; each should print why it exists and when a raise or sanction is right — medium. — CLOSED 2026-11-22 (gate-contortions loop, U1 + U2): every firing gate prints what its finding means from one module, `buildSystem/lib/gate-advice.js` — a budget when a raise is the answer, an invariant or a convention its quiet fixes as wrong and the right answer — and each bite-proof holds it to that advice (`lib/prove-rules.js` `advised`); the classes are `lint-and-static-checks.md` §3b.
 - [x] U3: four facts cut from `Fizzygum-tests/CLAUDE.md` by byte count, three tests' prose that stopped naming `catchesPointerAt`, a layering-doc shape bent to hold one site, two stale sanction pointers — small. — CLOSED 2026-11-22 (gate-contortions loop, U3): the facts restored where true, the tests name `catchesPointerAt` in words true of the code, §2.5 has a third shape, the two pointers corrected.
+- [x] U4: four platform calls respelled for unresolved-sends (one dropped a Duplicator hardening), eleven `new (window["X"])` sites, and `isDesktopShortcut`, alive only for two rigs — small. — CLOSED 2026-11-22 (gate-contortions loop, U4): the plain platform calls, the Duplicator hardening with a rig check, the classes named bare under their await, the predicate deleted.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

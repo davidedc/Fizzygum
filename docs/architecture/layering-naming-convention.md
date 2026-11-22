@@ -253,7 +253,7 @@ Rules:
   default content again whether its content was picked up, dragged, attached elsewhere, closed or destroyed is
   `FrameWdgt._reactToChildRemoved`, as a stretchable container's fresh page is.
 - **Capability predicates stay as-is** — `imposesRatioConstraintOnDroppedChildren` /
-  `releasesRatioConstraintOnGrabbedChildren`, `isDesktopShortcut` / `isShortcutTo` are capability *queries*, not phase
+  `releasesRatioConstraintOnGrabbedChildren`, `isShortcutTo` are capability *queries*, not phase
   hooks, so they are outside the grid.
 
 ---

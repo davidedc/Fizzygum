@@ -31,7 +31,8 @@
  *
  * WHAT COUNTS AS GUARDED (an occurrence is allowed if any holds):
  *   1. it is inside a `#` comment — prose may name anything;
- *   2. it is inside a string literal — a class NAME as data is exactly the sanctioned indirection;
+ *   2. it is inside a string literal — a string is data, and a name that ARRIVES as data has no
+ *      symbol to guard (the blind spot below);
  *   3. the same line carries `SomeClass?` (covers `… if TheClass?`, `if TheClass? then …`,
  *      `TheClass?.something`, `(new TheClass) if TheClass?`);
  *   4. it is INSIDE THE SCOPE of such a guard — i.e. on a following line indented deeper than the
@@ -50,13 +51,14 @@
  * and a part is all-or-nothing — if one of its classes is here, all of them are. So a guard on any
  * class of part P protects references to every class of part P.
  *
- * ⚠⚠ ONE DELIBERATE BLIND SPOT — DO NOT "FIX" IT. `new (window[className])` after an
- * `ensureLoaded`, and `world.parts.launch "SomeClass"`, contain no bare class identifier, so this
- * gate cannot see them. That is BY DESIGN and it is the prescribed shape for a lazy part: core names
- * the class as DATA (from the manifest, or from its caller) rather than as a SYMBOL the loader must
- * have already defined. Teaching this gate to chase string literals through `window[…]` would flag
- * the correct pattern and push authors back to the broken one. The safety net for that path is the
- * ensure promise itself, plus the lazy path's own SystemTest.
+ * ⚠⚠ ONE DELIBERATE BLIND SPOT — DO NOT "FIX" IT: a class name that ARRIVES AS DATA. `classNamed name`
+ * (a file's record class, an `app:` key, a launcher's app) and `world.parts.launch name` contain no
+ * bare class identifier, so this gate cannot see them. That is BY DESIGN: there the code does not know
+ * the class -- the record, the manifest or the caller does -- so there is no symbol to name, and the
+ * safety net for that path is the ensure promise itself, plus the rigs that drive a lazy part's doors
+ * on index.html. ⚠ A class the code DOES know is not data: it is named bare under its guard or its
+ * await (6. below), where this gate reads it. Spelling it as a string (`window["X"]`, `classNamed "X"`)
+ * only hides the edge from the one gate that judges it.
  *
  * SCOPE: EVERY source that is present at boot -- core AND every eager part -- plus each lazy part
  * measured against the parts it does not declare in `requires`. It used to be core alone, on the

@@ -600,9 +600,10 @@ in the one walker and a field left `undefined` in the other). A value that rebui
 asked about before any handler: where its holder rebuilds it, it is derived (§5); anywhere else a copy keeps it
 by reference and a save refuses it. A BUFFER (`NativeValueKinds.isBuffer`: an ArrayBuffer, or a view onto one — a
 typed array, a DataView) is data with a copy handler, `Duplicator._copyBuffer`: an ArrayBuffer byte for byte, a view
-rebuilt over the copy of its buffer at the same offset and length, the buffer going through the identity bookkeeping so
-views that share one buffer share one in the copy (the rig's `inspector.onABuffer*` and
-`duplicate.buffersSharingOneStayShared`); the Serializer has no arm for one, so its closed set refuses it. Anything
+rebuilt over the copy of its buffer at the same offset and length, by its prototype's constructor (so a `constructor`
+property written onto the view does not choose the copy's kind), the buffer going through the identity bookkeeping so
+views that share one buffer share one in the copy (the rig's `inspector.onABuffer*`,
+`duplicate.buffersSharingOneStayShared` and `duplicate.aViewWithItsOwnConstructorKeepsItsKind`); the Serializer has no arm for one, so its closed set refuses it. Anything
 else that reaches neither a handler nor a plain object literal must be an
 instance of a class boot's `classNamed` answers for — the CLOSED SET, one rule shared by the two
 walkers (`Serializer`'s guard and `Duplicator._copyFizzygumObject`'s): an instance of a

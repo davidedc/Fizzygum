@@ -254,16 +254,15 @@ against the current tree. This plan is its executable distillation.
     1. `world.parts.isAvailable "meta-tools"`;
     2. `world.parts.whenAllLoaded ["meta-tools"], …`;
     3. `ensureReflectiveLayerLoaded()`;
-    4. `new (window["InspectorWdgt"].inspectorClassFor inspectee) inspectee` — the inspector the
-       subject calls for, a class's prototype getting its class inspector (the class is named **as data** because
-       `buildSystem/check-part-edges.js` forbids core naming a lazy part's class as a symbol);
+    4. `new (InspectorWdgt.inspectorClassFor inspectee) inspectee` — the inspector the subject calls for, a
+       class's prototype getting its class inspector, the class named bare INSIDE the `whenAllLoaded` callback,
+       which `buildSystem/check-part-edges.js` reads as the guard for every line indented under it;
     5. `world.openFrameWith inspector, new Point(560, 410), …`.
 
-    Copy this pattern for every new door, **but spell step 4 `new (classNamed "X")`**. `classNamed`
-    is boot's helper (`src/boot/globalFunctions.coffee`), which `PartsRegistry.launch` already uses,
-    and the root CLAUDE.md asks for it over `window[name]`: a plain `window` lookup also answers
-    inherited properties and native globals. Both spellings pass the part-edge gate, because it
-    deliberately does not chase string names.
+    Copy this pattern for every new door, the construction inside the callback (a closure built above the await
+    reads as unguarded: the gate reads one line at a time). `classNamed` (boot's helper,
+    `src/boot/globalFunctions.coffee`) is for a class whose NAME arrives as data (`PartsRegistry.launch`); a
+    class the code knows is named as a symbol.
   - `createConsole` follows the same pattern.
   - **Dev tools submenu:** `MenusHelper.popUpDevToolsMenu` (`src/basic-widgets/menu-system/MenusHelper.coffee`)
     offers "Inspect" and "Console". It is reached from a widget's context menu as "Dev", shown only
@@ -400,9 +399,9 @@ stink counts and sanctions by its member (2026-11-11): U2's timer is read the sa
 |---|---|
 | `check-dead-methods.js` | Every new method must be reached by a property access, a whole-name string (`"m"`) or a name template. Menu actions named as strings count |
 | `check-unresolved-sends.js` | Every sent name must be defined somewhere (the `aView` builder API included) |
-| `check-part-edges.js` | Core may not name a lazy part's class as a symbol. Use the door pattern of §1.2 (`new (classNamed "X")` after the part loads) |
+| `check-part-edges.js` | Core names a lazy part's class only under an await of its part: the door pattern of §1.2 (the class named bare inside `whenAllLoaded`) |
 | `check-menu-actions.js` + `fg menusweep` | Every new menu row must resolve, and the runtime sweep *fires it*. A row that cannot run headless goes in the sweep's `SKIP` table **with its reason** |
-| `check-stinks.js` | `timer` (setTimeout/setInterval, baseline 4: **do not add one**); `clock-read` (`Date.now()`, an argument-less `new Date`, `performance.now()`, baseline 13: a profiler's clock reads are sanctioned by member in `check-stinks.js`, with their reason — never a raised baseline); `instanceof-type-test` (baseline 74: use capability queries); `raw-chrome-color` (HARD 0: Theme roles only) |
+| `check-stinks.js` | `timer` (setTimeout/setInterval) and `clock-read` (`Date.now()`, an argument-less `new Date`, `performance.now()`): first, does it reach render, layout or input? Then it is a determinism bug; otherwise the stink's own advice says which answer fits (a `sanctioned` entry with its reason, where the stink keeps a list). `instanceof-type-test`: a capability query first. `raw-chrome-color` (HARD 0): Theme roles only. A firing stink prints its own advice (`lint-and-static-checks.md` §3b) |
 | `check-layering.js` / call separation | The `NoSettle` / settle-tier naming and the public/private split (`_` prefix). Read lint doc §4 and §6 |
 | constructor conformance / argument holes | Identity args are positional, optional ones go in `opts` (PinSpec's constructor is the model) |
 | runtime legs: paint audit, settle, capstone, revisits, census, serialization, storage, vmtruth | A new widget must settle, paint truthfully, serialize (or declare transients), and be GC-collectible after destroy |
@@ -597,7 +596,8 @@ green.
   - **Rule 4, timing:** use `performance.now()` (the monotonic clock, as the compile budget does), and
     SANCTION each read in `check-stinks.js`'s `clock-read` entry by its member, with its reason: these
     numbers ARE drawn (they stay out of reference screenshots, below), so the reason is "a profile the
-    person asked for", never "never a pixel". Never raise the stink's baseline instead; no timers.
+    person asked for", never "never a pixel"; a named entry, not a raised baseline, answers a read that is not the
+    smell (`lint-and-static-checks.md` §3b). No timers.
   - **Rule 5, self time:** keep a shared stack. On entry push a frame; on exit (in `finally`) pop it,
     add the inclusive time to the parent frame's child time, and set self = inclusive − child time.
     `finally` keeps the stack balanced through exceptions.

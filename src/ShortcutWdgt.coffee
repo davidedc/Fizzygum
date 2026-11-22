@@ -86,13 +86,6 @@ class ShortcutWdgt extends DesktopLinkWdgt
   isShortcutTo: (widget) ->
     @referencedWidget == widget
 
-  # I am a desktop shortcut (a reference), not a real widget being dropped in. A folder's drop
-  # handling positions/references me accordingly, asking this instead of testing
-  # `instanceof ShortcutWdgt`; inherited by all shortcut subclasses.
-  # (type-test-elimination campaign)
-  isDesktopShortcut: ->
-    true
-
   # My REFERENCE edge (Widget.graphEdgesOut -- the three-edge model,
   # docs/archive/graph-edges-and-lifecycle-plan.md §4.2): the referent I point at and can re-summon.
   # Inherited by all shortcut subclasses. The guard covers a deserialization shell mid-restore,

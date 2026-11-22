@@ -73,16 +73,15 @@ class SerializationError
   @intoItem: (index) -> "[" + index + "]"
   @intoKey: (key) -> " → " + key
   @INTO_MAP_KEY: " (Map key)"
-  # (a key is spelled as it reads: a string quoted -- cut past MAP_KEY_SHOWN characters --, a number as itself, NaN,
-  # Infinity and -0 included, which JSON would write as null and 0)
+  # (a key is spelled as it reads: a string quoted -- cut past MAP_KEY_SHOWN characters --, a number as itself, NaN
+  # and ±Infinity included, which JSON would write as null; a Map holds no -0 key, it stores one as 0)
   @MAP_KEY_SHOWN: 40
   @intoMapValue: (key) ->
     keyText = switch typeof key
       when "string"
         quoted = JSON.stringify key
         if quoted.length > SerializationError.MAP_KEY_SHOWN + 2 then quoted.slice(0, SerializationError.MAP_KEY_SHOWN + 1) + '…"' else quoted
-      when "number" then (if key is 0 and 1 / key < 0 then "-0" else String key)
-      when "boolean" then String key
+      when "number", "boolean" then String key
     if keyText? then " (Map value at " + keyText + ")" else " (Map value)"
   @INTO_SET_ITEM: " (Set item)"
   @enteringWidget: (widget) -> " (" + widget.uniqueIDString() + ")"

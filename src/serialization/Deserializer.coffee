@@ -643,7 +643,7 @@ class Deserializer
         return "a $Canvas whose size is " + Deserializer._shown([record.w, record.h]) + ", not two whole numbers" unless isASize(record.w) and isASize(record.h)
         return "a $Canvas whose pixel ratio is " + Deserializer._shown(record.pr) + ", not a positive number" if record.pr? and !(Number.isFinite(record.pr) and record.pr > 0)
         # a canvas with a zero side encodes as "data:," (toDataURL), any other as an image's data URL
-        isItsData = typeof record.data is "string" and (/^data:image\//.test(record.data) or (record.data is "data:," and (record.w is 0 or record.h is 0)))
+        isItsData = typeof record.data is "string" and (record.data.startsWith("data:image/") or (record.data is "data:," and (record.w is 0 or record.h is 0)))
         return "a $Canvas whose data is " + Deserializer._shown(record.data) + ", not its image's data URL" unless isItsData
         undefined
       build: (record, asyncPromises) ->

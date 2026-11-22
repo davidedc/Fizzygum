@@ -153,7 +153,7 @@ class Class
       bodyLine = lines[tokens[arrowAt + 2][2].first_line]
       return source + "\n" + bodyLine.match(/^[ \t]*/)[0] + "return\n"
     {last_line: line, last_column: column} = arrow[2]
-    lines[line] = lines[line].slice(0, column + 1) + "\n  " + lines[line].slice(column + 1).replace(/^\s+/, "")
+    lines[line] = lines[line].slice(0, column + 1) + "\n  " + lines[line].slice(column + 1).trimStart()
     lines.join("\n") + "\n  return\n"
 
   # THE CLASS NAME MUST BE IN THE PARSED SOURCE, not patched on afterwards.

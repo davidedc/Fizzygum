@@ -190,10 +190,11 @@ function harvestCalls(files) {
 // is real.
 const BUILTINS_TABLE = `
 push pop shift slice concat join filter map some every indexOf lastIndexOf includes sort reverse fill keys values
-charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimEnd split replace match repeat substring substr
+charAt charCodeAt fromCharCode toLowerCase toUpperCase trim trimStart trimEnd split replace match repeat
+startsWith substring substr
 toString toFixed valueOf
 sqrt pow random atan2 sin cos asin exp log sign
-now parse stringify
+now parse stringify getPrototypeOf
 getContext measureText beginPath closePath stroke clip save restore translate scale setTransform createPattern
 getImageData
 preventDefault appendChild createElement getElementById getElementsByTagName querySelectorAll focus blur click
