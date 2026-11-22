@@ -10,7 +10,8 @@
 # baseline, (b) a declared page-lifetime store below, or (c) a bug.
 #
 # A plain collaborator (no widget), and CORE, so every build ships it; nothing in the
-# product constructs it -- the harness audit seam and the headless rigs do.
+# product constructs it -- the harness audit seam and the headless rigs do. Its property
+# walk is an InventoryWalker, one instance per inventory (that class says why).
 #
 # THE WALK IS READ-ONLY AND SIDE-EFFECT-FREE: it never calls methods on visited objects
 # (the named accessor portholes and SourceVault.names() are the deliberate exceptions --
@@ -107,140 +108,42 @@ class WorldInventory
     return value.size if typeof value.size is "number" and typeof value.capacity is "number"
     undefined
 
-  # ---- the walk -------------------------------------------------------------------
+  # ---- the walks ------------------------------------------------------------------
   # Returns {report, escapedWidgets, retainedZombies}:
   #   report          -- flat {dimensionKey: number}
-  #   escapedWidgets  -- live widgets the containment walk cannot reach: ["Class#id", ...]
+  #   escapedWidgets  -- live widgets the containment walk cannot reach, each with the path
+  #                      the property walk found to it: [{id, path}, ...]
   #   retainedZombies -- destroyed widgets still held somewhere, each with the path
   #                      that names the retainer: [{id, path}, ...]
+  # Two walks: the PROPERTY walk (an InventoryWalker, seeded with the roots below and each
+  # class's statics) counts everything reachable into the report and meets the zombies; the
+  # CONTAINMENT walk writes no row, and names the escapes by the paths the property walk found.
+  # The order of the steps holds three ways: it is the report's key order, which the diff's rows
+  # -- and so the gate's DRIFT lines -- keep; the walk runs after every step that seeds it; and
+  # identity runs after the walk, whose paths it reads.
   takeInventory: ->
     report = {}
-    escaped = []
-    zombies = []
-    visited = new Set
-    provenance = new Map   # object -> {parent, key}, only to name a zombie's retainer
-    stack = []
-    transientsCache = new Map
+    walker = new InventoryWalker report
+    walker.enqueueRoot world, "world"
+    walker.enqueueRoot window.menusHelper, "menusHelper"
+    walker.enqueueRoot window.demoMenus, "demoMenus"
+    @_reportClassSide report, walker
+    @_reportWorldFieldSizes report
+    @_reportUnwalkedStores report
+    walker.walk()
+    offences = @_identityOffences walker
+    {
+      report: report
+      escapedWidgets: offences.escapedWidgets
+      retainedZombies: walker.retainedZombies.concat offences.registryZombies
+    }
 
-    add = (key, n) -> report[key] = (report[key] ? 0) + n
-
-    passiveId = (aWidget) ->
-      (aWidget.constructor?.name ? "?") + "#" + (aWidget.instanceNumericID ? "?")
-
-    pathOf = (value) ->
-      parts = []
-      cursor = value
-      guard = 0
-      while cursor? and guard++ < 300
-        entry = provenance.get cursor
-        if !entry?
-          parts.unshift "<?>"
-          break
-        parts.unshift entry.key
-        break unless entry.parent?
-        cursor = entry.parent
-      parts.join "."
-
-    # the serializer's per-class transient declarations, merged up the chain -- those
-    # fields are recomputed on restore, so retention through them is by design. Only a
-    # Fizzygum class declares any: classNamed is the one test of that
-    transientsOf = (ctor, ctorName) ->
-      return undefined unless ctor?
-      return transientsCache.get ctor if transientsCache.has ctor
-      found = undefined
-      if Serializer? and classNamed(ctorName) is ctor
-        try
-          found = Serializer.transientsForClass ctor
-      transientsCache.set ctor, found
-      found
-
-    enqueue = (value, key, parent) ->
-      return unless value?
-      type = typeof value
-      if type is "string"
-        add "strings.count", 1
-        add "strings.chars", value.length
-        return
-      return if type is "number" or type is "boolean" or type is "symbol" or type is "bigint"
-      if type is "function"
-        add "objects.Function", 1
-        return
-      return if visited.has value
-      visited.add value
-      if NativeValueKinds.isBuffer value
-        add "typedArrays.count", 1
-        add "typedArrays.bytes", value.byteLength
-        return
-      provenance.set value, {parent: parent, key: key}
-      stack.push value
-      return
-
-    processValue = (value) ->
-      try
-        if value is window
-          add "objects.Window", 1
-          return
-        if value is document
-          add "objects.Document", 1
-          return
-        isCanvasLike = false
-        try
-          isCanvasLike = typeof value.getContext is "function" and typeof value.toDataURL is "function"
-        if isCanvasLike
-          add "canvases.count", 1
-          add "canvases.pixels", (value.width ? 0) * (value.height ? 0)
-          return
-        if window.Node? and value instanceof Node
-          add "dom.nodes", 1
-          return
-        if NativeValueKinds.isMap value
-          add "objects.Map", 1
-          add "containers.mapEntries", value.size
-          value.forEach (eachValue, eachKey) ->
-            enqueue eachKey, "<mapKey>", value
-            enqueue eachValue, "<mapValue>", value
-          return
-        if NativeValueKinds.isSet value
-          add "objects.Set", 1
-          add "containers.setEntries", value.size
-          value.forEach (eachValue) -> enqueue eachValue, "<setEntry>", value
-          return
-        if Array.isArray value
-          add "objects.Array", 1
-          add "containers.arrayElements", value.length
-          for eachElement, i in value
-            enqueue eachElement, "[" + i + "]", value
-          return
-        ctor = undefined
-        ctorName = "NoConstructor"
-        try
-          ctor = value.constructor
-          ctorName = ctor.name if ctor?.name
-        add "objects." + ctorName, 1
-        if Widget? and value instanceof Widget and value.destroyed
-          zombies.push {id: passiveId(value), path: pathOf(value)}
-        transients = transientsOf ctor, ctorName
-        for own name of value
-          continue if Widget.isDerivedStateField name
-          continue if transients?.has name
-          descriptor = undefined
-          try
-            descriptor = Object.getOwnPropertyDescriptor value, name
-          continue unless descriptor?
-          continue if descriptor.get? or descriptor.set?
-          enqueue descriptor.value, name, value
-      catch error
-        add "walker.errors", 1
-      return
-
-    # ---- roots ---------------------------------------------------------------------
-    enqueue world, "world"
-    enqueue window.menusHelper, "menusHelper"
-    enqueue window.demoMenus, "demoMenus"
-
-    # every class, via THE shared marker enumeration (boot's allClassFunctions --
-    # the same one the teardown's id-zeroing and the serializer's counter
-    # collection consume, so the three cannot disagree about what a class is)
+  # every class, via THE shared marker enumeration (boot's allClassFunctions -- the same one
+  # the teardown's id-zeroing and the serializer's counter collection consume, so the three
+  # cannot disagree about what a class is): the class count, each class's live-instance count,
+  # a row for each own static that is a container (its size) or a number (its value), and each
+  # static as a root of the property walk
+  _reportClassSide: (report, walker) ->
     classFunctions = allClassFunctions()
     report["classes.count"] = classFunctions.length
     for ctor in classFunctions
@@ -249,30 +152,27 @@ class WorldInventory
       report["instances." + className] = instanceCount if instanceCount > 0
       for staticName in Object.getOwnPropertyNames ctor
         continue if WorldInventory._skippedStaticNames.has staticName
-        descriptor = undefined
-        try
-          descriptor = Object.getOwnPropertyDescriptor ctor, staticName
-        continue unless descriptor? and !descriptor.get? and !descriptor.set?
-        staticValue = descriptor.value
+        staticValue = InventoryWalker.ownDataValueOf ctor, staticName
         sized = WorldInventory._containerSize staticValue
         if sized?
           report["statics." + className + "." + staticName] = sized
         else if typeof staticValue is "number"
           report["statics." + className + "." + staticName] = staticValue
-        enqueue staticValue, className + "." + staticName, ctor
+        walker.enqueueRoot staticValue, className + "." + staticName, ctor
+    return
 
-    # the world's own container fields (incl. the cacheFor* LRUs) get their own size
-    # rows so a declared growth policy has a row to check
+  # the world's own container fields (incl. the cacheFor* LRUs) get their own size
+  # rows so a declared growth policy has a row to check
+  _reportWorldFieldSizes: (report) ->
     if world?
       for own fieldName of world
         continue if Widget.isDerivedStateField fieldName
-        descriptor = undefined
-        try
-          descriptor = Object.getOwnPropertyDescriptor world, fieldName
-        continue unless descriptor? and !descriptor.get? and !descriptor.set?
-        sized = WorldInventory._containerSize descriptor.value
+        sized = WorldInventory._containerSize InventoryWalker.ownDataValueOf(world, fieldName)
         report["world." + fieldName] = sized if sized?
+    return
 
+  # the stores counted and never walked
+  _reportUnwalkedStores: (report) ->
     # the module-state porthole (a read-only accessor; an absent build is a no-op)
     textState = window.swCanvasTextStateForAudit?()
     if textState?
@@ -283,44 +183,51 @@ class WorldInventory
       # walking it would zombie-report a race that is benign by design
       report["swCanvasText.coldGlyphWidgets"] = textState.coldGlyphWidgets.length
       report["swCanvasText.poisonedCacheKeys"] = textState.poisonedCacheKeys.length
-
-    # counted, never walked: the vault holds every class's source text
+    # the vault holds every class's source text
     report["sourceVault.entries"] = SourceVault.names().length if SourceVault?
     report["dom.headScripts"] = document.head.querySelectorAll("script").length
     report["dom.bodyChildren"] = document.body.children.length
+    return
 
-    processValue stack.pop() while stack.length > 0
-
-    # ---- identity: the registry vs the containment walk ----------------------------
-    # containment roots = the ONE liveness enumeration, plus the bin/shelf containers
-    # themselves: their chrome is accounted-for citizenry even though residency in them
-    # confers no liveness (see graphLivenessRoots). Containment = `children` and nothing else:
-    # a widget is owned by being a child, so one its holder keeps off its tree is escaped (a
-    # frame's empty-state placeholder exists only while it is mounted, FrameWdgt.defaultContents).
+  # ---- identity: the registry vs the containment walk ----------------------------
+  # Returns {escapedWidgets, registryZombies}: each live registered widget the containment
+  # walk does not reach, and each destroyed widget still registered.
+  _identityOffences: (walker) ->
+    escapedWidgets = []
+    registryZombies = []
     if world? and Widget?
-      reached = new Set
-      containmentStack = world.graphLivenessRoots()
-      containmentStack.push world.binWdgt if world.binWdgt?
-      containmentStack.push world.shelfWdgt if world.shelfWdgt?
-      while containmentStack.length > 0
-        cursor = containmentStack.pop()
-        continue if !cursor? or reached.has cursor
-        reached.add cursor
-        if cursor.children?
-          containmentStack.push eachChild for eachChild in cursor.children
+      reached = @_reachedByContainment()
       Widget.instances.forEach (eachInstance) ->
         if eachInstance.destroyed
           # still registered after destruction: unregisterThisInstance was skipped
-          zombies.push {id: passiveId(eachInstance), path: "<registry>"}
+          registryZombies.push {id: InventoryWalker.passiveIdOf(eachInstance), path: "<registry>"}
         else if !reached.has eachInstance
           # when the property walk visited it, its provenance names the RETAINER --
           # the single most actionable fact about an escape
-          escaped.push {
-            id: passiveId(eachInstance)
-            path: if provenance.has eachInstance then pathOf eachInstance else "<unreached-by-property-walk>"
+          escapedWidgets.push {
+            id: InventoryWalker.passiveIdOf(eachInstance)
+            path: walker.pathOf(eachInstance) ? "<unreached-by-property-walk>"
           }
+    {escapedWidgets: escapedWidgets, registryZombies: registryZombies}
 
-    {report: report, escapedWidgets: escaped, retainedZombies: zombies}
+  # the containment walk: every widget `children` reaches from the containment roots -- the
+  # ONE liveness enumeration, plus the bin/shelf containers themselves: their chrome is
+  # accounted-for citizenry even though residency in them confers no liveness (see
+  # graphLivenessRoots). Containment = `children` and nothing else: a widget is owned by being
+  # a child, so one its holder keeps off its tree is escaped (a frame's empty-state placeholder
+  # exists only while it is mounted, FrameWdgt.defaultContents).
+  _reachedByContainment: ->
+    reached = new Set
+    containmentStack = world.graphLivenessRoots()
+    containmentStack.push world.binWdgt if world.binWdgt?
+    containmentStack.push world.shelfWdgt if world.shelfWdgt?
+    while containmentStack.length > 0
+      cursor = containmentStack.pop()
+      continue if !cursor? or reached.has cursor
+      reached.add cursor
+      if cursor.children?
+        containmentStack.push eachChild for eachChild in cursor.children
+    reached
 
   # stores the current report as the baseline (the harness calls this at the FIRST teardown)
   snapshotBaseline: ->

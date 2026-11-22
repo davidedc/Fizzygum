@@ -24,7 +24,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U9 | A re-click keeps a member's undo history | CLOSED 2026-11-22 (§U9) |
 | U10 | Six self-called helpers take their own tier | CLOSED 2026-11-22 (§U10) |
 | U11 | `loadWorldSnapshot` is its phases | CLOSED 2026-11-22 (§U11) |
-| U12 | `takeInventory` is its walks | not started |
+| U12 | `takeInventory` is its walks | CLOSED 2026-11-22 (§U12) |
 | U13 | A type test says it is one, or the question names a capability | not started |
 | U14 | A low-level method that sizes or drives another widget: [A] against [U] | not started |
 | U15 | The list-row verb scrolls one way | not started |
@@ -730,6 +730,24 @@ self-tests that plant a leak (`heap-forensics-selftest-headless.js`, `vm-truth-g
 **Park when.** No seam splits it without threading more than three values through each helper: park with the seam
 map (a blind split is the quiet fix of the complexity ceiling). **Audit.** ratchet §1 (d), last paragraph.
 
+**Landed 2026-11-22.** `takeInventory` is its steps, in their order (the report's key order is the DRIFT lines'
+order): the class side, the world's field sizes, the stores counted and never walked, the property walk, and the two
+identity lists (`_reportClassSide`, `_reportWorldFieldSizes`, `_reportUnwalkedStores`, `_identityOffences`,
+`_reachedByContainment`). Ruled at Prepare: the property walk's bookkeeping (what it visited, the path that first
+reached each object, what it has yet to expand, the serializer transients per class, the zombies, the report) lives on
+a new core collaborator, `InventoryWalker`, one instance per inventory — the Duplicator's shape. It cannot live on the
+`WorldInventory`: the harness holds that one on a class static the walk reaches, so the walk would walk, and grow, its
+own bookkeeping. One `InventoryWalker.ownDataValueOf` replaces three copies of the skip-accessors rule. Corrected at
+research: no standing proof saw a REAL `WORLD_INVENTORY_ESCAPED` / `_ZOMBIE` line, so dropping a walk failed nothing;
+now the suite-gate proof plants real offences at the reset that holds its store plant (a grown world field holding a
+destroyed widget, an appended DOM child, an escaped widget, a zombie held by a class static), each judged by its own
+line, and a drop of each step (class side, world fields, the unwalked stores, the property walk, the identity lists,
+the world root) loses exactly its own lines; the `menusHelper` / `demoMenus` roots hold no offence, and the proof's
+header says so. Purity: the pre-split body compiled from HEAD ran beside the split at every inventory of the whole suite
+and the round-trip rig — byte-identical JSON, 0 mismatches (its perturbing control fires). Ratchets:
+`RECORDED['WorldInventory#takeInventory']` (129) deleted (it measures 0; every helper ≤ 12); the complexity gate's own
+self-test retargets its record plant to `diffAgainstBaseline`. Pixels: none.
+
 ### U13 — A type test says it is one, or the question names a capability (sites INDEPENDENT)
 
 **The rule** (`docs/architecture/widget-authoring-guidelines.md` §14), in rank order: (1) the branch disappears, the
@@ -961,6 +979,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium. — CLOSED 2026-11-22 (gate-contortions loop, U9): the reload records itself as an undo step; another member forgets.
 - [x] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U10): eight helpers take the `_` tier; three markers.
 - [x] U11: `WorldWdgt.loadWorldSnapshot` stays at complexity 67 because its split adds methods to a class at its method ceiling — medium. — CLOSED 2026-11-22 (gate-contortions loop, U11): six phase cores; the ceiling +6, dated.
+- [x] U12: `WorldInventory.takeInventory` stays at complexity 129 because a split's child above 15 could not be recorded — medium. — CLOSED 2026-11-22 (gate-contortions loop, U12): its steps + `InventoryWalker`; real offences prove every walk.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

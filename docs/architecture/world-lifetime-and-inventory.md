@@ -48,12 +48,13 @@ one is visible even while it stays "correct".
 ## 2. What the inventory measures
 
 `WorldInventory.takeInventory()` walks the reachable object graph — read-only,
-side-effect-free, ~6 ms — from these roots: the world, every class object (boot's
+side-effect-free, ~6 ms; one `InventoryWalker` per inventory does the property walk and holds
+its bookkeeping, where the walk cannot reach it — from these roots: the world, every class object (boot's
 `allClassFunctions`: every OWN name of `window` — `getOwnPropertyNames`, so a class assigned into a
 browser built-in's non-enumerable slot, `InputEvent`, is found too — that boot's `classNamed`
 answers, by the `instances`-Set marker every class carries, never a name-suffix scan) with its own statics,
-the module-state porthole (`swCanvasTextStateForAudit`),
-`menusHelper`, `demoMenus`. It returns:
+`menusHelper`, `demoMenus`. The module-state porthole (`swCanvasTextStateForAudit`) is counted and
+never walked. It returns:
 
 - a flat report of **dimensions**: `objects.<Ctor>` counts, container totals
   (`containers.*`), `canvases.count/pixels`, `strings.count/chars`, `typedArrays.count/bytes`
@@ -83,7 +84,7 @@ three console-error tokens the headless runners fail a test on (the shared list:
 `Fizzygum-tests/scripts/lib/gate-tokens.js`):
 
 - `WORLD_INVENTORY_DRIFT <key> baseline=<v> now=<v>` — an undeclared store moved;
-- `WORLD_INVENTORY_ESCAPED <Class>#<id>` — a live widget became unreachable;
+- `WORLD_INVENTORY_ESCAPED <Class>#<id> held at <path>` — a live widget became unreachable;
 - `WORLD_INVENTORY_ZOMBIE <Class>#<id> at <path>` — a destroyed widget is still retained.
 
 Two tiers keep the gate storm-proof (the ratchet's first deep cut once fired 1469 times on a

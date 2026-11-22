@@ -36,10 +36,10 @@ proveGate({
   runs: [{
     label: 'one more method in a held class, and a recorded function made more complex',
     edits: [['basic-widgets/Widget.coffee', /^class Widget extends TreeNode\n/m, 'class Widget extends TreeNode\n\n  biteProofOneMoreMethod: -> 1\n'],
-      ['WorldInventory.coffee', /^  takeInventory: ->\n/m, '  takeInventory: ->\n    if biteProofA\n      if biteProofB\n        biteProofC = 1\n']],
+      ['WorldInventory.coffee', /^  diffAgainstBaseline: ->\n/m, '  diffAgainstBaseline: ->\n    if biteProofA\n      if biteProofB\n        biteProofC = 1\n']],
     expect: {
       METHOD_COUNT_ABOVE_CEILING: /^  METHOD_COUNT_ABOVE_CEILING  Widget: \d+ methods \(ceiling \d+\) — basic-widgets\/Widget\.coffee$/m,
-      COMPLEXITY_ABOVE_RECORD: /^  COMPLEXITY_ABOVE_RECORD  WorldInventory#takeInventory: 132 \(recorded 129\) — WorldInventory\.coffee:\d+$/m,
+      COMPLEXITY_ABOVE_RECORD: /^  COMPLEXITY_ABOVE_RECORD  WorldInventory#diffAgainstBaseline: 31 \(recorded 28\) — WorldInventory\.coffee:\d+$/m,
     },
     advised: ['METHOD_COUNT_ABOVE_CEILING', 'COMPLEXITY_ABOVE_RECORD'],
   }, {
@@ -51,11 +51,11 @@ proveGate({
     lines: [/^  COMPLEXITY_ABOVE_CEILING  BiteProofHarnessTangled#tangled: 20 \(ceiling 15\) — harness\/BiteProofHarnessTangled\.coffee:2$/m],
   }, {
     label: 'a recorded function renamed, and a held class file removed',
-    edits: [['WorldInventory.coffee', /^  takeInventory: ->\n/m, '  takeInventoryRenamed: ->\n']],
+    edits: [['WorldInventory.coffee', /^  diffAgainstBaseline: ->\n/m, '  diffAgainstBaselineRenamed: ->\n']],
     unplant: ['FrameWdgt.coffee'],
     expect: {
-      STALE_ALLOWLIST_ENTRY: /^  STALE_ALLOWLIST_ENTRY  RECORDED\['WorldInventory#takeInventory'\] \(129\) names no function above the ceiling/m,
-      COMPLEXITY_ABOVE_CEILING: /^  COMPLEXITY_ABOVE_CEILING  WorldInventory#takeInventoryRenamed: 129 \(ceiling 15\)/m,
+      STALE_ALLOWLIST_ENTRY: /^  STALE_ALLOWLIST_ENTRY  RECORDED\['WorldInventory#diffAgainstBaseline'\] \(28\) names no function above the ceiling/m,
+      COMPLEXITY_ABOVE_CEILING: /^  COMPLEXITY_ABOVE_CEILING  WorldInventory#diffAgainstBaselineRenamed: 28 \(ceiling 15\)/m,
     },
     advised: ['COMPLEXITY_ABOVE_CEILING'],
     lines: [/^  STALE_ALLOWLIST_ENTRY  METHOD_CEILINGS\.FrameWdgt names FrameWdgt\.coffee, which does not exist/m],
