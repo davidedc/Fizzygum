@@ -2636,8 +2636,8 @@ pinned-anchor interplay line).**
   false/unchanged with no island, so it is almost certainly noise — but it is NEW dormant hot-path
   work under a byte-exact perf culture. **TOP dormant-perf follow-up: implement the cached flag
   (invalidated on reparent / spec change) + the per-event hit-test memoization (§4.6), OR run a
-  minified `prof-interactive.js --sw` A/B and update this claim to the measured reality.** The walk
-  is consolidated behind `Widget._isInsideNonIdentityIsland` — the natural place to add the cache.
+  minified `prof-interactive.js --sw` A/B and update this claim to the measured reality.** The shared
+  walk is `Widget._enclosingMappedPlaneRoot` — the natural place to add the cache.
 - Identity island: one extra buffer + one extra equal-extent blit per composite (≈ the cost
   every text widget already pays).
 - Rotation animation of a static window: per step = matrix update + damage (oldAABB ∪ newAABB) +

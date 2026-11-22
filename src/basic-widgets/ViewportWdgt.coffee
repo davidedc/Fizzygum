@@ -411,14 +411,10 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   _scrollBarRunMargin: ->
     @planeMargin
 
-  # THE BOX I PRESENT TO AN OVERLAY laid over me -- the hover wash a menu row standing for me lays
-  # (HighlighterWdgt.coverTarget), the drag's outline around me as a target or as one that
-  # declines the drop, the lock badge at that outline's corner (WorldWdgt.addDragAffordanceWidgets),
-  # and the dev label naming my output pins (PinoutsOverlay.reconcile): what shows of me
-  # (clippedThroughBounds), less my margin while I keep one, so such an overlay frames my plane,
-  # where what I hold shows, and not the margin around it. In my bounds' coordinates, as
-  # clippedThroughBounds is (not my plane's, which my scroll translates). PUBLIC: asked through ?()
-  # of the overlay's target, which answers clippedThroughBounds when it answers nothing.
+  # THE BOX I PRESENT TO AN OVERLAY laid over me (Widget's answer names the overlays that ask): what
+  # shows of me (clippedThroughBounds), less my margin while I keep one, so such an overlay frames my
+  # plane, where what I hold shows, and not the margin around it. In my bounds' coordinates, as
+  # clippedThroughBounds is (not my plane's, which my scroll translates).
   boxPresentedToOverlays: ->
     shown = @clippedThroughBounds()
     if @planeMargin is 0 then shown else shown.intersect @_planeBox()

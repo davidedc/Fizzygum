@@ -63,7 +63,11 @@ const METHOD_CEILINGS = {
   // copied pinned "Layout in stack" or "Layout in row" menu drives the real spec, not a clone. Raised 393 -> 394 on
   // 2026-11-20 under the owner's standing ruling of 2026-11-16 (the right shape over the count):
   // isLeftOutOfCopiesAndSaves, the one question both walkers ask of a widget the world keeps in a tree (the text
-  // caret, an ephemeral overlay), so a copy or a save of what it stands in leaves it out
+  // caret, an ephemeral overlay), so a copy or a save of what it stands in leaves it out. Lowered 394 -> 393 on 2026-11-22:
+  // isVisuallyTransformed is the one answer to whether an island turns or scales a widget, so its private twin,
+  // which only the dock band asked, is gone. Raised 393 -> 394 on 2026-11-22 under the owner's standing ruling of
+  // 2026-11-16 (the right shape over the count): boxPresentedToOverlays, the box every widget presents to an overlay
+  // laid over it, answered on Widget, overridden by a viewport keeping a margin, and asked plainly by its readers
   Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 394 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own

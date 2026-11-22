@@ -17,7 +17,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U2 | Every other gate names its quiet fix as the wrong answer | CLOSED 2026-11-22 (§U2) |
 | U3 | The words say what is true again | CLOSED 2026-11-22 (§U3) |
 | U4 | Three spellings a gate's blind spot chose | CLOSED 2026-11-22 (§U4) |
-| U5 | One answer on `Widget`, asked plainly | not started |
+| U5 | One answer on `Widget`, asked plainly | CLOSED 2026-11-22 (§U5) |
 | U6 | Three checks get a witness of their own | not started |
 | U7 | The world steps what is attached; a row with nothing to load says so | not started |
 | U8 | The caret's margin includes the border | not started |
@@ -438,6 +438,24 @@ tests). Pixel-neutral is a hypothesis until the suite says so.
 Prepare (`scripts/inspector-churn-set.json`, `derive-inspector-churn-set.js`).
 **Audit.** static C2; ratchet §2 row 23.
 
+**Landed 2026-11-22.** (1) `isVisuallyTransformed` is the one name: its private twin `_isInsideNonIdentityIsland`,
+same body, made public "because macros cannot call `_` members" (false today: rule [D] has its oracle marker) and
+asked only by the dock band, is deleted; the band asks the public question; the comments that leaned on the twin
+(and its stale "handles refuse, float-drag escalates" policy) say what holds, and `transforms.md` §1 names the
+predicate. (2) `Widget.boxPresentedToOverlays: -> @clippedThroughBounds()` is the base answer every widget gives; the
+viewport keeping a margin overrides it; the hover wash, the drag outlines and the lock badge, the grip's outline and
+the pinout label ask it plainly where they wrote `x.boxPresentedToOverlays?() ? x.clippedThroughBounds()`.
+`widget-authoring-guidelines.md` §14 says what the soft probe had misread: a question every widget answers is a
+`Widget` member a subclass overrides, not a capability probed with `?()`. Proof: a plant that logs from
+`isVisuallyTransformed` fails the two value tests AND the three dock tests (the band asks it); deleting the base fails
+all six overlay tests; insetting it by 3 px fails the five base-path tests and not the document's margin leg, which
+the override answers; deleting the override fails that leg's three lines. Pixels: exactly the predicted set —
+`SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2 and image_3, both densities, both pointers (8
+references): its member list, inherited shown, rests one row-index off after the scroll to `alpha`, each changed shot
+the list shifted 1 logical px, nothing else. Ratchets, each on its own merits: `Widget`'s method ceiling lowered 394 →
+393 (the twin) and raised 393 → 394 (the base answer), both dated; `comment-narration` 80 → 79 (a reworded comment
+stopped narrating).
+
 ### U6 — Three checks get a witness of their own (parts INDEPENDENT)
 
 The owner's rule from the dup-caret arc: a check must not ask the product's own rule for its expected value.
@@ -809,6 +827,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] **A firing gate says how to go quiet, never when the quiet fix is wrong** — ratchets steered sessions to inline helpers, home code by a ceiling, make a CLAUDE.md line false; many gates have a cheap quiet fix that is a contortion; each should print why it exists and when a raise or sanction is right — medium. — CLOSED 2026-11-22 (gate-contortions loop, U1 + U2): every firing gate prints what its finding means from one module, `buildSystem/lib/gate-advice.js` — a budget when a raise is the answer, an invariant or a convention its quiet fixes as wrong and the right answer — and each bite-proof holds it to that advice (`lib/prove-rules.js` `advised`); the classes are `lint-and-static-checks.md` §3b.
 - [x] U3: four facts cut from `Fizzygum-tests/CLAUDE.md` by byte count, three tests' prose that stopped naming `catchesPointerAt`, a layering-doc shape bent to hold one site, two stale sanction pointers — small. — CLOSED 2026-11-22 (gate-contortions loop, U3): the facts restored where true, the tests name `catchesPointerAt` in words true of the code, §2.5 has a third shape, the two pointers corrected.
 - [x] U4: four platform calls respelled for unresolved-sends (one dropped a Duplicator hardening), eleven `new (window["X"])` sites, and `isDesktopShortcut`, alive only for two rigs — small. — CLOSED 2026-11-22 (gate-contortions loop, U4): the plain platform calls, the Duplicator hardening with a rig check, the classes named bare under their await, the predicate deleted.
+- [x] U5: `isVisuallyTransformed` duplicates a private twin made so a macro could call it; `boxPresentedToOverlays` has its default written at four readers — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U5): one public name; the base answer on `Widget`, a viewport overriding it.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

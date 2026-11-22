@@ -1003,7 +1003,8 @@ door reaches (every re-home and destroy of the holder's own child, inside the se
 4. **Leave it**, with a comment saying why, when there is genuinely no behaviour to move.
 
 **Placement:** the query lives on the **answering subclass** and is dispatched with `x.method?()`.
-Do not add a `-> false` default on `Widget`.
+Do not add a `-> false` default on `Widget`. A question every widget answers (a box, a value with a real
+default) is not such a capability: it is a `Widget` member a subclass overrides, asked plainly.
 
 **Faithfulness:** a conversion must fire for exactly the original test's object set — mind
 inheritance. Any red test after such a swap is a faithfulness bug, not a rendering change.

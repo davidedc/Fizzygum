@@ -98,10 +98,9 @@ class HighlighterWdgt extends RectangleWdgt
       @_changed()
 
   # Lay me over `aTarget` as the per-widget channel shows it: over the box it presents to an overlay
-  # (boxPresentedToOverlays, asked through ?(): a viewport keeping a margin presents its plane box),
-  # else its clipped-through bounds, in its plane (the reconciler parents me there), my outline
-  # following the corners it shows.
+  # (boxPresentedToOverlays: what shows of it, a viewport keeping a margin presenting its plane box), in
+  # its plane (the reconciler parents me there), my outline following the corners it shows.
   coverTarget: (aTarget) ->
-    box = aTarget.boxPresentedToOverlays?() ? aTarget.clippedThroughBounds()
+    box = aTarget.boxPresentedToOverlays()
     @coverBox box, aTarget.cornerRadiiFollowingMyOutline box
 

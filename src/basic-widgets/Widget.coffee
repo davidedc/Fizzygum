@@ -1752,32 +1752,26 @@ class Widget extends TreeNode
       root = root._enclosingMappedPlaneRoot()
     result
 
-  # Affine transforms (§4.6): true if a non-identity TransformFrameWdgt island is on my parent chain.
-  # The shared predicate behind the Phase-1-symmetric interaction guards (handles refuse, float-drag
-  # escalates to the island). Dormant returns false with no island. (This is the §9 memoization point:
-  # a cached inside-an-island flag invalidated on reparent/spec change would replace this walk — banked.)
-  _isInsideNonIdentityIsland: ->
-    @_enclosingNonIdentityIsland()?
-
   # Affine transforms (§6 R2): the INNERMOST enclosing non-identity island (TransformFrameWdgt) on my
   # parent chain, or undefined. My (virtual) geometry lives in THIS island's plane — clippedThroughBounds and
-  # the mapRectToScreen / screenPointToMyPlane chain are all expressed there — so ephemeral chrome that
-  # must track me (a highlight) is parented HERE to composite through the transform for free (rotates +
-  # clips with me, §4.6 halo-handle model). Dormant returns undefined (no island) ⇒ the highlight stays a
-  # world child, byte-identical. Backs _isInsideNonIdentityIsland above (its one caller is boolean-context).
+  # the mapRectToScreen / screenPointToMyPlane chain are all expressed there. Dormant returns undefined
+  # (no island), byte-identical. isVisuallyTransformed asks whether there is one; ephemeral chrome that
+  # must track me (a highlight) is parented by the general _enclosingMappedPlaneRoot below, which a
+  # scrolled viewport answers too.
   # The mapping ancestors that rotate or scale are the islands: they alone answer the linear part
   # (rotationDegreesOfChildPlane), a translation having none — so the iterator, asked for those only,
   # never asks a viewport whether it is scrolled.
   _enclosingNonIdentityIsland: ->
     @_enclosingMappedPlaneRoot true
 
-  # The GENERAL siblings of the pair above (paint-time-scroll-translation plan §3.2): is any
-  # MAPPING ancestor — a non-identity island OR a scroll-translation provider for the child
-  # edge crossed — between me and the screen plane? The island pair stays for ROTATION-specific
-  # policy (handles refuse, float-drag escalates, pick-out/re-express); this pair is for
-  # PLANE-MAPPING policy — the call sites that must re-express coordinates or re-home overlay
-  # chrome whenever my plane is mapped at all, however it is mapped (the drop re-centre gate,
-  # the highlight re-home). Off any mapped plane: false / undefined — byte-identical dormant.
+  # The GENERAL siblings of _enclosingNonIdentityIsland above and of isVisuallyTransformed
+  # (paint-time-scroll-translation plan §3.2): is any MAPPING ancestor — a non-identity island OR a
+  # scroll-translation provider for the child edge crossed — between me and the screen plane? The
+  # island questions serve ROTATION-specific policy (the pick-out and re-express of a turned figure,
+  # a corner or an outline a turned box cannot follow); this pair is for PLANE-MAPPING policy — the
+  # call sites that must re-express coordinates or re-home overlay chrome whenever my plane is mapped
+  # at all, however it is mapped (the drop re-centre gate, the highlight re-home). Off any mapped
+  # plane: false / undefined — byte-identical dormant.
   _isInsideMappedPlane: ->
     @_enclosingMappedPlaneRoot()?
 
@@ -1868,10 +1862,11 @@ class Widget extends TreeNode
       island = island._enclosingNonIdentityIsland()
     product
 
-  # Public, macro-callable predicate: true iff at least one STRICT ancestor island has a non-identity
-  # spec — i.e. "my layout-box geometry does not coincide with my screen appearance". For an island
-  # itself: false (its slot box IS plane geometry — its CONTENT is what transforms). The blessed
-  # public name for the private _isInsideNonIdentityIsland (macros cannot call `_`-prefixed members).
+  # True iff a STRICT ancestor island turns or scales me (a non-identity spec on my parent chain):
+  # my layout-box geometry does not coincide with my screen appearance. An island's own spec does not
+  # count (it transforms the island's CONTENT; its slot box IS plane geometry), and neither does a
+  # scroll translation. The dock band's outline asks it of the band's host
+  # (WorldWdgt.addDragAffordanceWidgets): a band on a turned or scaled host is outlined square.
   isVisuallyTransformed: ->
     @_enclosingNonIdentityIsland()?
 
@@ -3267,7 +3262,16 @@ class Widget extends TreeNode
     @_paintChildrenOver aContext, rectangle, appliedShadow
     aContext.restore()
 
-  # ===== the corners a box laid over me follows =====
+  # ===== the box an overlay laid over me frames, and the corners it follows =====
+  # THE BOX I PRESENT TO AN OVERLAY laid over me -- the hover wash a menu row standing for me lays
+  # (HighlighterWdgt.coverTarget), the drag's outline round me as a target or as one that declines the
+  # drop, the lock badge at that outline's corner (WorldWdgt.addDragAffordanceWidgets), the outline
+  # round a window its grip would resize (FrameGripWdgt), and the dev label naming my output pins
+  # (PinoutsOverlay.reconcile): what shows of me, in my bounds' coordinates. A viewport keeping a
+  # margin presents its plane box (ViewportWdgt).
+  boxPresentedToOverlays: ->
+    @clippedThroughBounds()
+
   # The per-corner radii [topLeft, topRight, bottomRight, bottomLeft] of the rounded outline my BODY
   # is painted in, or undefined when it is square: my appearance's outlineCornerRadii (a rounded
   # box's -- a window's, a card's, a menu's, a button's --, a text field's well, a magnet's, a

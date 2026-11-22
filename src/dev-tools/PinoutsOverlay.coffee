@@ -51,10 +51,9 @@ class PinoutsOverlay
           # target's SCREEN footprint: the box is plane-local, and for a target inside a rotated/scaled
           # island the un-mapped box is the wrong plane (§7.11) — off any island mapRectToScreen returns
           # the box unchanged. The box is the one the target presents to an overlay, as every overlay laid
-          # at a widget reads it (boxPresentedToOverlays, asked through ?(): a viewport keeping a margin
-          # presents its plane box), else its clippedThroughBounds.
+          # at a widget reads it (boxPresentedToOverlays).
           target = eachPinoutingWidget.wdgtThisWdgtIsPinouting
-          peekThroughBox = target.mapRectToScreen (target.boxPresentedToOverlays?() ? target.clippedThroughBounds())
+          peekThroughBox = target.mapRectToScreen target.boxPresentedToOverlays()
           eachPinoutingWidget._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
 
       else
@@ -74,8 +73,7 @@ class PinoutsOverlay
         world.add hM
         hM.wdgtThisWdgtIsPinouting = eachWidgetNeedingPinout
         # SCREEN-anchor, same box and mapping as the reposition branch above (§7.11)
-        shownBox = eachWidgetNeedingPinout.boxPresentedToOverlays?() ? eachWidgetNeedingPinout.clippedThroughBounds()
-        peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen shownBox
+        peekThroughBox = eachWidgetNeedingPinout.mapRectToScreen eachWidgetNeedingPinout.boxPresentedToOverlays()
         hM._applyMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
         hM.setColor WorldWdgt.theme.pinoutLabelText
         hM.setWidth 400

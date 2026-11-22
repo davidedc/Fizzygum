@@ -89,12 +89,10 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     return unless leftWidget? and rightWidget?
 
     # Where the pointer says my LEADING EDGE should be, in MY plane. nonFloatDragPositionWithinWdgtAtStart
-    # is the grab grip, captured in my plane at drag start (ActivePointerWdgt.coffee:1096-1099).
-    # Affine transforms §7.12: this REPLACES the old inverse-linear-part mapping of the screen DELTA (a
-    # delta had to be mapped as the difference of two plane-mapped points, or the translation
-    # double-applies) -- an absolute target needs no such care, and screenPointToMyPlane is identity off
-    # any island, so the ex-@_isInsideNonIdentityIsland gate that kept the dormant path off the ancestor
-    # walk is no longer worth its own branch here.
+    # is the grab grip, captured in my plane at drag start (ActivePointerWdgt.determineGrabs). An ABSOLUTE
+    # target maps as a point (screenPointToMyPlane), where a screen DELTA would have to be mapped as the
+    # difference of two plane-mapped points or the translation applies twice; off any mapped plane
+    # screenPointToMyPlane returns the point itself, so the dormant path needs no branch of its own.
     targetLeft = mainOf(@screenPointToMyPlane pos) - mainOf(nonFloatDragPositionWithinWdgtAtStart)
 
     # ONE walk of the stack children: D/sumMax over the WHOLE stack, A/B up to me. (These are

@@ -79,7 +79,8 @@ Only a **sugar-materialized** island auto-removes at identity; an explicitly-aut
 stays (merely dormant). The `_materializedBySugar` boolean serializes, so a saved-then-
 reloaded sugar island stays sugar-removable. The getters `rotationDegrees()` / `scaleFactor()`
 mirror the sugar setters' scope; `accumulated*()` walks **all** ancestor islands (sugar +
-explicit) for the total visual transform (rotations sum, scales multiply — a similitude).
+explicit) for the total visual transform (rotations sum, scales multiply — a similitude); `isVisuallyTransformed()` asks
+whether any strict ancestor island is non-identity, even where their turns cancel (a compensating wrapper's do).
 
 ---
 

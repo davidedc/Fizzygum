@@ -1792,10 +1792,10 @@ class WorldWdgt extends IconGridPanelWdgt
       # the badge is a world child, so anchor it to the target's SCREEN footprint — the target can sit
       # inside a rotated/scaled island, where the plane-local box is the wrong plane (§7.11 mapping;
       # off any island mapRectToScreen returns the box unchanged) — at the box the target presents to
-      # an overlay, as its outline does (a viewport keeping a margin presents its plane box:
-      # ViewportWdgt.boxPresentedToOverlays)
+      # an overlay, as its outline does (boxPresentedToOverlays: a viewport keeping a margin presents its
+      # plane box)
       badgeTarget = @dragEmbedLockBadgeDeclared.target
-      box = badgeTarget.mapRectToScreen (badgeTarget.boxPresentedToOverlays?() ? badgeTarget.clippedThroughBounds())
+      box = badgeTarget.mapRectToScreen badgeTarget.boxPresentedToOverlays()
       @dragEmbedLockBadgeWdgt._applyMoveTo new Point(box.right() - 70, box.top() + 4)
     else if @dragEmbedLockBadgeWdgt?
       @dragEmbedLockBadgeWdgt.fullDestroy()
@@ -1817,7 +1817,7 @@ class WorldWdgt extends IconGridPanelWdgt
       # the bounding box of a turned rectangle, with no corner of the host's to follow.
       bandHost = @dragEmbedDockBandDeclared.host
       bandBox = @dragEmbedDockBandDeclared.box
-      bandRadii = if bandHost._isInsideNonIdentityIsland() then undefined else bandHost.cornerRadiiFollowingMyOutline bandBox
+      bandRadii = if bandHost.isVisuallyTransformed() then undefined else bandHost.cornerRadiiFollowingMyOutline bandBox
       @dragEmbedDockBandWdgt.coverBox (bandHost.mapRectToScreen bandBox), bandRadii
     else if @dragEmbedDockBandWdgt?
       @dragEmbedDockBandWdgt.fullDestroy()
