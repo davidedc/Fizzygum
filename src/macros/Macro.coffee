@@ -110,6 +110,9 @@ class Macro
         next = @macroGenerator.next()
         @msSinceLastExecutedMacroStep = 0
         if next.done
+          # the finished generator goes at once: nothing steps it again, and its context holds the
+          # macro's locals, the widgets it built among them
+          @macroGenerator = undefined
           # a macro whose last statement is a wheel still holds swipes: they are delivered before it
           # ends (MacroToolkit._deliverHeldSwipesThenEnd)
           if @heldSwipes?

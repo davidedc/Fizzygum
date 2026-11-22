@@ -62,7 +62,6 @@ items whose arc never had a plan file are collected in `archive/backlog-closed-i
 ### `archive/world-inventory-instruments-plan.md` — the object-lifetime program, stated in that plan's §0 (Arcs A, B and C CLOSED 2026-08-20/21)
 - [ ] ⛔ **OWNER DECISION: a failed async door tells the user NOTHING** — on a transient failure of a part the build ships (a bad `file://` read), a click silently does nothing; whether a door should `inform` is a product call. → "OWNER DECISION: a failed async door tells the user nothing"
 - [ ] StorageSorter-roots unification (plan D2's stated non-goal): examine folding `StorageSorter._runClassifier`'s own root/marking enumeration onto `WorldWdgt.graphLivenessRoots()`, in a dedicated pass. → "StorageSorter-roots unification (plan D2's stated non-goal)"
-- [ ] The `vmtruth` leg's pin cap is within reach of a green suite: a shard's spreadsheet tests leave 139 to 200+ uncollected (all UNRETAINED) cells at a sweep; past 200 a page it reads INVALID — medium: fg's serial retry absorbs it. → "The vmtruth leg's pin cap is within reach of a green suite"
 
 ### `archive/shared-base-layer-part-plan.md`
 CLOSED 2026-08-02, executed in full (residue in `architecture/build-and-packaging.md` §2/§5); open: the two classes it could not move. → "The backlog's note on this plan"
@@ -321,7 +320,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
 - [ ] Owner question (gate-contortions U14): does layering rule [A] get a per-method marker for a member that drives another widget's public setter at event time, or do `bringTextAndCaretToState`, `actOn` and the `InertIconHolderWdgt` sizing stay public with reasons that say what they are (plan §U14) — small.
-- [ ] U16b: `fg vmtruth` reads INVALID under machine load — a burst of a test's destroyed widgets, uncollected at the next sweep, fills the pin cap; find what holds them (owner-added; plan §U16b) — medium.
 - [ ] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first.
 - [ ] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium.
 - [ ] Filed by U2: `check-part-edges` does not read `world.parts.ensureLoaded("p").then ->` as a guard, so a correct await of a lazy part fails as `UNGUARDED_CLASS_REF` — whether its scanner should read it is a rule change for the owner (plan §U2) — small.

@@ -170,16 +170,21 @@ launched with `--js-flags=--expose-gc --enable-precise-memory-info` (both flags 
 dose: without the second, `performance.memory` is quantized and the floor gate is blind).
 The prelude records a `WeakRef` for every widget at `unregisterThisInstance` (the moment it
 leaves the live registry and is supposed to be garbage) and, at each `resetWorld` — after
-the teardown and the in-band audits — forces a double GC and asserts, with three verdicts (and a fourth exit, 3, for a
+the teardown and the in-band audits — forces a stackless collection and asserts, with three verdicts (and a fourth exit, 3, for a
 shard dropped twice: the audited-suite gates' shared retry gave up, re-run):
 
 - **RETENTION, in two tiers — because the cheap question and the true question are not the
-  same question.** *Tier 1* (in the page, at every `resetWorld`) forces the double GC and
-  collects every widget still alive at the FIRST sweep after the reset that destroyed it,
-  emitting `LAYOUTAUDIT VMTRUTH suspect:<Class>#<id> destroyedDuring:<test>`. Those are
+  same question.** *Tier 1* (in the page, at every `resetWorld`) forces that collection —
+  `gc({type: 'major', execution: 'async'})`, which V8 runs from a task of its own with the
+  stack declared free of heap pointers — and, once it settles, lists every widget still alive
+  at the FIRST sweep after the reset that destroyed it, emitting
+  `LAYOUTAUDIT VMTRUTH suspect:<Class>#<id> destroyedDuring:<test>`. Those are
   **SUSPECTS, not findings**: "the collector has not got to it yet" and "something is
   holding it" are indistinguishable from inside the page, so tier 1 declares nothing and
-  **pins** each suspect where a heap snapshot can still address it. *Tier 2* (in the
+  **pins** each suspect where a heap snapshot can still address it — every one, however many:
+  a pinned suspect world already keeps everything it reaches, so a count would bound no
+  memory, only leave the suspects past it unasked. (Pinned suspects stay alive until shard end, so
+  they count toward the page's post-GC floor: one pinned world adds ~7 MB to it.) *Tier 2* (in the
   runner, `--retainer-confirm`) takes one snapshot per shard at shard end and marks
   forward from the GC root **with the pin arrays subtracted by NODE** — never by edge name,
   because an array reaches its elements through a backing store whose edges are numeric
@@ -193,12 +198,16 @@ shard dropped twice: the audited-suite gates' shared retry gave up, re-run):
   objects the old proxy reported had **no retaining heap edge at all** — unreachable
   garbage the forced GC had not reclaimed yet — which is precisely the false-positive class
   a grace period can only ever hide, never remove.
-  ⚠ **The sweep runs OFF the world cycle** (a `setTimeout 0` macrotask), and that position
-  is measured: run inline — inside `resetWorld`/`doOneCycle`/the rAF callback — V8's
-  conservative stack scanning treats the live frames above it as roots and the forced GC
-  cannot reclaim what they mention, leaving **20781** corpses alive one sweep later across a
-  307-sweep run, against **40** from the deferred position.
-  Attribution: a suspect is raised during the INCOMING test's opening reset, so the leaker
+  ⚠ **The collection is stackless**, and that is measured: the synchronous `gc()` scans the
+  stack it is called from conservatively and cannot reclaim what a word there points at — run
+  inline, inside `resetWorld`/`doOneCycle`/the rAF callback, it leaves **20781** corpses alive
+  one sweep later across a 307-sweep run, against **40** from a `setTimeout 0` task of its
+  own; and from that task, on a loaded machine, it still lets a replaced world through now and
+  then (0, 2 and 1 in three full suites beside an 8-loop CPU burner, each unretained at tier
+  2), where the same sweep with a stackless collection before it lets none. An engine whose
+  `gc(options)` answers no promise gets no sweep at all — no heap sample, so INVALID — never a
+  lesser collection in its place.
+  Attribution: a suspect is raised at the INCOMING test's opening reset, so the leaker
   is the PREVIOUS test on that shard page (same semantics as every reset-seam gate); the
   last test of a shard is never swept (same stated hole as the storage prelude).
 - **Heap floor** — one post-GC `usedJSHeapSize` sample per teardown
@@ -206,7 +215,8 @@ shard dropped twice: the audited-suite gates' shared retry gave up, re-run):
   (green-suite worst: +44 MB — the heap legitimately balloons and deflates with test
   composition, so only the FLOOR is a leak signal; endpoint statistics are noise).
 - **INVALID (exit 2)** — the run measured NOTHING and must never read as a pass: a test the
-  runner played with no bucket, a test bucket with no heap sample (prelude not installed, or no `window.gc`), no reset ever
+  runner played with no bucket, a test bucket with no heap sample (prelude not installed, or no stackless collection:
+  no `window.gc`, or a `gc(options)` that answers no promise), no reset ever
   observed to REPLACE the world, or — the tier-2 case — **a suspect tier 1 raised that
   tier 2 never answered**, whether because the confirmation broke on a shard or because it
   never ran at all. A suspect nobody asked the snapshot about is not a suspect that came
@@ -215,7 +225,7 @@ shard dropped twice: the audited-suite gates' shared retry gave up, re-run):
 **The forensic tool** — `Fizzygum-tests/scripts/heap-forensics.js`
 (`--test=<name>` / `--tests=A,B` / `--boot-only`, `--snapshot` for retainer paths): four
 lenses over the world a test leaves behind — the in-band anatomy (escaped widgets with
-parent chains), the WeakRef collectibility sweep, the `Runtime.queryObjects` registry
+parent chains), the WeakRef collectibility sweep (after the same stackless collection), the `Runtime.queryObjects` registry
 cross-check (VM-alive ∖ `Widget.instances` = retained corpses; the reverse would be a
 registration hole), and heap-snapshot retainer paths whose `context:<var>` edges name the
 exact closure variable holding a corpse. Two mechanism facts it encodes (measured): widget

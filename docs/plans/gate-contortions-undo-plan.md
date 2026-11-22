@@ -29,7 +29,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U14 | A low-level method that sizes or drives another widget: [A] against [U] | CLOSED 2026-11-22 (§U14; three PARKED for the owner) |
 | U15 | The list-row verb scrolls one way | CLOSED 2026-11-22 (§U15) |
 | U16 | Two documents reach their clamp under a finger | CLOSED 2026-11-22 (§U16) |
-| U16b | `fg vmtruth` measures something under load (owner-added 2026-11-22, filed by U9) | not started |
+| U16b | `fg vmtruth` measures something under load (owner-added 2026-11-22, filed by U9) | CLOSED 2026-11-22 (§U16b) |
 | U17 | A menu row is found, not fetched | not started |
 | U18 | A capture that does not verify is UNSTABLE | not started |
 | U19 | Close | not started |
@@ -976,6 +976,27 @@ absence); after the fix, the reproduction reads OK with every suspect answered; 
 **Park when.** The cause is a product teardown whose fix needs a product decision, or the reproduction cannot be made
 to happen on demand within the time box (park with the measurements). **Audit.** — (found by this loop).
 
+**Landed 2026-11-22.** Measured: each burst was ONE replaced world surviving the first sweep after its reset, plus
+everything it reached (every shard's pinned set held exactly one `WorldWdgt#1`; tier 2 cleared every one; one pinned
+world adds ~7 MB to its page's post-GC floor). One page never bursts, unloaded or under a 14-loop CPU burner. The full
+suite at 6 shards under an 8-loop burner: the sweep as it shipped raised 0, 2 and 1 world suspects in three runs, the
+sweep preceded by V8's STACKLESS collection (`gc({type:'major', execution:'async'})`) 0, 0 and 0. The 200-wide bursts
+did not recur on the day and no retainer path was read at a bursting sweep, so the cause is CONSISTENT WITH the
+synchronous collection scanning the stack conservatively, not proven; reading found no product or harness holder.
+The fix does not depend on the cause: (1) the prelude drops no suspect — `MAX_PINNED`, its branch, its
+`suspects-capped:` line and the judge's "raise MAX_PINNED" advice go: a pinned world already keeps all it reaches, so
+the count bounded no memory and only turned a burst into INVALID; every suspect is answered by construction (the
+gate's own invariant; its six rules unchanged — a mechanism change, not a rule change); (2) each reset asks for the
+stackless collection and sweeps when it settles (the sweep's own `gc();gc()` goes), and an engine without that form
+reads INVALID, never a quiet fallback; `heap-forensics.js` lens 2 collects the same way; (3) `macroGenerator` is
+cleared when its macro is done, as its comment said (only the pump and `Macro.start` read it). This also closes the
+same defect filed on 2026-11-16 (`archive/world-inventory-instruments-plan.md`, "The vmtruth leg's pin cap is within
+reach of a green suite"). Proof: the gate's self-test (30 cases, 6/6 rules planted) — the retention plant still
+convicts; a confirm failure reads INVALID, beside a climbing floor HEAP_FLOOR "and INCOMPLETE"; `gc(options)` answering
+nothing reads INVALID; the control now holds 250 corpses past the next sweep (over the old cap) and every one is
+pinned, confirmed and cleared; heap-forensics' self-test still finds its planted leak; three full-suite runs under
+the burner read OK with 0 tier-1 suspects. Ratchets: none. Pixels: none.
+
 ### U17 — A menu row is found, not fetched
 
 **Stands today.** `src/macros/MacroToolkit.coffee`, `_menuRowScrolledIntoView` (line 1944): `viewport.setScrollY
@@ -1113,6 +1134,8 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U15: the list-row macro verb keeps a drag, nudges and a wheel so old shots keep their offsets; a class-inspector test changed its example class so a row shows — medium, a recapture. — CLOSED 2026-11-22 (gate-contortions loop, U15): drag for reach, one wheel for precision, a named fault, the click.
 - [x] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim. — CLOSED 2026-11-22 (gate-contortions loop, U15): no nudge loop remains; a row not whole after the one wheel is the verb's named fault.
 - [x] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium. — CLOSED 2026-11-22 (gate-contortions loop, U16): measured — both reach their clamp under a finger today; declarations lifted, finger references captured; the toolkit's translated wheel splits evenly (no sliver leg that taps), and `SimpleDocumentRemovingLastParagraph…`'s 10 finger references that carried such a tap are recaptured.
+- [x] U16b: `fg vmtruth` reads INVALID under machine load — a burst of a test's destroyed widgets, uncollected at the next sweep, fills the pin cap; find what holds them (owner-added; plan §U16b) — medium. — CLOSED 2026-11-22 (gate-contortions loop, U16b): every suspect pinned and answered (no cap), the sweep after a stackless collection.
+- [x] The `vmtruth` leg's pin cap is within reach of a green suite: a shard's spreadsheet tests leave 139 to 200+ uncollected (all UNRETAINED) cells at a sweep; past 200 a page it reads INVALID — medium: fg's serial retry absorbs it. → "The vmtruth leg's pin cap is within reach of a green suite" — CLOSED 2026-11-22 (gate-contortions loop, U16b): the same defect: the cap is gone (gate-contortions U16b).
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

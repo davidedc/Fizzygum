@@ -30,8 +30,9 @@ class MacroToolkit
   msSinceLastExecutedMacroStep: undefined
   aMacroIsRunning: undefined
   returnFromLastMacroStep: undefined
-  # the running macro's generator; (re)created at macro start by the pump header
-  # in Macro._addHeaderCode, cleared (undefined) between macros.
+  # the running macro's generator; created at the macro's first pump by the pump header in
+  # Macro._addHeaderCode, which clears it (undefined) once the generator is done — so between
+  # macros it is undefined, and Macro.start clears it again for the one it starts.
   macroGenerator: undefined
 
   # False-double-click guard state (see guardedClickStart). The most recent scheduled
