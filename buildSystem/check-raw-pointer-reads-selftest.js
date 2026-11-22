@@ -10,7 +10,8 @@
 // handed to a handler the table says takes none, a POSITION_QUERIES entry no longer handed one, a plane handler no
 // dispatch maps for; and the dispatcher gone altogether. Mapping on the line, the marker above the header (a blank
 // line between), a read in a helper or a comment, and a dispatch named in the dispatcher's comment after a regex holding
-// a quote pass. Run by buildSystem/run-selftests.js on every build.
+// a quote pass. A raw read prints its advice once (lib/gate-advice.js), a table problem none. Run by
+// buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -49,10 +50,13 @@ proveGate({
     lines: [/^  \[raw-pointer\] BiteProofRawPointerWdgt\.takeStrokeScrollFrom reads .* — src\/BiteProofRawPointerWdgt\.coffee:5$/m,
             /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:10$/m,
             /^  \[raw-pointer\] BiteProofRawPointerWdgt\.pressEnded reads .* — src\/BiteProofRawPointerWdgt\.coffee:11$/m],
+    // a raw read prints its advice; the stale entry's own line says what to do with it
+    advised: ['RAW_READ'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessRawPointerWdgt.coffee': cls('BiteProofHarnessRawPointerWdgt', '  pressBegan: (pos) ->', '    @bpAt = world.hand.position()') },
     expect: { RAW_READ: /^  \[raw-pointer\] BiteProofHarnessRawPointerWdgt\.pressBegan reads world\.hand\.position\(\) unmapped — harness\/BiteProofHarnessRawPointerWdgt\.coffee:3$/m },
+    advised: ['RAW_READ'],
   }, {
     label: 'the handler table disagreeing with the dispatcher, every way',
     edits: [

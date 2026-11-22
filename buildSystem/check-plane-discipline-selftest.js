@@ -8,9 +8,9 @@
 // scroll provider's escalated `activated` reading its `pos` fails, in a subclass too; C2: `nonFloatDragging` reading
 // its raw screen `pos` unmapped fails. The accepted forms ride the control: the write inside _writeScrollOffset, a
 // class-level offset declaration, a comparison; one receiver's own positions; a mapped mix; the escalated-pos marker,
-// an `ignored` parameter, a handler that only forwards; a mapped raw position. B's rise, the one budget, prints its
-// advice (lib/gate-advice.js); B's drop, the other rules and the control none. Run by buildSystem/run-selftests.js on
-// every build.
+// an `ignored` parameter, a handler that only forwards; a mapped raw position. A and C print their invariant advice,
+// B's rise, the one budget, its budget advice (lib/gate-advice.js); B's drop, the stale entry and the control none.
+// Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -58,8 +58,8 @@ proveGate({
       C1_ESCALATED_POS: /^    BiteProofEscalatedPosWdgt\.coffee:7: BiteProofEscalatedPosWdgt\.activated reads its escalated 'pos'/m,
       C2_RAW_SCREEN_POS: /^    BiteProofRawScreenPosWdgt\.coffee:3: BiteProofRawScreenPosWdgt\.nonFloatDragging reads the raw screen 'pos' unmapped/m,
     },
-    // rule B's rise is the one budget: the A, C and stale-entry rules beside it print no advice
-    advised: ['B_MIX_ROSE'],
+    // A and C print their invariant rows (C1 and C2 share one), B's rise its budget row; the stale entry none
+    advised: ['A_BARE_OFFSET_WRITE', 'B_MIX_ROSE', 'C1_ESCALATED_POS', 'C2_RAW_SCREEN_POS'],
     lines: [/^    BiteProofOffsetWriteWdgt\.coffee:5: \[in bpNudge\] @scrollOffsetY \+= d$/m,
       /^    BiteProofOffsetWriteWdgt\.coffee:7: \[in bpAfterRegex\] r = \/#x\/; @scrollOffsetX = x$/m,
             /^    BiteProofMixWdgt\.coffee:3: \[a vs b\] @bpGap = a\.left\(\) - b\.left\(\)$/m,
@@ -68,9 +68,11 @@ proveGate({
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessOffsetWriteWdgt.coffee': cls('BiteProofHarnessOffsetWriteWdgt', 'Widget', '  bpScrollTo: (x) ->', '    @scrollOffsetX = x') },
     expect: { A_BARE_OFFSET_WRITE: /^    harness\/BiteProofHarnessOffsetWriteWdgt\.coffee:3: \[in bpScrollTo\] @scrollOffsetX = x$/m },
+    advised: ['A_BARE_OFFSET_WRITE'],
   }, {
     label: 'a real mixing line rewritten: the count drops',
     edits: [['fizzytiles/FridgeWdgt.coffee', /m\.rightCenter\(\)\.distanceTo\(aMagnet\.leftCenter\(\)\)/, 'm.distanceTo(aMagnet)']],
     expect: { B_MIX_DROPPED: /^    Count DROPPED — good: lower the baseline to lock it in\./m },
+    advised: [],
   }],
 });

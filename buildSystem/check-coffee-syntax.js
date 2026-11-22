@@ -75,6 +75,7 @@ const { listShippable, IS_CLASS } = require('./build');
 const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 const FILES_FLAG = process.argv.indexOf('--files');
@@ -259,4 +260,7 @@ if (nClass > 0 && strippedFragments === 0) {
 }
 console.log(`syntax check: ${nClass} files (${nClass} classes, ${nSkip} skipped) — ${failures.length} error(s); `
   + `${strippedFragments} class-member fragments checked against the provided helpers [${[...PROVIDED].join(', ')}] — ${helperLosses.length} losing a helper`);
+// after the whole report: what a failure means, its quiet fix and the right answer (lib/gate-advice.js)
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
 process.exit(failures.length || helperLosses.length ? 1 : 0);

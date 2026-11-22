@@ -8,7 +8,8 @@
 // `super` (it stays advisory), one sanctioned on its header line and one in the comment block above it, a different
 // parameter list, a default holding a call against no list at all, a different arrow, and a method identical to an
 // ancestor's with a FIELD of the same name in a class between. The control's pass line names no count: the real tree
-// may hold sanctioned or `super`-holding copies. Run by buildSystem/run-selftests.js on every build.
+// may hold sanctioned or `super`-holding copies. A failing run prints the rule's advice once (lib/gate-advice.js). Run
+// by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -77,6 +78,7 @@ proveGate({
       /^  IDENTICAL_OVERRIDE BiteProofIdenticalChildWdgt\.coffee:8: BiteProofIdenticalChildWdgt\.bpEmpty == /m,
       /^  IDENTICAL_OVERRIDE BiteProofIdenticalChildWdgt\.coffee:9: BiteProofIdenticalChildWdgt\.bpDefaultCall == /m,
     ],
+    advised: ['IDENTICAL_OVERRIDE'],
   }, {
     label: 'a harness file',
     plants: {
@@ -87,5 +89,6 @@ proveGate({
     expect: {
       IDENTICAL_OVERRIDE: /^  IDENTICAL_OVERRIDE harness\/BiteProofHarnessIdenticalWdgt\.coffee:3: BiteProofHarnessIdenticalWdgt\.bpHarness == BiteProofIdenticalParentWdgt\.bpHarness  \[BiteProofIdenticalParentWdgt\.coffee:13\]$/m,
     },
+    advised: ['IDENTICAL_OVERRIDE'],
   }],
 });

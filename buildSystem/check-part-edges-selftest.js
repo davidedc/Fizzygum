@@ -4,8 +4,10 @@
 // `requires` rule. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by running the
 // REAL gate (build.js's listing, parts.json, the class model, the boot install edges) on a planted copy of src/ and of
 // the tests repo's harness, and a planted parts.json (lib/planted-src.js); a harness file — the eager `harness` part —
-// naming a LAZY part's class unguarded fails, named by build.js's listing of it (../Fizzygum-tests/<path>). Run by
-// buildSystem/run-selftests.js on every build.
+// naming a LAZY part's class unguarded fails, named by build.js's listing of it (../Fizzygum-tests/<path>). The
+// control holds every guard the gate reads, the `world.parts.whenAllLoaded` await its advice names among them; each
+// failing run prints the advice of its rules, each row once (lib/gate-advice.js). Run by buildSystem/run-selftests.js
+// on every build.
 
 const { soleProviders, memberReaches, superReaches, unusedRequires } = require('./check-part-edges');
 const { guardedPartsPerLine } = require('./lib/part-edge-scan');
@@ -148,6 +150,8 @@ proveGate({
         '  bpSameLine: ->', '    @bpA = new ChapterXIconWdgt() if ChapterXIconWdgt?',
         '  bpBlock: ->', '    if ChapterXIconWdgt?', '      @bpB = new ChapterXIconWdgt()',
         '  bpEarly: ->', '    return unless ChapterXIconWdgt?', '    @bpC = new ChapterXIconWdgt()',
+        // the await the advice names for a LAZY part's door, the class named bare under it
+        '  bpAwait: ->', '    world.parts.whenAllLoaded ["maps"], =>', '      @bpD = new SimpleUSAMapIconAppearance @',
         '  bpMembers: (w) ->', '    @serialiseToMemory?()', '    if w.deserialiseFromMemoryAndAttachToWorld?', '      w.deserialiseFromMemoryAndAttachToWorld()'),
     },
   },
@@ -171,10 +175,13 @@ proveGate({
     },
     lines: [/^  src\/BiteProofPartRefWdgt\.coffee:4  \S+ -> ChapterXIconWdgt \(part 'dev-icons'\)$/m],
     absent: [/BiteProofPartGuardsWdgt/],
+    // each rule's row, printed once (the three member rules share one); the inheritance edge's own lines answer it
+    advised: ['UNGUARDED_CLASS_REF', 'MEMBER_REFERENCE', 'MEMBER_DISPATCHED_BY_NAME', 'UNUSED_REQUIRES', 'MEMBER_SUPER'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessPartRefWdgt.coffee': cls('BiteProofHarnessPartRefWdgt', 'Widget', '  bpMake: ->', '    @bpIcon = new SimpleUSAMapIconAppearance @') },
     expect: { UNGUARDED_CLASS_REF: /^  \.\.\/Fizzygum-tests\/Automator-and-test-harness-src\/BiteProofHarnessPartRefWdgt\.coffee:3  \S+ -> SimpleUSAMapIconAppearance \(part 'maps', LAZY\)$/m },
+    advised: ['UNGUARDED_CLASS_REF'],
   }],
 });
 

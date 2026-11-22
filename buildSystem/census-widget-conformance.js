@@ -33,7 +33,7 @@ const { methodSpans } = require('./lib/coffee-method-header');   // facet 5's se
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-const { adviceLines } = require('./lib/gate-advice');
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 rejectUnknownArgs(process.argv.slice(2), ['--gate', '--json', ...SOURCE_RAILS], 'widget-conformance');
 rejectPositionalArgs(process.argv.slice(2), 'widget-conformance', 'a src tree is named with --src=DIR');
 const ROOTS = sourceRoots(process.argv.slice(2), 'widget-conformance');
@@ -208,11 +208,10 @@ if (GATE) {
   if (fails.length) {
     console.error('\n[widget-conformance] FAIL -- a ratcheted count rose above its baseline:');
     for (const f of fails) console.error('  ' + f);
-    if (rules.firedIds.has('UNDECLARED_FIELD')) {
-      console.error('\nAn undeclared field is invisible to a copy, a save and the inspector until the method that writes it has run: declare it at class level (`name: undefined`).');
-    }
-    // the prologue floor is the one BUDGET here: it prints what the number holds back and when a raise is the answer
-    if (rules.firedIds.has('PROLOGUE_COPY')) { console.error(''); for (const l of adviceLines(rules.gate, ['PROLOGUE_COPY'])) console.error(l); }
+    // after the whole report: an undeclared field's quiet fix and the right answer; the prologue floor, the one BUDGET
+    // here, what its number holds back and when a raise is the answer (lib/gate-advice.js)
+    const advised = advisedAmong(rules.gate, rules.firedIds);
+    if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
     process.exit(1);
   }
   console.log(`[widget-conformance] OK -- undeclared fields ${undeclared.length}/${undeclaredFieldCount} ` +

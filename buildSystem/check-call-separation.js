@@ -16,7 +16,8 @@
  *       `# public-call-sanctioned: <why>` is exempt (the census reports it as sanctioned).
  *       RATCHET: two inline baselines (SETTLING / EFFECTFUL), the check-stinks.js idiom — the
  *       build FAILS when a count EXCEEDS its baseline; when it drops, tighten the baseline to lock
- *       the gain (the gate prints a reminder). Baseline 0 = a HARD rule.
+ *       the gain (the gate prints a reminder). Baseline 0 = a HARD rule, a convention: a failing run
+ *       prints its quiet fixes and the right answer (lib/gate-advice.js).
  *
  * [U] — a public method whose EVERY reference (src, plus the tests repo's CODE: its harness, macro
  *       sources and scripts/ rigs, strings included, comments and prose not — lib/tests-repo-code.js)
@@ -27,8 +28,9 @@
  *       (lib/gate-advice.js).
  *       Deliberate end-user API (Fizzygum is live-editable: a method can exist solely for a user
  *       to call from the in-world Object Inspector / scripting) goes in
- *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom); an
- *       entry that is no longer a self-only public method FAILS as stale (STALE_ALLOWLIST_ENTRY).
+ *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom), its
+ *       reason naming that surface, never an internal method a layering rule refuses in its `_` form;
+ *       an entry that is no longer a self-only public method FAILS as stale (STALE_ALLOWLIST_ENTRY).
  *       Its reference set includes the sibling Fizzygum-tests repo, which every build requires —
  *       a production one included — exactly like check-dead-methods.js.
  *
@@ -58,7 +60,7 @@ const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 // --src=DIR / --tests-repo=DIR check another src tree / tests repo in place of this umbrella's: a copy carrying a plant
 // (the self-test's rail)
 const rules = require('./lib/gate-rules').forGate(__filename);
-const { adviceLines } = require('./lib/gate-advice');
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'check-call-separation');
 rejectPositionalArgs(ARGV, 'check-call-separation', 'a src tree is named with --src=DIR');
@@ -91,7 +93,7 @@ const sanctionedCount = census.R1.filter(r => (r.calleeClass === 'SETTLING' || r
 
 function checkRatchet(label, rows, baseline, describe, rule) {
   if (rows.length > baseline) {
-    problems.push(rule(`[S] ${label}: ${rows.length} unsanctioned site(s) EXCEEDS the baseline ${baseline} — a private method newly self-calls a public ${describe}. A tier states a member's role: when the callee's role is internal, re-tier it _ (or call its _<name>NoSettle core); when the call is a conscious exception, mark the CALLER  # public-call-sanctioned: <why>. Re-tiering either member only so this line goes quiet is the wrong answer, and so is raising the baseline.`));
+    problems.push(rule(`[S] ${label}: ${rows.length} unsanctioned site(s) EXCEEDS the baseline ${baseline} — a private method newly self-calls a public ${describe}.`));
     for (const r of rows) problems.push(`    ${r.cls}.${r.caller} -> @${r.callee}  ${r.at}`);
   } else if (rows.length < baseline) {
     notes.push(`[S] ${label}: ${rows.length} < baseline ${baseline} — tighten BASELINE_S_${label} in check-call-separation.js to lock the gain.`);
@@ -113,7 +115,7 @@ if (stale.length) {
   for (const n of stale) problems.push(rules.fired('U_STALE_ALLOWLIST_ENTRY', `    STALE_ALLOWLIST_ENTRY ${n} — no longer a self-only public method (it gained a reference that is not an @-self call, went _-tier, or was deleted)`));
 }
 if (uEff.length > BASELINE_U_EFFECTFUL) {
-  problems.push(rules.fired('U_EFFECTFUL_SELF_ONLY', `[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API. Name it _-tier from the start (or, if it is deliberate end-user API for the in-world inspector/scripting, add it to buildSystem/public-api-allowlist.txt with a reason).`));
+  problems.push(rules.fired('U_EFFECTFUL_SELF_ONLY', `[U] EFFECTFUL self-only public methods: ${uEff.length} EXCEEDS the baseline ${BASELINE_U_EFFECTFUL} — a NEW public command is referenced only by @-self calls, i.e. it is not external API.`));
   const newest = uEff.slice(0, 10).map(r => `${r.name} (${r.defs.slice(0, 3).join(', ')})`);
   problems.push(`    candidates include: ${newest.join('; ')}  — run  node ./buildSystem/census-public-private-calls.js --full  to identify the new one`);
 } else if (uEff.length < BASELINE_U_EFFECTFUL) {
@@ -131,9 +133,11 @@ if (problems.length) {
   console.error(`\n!!! call-separation gate FAILED:\n`);
   for (const p of problems) console.error('  ' + p);
   console.error('\nRules [S]/[U] — docs/archive/public-private-call-separation-plan.md; measurement: node ./buildSystem/census-public-private-calls.js');
-  // the [U] query count is the one BUDGET here (its baseline above zero): it prints what the number holds back and
-  // when a raise is the answer; every other rule's own line says what to do
-  if (rules.firedIds.has('U_QUERY_SELF_ONLY')) { console.error(''); for (const l of adviceLines(rules.gate, ['U_QUERY_SELF_ONLY'])) console.error(l); }
+  // after the whole report: [S]'s and [U] effectful's quiet fixes and the right answer, and the [U] query count — the
+  // one BUDGET here, its baseline above zero — what its number holds back and when a raise is the answer
+  // (lib/gate-advice.js); a stale entry's own line says to delete it
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log(`[call-separation] OK — [S] ${sSettling.length}/${BASELINE_S_SETTLING} settling + ${sEffectful.length}/${BASELINE_S_EFFECTFUL} effectful unsanctioned private->public-command sites (${sanctionedCount} sanctioned); [U] ${uMsg}.`);

@@ -76,6 +76,7 @@ const { readAllowlist } = require('./lib/allowlist-file');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 // bite-unplantable: BUILTINS_KEYED_OFF_PLATFORM — both sides are this file's own constants (BUILTINS_TABLE, PLATFORM_GLOBALS); a planted src tree reaches neither
 
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-unresolved-sends.js [--src=DIR]
@@ -308,13 +309,13 @@ function main() {
         console.error(`      ${s.text}`);
       }
     }
-    console.error('\nEither FIX the call (a name nobody implements is a runtime TypeError on any path that reaches it),');
-    console.error('or — if it is a vendor API / a genuinely dynamic send — add its name to');
-    console.error('buildSystem/unresolved-sends-allowlist.txt with a reason. (Standard JS/DOM/canvas API goes in');
-    console.error('the BUILTINS set inside check-unresolved-sends.js instead.)');
-    process.exit(1);
   }
-  if (stale.length || unsentBuiltins.length || formErrors.length) process.exit(1);
+  // after the whole report: what an unresolved send means, its quiet fixes and the right answer, for a name Fizzygum
+  // should answer and for a platform method (lib/gate-advice.js); a stale or misformed table entry's own line says
+  // what to do with it
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
+  if (violations.length || stale.length || unsentBuiltins.length || formErrors.length) process.exit(1);
 
   console.log(`[unresolved-sends] OK — ${sites.length} calls checked, 0 unresolved (${defined.size} names implemented, ${allow.size} allowlisted; BUILTINS ${BUILTINS.size} bare + ${BUILTINS_KEYED.size} keyed).`);
   process.exit(0);

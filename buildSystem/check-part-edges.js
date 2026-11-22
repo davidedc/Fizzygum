@@ -23,7 +23,8 @@
  *
  * TWO KINDS OF EDGE, TWO VERDICTS:
  *   - a REFERENCE (a construction, a static call, a mention) is fixable where it stands: guard it
- *     with `if TheClass?` for an eager part, or await `world.parts.ensureLoaded` for a lazy one.
+ *     with `if TheClass?` for an eager part, or await a lazy one with `world.parts.whenAllLoaded`
+ *     (6. below) or an app's `requiredParts` (7.).
  *   - `extends X` is NOT guardable at all — you cannot conditionally derive a class. It means the
  *     PARTITION IS WRONG: the base class is core material. Reported separately, and never with a
  *     "add a guard" suggestion.
@@ -163,6 +164,7 @@ const { rejectUnknownArgs, rejectPositionalArgs, fileArg } = require('./lib/cli-
 const { sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const { bootPieces } = require('./lib/boot-pieces');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const REPO = path.resolve(__dirname, '..');
 // the rule each member reach breaks, by its clause
@@ -491,7 +493,7 @@ function main() {
     console.error('\n[part-edges] FAIL -- a parts.json `requires` entry names a part whose classes the requiring part');
     console.error("never names in code. `requires` orders the required part's load fully first, so an entry nothing");
     console.error('uses still costs a fetch, and its stated reason no longer holds -- delete it (and its "//requires"');
-    console.error('justification), or, if something genuinely needs it, that something names one of its classes:');
+    console.error('justification):');
     for (const v of requiresViolations) console.error(rules.fired('UNUSED_REQUIRES', `  ${v.part} requires '${v.requires}'`));
   }
 
@@ -515,8 +517,11 @@ function main() {
     }
     console.error('\nFIX, for an EAGER part (present or absent, never late): guard the site --');
     console.error('  (new TheClass).doThing()  if TheClass?        # or a leading `return unless TheClass?`');
-    console.error('FIX, for a LAZY part: a guard is WRONG there (it silently swallows the click). Await');
-    console.error('the load instead:  world.parts.ensureLoaded("thePart").then -> …');
+    console.error('FIX, for a LAZY part: a guard is WRONG there (it silently swallows the click). Await the load, and');
+    console.error('name the class bare under it -- the await this gate reads as a guard:');
+    console.error('  world.parts.whenAllLoaded ["thePart"], ->');
+    console.error('    (new TheClass).doThing()');
+    console.error('or, in an app, declare the part in its class-level `requiredParts`.');
     console.error('Either way, if the reference is genuinely core-critical, the partition is wrong.');
   }
 
@@ -538,6 +543,10 @@ function main() {
     console.error('it to call. If the member is product, it does not belong in the part: promote it.');
   }
 
+  // after the whole report: each rule's quiet fixes and the right answer (lib/gate-advice.js); an inheritance edge's
+  // own lines give its one answer, the partition
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   if (inheritViolations.length || refViolations.length || memberViolations.length || requiresViolations.length) process.exit(1);
   console.log('[part-edges] OK -- every core reference into a part, to a class or to a member it installs, is guarded.');
   process.exit(0);

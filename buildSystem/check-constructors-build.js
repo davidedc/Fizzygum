@@ -36,6 +36,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'ctor-build');
@@ -104,7 +105,9 @@ if (violations.length) {
   }
   console.error('\nMove the child-building into  _buildAndConnectChildrenNoSettle  and have the constructor call the');
   console.error('settling wrapper  @_buildAndConnectChildren()  (orphan-settledness: `new X()` returns settled).');
-  console.error('Or add a  # constructor-build-exempt: <reason>  comment in/above the constructor.');
+  // after the whole report: its quiet fixes, the right answer, and what the marker answers (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log('[ctor-build] OK — no constructor builds its own children inline.');

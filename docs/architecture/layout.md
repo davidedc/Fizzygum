@@ -484,7 +484,8 @@ The layout system holds three empty/zero baselines. A layout change that breaks 
   entrypoints), orphan/construction deferrals, and the in-pass re-fit seam.
 - **Empty settle-re-visit baseline (`fg revisits`).** Every widget is visited **at most once per flush**, suite-wide —
   the committed baseline is empty. Any new re-visit means an arrange that is not idempotent, reads half-applied state,
-  or is a genuinely new up-edge that must be argued into the baseline consciously.
+  or a container notified mid-arrange, and is fixed at its cause. A baseline entry records an owner's decision about a
+  design (a new up-edge argued as the right shape), never the answer to a finding.
 - **Arrange-idempotence census (`fg census`).** Boots the app battery, resizes every window, then post-order forces a
   re-lay at each widget's *current* frame and diffs subtree geometry. Expected movers: **zero**. Any mover is a
   non-idempotent or stale arrange, fixed at the arrange.

@@ -4,8 +4,9 @@
 // rule (each violation matched on its OWN line, naming the plant); a second run makes each exemption table stale by
 // editing the real holders it excuses in the copy (anchored, so a holder that moved fails loudly); a third plants an [A]
 // violation in a harness file, named harness/<path>; a fourth points [D]'s whole-file half at a planted tests dir. The
-// control is the unplanted copy plus every sanctioned form, which must pass. Run by buildSystem/run-selftests.js on
-// every build.
+// control is the unplanted copy plus every sanctioned form, which must pass. Each run prints the advice of the rules it
+// fires that carry a row, each row once (lib/gate-advice.js), and the stale tables none. Run by
+// buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -138,6 +139,12 @@ proveGate({
       R_USERLAND_PRIVATE: /^  \[R\] userland biteProofUserland\(\) reaches into a private: w\._biteProofPrivateCore\(\) — .*  — src\/basic-widgets\/menu-system\/MenusHelper\.coffee:\d+$/m,
       T_DOUBLE_SETTLE: /^  \[T\] biteProofDoubleSettle\(\) self-settles \(src\/BiteProofTWdgt\.coffee:7\) AND @-calls settling public setter @setExtent\(\) — .*  — src\/BiteProofTWdgt\.coffee:8$/m,
     },
+    // every rule this run fires carries a row; the rules sharing one print it once, its header naming them all
+    advised: ['A_PUBLIC_SETTER', 'A_TEXT_SETTER', 'A_RECALC', 'B_RECALC_CALLER', 'C_SETTER_CALLS_SETTER', 'D_MACRO_PRIVATE_CALL',
+      'E_MUTATOR_INVALIDATES', 'E_MUTATOR_VALVE', 'F_OFF_SETTLE_APPLY', 'G_SETTLING_WRAPPER', 'G_SELF_ADD', 'I_LEAF_ORCHESTRATES',
+      'J_HOOK_SETTLES', 'K_TWIN_SEAM', 'K_TWIN_DISPATCH', 'K_COMMIT_REACTS', 'L_CALLBACK_NOSETTLE', 'L_MALFORMED_CALLBACK',
+      'L_LEGACY_CALLBACK_FRAGMENT', 'M_RETIRED_FRAGMENT', 'M_RETIRED_ANDNOTIFY', 'N_RETIRED_SEAM_VERB', 'O_DEFERRED_SETTLE_CALLER',
+      'P_JOIN_LANE_CALLER', 'Q_CONNECTOR_CALLER', 'R_USERLAND_PRIVATE', 'T_DOUBLE_SETTLE'],
     lines: [
       // the one-liner's inline body is read, and every second spelling of a rule its own line
       line('[A] low-level _biteProofOneLiner() calls public setter .setExtent()', 'BiteProofAWdgt', 8),
@@ -176,14 +183,18 @@ proveGate({
       R_STALE_USERLAND_FILES: /^  \[R\] STALE_ALLOWLIST_ENTRY USERLAND_FILES 'src\/basic-widgets\/menu-system\/MenusHelper\.coffee' — /m,
       B_STALE_RECALC_ORACLE: /^  \[B\] STALE_ALLOWLIST_ENTRY RECALC_ORACLES '_checkPaintTruthfulness' — /m,
     },
+    // a stale entry's own line gives its one answer: no advice
+    advised: [],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessAWdgt.coffee': cls('BiteProofHarnessAWdgt', '  _biteProofLowLevelSetter: ->', '    @setExtent new Point 10, 10') },
     expect: { A_PUBLIC_SETTER: /^  \[A\] low-level _biteProofLowLevelSetter\(\) calls public setter \.setExtent\(\).*  — harness\/BiteProofHarnessAWdgt\.coffee:3$/m },
+    advised: ['A_PUBLIC_SETTER'],
   }, {
     label: "[D]'s whole-file half over a planted tests dir",
     args: ['--tests-dir=' + testsDir],
     expect: { D_MACRO_PRIVATE_CALL: /^  \[D\] macro calls private\/low-level \._biteProofTestsHalfCall\(\) — \S*SystemTest_BiteProofMacro_automationCommands\.js:3 /m },
+    advised: ['D_MACRO_PRIVATE_CALL'],
   }, {
     label: 'a tests dir holding a directory that is no test',
     args: ['--tests-dir=' + malformedTestsDir],

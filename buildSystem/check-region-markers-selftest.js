@@ -2,8 +2,9 @@
 // check-region-markers-selftest.js — check-region-markers.js (a tombstone) proved able to BITE, by running the REAL gate
 // on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): an opener of each retired kind fails,
 // named by file and line, an opener that never closes fails as unpaired, and a »>> marker of no known kind fails as
-// unknown, in src and in a harness file (named harness/<path>) alike; prose ABOUT the mechanism passes. Run by
-// buildSystem/run-selftests.js on every build.
+// unknown, in src and in a harness file (named harness/<path>) alike; prose ABOUT the mechanism passes. Every rule
+// shares one advice row, printed once however many fired (lib/gate-advice.js). Run by buildSystem/run-selftests.js on
+// every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -35,9 +36,12 @@ proveGate({
     },
     lines: [/homepage=1\/0 macros=2\/0 videoplayer=1\/0$/m],
     absent: [/BiteProofRegionProse/],
+    // every rule here shares one row, printed once, its header naming each
+    advised: ['homepage', 'macros', 'videoplayer', 'UNPAIRED_OPENER', 'UNKNOWN_MARKER'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessRegionUnknown.coffee': region('BiteProofHarnessRegionUnknown', 'this part is only needed for Demos') },
     expect: { UNKNOWN_MARKER: /^  harness\/BiteProofHarnessRegionUnknown\.coffee:2$/m },
+    advised: ['UNKNOWN_MARKER'],
   }],
 });

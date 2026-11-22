@@ -4,8 +4,8 @@
 // fails, named by class and line, and so does a one-line constructor doing it after its arrow, and one doing it after a
 // string holding `#`, and one in a harness file, named harness/<path>. A class-side member after the constructor ends it (its
 // `@add` is not the constructor's). The marker above the constructor and the marker in its body each excuse one
-// (counted), and building into a sub-child or calling the settling builder pass. Run by
-// buildSystem/run-selftests.js on every build.
+// (counted), and building into a sub-child or calling the settling builder pass. A failing run prints the rule's advice
+// once (lib/gate-advice.js). Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -39,9 +39,11 @@ proveGate({
     expect: { CTOR_BUILDS_CHILDREN: /^  BiteProofCtorBuildWdgt  \(BiteProofCtorBuildWdgt\.coffee:4\)$/m },
     lines: [/^  BiteProofCtorOneLinerWdgt  \(BiteProofCtorOneLinerWdgt\.coffee:2\)$/m,
             /^  BiteProofCtorAfterHashWdgt  \(BiteProofCtorAfterHashWdgt\.coffee:4\)$/m],
+    advised: ['CTOR_BUILDS_CHILDREN'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessCtorBuildWdgt.coffee': cls('BiteProofHarnessCtorBuildWdgt', '  constructor: ->', '    super()', '    @add new Widget()') },
     expect: { CTOR_BUILDS_CHILDREN: /^  BiteProofHarnessCtorBuildWdgt  \(harness\/BiteProofHarnessCtorBuildWdgt\.coffee:4\)$/m },
+    advised: ['CTOR_BUILDS_CHILDREN'],
   }],
 });

@@ -71,7 +71,8 @@ check('a string is no receiver',           recvsOf('"Math".round()\n'), ['-']);
 // THIS HARVEST CLOSED: every callable definition of a name that still has a DATA key elsewhere is removed from the copy,
 // and a send of it must FAIL — the catch-all definition form kept such a send resolved (lib/name-definitions.js). The
 // definers are found by the harvest itself, so the plant follows the tree. Run 2 takes away what one entry of each
-// table excuses. Run 3 plants a send nobody defines in a harness file, which fails named harness/<path>.
+// table excuses. Run 3 plants a send nobody defines in a harness file, which fails named harness/<path>. An unresolved
+// send prints its advice once (lib/gate-advice.js), a table entry none.
 const { proveGate, SRC } = require('./lib/planted-src');
 const { definedName } = require('./lib/name-definitions');
 const { coffeeMask } = require('./lib/coffee-mask');
@@ -119,6 +120,8 @@ proveGate({
     lines: [/^  src\/BiteProofSends\.coffee:5: @biteProofNoSuchMethod\( — no definition found/m,
             /^  src\/BiteProofSendsVerbs\.coffee:5: \.biteProofVerbSend\( — no definition found/m],
     absent: [/BiteProofSendsOk/],
+    // the unresolved send prints its advice; a stale or misformed table entry's own line says what to do with it
+    advised: ['UNRESOLVED_SEND'],
   }, {
     label: 'what one entry of each table excuses, taken away',
     edits: [['icons/CurledArrowsSquareIconAppearance.coffee', /Math\.asin\(/, 'Math.sin('],             // the one sender of asin
@@ -129,10 +132,12 @@ proveGate({
       BUILTINS_KEYED_NOTHING_TO_UNMASK: /^  BUILTINS_KEYED_NOTHING_TO_UNMASK Array\.isArray — no definition of isArray is in src\+harness: list it bare$/m,
       STALE_PLATFORM_GLOBAL: /^  STALE_ALLOWLIST_ENTRY PLATFORM_GLOBALS ArrayBuffer — no BUILTINS call/m,
     },
+    advised: [],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessSends.coffee': ['class BiteProofHarnessSends', '  bpNobody: ->', '    @biteProofHarnessNoSuchMethod()', ''].join('\n') },
     expect: { UNRESOLVED_SEND: /^  harness\/BiteProofHarnessSends\.coffee:3: @biteProofHarnessNoSuchMethod\( — no definition found in src\+harness$/m },
+    advised: ['UNRESOLVED_SEND'],
   }],
 });
 

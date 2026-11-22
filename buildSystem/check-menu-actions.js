@@ -89,6 +89,7 @@ const { runCensus } = require('./census-public-private-calls.js');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 // It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-menu-actions.js [--src=DIR]
 // [--tests-repo=DIR] — the rails check another src tree or tests repo (a copy carrying a plant), read whole: the class
@@ -338,18 +339,21 @@ for (const u of unread) {
   console.log(`  ${u.rel}:${u.line}  ${u.name}  unread parameter \`${u.prm}\``);
 }
 
+// after the whole report: what the finding means, its quiet fixes and the right answer (lib/gate-advice.js)
+function printAdvice() {
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
+}
 if (bad) {
   console.error(`\n[menu-actions] FAIL — ${bad} provably-wrong menu wiring(s).`);
-  console.error('An action must be a STRING method name on the target that SOMETHING implements, and');
-  console.error('the 4th argument is the options object.');
   console.error('Law: docs/architecture/constructor-and-parameter-conventions.md');
+  printAdvice();
   process.exit(1);
 }
 if (unread.length > RULE3_BASELINE) {
   console.error(rules.fired('RULE_3_UNREAD_PARAM', `\n[menu-actions] FAIL — ${unread.length} unread menu-action parameter(s), baseline ${RULE3_BASELINE}.`));
   console.error('A verb wired to a menu receives four dispatcher slots whether it wants them or not.');
-  console.error('If a slot exists only to be skipped, NAME it so: `ignored`, `ignored2`, `unused`.');
-  console.error('Otherwise read it — or drop it, and let the dispatcher\'s extra arguments fall away.');
+  printAdvice();
   process.exit(1);
 }
 console.log(`\n[menu-actions] OK — ${actionNames.size} menu-dispatched verb(s); ${ruleB.checked} \`@\`-targeted row(s) all resolve; 0 provably-wrong wirings; ${unread.length} unread parameter(s) (baseline ${RULE3_BASELINE}).`);

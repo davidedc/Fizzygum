@@ -4,7 +4,8 @@
 // what it painted fails, naming the class and the field, also when a regex holding a quote comes first on its line, and
 // also in a harness file (named harness/<path>); a builder header spelled so the shared matcher cannot see it is
 // refused (the gate would be blind there). The memo field declared either way the rule accepts — a serialization
-// transient, or saved content — passes. Run by buildSystem/run-selftests.js on every build.
+// transient, or saved content — passes. A memo prints its advice once (lib/gate-advice.js), a refused header none. Run
+// by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -37,9 +38,12 @@ proveGate({
     },
     lines: [/^  BiteProofMemoAfterRegexWdgt\.bpMemoAfterRegex  \(BiteProofMemoAfterRegexWdgt\.coffee:3, in _createRefreshOrGetBackBuffer\)$/m],
     absent: [/BiteProofMemoTransientWdgt|BiteProofMemoContentWdgt/],
+    // the memo prints its advice; the refused header's own line says what to do with it
+    advised: ['MEMO_RIDES_A_SAVE'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessMemoWdgt.coffee': builder('BiteProofHarnessMemoWdgt') },
     expect: { MEMO_RIDES_A_SAVE: /^  BiteProofHarnessMemoWdgt\.bpLastPaintedSize  \(harness\/BiteProofHarnessMemoWdgt\.coffee:4, in _createRefreshOrGetBackBuffer\)$/m },
+    advised: ['MEMO_RIDES_A_SAVE'],
   }],
 });

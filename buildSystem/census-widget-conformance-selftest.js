@@ -3,9 +3,9 @@
 // gate on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): a widget writing a field it
 // never declares fails — written with `=` or lazily with `?=`, also after a string holding `#` on its line, also in a
 // harness file (named harness/<path>) — named with the class; one more _reLayout prologue copy takes the ratchet over its
-// floor and fails, named. The prologue floor, a budget, prints its advice (lib/gate-advice.js); the undeclared field
-// and the control none. The declaration forms the facet accepts ride the control: a class-level declaration, a
-// write inside a block string (data, not code), a comparison, a bound function. Run by
+// floor and fails, named. Each prints its advice (lib/gate-advice.js): the undeclared field an invariant's, the
+// prologue floor a budget's; the control none. The declaration forms the facet accepts ride the control: a
+// class-level declaration, a write inside a block string (data, not code), a comparison, a bound function. Run by
 // buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -36,13 +36,14 @@ proveGate({
       UNDECLARED_FIELD: /^      BiteProofUndeclaredWdgt \(BiteProofUndeclaredWdgt\.coffee\): bpAfterHashField, bpLazyField, bpUndeclared$/m,
       PROLOGUE_COPY: /^      BiteProofPrologueWdgt \(BiteProofPrologueWdgt\.coffee\)$/m,
     },
-    // the prologue floor is a budget and prints its advice; the undeclared field, an invariant, prints none
-    advised: ['PROLOGUE_COPY'],
-    lines: [/^An undeclared field is invisible to a copy, a save and the inspector until the method that writes it has run: declare it at class level/m],
+    // each prints its row: the undeclared field, an invariant, its quiet fix and the right answer; the prologue floor,
+    // a budget, what its number holds back
+    advised: ['UNDECLARED_FIELD', 'PROLOGUE_COPY'],
     absent: [/BiteProofDeclaredFieldsWdgt/],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessUndeclaredWdgt.coffee': lines('class BiteProofHarnessUndeclaredWdgt extends Widget', '  bpSet: ->', '    @bpHarnessUndeclared = 1') },
     expect: { UNDECLARED_FIELD: /^      BiteProofHarnessUndeclaredWdgt \(harness\/BiteProofHarnessUndeclaredWdgt\.coffee\): bpHarnessUndeclared$/m },
+    advised: ['UNDECLARED_FIELD'],
   }],
 });

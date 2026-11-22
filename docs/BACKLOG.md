@@ -338,9 +338,11 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium.
 - [ ] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first.
 - [ ] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium.
+- [ ] Filed by U2: `check-part-edges` does not read `world.parts.ensureLoaded("p").then ->` as a guard, so a correct await of a lazy part fails as `UNGUARDED_CLASS_REF` — whether its scanner should read it is a rule change for the owner (plan §U2) — small.
+- [ ] Filed by U2: `dead-method-allowlist.txt`'s group "Kept as intentional API … currently unused" gives reasons that name no reach this scan cannot see — re-judge each entry: delete the member, or name its reach (plan §U2) — small.
+- [ ] Filed by U2: the paint audit, tier-naming, capstone, storage, vmtruth, graph, parts, apps, serialization and boot-smoke legs print no advice row — where a finding of one has a quiet fix (a baseline or allowlist entry, a declaration), its row names it (plan §U2) — small.
 
 ### Gate audit 2026-11-16 — residue (no plan doc; detail in `archive/backlog-open-items-detail.md`)
-- [ ] **A firing gate says how to go quiet, never when the quiet fix is wrong** — ratchets steered sessions to inline helpers, home code by a ceiling, make a CLAUDE.md line false; many gates have a cheap quiet fix that is a contortion; each should print why it exists and when a raise or sanction is right — medium.
 - [ ] **No audit has looked for shapes chosen only to quiet a non-ratchet gate** — search the session transcripts and git for each gate's quiet-fix spelling (an `if X?` guard, a stub, a deletion, a tier rename, a new exemption) and re-judge each find on its merits — medium.
 
 ### Tooling arc 2026-10-29 — residue (no plan doc; closed items in `archive/backlog-closed-items-ledger.md`)

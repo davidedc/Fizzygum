@@ -59,14 +59,15 @@
 // deliberately. Lower a number whenever you clean a doc — `--write-baseline` re-records.
 //
 // If this fires, either state the current fact without the history, or move the history to the
-// plan/archive doc that owns it. `<!-- narration-ok: reason -->` on the line is the escape hatch,
+// plan/archive doc that owns it; a failing run prints that advice, its quiet fixes named
+// (lib/gate-advice.js). `<!-- narration-ok: reason -->` on the line is the escape hatch,
 // for the rare line that must QUOTE the narration words (e.g. the stink's own definition).
 
 const fs = require('fs');
 const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
-const { adviceLines } = require('./lib/gate-advice');
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 // [--umbrella=DIR] reads another umbrella — `DIR/Fizzygum/docs` and the instruction files under `DIR` (a planted one: the
 // bite-proof's input, check-doc-narration-selftest.js, which proves every rule below BITES). [--baseline=FILE] reads,
@@ -293,9 +294,7 @@ if (risen.length) {
   console.log(risen.join('\n'));
   // every narration line of a file whose count rose, each naming the rule it breaks
   for (const r of risen) for (const h of hitsOf[r.trim().split(':')[0]] || []) console.log(rules.fired(h.id, h.line));
-  console.log('\nThese buckets are PRESENT TENSE (docs/README.md filing rule 3): state the current');
-  console.log('fact without the history, or move the history to the plan/archive doc that owns it.');
-  console.log('specs/, plans/, archive/ and measurements/ are chronological by design, not scanned.');
+  console.log('\nspecs/, plans/, archive/ and measurements/ are chronological by design, not scanned.');
   console.log('Run with --full to list every line.');
 }
 if (over.length) {
@@ -313,9 +312,11 @@ if (longItems.length) {
   console.log('\ndocs/BACKLOG.md is an INDEX (docs/README.md filing rule 5): an item says what is wrong or what is to do, its');
   console.log('reach or severity, and where its detail lives; the detail goes, verbatim, to the plan that owns it.');
 }
-// the instruction-file ceiling is the one BUDGET here: after the whole report, what it holds back and when a raise is
-// the answer; every other rule's own lines say what to do
-if (over.length) { console.log(''); for (const l of adviceLines(rules.gate, ['INSTRUCTION_FILE_OVER_CEILING'])) console.log(l); }
+// after the whole report: narration's quiet fixes and the right answer, and the instruction-file ceiling — the one
+// BUDGET here — what it holds back and when a raise is the answer (lib/gate-advice.js); the BACKLOG rules' own lines
+// say what to do
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.log(''); for (const l of adviceLines(rules.gate, advised)) console.log(l); }
 if (closedItems.length || risen.length || over.length || longItems.length) process.exit(1);
 
 console.log(`OK — ${scanned} docs in ${BUCKETS.join('/')}; ${total} narration line(s), baseline ${baseTotal}; ` +

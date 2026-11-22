@@ -6,7 +6,8 @@
 // (named harness/<path>); a _layOutOwnContents hook whose class never routes through the template fails. Every accepted
 // shape rides the control and is COUNTED into its bucket (apply-first ×4: granted bounds, the setBounds twin,
 // move + extent, super; template ×2: a delegating class and its hook-only subclass; no geometry read ×1; the marker
-// ×1). Run by buildSystem/run-selftests.js on every build.
+// ×1). A failing run prints the advice its two rules share, once (lib/gate-advice.js). Run by
+// buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -51,9 +52,12 @@ proveGate({
     lines: [/^  BiteProofReadBeforeDelegateWdgt\._reLayout  \(BiteProofReadBeforeDelegateWdgt\.coffee:2\)/m,
             /^  BiteProofStringSuperWdgt\._reLayout  \(BiteProofStringSuperWdgt\.coffee:2\) -- first own-geometry read at line 4:/m,
             /^  BiteProofReadAfterHashWdgt\._reLayout  \(BiteProofReadAfterHashWdgt\.coffee:2\) -- first own-geometry read at line 3:/m],
+    // the two rules share one row, printed once
+    advised: ['READS_BEFORE_APPLY', 'HOOK_WITHOUT_TEMPLATE'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessReadFirstWdgt.coffee': relayout('BiteProofHarnessReadFirstWdgt', 'Widget', '    @bpX = @width()', '    @_applyGrantedBounds newBoundsForThisLayout') },
     expect: { READS_BEFORE_APPLY: /^  BiteProofHarnessReadFirstWdgt\._reLayout  \(harness\/BiteProofHarnessReadFirstWdgt\.coffee:2\) -- first own-geometry read at line 3:  @bpX = @width\(\)$/m },
+    advised: ['READS_BEFORE_APPLY'],
   }],
 });

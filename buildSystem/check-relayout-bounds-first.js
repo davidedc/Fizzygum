@@ -58,6 +58,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'relayout-bounds-first');
@@ -186,8 +187,9 @@ if (violations.length) {
   console.error('       _reLayout: (newBoundsForThisLayout) ->');
   console.error('         @_reLayoutWithOwnContents newBoundsForThisLayout');
   console.error('       _layOutOwnContents: ->  …  (bounds are already committed when this runs)');
-  console.error('Or, for a _reLayout only, add  # relayout-bounds-first-exempt: <reason>  directly above its header (a');
-  console.error('_layOutOwnContents hook takes no marker: route its class through the template).');
+  // after the whole report: its quiet fixes, the right answer, and what the marker answers (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log('[relayout-bounds-first] OK -- every _reLayout applies its own bounds before reading its own geometry.');

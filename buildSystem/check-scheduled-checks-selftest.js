@@ -4,7 +4,8 @@
 // OVERDUE, in src and in a harness file (named harness/<path>) alike, and one whose date cannot parse fails as
 // UNPARSEABLE_DATE, each named by file and line; a marker dated far ahead passes, and so does a past
 // date written inside a heredoc (its text, not a comment). (Dates are ISO and
-// far from today: the gate reads the clock.) Run by buildSystem/run-selftests.js on every build.
+// far from today: the gate reads the clock.) An overdue marker prints its advice once (lib/gate-advice.js), an
+// unparseable one none. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -29,9 +30,12 @@ proveGate({
       UNPARSEABLE_DATE: /^  BiteProofUnparseableCheck\.coffee:2  \(date: "not-a-date"\)$/m,
     },
     absent: [/BiteProofNotYetDueCheck|BiteProofHeredocCheck/],
+    // the overdue marker prints its advice; the unparseable one's own line says how to write the date
+    advised: ['OVERDUE'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessOverdueCheck.coffee': 'class BiteProofHarnessOverdueCheck\n  # CHECK AFTER 2000-01-01T00:00:00Z\n  a: -> 1\n' },
     expect: { OVERDUE: /^  harness\/BiteProofHarnessOverdueCheck\.coffee:2  \(due: 2000-01-01T00:00:00Z\)$/m },
+    advised: ['OVERDUE'],
   }],
 });

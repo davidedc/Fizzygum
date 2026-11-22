@@ -38,6 +38,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'thin-wraps');
@@ -105,13 +106,15 @@ if (violations.length) {
     console.error(`    body: ${JSON.stringify(v.body)}`);
   }
   console.error('\nCanonical: [return if/unless guards] then  @_settleLayoutsAfter => @_<name>NoSettle <args>.');
-  console.error('Or add a  # thin-wrap-exempt: <reason>  comment directly above the method.');
 }
 if (staleMarkers.length) {
   console.error(`\n[thin-wraps] FAIL -- ${staleMarkers.length} # thin-wrap-exempt: marker(s) excuse nothing (no method owning a _<name>NoSettle twin directly below):`);
   for (const s of staleMarkers) console.error(rules.fired('STALE_EXEMPT_MARKER', `  STALE_ALLOWLIST_ENTRY ${s.file}:${s.line}`));
   console.error('Delete the marker; keep any explanation as a plain comment.');
 }
+// after the whole report: its quiet fixes, the right answer, and what the marker answers (lib/gate-advice.js)
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
 if (violations.length || staleMarkers.length) process.exit(1);
 console.log('[thin-wraps] OK -- every public/NoSettle pair is the canonical wrap or marked exempt.');
 process.exit(0);

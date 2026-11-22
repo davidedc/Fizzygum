@@ -2,8 +2,8 @@
 // check-whole-file-markers-selftest.js — check-whole-file-markers.js (a tombstone) proved able to BITE, by running the
 // REAL gate on a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): each retired per-file
 // exclusion comment fails, named by file and line, and so does one heading a harness file, named harness/<path>; prose
-// QUOTING a marker passes (only the exact comment line is the mechanism). Run by buildSystem/run-selftests.js on every
-// build.
+// QUOTING a marker passes (only the exact comment line is the mechanism). The kinds share one advice row, printed once
+// however many fired (lib/gate-advice.js). Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -28,9 +28,12 @@ proveGate({
       'video-player': /^    src\/BiteProofWholeFileVideo\.coffee:1$/m,
     },
     absent: [/BiteProofQuotedMarker/],
+    // the three kinds share one row, printed once, its header naming each
+    advised: ['homepage', 'macros', 'video-player'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessWholeFileMacros.coffee': marked('BiteProofHarnessWholeFileMacros', '# this file is only needed for Macros') },
     expect: { macros: /^    harness\/BiteProofHarnessWholeFileMacros\.coffee:1$/m },
+    advised: ['macros'],
   }],
 });

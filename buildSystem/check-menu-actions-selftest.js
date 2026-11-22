@@ -7,7 +7,8 @@
 // RULE 3 — in a run of its own, since a hard violation exits before the ratchet — a menu verb with an unread
 // parameter fails, and so does one whose signature WRAPS. The accepted forms ride the control: an action held in a
 // variable, a verb defined only by a subclass, a harness member installed on the world, an options object (braced or
-// implicit), a one-line verb reading its parameter after the arrow, parameters named `ignored`. Run by
+// implicit), a one-line verb reading its parameter after the arrow, parameters named `ignored`. Each failing run prints
+// its rules' advice once (lib/gate-advice.js): the hard rules share one row, rule 3 has its own. Run by
 // buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -51,10 +52,13 @@ proveGate({
     },
     lines: [/^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:4$/m, /^\[menu-actions\] RULE 1b FAIL — BiteProofMenuHardWdgt\.coffee:6$/m,
       /^\[menu-actions\] RULE 1 FAIL — BiteProofMenuHardWdgt\.coffee:8$/m],
+    // the three hard rules share one row, printed once
+    advised: ['RULE_1_FUNCTION_ACTION', 'RULE_1B_UNRESOLVED_ACTION', 'RULE_2_STRING_OPTS'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessMenuHardWdgt.coffee': cls('BiteProofHarnessMenuHardWdgt', 'Widget', '  bpWire: (menu) ->', '    menu.addMenuItem "bp fn", world, (-> 1)') },
     expect: { RULE_1_FUNCTION_ACTION: /^\[menu-actions\] RULE 1 FAIL — harness\/BiteProofHarnessMenuHardWdgt\.coffee:3$/m },
+    advised: ['RULE_1_FUNCTION_ACTION'],
   }, {
     label: 'an unread parameter, a wrapped signature',
     plants: {
@@ -65,5 +69,6 @@ proveGate({
     },
     expect: { RULE_3_UNREAD_PARAM: /^  BiteProofMenuUnreadWdgt\.coffee:5  bpMenuUnreadVerb  unread parameter `menuItem`$/m },
     lines: [/^  BiteProofMenuUnreadWdgt\.coffee:7  bpWrappedVerb  unread parameter `menuItem`$/m],
+    advised: ['RULE_3_UNREAD_PARAM'],
   }],
 });

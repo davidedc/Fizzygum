@@ -4,7 +4,8 @@
 // another widget fails — in the private spelling, the legacy public one, the world's paint executor, with a sanction
 // marker that gives no reason, after a string holding `#` on its line, and in a harness file (named harness/<path>);
 // the paint executor renamed away fails the gate as STALE. The sanction on the line and directly above, and
-// a self-call written `@` or `this`, pass. Run by buildSystem/run-selftests.js on every build.
+// a self-call written `@` or `this`, pass. A reach-over prints its advice once (lib/gate-advice.js), the stale executor
+// none. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -56,13 +57,16 @@ proveGate({
       /^  \[invalidation\] src\/BiteProofInvalidationWdgt\.coffee:11 — `other\._changed\(\)`/m,
     ],
     absent: [/BiteProofSanctionedInvalidationWdgt/],
+    advised: ['CROSS_INVALIDATION'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessInvalidationWdgt.coffee': 'class BiteProofHarnessInvalidationWdgt extends Widget\n  reachOver: (other) ->\n    other._changed()\n' },
     expect: { CROSS_INVALIDATION: /^  \[invalidation\] harness\/BiteProofHarnessInvalidationWdgt\.coffee:3 — `other\._changed\(\)` invalidates another widget$/m },
+    advised: ['CROSS_INVALIDATION'],
   }, {
     label: 'the paint executor renamed away',
     edits: [['WorldWdgt.coffee', /^  _repaintDamagedRects(\s*:)/m, '  _repaintDamagedRectsBiteProofRenamed$1']],
     expect: { STALE_PAINT_EXECUTOR: /STALE — WorldWdgt\.coffee defines no _repaintDamagedRects/ },
+    advised: [],
   }],
 });

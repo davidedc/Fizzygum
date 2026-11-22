@@ -20,6 +20,7 @@ const fs = require('fs');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'stringified-scripts');
@@ -51,8 +52,9 @@ console.log(`[stringified-scripts] scan done (${sanctioned} sanctioned).`);
 if (violations.length) {
   console.error(`\n[stringified-scripts] FAIL -- ${violations.length} stringified ScriptWdgt literal(s) in core:`);
   for (const v of violations) console.error(rules.fired('STRINGIFIED_SCRIPT', `  ${v.file}:${v.line}`));
-  console.error('\nMove the script into user code / a real class, or add a');
-  console.error('`# stringified-script-sanctioned: <reason>` marker on/above the line.');
+  // after the whole report: its quiet fixes, the right answer, and what the marker answers (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log('[stringified-scripts] OK -- no stringified ScriptWdgt literals in core.');

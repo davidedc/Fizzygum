@@ -65,8 +65,9 @@
  * boot, and would make a subclass's copy load-bearing if it replaced a member the target defines —
  * none does (each installs only members its target lacks), and an overwrite of that kind would be
  * its own defect.
- *   A copy kept ON PURPOSE — a member whose OWNERSHIP is read (the inspector's own-member rows; the
- * menu sweep derives its contributors from the prototypes owning addWidgetSpecificMenuEntries) —
+ *   A copy kept ON PURPOSE — a member whose OWNERSHIP a behaviour reads (the menu sweep derives its
+ * contributors from the prototypes owning addWidgetSpecificMenuEntries); the inspector's own-member
+ * rows move with a deletion, and a screenshot of them is recaptured, never a reason to keep a copy —
  * says so on its header line or in the comment block directly above it:
  *     # identical-override-sanctioned: <why>
  * (a reason is required; a bare marker sanctions nothing). Every other finding — an identical body
@@ -108,6 +109,7 @@ const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 const { rejectUnknownArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--full', '--json', '--gate'], 'census-hierarchy-duplication');
@@ -318,10 +320,9 @@ if (GATE) {
       console.error('  ' + rules.fired('IDENTICAL_OVERRIDE',
         `IDENTICAL_OVERRIDE ${r.at}: ${r.cls}.${r.name} == ${r.from}.${r.name}  [${r.fromAt}]`));
     }
-    console.error('\nDelete the override: it is the same code with nothing bound to its class, so the inherited');
-    console.error('definition already does what it does (a comment on it that describes the subclass moves to the');
-    console.error('core it describes). If its prototype must OWN the member (a reader of ownership), keep it and say why');
-    console.error('on or directly above its header: # identical-override-sanctioned: <why>');
+    // after the whole report: its quiet fixes, the right answer, and what the marker answers (lib/gate-advice.js)
+    const advised = advisedAmong(rules.gate, rules.firedIds);
+    if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
     process.exit(1);
   }
   console.log(`[hierarchy-duplication] OK -- 0 overrides identical to what they inherit with no \`super\` in them ` +

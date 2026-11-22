@@ -131,12 +131,15 @@ proveGate({
       SELFTEST_OUTSIDE_CONVENTION: /^  SELFTEST_OUTSIDE_CONVENTION  Fizzygum\/buildSystem\/offers\.js:1  /m,
       SELFTEST_UNDISCOVERED: /^  SELFTEST_UNDISCOVERED  Fizzygum\/buildSystem\/m\.selftest\.js$/m,
     },
+    // two rows, each printed once: a broken proof's three rules share one, a self-test nothing runs the other
+    advised: ['SELFTEST_FAILED', 'SELFTEST_NO_VERDICT', 'SELFTEST_VACUOUS', 'SELFTEST_OUTSIDE_CONVENTION', 'SELFTEST_UNDISCOVERED'],
     absent: [/mentions\.js|named-like/],
   }, {
     label: 'the headless tier',
     args: ['--headless'],
     plants: { [BS + 'h-selftest-headless.js']: verdict('h', 'FAIL — 1 of 1 case') + 'process.exitCode = 1;\n' },
     expect: { SELFTEST_FAILED: /^  SELFTEST_FAILED  Fizzygum\/buildSystem\/h-selftest-headless\.js  \(exit 1, /m },
+    advised: ['SELFTEST_FAILED'],
   }, {
     label: 'the gate census: a gate no proof launches, a gate that names no rule, a build step that says so, a proof that ' +
       'never calls its helper, a not-a-gate line below the header, a gate reached only as a row of the build\'s gate table',
@@ -163,6 +166,7 @@ proveGate({
       GATE_WITHOUT_PROOF: /^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/noproof-gate\.js$/m,
       GATE_WITHOUT_REGISTRY: /^  GATE_WITHOUT_REGISTRY  Fizzygum\/buildSystem\/noreg-gate\.js$/m,
     },
+    advised: ['GATE_WITHOUT_PROOF', 'GATE_WITHOUT_REGISTRY'],
     lines: [/^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/callless-gate\.js$/m,
             /^  GATE_WITHOUT_PROOF  Fizzygum\/buildSystem\/late-gate\.js$/m,
             /^  GATE_WITHOUT_REGISTRY  Fizzygum\/buildSystem\/table-gate\.js$/m],

@@ -52,6 +52,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'raw-pointer-reads');
@@ -135,6 +136,10 @@ if (violations.length || stale.length) {
     console.error(`raw-pointer-reads gate: ${stale.length} stale entr${stale.length === 1 ? 'y' : 'ies'} in this gate's own tables:`);
     for (const s of stale) console.error(rules.fired('STALE_EXTRA_HANDLER_NAME', '  STALE_ALLOWLIST_ENTRY ' + s));
   }
+  // after the whole report: a raw read's quiet fixes, the right answer, and what the marker answers
+  // (lib/gate-advice.js); a stale entry's own line says what to do with it
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log(`  raw-pointer-reads gate OK — ${checked} pointer-handler bodies scanned, ${exempt} exempt, 0 raw reads.`);

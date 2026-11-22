@@ -3,7 +3,8 @@
 // a planted copy of src/ and of the tests repo's harness (lib/planted-src.js): the retired `_coffeSource` identifier
 // fails anywhere, a harness file included (named harness/<path>); a scan of the window's own keys fails in src/boot,
 // with and without parentheses; the exemption fails as stale when its file is gone, and when the file holds no hit
-// left to excuse. The same scan OUTSIDE src/boot, and a boot scan of a table hung on the window, pass. Run by
+// left to excuse. The same scan OUTSIDE src/boot, and a boot scan of a table hung on the window, pass. The two
+// retired patterns share one advice row, printed once (lib/gate-advice.js), a stale exemption none. Run by
 // buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -33,13 +34,17 @@ proveGate({
       STALE_EXEMPT_MISSING: /STALE_ALLOWLIST_ENTRY EXEMPT 'src\/boot\/source-vault\.coffee': no such src file/,
     },
     lines: [/^    src\/boot\/BiteProofBootScan\.coffee:5: names = Object\.keys\(window\)$/m],
+    // the two retired patterns share one row, printed once; the stale exemption's own line says what to do with it
+    advised: ['coffeSource-global', 'boot-window-key-scan'],
   }, {
     label: 'the exempt file excusing nothing',
     plants: { 'boot/source-vault.coffee': 'class SourceVault\n' },
     expect: { STALE_EXEMPT_UNUSED: /STALE_ALLOWLIST_ENTRY EXEMPT 'src\/boot\/source-vault\.coffee': the file holds no hit/ },
+    advised: [],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessCoffeSource.coffee': 'class BiteProofHarnessCoffeSource\n  a: ->\n    x = window.Widget_coffeSource\n' },
     expect: { 'coffeSource-global': /^    harness\/BiteProofHarnessCoffeSource\.coffee:3: x = window\.Widget_coffeSource$/m },
+    advised: ['coffeSource-global'],
   }],
 });

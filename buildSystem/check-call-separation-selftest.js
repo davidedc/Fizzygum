@@ -7,8 +7,9 @@
 // take the query count over its baseline (the plant is sized from the count the control prints); an allowlist entry
 // that gained a real outside reference fails as stale. A self-call is seen whatever comes before it on its line or
 // as its argument: one after a regex holding `#`, and a paren-less one given a string. The caller marked
-// `# public-call-sanctioned:` passes. The query count, the one budget, prints its advice (lib/gate-advice.js); the
-// other rules and the control none. The census's
+// `# public-call-sanctioned:` passes. Each rule but the stale entry prints its advice once (lib/gate-advice.js): [S]'s
+// two a convention's row they share, [U] effectful a convention's, the query count, the one budget, a budget's; the
+// control none. The census's
 // call-shape decisions are census-public-private-calls-selftest.js; this is the verdict over them. Run by
 // buildSystem/run-selftests.js on every build.
 
@@ -50,8 +51,9 @@ proveGate({
         U_QUERY_SELF_ONLY: /^  \[U\] QUERY self-only public methods: \d+ EXCEEDS the baseline/m,
         U_STALE_ALLOWLIST_ENTRY: new RegExp(`^      STALE_ALLOWLIST_ENTRY ${allowlisted} — no longer a self-only public method`, 'm'),
       },
-      // the query count is the one budget: the four hard rules beside it print no advice
-      advised: ['U_QUERY_SELF_ONLY'],
+      // [S]'s two rules share a convention's row, [U] effectful has its own, the query count a budget's; the stale
+      // entry's own line says to delete it
+      advised: ['S_SETTLING_SELF_CALL', 'S_EFFECTFUL_SELF_CALL', 'U_EFFECTFUL_SELF_ONLY', 'U_QUERY_SELF_ONLY'],
       lines: [/candidates include: .*bpSelfOnlyCmd/,
         /^      BiteProofCallSeparationWdgt\._bpAfterRegexCaller -> @bpEffectfulCmd  /m,
         /^      BiteProofCallSeparationWdgt\._bpStringArgCaller -> @bpEffectfulCmd  /m],
@@ -60,6 +62,7 @@ proveGate({
       label: 'a harness file',
       plants: { 'harness/BiteProofHarnessCallSeparationWdgt.coffee': cls('BiteProofHarnessCallSeparationWdgt', '  _bpPlantedPrivate: ->', '    @destroy()') },
       expect: { S_SETTLING_SELF_CALL: /^      BiteProofHarnessCallSeparationWdgt\._bpPlantedPrivate -> @destroy  harness\/BiteProofHarnessCallSeparationWdgt\.coffee:3$/m },
+      advised: ['S_SETTLING_SELF_CALL'],
     }];
   },
 });

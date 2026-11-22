@@ -4,8 +4,8 @@
 // ''' block, a parenthesised block and a one-line string each fail it, and so do a sanction with no reason, one cut off
 // by a blank line, the words of one written after a heredoc's opening quotes (heredoc text, not a comment), and a
 // one-line string in a harness file, named harness/<path>; the sanction directly above
-// (through a second comment line) and on the line itself both pass, counted. Run by
-// buildSystem/run-selftests.js on every build.
+// (through a second comment line) and on the line itself both pass, counted. A failing run prints the rule's advice
+// once (lib/gate-advice.js). Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -64,9 +64,11 @@ proveGate({
     },
     expect: { STRINGIFIED_SCRIPT: /^  BiteProofStringifiedScript\.coffee:3$/m },
     lines: [6, 9, 12, 15, 19, 21].map((n) => new RegExp(`^  BiteProofStringifiedScript\\.coffee:${n}$`, 'm')),
+    advised: ['STRINGIFIED_SCRIPT'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessStringifiedScript.coffee': 'class BiteProofHarnessStringifiedScript\n  oneLine: ->\n    s = new ScriptWdgt "1 + 1"\n' },
     expect: { STRINGIFIED_SCRIPT: /^  harness\/BiteProofHarnessStringifiedScript\.coffee:3$/m },
+    advised: ['STRINGIFIED_SCRIPT'],
   }],
 });

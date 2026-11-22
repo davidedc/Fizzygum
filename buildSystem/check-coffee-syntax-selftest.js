@@ -5,7 +5,7 @@
 // head declares a helper the strip cuts (`%%` → modulo, a parameter-default temporary → ref) fail, named by class and
 // member. The forms the fragmented compile tolerates — a field set before a bare `super`, and the three provided
 // helpers (`in`, a slice, `for own`) — pass; and a harness file's member that does not parse fails, named as the
-// listing names it. The tree is
+// listing names it. Each failing run prints the advice the two rules share, once (lib/gate-advice.js). The tree is
 // src/meta + src/boot + the plants, beside a copy of the tests repo's code: the gate reads the meta-compiler and the
 // helper globals from those, and the listing finds the plants where core's part claims the src root and the harness
 // part claims the harness. Run by buildSystem/run-selftests.js on every build.
@@ -47,10 +47,13 @@ proveGate({
       LOST_HELPER: /^FAIL src\/BiteProofHelperLossWdgt\.coffee  BiteProofHelperLossWdgt\.biteProofModulo: its compiled form declares `modulo`/m,
     },
     lines: [/^FAIL src\/BiteProofHelperLossWdgt\.coffee  BiteProofHelperLossWdgt\.biteProofTemp: its compiled form declares `ref`/m],
+    // the two rules share one row, printed once
+    advised: ['PARSE_ERROR', 'LOST_HELPER'],
   }, {
     label: 'a harness file: a member that does not parse',
     plants: { 'harness/BiteProofHarnessParseError.coffee': lines('class BiteProofHarnessParseError', '',
       '  biteProofBroken: ->', '    if (', '    2') },
     expect: { PARSE_ERROR: /^FAIL \.\.\/Fizzygum-tests\/Automator-and-test-harness-src\/BiteProofHarnessParseError\.coffee \(5:\d+\)$/m },
+    advised: ['PARSE_ERROR'],
   }],
 });

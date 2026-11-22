@@ -83,17 +83,20 @@ class WorldInventory
       return declaration if declaration.match.test key
     undefined
 
+  # The tail of a WORLD_INVENTORY_DRIFT line: what moved, and what it asks -- on that one line, since a runner reports a
+  # line's first only, and naming no other gate token, since a runner files a line under the first it holds.
   @_hintFor: (key) ->
+    declaration = "; a WorldInventory.pageLifetimeStores entry, with its reason, is right only for a store page-lifetime by design (a lifetime counter, a self-capping cache), never for one holding what a world forgot"
     if /^instances\./.test key
-      "live-instance count changed across resetWorld -- the ESCAPED/ZOMBIE lines name the individuals"
+      "live-instance count changed across resetWorld -- a widget the world forgot is let go at the teardown that owns it (the ESCAPED/ZOMBIE lines name the individuals)"
     else if /^statics\./.test key
-      "a class-level store changed size -- reset it in the teardown, or declare it in WorldInventory.pageLifetimeStores with its reason"
+      "a class-level store changed size across resetWorld -- what it holds past a teardown is let go by the teardown that owns it" + declaration
     else if /^world\./.test key
-      "a world container field changed size -- reset it in the teardown, or declare it in WorldInventory.pageLifetimeStores with its reason"
+      "a world container field changed size across resetWorld -- what it holds past a teardown is let go by the teardown that owns it" + declaration
     else if /^dom\./.test key
-      "the page DOM changed -- something appends elements per test"
+      "the page DOM changed -- something appends elements per test, and whatever appends them removes them" + declaration
     else
-      "undeclared store changed -- declare it in WorldInventory.pageLifetimeStores with its reason, or fix the leak"
+      "an undeclared store changed across resetWorld -- fix the leak at the teardown that owns it" + declaration
 
   # a Set/Map/Array/LRU-like store's element count, else undefined
   @_containerSize: (value) ->

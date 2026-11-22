@@ -30,6 +30,7 @@ const fs = require('fs');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'relayout-repaints');
@@ -59,6 +60,10 @@ if (violations.length) {
   console.error('       @_repaintAsOneUnit =>');
   console.error('         <position children via _apply*/_reLayout tiers>');
   console.error('(Widget._repaintAsOneUnit — suppression depth and covering @_fullChanged both restored in `finally`.)');
+  // after the whole report: what bringing a retired mechanism back means, its quiet fixes and the right answer
+  // (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log(`[relayout-repaints] OK -- ${scanned} file(s): the retired disableTrackChanges/maybeEnableTrackChanges spelling is extinct ([INV-1] is structural in Widget._repaintAsOneUnit).`);

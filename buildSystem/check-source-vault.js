@@ -52,6 +52,7 @@ const fs = require('fs');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const gateRules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'source-vault');
@@ -127,6 +128,10 @@ for (const rel of EXEMPT) {
   failed = true;
 }
 
+// after the whole report: what bringing the retired delivery back means, its quiet fixes and the right answer, once
+// however many rules fired (lib/gate-advice.js); a stale exemption's own line says what to do with it
+const advised = advisedAmong(gateRules.gate, gateRules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(gateRules.gate, advised)) console.error(l); }
 if (failed) process.exit(1);
 console.log('[source-vault] OK -- the retired source-delivery patterns stay dead.');
 process.exit(0);

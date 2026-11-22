@@ -643,6 +643,10 @@ class MacroToolkit
       return if taker is receiver
     describe = (wdgt) -> if (not wdgt?) or (wdgt is world) then "the desktop" else wdgt.toString()
     kind = if check.isTouch then "touch" else "mouse"
+    # what a miss asks, on the miss's one line (a runner reports a console line's first only)
+    answer = ". Aim by meaning: bring the widget into reach and press it, or declare what the press must meet " +
+      "(@pressMustLandOn, a widget named by meaning); re-aiming at a raw point, declaring whatever the press met, " +
+      "or changing the example until the row happens to show hides the miss"
     if landed
       expected = "a scroll #{receiver.toString()} takes itself"
       # the taker and the receiver both lie on the hit's ancestry, so one encloses the other
@@ -653,11 +657,11 @@ class MacroToolkit
           "a scroll #{taker.toString()} takes, a scroller nested inside it"
         else
           "a scroll #{taker.toString()} takes, a scroller around it"
-      description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must start #{expected}, but at (#{place.x}, #{place.y}) it meets #{describe hit} and starts #{found}"
+      description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must start #{expected}, but at (#{place.x}, #{place.y}) it meets #{describe hit} and starts #{found}" + answer
     else
       expected = if receiver is world then "the bare desktop" else "#{receiver.toString()} or a widget inside it"
       found = describe hit
-      description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must land on #{expected}, but at (#{place.x}, #{place.y}) it meets #{found}"
+      description = "AIM MISSED: the #{kind} press set up by #{check.setBy} must land on #{expected}, but at (#{place.x}, #{place.y}) it meets #{found}" + answer
     world.automator.player.recordMacroAssertion false, description, expected, found
     return
 

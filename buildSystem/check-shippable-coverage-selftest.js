@@ -6,7 +6,8 @@
 // recursive), in src and in the harness; and a src/boot file no part declares (build.js --list-boot) fails. A file in a
 // claimed directory, of src and of the harness, passes, and so does every src/boot file the parts declare (the real
 // tree's own). And boot's by-name fetches: a fetch renamed in globalFunctions alone fails both ways (a name no part
-// declares, a declared script nothing fetches), while a comment naming a retired script passes. Run by
+// declares, a declared script nothing fetches), while a comment naming a retired script passes. Each failing run prints
+// its rules' advice once (lib/gate-advice.js). Run by
 // buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -37,15 +38,18 @@ proveGate({
     expect: { UNSHIPPED: /^  UNSHIPPED src\/biteproof-unclaimed\/BiteProofUnclaimedWdgt\.coffee$/m },
     lines: [/^  UNSHIPPED src\/basic-widgets\/biteproof-nested\/BiteProofNestedWdgt\.coffee$/m,
       /^  UNSHIPPED src\/\.biteproof-hidden\/BiteProofHidden\.coffee$/m, /^  UNSHIPPED src\/basic-widgets\/\.BiteProofDotFile\.coffee$/m],
+    advised: ['UNSHIPPED'],
   }, {
     label: 'a new subdirectory of the harness',
     plants: { 'harness/biteproof-nested/BiteProofNestedHarness.coffee': 'class BiteProofNestedHarness\n' },
     expect: { UNSHIPPED: /^  UNSHIPPED \.\.\/Fizzygum-tests\/Automator-and-test-harness-src\/biteproof-nested\/BiteProofNestedHarness\.coffee$/m },
+    advised: ['UNSHIPPED'],
   }, {
     label: 'a src/boot file no part declares',
     plants: { 'boot/BiteProofBootOnly.coffee': 'biteProofBootOnly = 1\n', 'boot/extensions/BiteProofExtension.coffee': 'x = 1\n' },
     expect: { UNSHIPPED: /^  UNSHIPPED src\/boot\/BiteProofBootOnly\.coffee$/m },
     lines: [/^  UNSHIPPED src\/boot\/extensions\/BiteProofExtension\.coffee$/m],
+    advised: ['UNSHIPPED'],
   }, {
     label: 'a boot fetch renamed on one side only',
     edits: [['boot/globalFunctions.coffee', /js\/src\/logging-div-min\.js/, 'js/src/biteproof-renamed-min.js']],
@@ -53,5 +57,7 @@ proveGate({
       BOOT_FETCH_UNDECLARED: /^  BOOT_FETCH_UNDECLARED src\/boot\/globalFunctions\.coffee:\d+ fetches js\/src\/biteproof-renamed-min\.js, which no bootScript of its own part \(core\) declares$/m,
       BOOT_SCRIPT_UNFETCHED: /^  BOOT_SCRIPT_UNFETCHED src\/boot\/logging-div\.coffee \(a bootScript of core\) is fetched by no code line of its part's boot files as js\/src\/logging-div-min\.js$/m,
     },
+    // the two rules share one row, printed once
+    advised: ['BOOT_FETCH_UNDECLARED', 'BOOT_SCRIPT_UNFETCHED'],
   }],
 });

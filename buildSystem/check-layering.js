@@ -61,6 +61,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 const { commandFiles } = require('./lib/tests-repo-code');
 const { testMacroSourcesIn, verbMacroSourcesIn } = require('./lib/macro-sources');
 
@@ -591,12 +592,12 @@ function checkFile(file, violations, gCtx, warnings) {
             const alsoPlain = plains && plains.size
               ? ` NB ${wname} is ALSO a plain (non-settling) method on ${[...plains].join(', ')} — if the receiver is one of those, mark # ${NOSETTLE_MARKER}: receiver is <that class>.`
               : '';
-            violations.push(rules.fired('G_SETTLING_WRAPPER', `[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper (or mark # ${NOSETTLE_MARKER}: <why>).${alsoPlain}  — ${at}`));
+            violations.push(rules.fired('G_SETTLING_WRAPPER', `[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper.${alsoPlain}  — ${at}`));
           }
         }
         // the unambiguous self-add @add (Widget.add) — the one add shape a name scanner can attribute (`.add` member
         // stays excluded as Point#add-ambiguous). Low-level code must use @_addNoSettle, not the self-settling add().
-        if (SELF_ADD_CALL.test(code)) violations.push(rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add() (or mark # ${NOSETTLE_MARKER}: <why>)  — ${at}`));
+        if (SELF_ADD_CALL.test(code)) violations.push(rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add()  — ${at}`));
       }
     }
     if (isImmediateMutator(tier) && invalidate) {
@@ -778,8 +779,7 @@ function checkMacroText(file, text, lineOf, violations) {
     if (line.code.trim() !== '') pendingSanction = false;
     const m = line.bare.match(MACRO_FORBIDDEN_CALL);
     if (m && !lineSanctioned) violations.push(rules.fired('D_MACRO_PRIVATE_CALL', `[D] macro calls private/low-level .${m[1]}() — ${rel}:${lineOf(n)} `
-      + `(use the PUBLIC API; for measure-and-size, attach the widget first then setExtent/setWidth/moveTo; `
-      + `a test ORACLE may carry \`# macro-private-call-sanctioned: <reason>\`)`));
+      + `(a macro drives the world through input and reads it through public queries)`));
   });
 }
 
@@ -859,20 +859,11 @@ function main() {
   if (violations.length) {
     console.error(`\n!!! layering gate FAILED — ${violations.length} violation(s):\n`);
     for (const v of violations) console.error('  ' + v);
-    console.error('\nSee docs/archive/deferred-layout-refit-and-add-design.md (D: macros must not call private/low-level methods;');
-    console.error('E: immediate geometry mutators (polymorphic apply corners + convenience movers) must not call _invalidateLayout) and docs/archive/deferred-layout-16-macro-breakages.md (A/B/C).');
-    console.error('F: a non-mutator handler must DEFER a container apply (_invalidateLayout) or mark it `# layout-apply-sanctioned: <why>` — see docs/archive/deferred-layout-OVERVIEW.md §11.');
-    console.error('G: low-level code must reach the _<name>NoSettle core, not the public self-settling wrapper (destroy/close/fullDestroy/createReference/...) — or mark `# nosettle-sanctioned: <why>`.');
-    console.error('I: a __ leaf must trigger no orchestration (re-fit seam / react / schedule-settle / public setter) — keep it a pure bottom (layering/naming convention §1).');
-    console.error('J: a notification hook (_reactTo*/_before*) must not open a settle — the gesture/structural dispatcher owns the one _settleLayoutsAfter (layering/naming convention §3).');
-    console.error('K: a 2x2 apply corner must match its name — a _apply*Base bypass twin must not fire the container re-fit seam nor dispatch to its polymorphic _apply* sibling; the silent commit corner (_commitBounds) must not react (layering/naming convention §2).');
-    console.error('L: a notification callback must be named _(reactTo|before)(Being|Child|HolderFrame)<Event> with no NoSettle; the legacy fragments (childX/justBeen/iHaveBeen/aboutTo/prepareTo) are retired (layering/naming convention §3/§4).');
-    console.error('M: the retired raw*/silent*/fullRaw fragments and the _apply*AndNotify suffix must not reappear as method names (use _apply*/_apply*Base/_commit*/__ tiers; raw PIXEL data uses rawPixel*/rawRGBA) (layering/naming convention §4).');
-    console.error('N: the retired notify-by-mutation container seam (_announce*ToContainer) must not be re-defined — the settle-time up-edge _reFitMyTrackingContainerAfterSettle replaced it (assessment §4.1 / §6 rulebook rule 2).');
-    console.error('O: a *DeferredSettle entrypoint (defers its layout settle to the end-of-cycle flush) may be CALLED only from an allowlisted per-event stream handler — DEFERRED_SETTLE_CALLER_ALLOWLIST (a discrete/programmatic caller must use the self-settling setter) (layering/naming convention §4).');
-    console.error('P: _settleLayoutsAfterOrJoinEnclosingPass (the reactive-connection settle lane — JOINS an open layout pass instead of throwing) may be CALLED only from a dedicated _<name>Connector entrypoint (connection-cascade-settle-fix-plan.md).');
-    console.error('Q: a _<name>Connector entrypoint (which joins an open layout pass instead of throwing — rule P) may be textually CALLED only from an allowlisted mid-cascade self-render — CONNECTOR_CALLER_ALLOWLIST; the reactive dispatch resolves it at runtime and needs no textual call (connection-cascade-settle-fix-plan.md §7e).');
-    console.error('T: a method that self-settles (@_settleLayoutsAfter) must not ALSO @-call a settling public method (setter/wrapper/@add) — one flush per logical mutation; bless a deliberate/branch-exclusive pair with `# double-settle-sanctioned: <why>` (public/private call-separation plan §4.1).');
+    console.error('\nEvery rule, and the convention behind it: docs/architecture/lint-and-static-checks.md §4.');
+    // after the whole report: the advice of the rules that fired — what each finding means, its quiet fixes and the
+    // right answer (lib/gate-advice.js); a stale table entry's own line says to delete it
+    const advised = advisedAmong(rules.gate, rules.firedIds);
+    if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
     process.exit(1);
   }
   console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R/T; ${wrapperNames.length} settling wrappers guarded, name-qualified)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);

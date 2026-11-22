@@ -69,7 +69,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-const { adviceLines } = require('./lib/gate-advice');
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'plane-discipline');
@@ -296,8 +296,9 @@ if (escalationViolations.length) {
   escalationViolations.forEach((v) => console.error(v.c1 ? rules.fired('C1_ESCALATED_POS', '    ' + v.text) : rules.fired('C2_RAW_SCREEN_POS', '    ' + v.text)));
 } else console.log(`[plane-discipline C] positions not in the receiver's plane: 0 reads -- OK (C1: ${c1Bodies} escalated-pos handler bodies [${[...escalatedPosHandlers].sort().join(', ')}] on ${providerDefiners.size} provider class(es) + subclasses; C2: ${c2Bodies} raw-screen-pos bodies [${[...RAW_SCREEN_POS_HANDLERS.keys()].join(', ')}]; ${classFile.size} classes scanned)`);
 
-// rule B's rise is the one BUDGET here: after the whole report, its question and when a raise is the answer; every
-// other rule's own line says what to do (a drop is banked, a stale entry deleted, A and C fixed)
-if (rules.firedIds.has('B_MIX_ROSE')) { console.error(''); for (const l of adviceLines(rules.gate, ['B_MIX_ROSE'])) console.error(l); }
+// after the whole report: A's and C's quiet fixes and the right answer, and rule B's rise — the one BUDGET here — its
+// question and when a raise is the answer (lib/gate-advice.js); a drop's and a stale entry's own line says what to do
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
 
 process.exit(failed ? 1 : 0);

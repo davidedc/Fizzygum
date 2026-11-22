@@ -89,7 +89,8 @@
 // A half whose baseline is above zero (the Fizzygum half) is a BUDGET (docs/architecture/
 // lint-and-static-checks.md §3b): over it, the run also prints what the number holds back and when a
 // raise is the answer (lib/gate-advice.js); a half at zero (the tests half) is a convention, and prints
-// its FIX lines alone.
+// a convention's advice — its quiet fixes named, and the right answer — as an unsanctioned list in --files
+// mode does, and a wrong sanction.
 //
 // BLIND SPOTS, plainly. It sees string-list LITERALS only — not object tables keyed by names, regex
 // alternations, `switch`/`when` arms, sequences of pushes, or names assembled at runtime; those mirror
@@ -116,7 +117,7 @@ const { testNames } = require('./lib/tests-repo-code');
 const { rejectUnknownArgs } = require('./lib/cli-args');
 const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
-const { adviceLines } = require('./lib/gate-advice');
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 // the four failing sanction tokens
 rules.declare(['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_EMPTY', 'SANCTION_STALE']);
 const { runSet, scriptFiles, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
@@ -502,7 +503,9 @@ function main(argv) {
   const nameLists = lists.filter(l => l.isName);
   const countOf = (ls, state) => ls.filter(l => l.state === state).length;
   let over = false;
-  let budgetOver = false;   // a half whose baseline is above zero (a BUDGET) is over it: the run prints its advice
+  // the advice a half over its baseline prints: a half above zero is a BUDGET (OVER_BASELINE), a half at zero a
+  // convention (OVER_BASELINE.at-zero, answered as an unsanctioned list in --files mode is)
+  const overAdvice = [];
 
   if (given) {
     const unsanctioned = nameLists.filter(l => l.state === 'UNSANCTIONED');
@@ -524,17 +527,12 @@ function main(argv) {
         `${countOf(own, 'SANCTIONED')} sanctioned + ${unsanctioned.length} unsanctioned (baseline ${h.baseline})`);
       if (unsanctioned.length > h.baseline) {
         over = true;
-        if (h.baseline > 0) budgetOver = true;
+        overAdvice.push(h.baseline > 0 ? 'OVER_BASELINE' : 'OVER_BASELINE.at-zero');
         console.error(`\n[hand-lists] FAIL — ${h.label} holds ${unsanctioned.length} unsanctioned name list(s), over its baseline of ${h.baseline}. Every one:`);
         for (const l of unsanctioned) console.error(rules.fired('OVER_BASELINE', `  ${where(l)}  [${preview(l.items)}]`));
       } else if (unsanctioned.length < h.baseline) {
         console.log(`[hand-lists] NOTE — ${h.label} is at ${unsanctioned.length} unsanctioned name list(s), below its baseline of ${h.baseline}: tighten BASELINE_${h.repo.toUpperCase()} in buildSystem/check-hand-lists.js to lock the gain in.`);
       }
-    }
-    if (over) {
-      console.error('\nFIX: derive the list from where its names are declared, or assert it both ways and sanction it');
-      console.error('naming the guard that fails:  # hand-list-sanctioned: <the gate, rig, SystemTest or token that fails when it goes stale>');
-      console.error('on the line holding its `[` or directly above it (`//` in .js).');
     }
     if (!over && !problems.length) {
       console.log(`[hand-lists] OK — ${treeFiles.length} file(s), universe ${universe.classes.size} class(es) + ${universe.members.size} member name(s); ${summary.join('; ')}.`);
@@ -547,7 +545,14 @@ function main(argv) {
     console.error(`\n[hand-lists] FAIL — ${problems.length} sanction marker(s) are wrong (never ratcheted):`);
     printProblems(problems);
   }
-  if (budgetOver) { console.error(''); for (const l of adviceLines(rules.gate, ['OVER_BASELINE'])) console.error(l); }
+  if (over) {
+    console.error('\nThe marker:  # hand-list-sanctioned: <the gate, rig, SystemTest or token that fails when it goes stale>');
+    console.error('on the line holding the list\'s `[` or directly above it (`//` in .js).');
+  }
+  // after the whole report: the advice of each half over its baseline, chosen by the half's class, then of every other
+  // rule that fired and carries a row (lib/gate-advice.js)
+  const advised = [...overAdvice, ...advisedAmong(rules.gate, [...rules.firedIds].filter((id) => id !== 'OVER_BASELINE'))];
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   return over || problems.length ? 1 : 0;
 }
 

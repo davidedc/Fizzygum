@@ -5,7 +5,8 @@
 // lib/tests-repo-code-selftest.js. Those are unit tests of the engine; the gate's rules are proven to BITE at the end, by
 // running the REAL gate (the src walk, the tests repo's references, the allowlist, the exit) on a planted copy of src/
 // and of the tests repo's code (lib/planted-src.js), a method defined in a harness file and reached nowhere failing as
-// dead, named harness/<path>. Run by buildSystem/run-selftests.js on every build.
+// dead, named harness/<path>. A dead method prints its advice once (lib/gate-advice.js), a stale entry none. Run by
+// buildSystem/run-selftests.js on every build.
 
 const { twinName, inventoryOf, independentlyReferenced } = require('./check-dead-methods');
 const { coffeeMask } = require('./lib/coffee-mask');
@@ -88,6 +89,7 @@ proveGate({
     label: 'a header the shared matcher cannot see',
     plants: { 'BiteProofUnseen.coffee': cls('BiteProofUnseen', '  biteProofWrapped: (a,', '    b) ->', '    1') },
     expect: { UNSEEN_HEADER: /^   BiteProofUnseen\.coffee:2: biteProofWrapped: \(a,$/m },
+    advised: [],
   }, {
     label: 'a dead method; allowlist entries referenced, redundant, defined nowhere',
     plants: {
@@ -105,10 +107,13 @@ proveGate({
       STALE_ENTRY_REDUNDANT: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${twinned} — auto-exempt by settle-tier symmetry \\(live twin _${twinned}NoSettle\\)`, 'm'),
       STALE_ENTRY_UNDEFINED: new RegExp(`^  STALE_ALLOWLIST_ENTRY ${undefinedEntry} — no method of that name is defined in the compiled sources$`, 'm'),
     },
+    // the dead method prints its advice; a stale entry's own line says to delete it
+    advised: ['DEAD_METHOD'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessDead.coffee': cls('BiteProofHarnessDead', '  biteProofHarnessNeverReached: -> 1') },
     expect: { DEAD_METHOD: /^  biteProofHarnessNeverReached  \(harness\/BiteProofHarnessDead\.coffee:2\)$/m },
+    advised: ['DEAD_METHOD'],
   }],
 });
 

@@ -569,10 +569,16 @@ cannot tell a sound flow, and its reason shows the flow is sound.
 a shape ("add no method to X", "find another seat", "net-zero"): the shape is chosen on its merits, before any count is
 read, and the number follows it.
 
-**The gates say so when they fire.** Each budget rule prints (but `BACKLOG_ITEM_TOO_LONG`, whose own line gives its
-one answer), on lines of its own after its findings and once however many of them fire, what its number holds back, the question it asks first where it has one, when a raise is the
-answer, the answers that are wrong, and how to raise (`buildSystem/lib/gate-advice.js`); each gate's bite-proof holds
-it to printing exactly that advice, and none for its other rules (`lib/prove-rules.js`, a run's `advised`).
+**The gates say so when they fire.** A rule prints its ADVICE (`buildSystem/lib/gate-advice.js`) on lines of its own
+after its gate's report, once however many lines it fired on, and then its class's shared text once. A budget's says
+what its number holds back, the question it asks first where it has one, when a raise is the answer, the answers that
+are wrong, and how to raise. An invariant's or a convention's names its QUIET FIXES (the answers that silence the line
+and keep what it found) as wrong, says why, gives the right answer, and, where the rule keeps a marker, says what the
+marker answers and what its reason names. A page finding carries its advice in its own message, on its first line
+(the runners report a page line's first line only). A rule whose own line gives its one answer and has no quiet fix (a
+stale entry's "delete it", `BACKLOG_ITEM_TOO_LONG`) prints none. Every static gate carries rows, and so do the suite runner,
+the revisit, settle and staleness-census legs and both sweeps; the other legs' findings print none. Each gate's bite-proof holds it to printing exactly
+the advice its run's `advised` names, each once (`lib/prove-rules.js`).
 
 Every gate, rule and token, by class:
 
@@ -584,7 +590,7 @@ Every gate, rule and token, by class:
 | `check-layering.js` [A] [B] [C] [E] [F] [G] [I] [J] [K] [O] [P] [Q] [T] | A | a flush the settle engine does not survive (§4) |
 | `check-layering.js` [D] [L] [M] [N] [R], and its tables' stale entries | B | a tier or naming rule broken; an entry that names nothing |
 | `check-invalidation-receivers.js` | A | a widget marking another changed: the receiver's own intent-named door is the answer |
-| `check-dead-methods.js` | B | a member nothing reaches; one reached by a string name is allowlisted with its reason |
+| `check-dead-methods.js` | B | a member nothing reaches: it is deleted (a whole-name string already counts as a reach); a reach the scan cannot see (a name assembled with `+`, a dispatch through an arbitrary object, the devtools console) is allowlisted, its reason naming that reach |
 | `check-hand-lists.js`: its sanctions, the tests half (`BASELINE_TESTS`, 0), `--files` | B | a name list neither derived nor asserted; a sanction naming no guard that runs |
 | `check-hand-lists.js`: the Fizzygum half (`BASELINE_FIZZYGUM`) | C | one more second source of truth |
 | `check-unresolved-sends.js` | A | a send nothing answers: a `TypeError` on any path that reaches it |
@@ -612,7 +618,7 @@ Every gate, rule and token, by class:
 | `aim-census.js --tables-only` | B | the census's tables disagree with the toolkit it reads |
 | `check-complexity-ratchets.js`: the method ceilings, the complexity ceiling and its records | C | one more method in a held class; one more tangled function |
 | `check-complexity-ratchets.js`: a stale entry | B | an entry that excuses nothing |
-| every static gate's stale-entry rule (an allowlist, sanction or table entry that excuses nothing: `STALE_ALLOWLIST_ENTRY`, `STALE_SANCTION`, `U_STALE_ALLOWLIST_ENTRY`, the `*_STALE_*` table rules), whatever its gate's class | B | an entry that names nothing: it is deleted |
+| every static gate's stale-entry rule (an allowlist, sanction or table entry that excuses nothing: `STALE_ALLOWLIST_ENTRY`, `STALE_SANCTION`, `U_STALE_ALLOWLIST_ENTRY`, the `*_STALE_*` table rules), and a leg's baseline entry that no longer matches (the revisit gate's vanished signature), whatever its gate's class | B | an entry that names nothing: it is deleted, or the gain banked |
 | `census-hierarchy-duplication.js --gate` | B | an override identical to what it inherits |
 | `check-doc-narration.js` narration, `BACKLOG_CLOSED_ITEM` | B | history in a present-tense doc; a closed item left in the index |
 | `check-doc-narration.js` the instruction-file ceilings | C | bytes every session pays before any work |

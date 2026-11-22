@@ -13,9 +13,9 @@
 // ceiling is INVALID, and `--write-baseline` refuses (INVALID, nothing written) an item over 400 characters — both on
 // a throwaway baseline (`--baseline=`), never the real one. The instruction files the same way, against the REAL
 // ceilings (the baseline file): one a byte over its ceiling fails, named; one exactly at it rides the control; an
-// umbrella missing one is INVALID. The instruction-file ceiling, a budget, prints its advice (lib/gate-advice.js);
-// narration, closed items, long items, every INVALID run and the control none. Run by buildSystem/run-selftests.js on
-// every build.
+// umbrella missing one is INVALID. Narration prints its convention's advice, once for every rule, and the
+// instruction-file ceiling, a budget, its own (lib/gate-advice.js); closed items, long items, every INVALID run and
+// the control none. Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -103,6 +103,8 @@ proveGate({
     },
     expect: Object.fromEntries(ids.map((id, k) => [id, new RegExp(`^  ${esc(DOC)}:${k + 2}  \\[[^\\]]+\\]  …${esc(LINES[id])}$`, 'm')])),
     lines: [new RegExp(`^  ${esc(DOC)}:${ids.length + 2}  \\[the then-/old-<Thing>\\]  …Use the old- here\\.$`, 'm')],
+    // every narration rule shares one row, printed once, its header naming each
+    advised: ids,
   }, {
     label: 'a closed task item in BACKLOG.md under each bullet shape',
     plants: {

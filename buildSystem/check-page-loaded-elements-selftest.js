@@ -6,7 +6,8 @@
 // chain re-making it after a copy but not a restore; after a restore but not a copy; an element built into no field and
 // not said to be unheld, in src and in a harness file (named harness/<path>) alike; a hook header the shared matcher
 // cannot see; and a hook neither walker calls (the copy's walkers edited so they never call it). The fully declared holder and the stated unheld element pass, and so
-// does an element named only in a comment after a regex holding a quote (no string is open there). Run by
+// does an element named only in a comment after a regex holding a quote (no string is open there). The element rules
+// share one advice row, printed once (lib/gate-advice.js); a refused header and an uncalled hook print none. Run by
 // buildSystem/run-selftests.js on every build.
 
 const path = require('path');
@@ -50,13 +51,17 @@ proveGate({
       UNSEEN_HOOK_HEADER: /^  BiteProofUnseenHookWdgt\.coffee:2  a hook header in a spelling the shared matcher cannot see/m,
     },
     absent: [/BiteProofDeclaredHolderWdgt\.bpPlantedImage|BiteProofStatedUnheldWdgt/],
+    // the four element rules share one row, printed once; the refused header's own line says what to do with it
+    advised: ['NOT_TRANSIENT', 'NO_RESTORE_HOOK', 'NO_COPY_HOOK', 'UNATTRIBUTED_ELEMENT'],
   }, {
     label: 'a harness file',
     plants: { 'harness/BiteProofHarnessUnheldWdgt.coffee': ['class BiteProofHarnessUnheldWdgt extends Widget', '', '  _bpDecode: (dataURL) ->', '    img = new Image()', '    img.src = dataURL', ''].join('\n') },
     expect: { UNATTRIBUTED_ELEMENT: /^  harness\/BiteProofHarnessUnheldWdgt\.coffee:4  img = new Image\(\)$/m },
+    advised: ['UNATTRIBUTED_ELEMENT'],
   }, {
     label: 'a hook neither walker calls',
     edits: [['duplication/Duplicator.coffee', /\._reactToBeingCopied\??\(/g, '._bpRenamedHook(']],   // its one caller
     expect: { HOOK_NOT_CALLED: /^  HOOKS names _reactToBeingCopied, which neither walker \(src\/serialization, src\/duplication\) calls/m },
+    advised: [],
   }],
 });

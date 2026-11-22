@@ -59,6 +59,7 @@ const { maskJs } = require('./lib/js-mask');
 const { VERDICT_RE } = require('./lib/selftest-verdict');
 
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 const { dirArg } = require('./lib/cli-args');
 // judge()'s tokens: each a rule of this gate
 rules.declare(['SELFTEST_FAILED', 'SELFTEST_NO_VERDICT', 'SELFTEST_VACUOUS']);
@@ -326,9 +327,8 @@ async function main(argv) {
     for (const f of census.noRegistry) console.error(rules.fired('GATE_WITHOUT_REGISTRY', `  GATE_WITHOUT_REGISTRY  ${rel(f)}`));
     for (const f of census.noProof) console.error(rules.fired('GATE_WITHOUT_PROOF', `  GATE_WITHOUT_PROOF  ${rel(f)}`));
     if (unproved) {
-      console.error('      Every script the build or an fg leg launches is a gate: it names its rules (lib/gate-rules.js)');
-      console.error('      and a self-test plants each one (proveGate / proveLeg, launching it by path.join(__dirname, …))');
-      console.error('      — or its header says why it is not one: `// not-a-gate: <reason>` (`#` in a shell or Python file).');
+      console.error('      Every script the build or an fg leg launches is a gate: it names its rules (lib/gate-rules.js),');
+      console.error('      and a self-test plants each one (proveGate / proveLeg, launching it by path.join(__dirname, …)).');
     }
   }
   if (hiding.length || stray.length) {
@@ -342,6 +342,9 @@ async function main(argv) {
   if (failures.length || hiding.length || stray.length || unproved) {
     console.error(`[selftests] FAIL — ${failures.length} of ${tests.length} self-test(s) failed, ${hiding.length} outside the convention, ${stray.length} undiscovered` +
       (census ? `, ${census.noRegistry.length} gate(s) without a registry, ${census.noProof.length} without a proof` : '') + ` (${secs}s)`);
+    // after the whole report: what each failure means, its quiet fixes and the right answer (lib/gate-advice.js)
+    const advised = advisedAmong(rules.gate, rules.firedIds);
+    if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
     process.exitCode = 1;
   } else {
     console.log(`[selftests] OK — ${tests.length} self-test(s), ${cases} cases, ${secs}s${gatesNote}`);

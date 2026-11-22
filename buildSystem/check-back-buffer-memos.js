@@ -72,6 +72,7 @@ const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 // --src=DIR / --tests-repo=DIR check another src tree / tests repo in place of this umbrella's: a copy carrying a plant
 // (the self-test's rail)
 const ARGV = process.argv.slice(2);
@@ -222,10 +223,10 @@ if (violations.length) {
     console.error(rules.fired('MEMO_RIDES_A_SAVE', `  ${v.name}.${v.field}  (${v.at}, in ${v.via}${v.via === BUILDER ? '' : ', reached from ' + BUILDER})`));
     console.error(`    ${v.text}`);
   }
-  console.error('\nA field written while the back buffer is built describes that buffer, which is a serialization');
-  console.error('transient: keep no memo (ask the raster, or paint unconditionally), declare the field in the');
-  console.error("class's @serializationTransients, or — if the field is the saved picture itself — mark its");
-  console.error('declaration  # saved-content: <what makes it content>.');
+  console.error('\nA field written while the back buffer is built describes that buffer, which is a serialization transient.');
+  // after the whole report: its quiet fix, the right answer, and what `# saved-content:` declares (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 if (problems.length) process.exit(1);

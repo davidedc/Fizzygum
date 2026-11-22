@@ -7,8 +7,9 @@
 // PURPOSE: a "time-bomb reminder" — drop `# CHECK AFTER <date>` next to a workaround / deferred
 // decision that should be re-evaluated once <date> passes. This gate FAILS the build the first time it
 // is built on/after that date, so the reminder can't rot unnoticed (the original tool found two markers
-// dated Jan 2021 still sitting in the tree in 2026). To resolve: act on it, then either delete the
-// marker or push the date forward. <date> is anything Date.parse understands, e.g.
+// dated Jan 2021 still sitting in the tree in 2026). To resolve: act on it, then delete the marker; a later
+// date is right only when the decision waits on something the comment names, and a failing run prints that
+// advice (lib/gate-advice.js). <date> is anything Date.parse understands, e.g.
 //   # CHECK AFTER 1 Jan 2027 00:00:00 GMT
 // A marker whose date is unparseable is also flagged (it can never fire, defeating the purpose).
 //
@@ -20,6 +21,7 @@ const fs = require('fs');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'scheduled-checks');
@@ -52,8 +54,11 @@ if (overdue.length || malformed.length) {
   if (malformed.length) {
     console.error(`\n[scheduled-checks] FAIL -- ${malformed.length} CHECK-AFTER marker(s) have an unparseable date:`);
     for (const v of malformed) console.error(rules.fired('UNPARSEABLE_DATE', `  ${v.file}:${v.line}  (date: "${v.date}")`));
+    console.error('A marker whose date Date.parse cannot read never fires: write one it reads (`# CHECK AFTER 1 Jan 2027 00:00:00 GMT`).');
   }
-  console.error('\nRe-evaluate the flagged code, then delete the marker or push its date forward.');
+  // after the whole report: what an overdue reminder asks, its quiet fix and the right answer (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log('[scheduled-checks] OK -- no overdue CHECK-AFTER markers.');

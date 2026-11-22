@@ -37,6 +37,7 @@ const fs = require('fs');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'region-markers');
@@ -118,14 +119,17 @@ for (const k of KINDS) {
     console.error(`\n[region-markers] FAIL -- '${k.id}' regions: ${n} > baseline ${k.baseline}:`);
     for (const s of sites[k.id]) console.error(rules.fired(k.id, `    ${s}`));
     console.error(`  ${k.why}`);
-    console.error('  The region mechanism is being RETIRED: do not add a region, and do not invent a');
-    console.error('  replacement marker syntax. RE-HOME the code instead — promote it (it is product),');
-    console.error('  move it to ../Fizzygum-tests/Automator-and-test-harness-src/ as a *TestSupport class (it is test machinery),');
+    console.error('  The region mechanism is RETIRED: RE-HOME the code — promote it (it is product), move it to');
+    console.error('  ../Fizzygum-tests/Automator-and-test-harness-src/ as a *TestSupport class (it is test machinery),');
     console.error('  or extract it into its own collaborator class.');
     failed = true;
   }
 }
 
+// after the whole report: what bringing a retired mechanism back means, its quiet fixes and the right answer, once
+// however many kinds fired (lib/gate-advice.js)
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
 if (failed) process.exit(1);
 console.log('[region-markers] OK -- no region added.');
 process.exit(0);

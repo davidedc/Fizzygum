@@ -54,6 +54,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'invalidation-receivers');
@@ -115,9 +116,8 @@ for (const p of compiledFiles(ROOTS)) {
       if (ALLOWED.has(recv)) { allowed++; continue; }
       if (lineSanctioned) { sanctioned++; continue; }
       violations.push(rules.fired('CROSS_INVALIDATION', `[invalidation] ${rel}:${n + 1} — \`${recv || '<?>'}.${m[1]}()\` invalidates another widget\n`
-        + `    a widget invalidates only itself (widget-citizenship point 2): make the receiver mark\n`
-        + `    itself changed inside the method you invoke on it — or, for genuine dispatcher plumbing,\n`
-        + `    add \`# cross-invalidation-sanctioned: <reason>\` on or directly above this line`));
+        + `    a widget invalidates only itself (widget-citizenship point 2): the receiver marks itself\n`
+        + `    changed inside the method invoked on it`));
     }
   }
 }
@@ -125,6 +125,9 @@ for (const p of compiledFiles(ROOTS)) {
 if (violations.length) {
   console.error(`invalidation-receivers gate: ${violations.length} violation(s) among ${sites} non-self invalidation call sites:`);
   for (const v of violations) console.error('  ' + v);
+  // after the whole report: its quiet fixes, the right answer, and what the marker answers (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log(`  invalidation-receivers gate OK — ${sites} dotted [${GATED.join(', ')}] sites: ${allowed} singleton-allowed, ${sanctioned} sanctioned, 0 violations.`);

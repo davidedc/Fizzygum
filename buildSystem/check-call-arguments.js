@@ -71,6 +71,7 @@ const { callSites, callersTest, arityTest, describeCallee } = require('./lib/cal
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS, '--values'], 'call-arguments');
@@ -123,17 +124,10 @@ const over = `${sites.length} calls (src ${by('src')}, harness ${by('harness')},
 const failed = verdict.holes.length + arity.extra.length + arity.intoOptions.length;
 if (failed > 0) {
   console.error(`\n[call-arguments] FAIL — ${verdict.holes.length} hole(s), ${arity.extra.length} extra argument(s), ${arity.intoOptions.length} positional(s) into options over ${over}.`);
-  if (verdict.holes.length) {
-    console.error('HOLE: each `undefined` fills a slot only to reach a later argument — its witness passes fewer. The list is');
-    console.error('wrong (R3): move the operands every caller does not supply into a trailing `opts = {}`, reorder a class');
-    console.error('exempt under §3, or, if the argument it reaches is dead, delete it.');
-  }
-  if (arity.extra.length) {
-    console.error('EXTRA_ARGUMENT: no parameter receives the extra argument. Delete it if it is dead; if the call reads');
-    console.error('differently than it compiles (check with buildSystem/compile-fragment.js), spell it so it compiles to what is meant.');
-  }
-  if (arity.intoOptions.length) console.error('POSITIONAL_INTO_OPTIONS: that argument is taken AS the options object — pass `key: value` pairs.');
   console.error('Law: docs/architecture/constructor-and-parameter-conventions.md');
+  // after the whole report: what each rule's finding means, its quiet fixes and the right answer (lib/gate-advice.js)
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log(`[call-arguments] OK — 0 holes, 0 extra arguments, 0 positionals into options over ${over}; `

@@ -14,11 +14,12 @@
 // (`FormulaHelpers[name]`, every method on that side). A bare word — a local, a parameter, an object key, a
 // def's own name — reaches nothing, and neither does a comment. A method nothing reaches is DEAD.
 //
-// The rare genuine exception (intentional public API kept for a family's symmetry, a method dispatched by a
-// name assembled with `+` or through an arbitrary object, `@target[action]`) goes in dead-method-allowlist.txt
-// with its reason. Every limit of the reference rule errs toward ALIVE (method-references.js's header), so
-// what this flags really is dead; the price of matching by name stands: two same-named methods on unrelated
-// classes cover each other.
+// A method something reaches where this scan cannot see (a name typed in the devtools console, a name assembled
+// with `+`, a dispatch through an arbitrary object, `@target[action]`) goes in dead-method-allowlist.txt with a
+// reason naming that reach; a member nothing reaches is deleted, never kept as API nobody calls, and a failing run
+// prints that advice (lib/gate-advice.js). Every limit of the reference rule errs toward ALIVE
+// (method-references.js's header), so what this flags really is dead; the price of matching by name stands: two
+// same-named methods on unrelated classes cover each other.
 //
 // The lint FAILS on any dead method NOT in the allowlist, and on a STALE allowlist entry
 // (STALE_ALLOWLIST_ENTRY: a name no longer dead, or now auto-exempt by settle-tier symmetry), which
@@ -42,6 +43,7 @@ const methodRefs = require('./lib/method-references');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 let ROOTS;   // main() reads the rails
 
 // ── settle-tier symmetry helpers (pure; check-dead-methods-selftest.js drives them) ─────────────────
@@ -222,16 +224,16 @@ function main() {
   if (newDead.length) {
     console.error(`\n[dead-methods] FAIL — ${newDead.length} method(s) defined but reached nowhere (src, harness, macros, rigs) and not allowlisted:`);
     for (const n of newDead) console.error(rules.fired('DEAD_METHOD', `  ${n}  (${defs.get(n)[0]})`));
-    console.error('\nNothing reaches it by property access, whole-name string, name template or computed class access');
-    console.error('(lib/method-references.js). Either DELETE the method, or — if it is intentional public API, or');
-    console.error('dispatched by a name assembled with `+` or through an arbitrary object —');
-    console.error('add its name to buildSystem/dead-method-allowlist.txt with a one-line reason.');
-    console.error('(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
+    console.error('\n(A wrapper/core twin kept for symmetry needs NO entry — auto-exempt when its settle-twin is live.)');
   }
   if (stale.length || redundant.length) {
     console.error(`\n[dead-methods] FAIL — ${stale.length + redundant.length} stale entr${stale.length + redundant.length === 1 ? 'y' : 'ies'} in buildSystem/dead-method-allowlist.txt (delete each):`);
     for (const s of [...stale, ...redundant]) console.error(`  STALE_ALLOWLIST_ENTRY ${s}`);
   }
+  // after the whole report: what a dead method means, its quiet fixes, and what an allowlist entry answers
+  // (lib/gate-advice.js); a stale entry's own line says to delete it
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   if (newDead.length || stale.length || redundant.length) process.exit(1);
 
   console.log(`[dead-methods] OK — ${defs.size} method names scanned, ${dead.length} dead (${flaggableDead.length} allowlisted + ${symmetryRetained.length} symmetry-exempt), 0 new.`);

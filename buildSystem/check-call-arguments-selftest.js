@@ -20,7 +20,8 @@
 //                                                              → EXTRA_ARGUMENT ×2, POSITIONAL_INTO_OPTIONS
 //   a macro that does not parse; a tests repo whose harness holds no file (SOURCE_TREE_MALFORMED); one with a harness
 //   but no macro and no script                                                           → INVALID (exit 2), no rule
-// Run by buildSystem/run-selftests.js on every build.
+// Each failing run prints the advice of each rule it fires, once (lib/gate-advice.js); an INVALID run none. Run by
+// buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -104,6 +105,7 @@ proveGate({
     args: [valuesRepo],
     expect: { HOLE: /^  \S*BpTarget\.coffee:6  @bpCallee  \[ 1 \| undefined \| 3 \]  — HOLE: \S*BpWitness\.coffee:3 passes 1$/m },
     absent: [/bpOpts/, /bpTrail/, /stringify/, /fn\.call/],
+    advised: ['HOLE'],
   }, {
     label: 'a hole in the tests repo: a macro and a script',
     plants: src(),
@@ -111,6 +113,7 @@ proveGate({
     expect: { HOLE: /^  \S*SystemTest_bp_automationCommands\.js:2  new BpButton  \[ undefined \| undefined \| face: "x" \]  — HOLE: \S*SystemTest_bp_automationCommands\.js:3 passes 1$/m },
     lines: [/^  \S*scripts\/s\.js:2  bpLocal  \[ 1 \| undefined \| 3 \]  — HOLE: \S*scripts\/s\.js:3 passes 1$/m,
       /^  \S*BpHarness\.coffee:4  @bpH  \[ 1 \| undefined \| 3 \]  — HOLE: \S*BpHarness\.coffee:5 passes 1$/m],
+    advised: ['HOLE'],
   }, {
     label: 'src: an extra argument, the swallowed-element spelling, a positional into options',
     plants: src({ 'BpExtra.coffee': EXTRA, 'boot/bp-swallowed.coffee': SWALLOWED }),
@@ -121,6 +124,7 @@ proveGate({
     },
     lines: [/^  \S*bp-swallowed\.coffee:3  bpOne  \[ "a" \| bpOne "b" \]  — EXTRA_ARGUMENT: passes 2, \S*bp-swallowed\.coffee:1 declares 1$/m],
     absent: [/Math/],
+    advised: ['EXTRA_ARGUMENT', 'POSITIONAL_INTO_OPTIONS'],
   }, {
     label: 'the tests repo: an extra argument in the harness and a script, a positional into options in a macro',
     plants: src(),
@@ -130,6 +134,7 @@ proveGate({
       POSITIONAL_INTO_OPTIONS: /^  \S*SystemTest_bp_automationCommands\.js:2  new BpButton  \[ 1 \| 2 \| @ \]  — POSITIONAL_INTO_OPTIONS: argument 3 is `@`, where \S*BpButton\.coffee:2 takes `opts = \{\}`$/m,
     },
     lines: [/^  \S*scripts\/s\.js:2  bpLocal  \[ 1 \| 2 \| 3 \| 4 \]  — EXTRA_ARGUMENT: passes 4, \S*scripts\/s\.js:1 declares 3$/m],
+    advised: ['EXTRA_ARGUMENT', 'POSITIONAL_INTO_OPTIONS'],
   }, {
     label: 'a macro that does not parse',
     plants: src(),

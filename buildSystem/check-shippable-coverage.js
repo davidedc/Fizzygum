@@ -57,6 +57,7 @@ const { bootPieces, onDiskIn } = require('./lib/boot-pieces');
 const { coffeeMask } = require('./lib/coffee-mask');
 const fs = require('fs');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const REPO = process.cwd(); // build_it_please.sh runs us from Fizzygum/
 const ARGV = process.argv.slice(2);
@@ -153,6 +154,9 @@ if (unshipped.length) {
     + 'build:');
   for (const dir of Array.from(dirs).sort()) console.error('  ' + dir);
 }
+// after the whole report: what each failure means, its quiet fix and the right answer (lib/gate-advice.js)
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
 if (unshipped.length || fetchProblems.length) process.exit(1);
 
 console.log('shippable-coverage check: ' + fullRel.length + ' .coffee files under src/ and the harness, all covered '

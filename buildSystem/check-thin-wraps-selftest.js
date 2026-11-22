@@ -5,7 +5,8 @@
 // # thin-wrap-exempt: marker above a method with no twin fails as stale. The accepted shapes ride
 // the control and are COUNTED, so each is seen to be accepted rather than skipped: the canonical wrap behind a guard
 // and a private twin pair add two canonical wrappers, a marked non-canonical twin owner adds one exemption, a
-// twinless _xNoSettle adds nothing, and a marker's words written inside a heredoc are text, not a marker. Run by buildSystem/run-selftests.js on every build.
+// twinless _xNoSettle adds nothing, and a marker's words written inside a heredoc are text, not a marker. A fat wrap
+// prints its advice once (lib/gate-advice.js), a stale marker none. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -50,6 +51,8 @@ proveGate({
       NOT_CANONICAL: /^  BiteProofThinWrapWdgt\.bpThinWrap  \(BiteProofThinWrapWdgt\.coffee:2\)$/m,
       STALE_EXEMPT_MARKER: /^  STALE_ALLOWLIST_ENTRY BiteProofThinWrapWdgt\.coffee:7$/m,
     },
+    // the fat wrap prints its advice; the stale marker's own line says to delete it
+    advised: ['NOT_CANONICAL'],
   }, {
     label: 'a harness file',
     plants: {
@@ -58,5 +61,6 @@ proveGate({
         '  _bpThinWrapNoSettle: (a) ->', '    @bpValue = a'),
     },
     expect: { NOT_CANONICAL: /^  BiteProofHarnessThinWrapWdgt\.bpThinWrap  \(harness\/BiteProofHarnessThinWrapWdgt\.coffee:2\)$/m },
+    advised: ['NOT_CANONICAL'],
   }],
 });

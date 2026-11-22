@@ -62,6 +62,7 @@ const { coffeeMask, isCommentOnly } = require('./lib/coffee-mask');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { coffeeFilesIn, compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 // --src=DIR / --tests-repo=DIR check another src tree / tests repo in place of this umbrella's: a copy carrying a plant
 // (the self-test's rail)
 const ARGV = process.argv.slice(2);
@@ -220,10 +221,11 @@ if (unattributed.length) {
   for (const u of unattributed) console.error(u);
 }
 if (failed) {
-  console.error('\nAn element the page loads is derived from its holder\'s path: keep the path in a field, declare the field');
-  console.error('holding the element in the class\'s @serializationTransients, and re-make the element from the path in');
-  console.error('_afterDeserialization and _reactToBeingCopied. An element no widget holds says why on its line:');
-  console.error('  # page-element-not-held: <reason>');
+  console.error('\nAn element the page loads is derived from its holder\'s path.');
+  // after the whole report: its quiet fixes, the right answer, and what the marker says (lib/gate-advice.js); a refused
+  // shape's own line says what to do with it
+  const advised = advisedAmong(rules.gate, rules.firedIds);
+  if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
   process.exit(1);
 }
 console.log('[page-loaded-elements] OK — every element the page loads is a transient its holder re-makes after a restore and a copy.');

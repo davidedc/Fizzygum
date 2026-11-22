@@ -46,6 +46,7 @@ const fs = require('fs');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines, advisedAmong } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'whole-file-markers');
@@ -105,13 +106,17 @@ for (const k of KINDS) {
     console.error(`  This mechanism is RETIRED (arc 4): a flavour excludes named PARTS, not files,`);
     console.error(`  and the partition lives in buildSystem/parts.json. Put the file in a part that the`);
     console.error(`  profiles which should not have it do not name (buildSystem/profiles/*.json), and make`);
-    console.error(`  sure its call sites cope with the part's absence via 'if TheClass?'.`);
-    console.error(`  ⛔ Do NOT invent a replacement marker syntax.`);
+    console.error(`  sure its call sites cope with the part's absence: 'if TheClass?' for an eager part, an await`);
+    console.error(`  of 'world.parts.whenAllLoaded' for a lazy one (check-part-edges.js says which).`);
     for (const f of found[k.id]) console.error(rules.fired(k.id, `    ${f}`));
     failed = true;
   }
 }
 
+// after the whole report: what bringing a retired mechanism back means, its quiet fixes and the right answer, once
+// however many kinds fired (lib/gate-advice.js)
+const advised = advisedAmong(rules.gate, rules.firedIds);
+if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
 if (failed) process.exit(1);
 console.log('[whole-file-markers] OK -- no whole-file exclusion marker; exclusion is by part.');
 process.exit(0);
