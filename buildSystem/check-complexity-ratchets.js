@@ -80,8 +80,13 @@ const METHOD_CEILINGS = {
   // act on whatever put the focus away (a close, a hide, a collapse, a drag out of a window), with no hook in those
   // cores. Raised 129 -> 130 on 2026-11-22 under the owner's standing ruling of 2026-11-16 (the right shape over the
   // count): _stepsMember, the one question the step station and the two pump queries ask of a member: is it on the
-  // world or the hand, and not banned
-  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 130 },
+  // world or the hand, and not banned. Raised 130 -> 136 on 2026-11-22 under the owner's standing ruling of 2026-11-16
+  // (the right shape over the count): loadWorldSnapshot is its phases — each step that settles nothing and leaves no
+  // local for a later one is a private core it calls in order (_restoreSnapshotIdCounters,
+  // _restoreSnapshotPreferences, _restoreSnapshotWorldState and _installSnapshotStorageAndAppWindows inside its one try,
+  // _attachSnapshotChildrenNoSettle inside the attach's settle after it), and its notice's text is composed by _sourceEditsNoticeFor,
+  // pure; the guards, every settle and the try that guarantees a bin and a shelf stay in the public method
+  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 136 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
   // raised 170 -> 171 on 2026-11-17 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
   // window is a holder of a paint tool and answers the person's pair (armedDrawingTool / armDrawingTool), offers its
@@ -205,7 +210,10 @@ const RECORDED = {
   'WorldWdgt#_severLivenessEdgesIntoWdgtNoSettle': 16,
   'WorldWdgt#_updateEditorSelectionOverlay': 16,
   'WorldWdgt#addDragAffordanceWidgets': 21,
-  'WorldWdgt#loadWorldSnapshot': 67,
+  // lowered 67 -> 23 on 2026-11-22: its phases that settle nothing and hand no local on are private cores it calls
+  // (each at or under the ceiling); what remains is the four guards, the load-then-re-enter step, every settle (the
+  // informs among them), the steps that hand their locals past the try, and the try round the restore
+  'WorldWdgt#loadWorldSnapshot': 23,
   'boot/dependencies-finding.coffee#extractDependenciesFromSource': 35,
   'boot/extensions/SWCanvasElement-extensions.coffee#swCanvasEnsureAtlasForFont': 22,
   'boot/extensions/SWCanvasElement-extensions.coffee#swCanvasInstallPoisonedKeyRecorder': 18,

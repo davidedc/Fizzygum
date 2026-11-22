@@ -824,7 +824,11 @@ the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
 `lastBuiltInstanceNumericID`, `WorldWdgt`/zeros skipped), and `sourceEdits` (§12).
 
 **Restore** — `loadWorldSnapshot(envelope, {skipConfirm})` — a PUBLIC orchestrator (like
-`resetWorld`), so its `setColor`/`_settleLayoutsAfter` calls are the sanctioned public path:
+`resetWorld`), so its `setColor`/`_settleLayoutsAfter` calls are the sanctioned public path. Its guards, its settles (the
+`inform`s among them) and its one `try` stay in it; each step that restores one part of the file, settles nothing
+and hands no local on is a private core it calls in order (`_restoreSnapshotIdCounters`, `_restoreSnapshotPreferences`, `_restoreSnapshotWorldState`,
+`_installSnapshotStorageAndAppWindows`, `_attachSnapshotChildrenNoSettle`; `_sourceEditsNoticeFor` words the
+source-edit notice):
 1. **Everything that can stop the load happens before anything changes**, because step 2 destroys
    the desktop and a load that fails after it leaves the user an empty one. In order:
    - **The format check** (`format` + `kind:"world"`) — not a snapshot: one `inform`, stop.

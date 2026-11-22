@@ -2791,11 +2791,17 @@ class WorldWdgt extends IconGridPanelWdgt
   # (the rig, a macro) pass opts.skipConfirm. This is a PUBLIC orchestrator (like resetWorld):
   # it sequences self-settling operations at the top level, so its setColor / _settleLayoutsAfter
   # calls are the sanctioned public path. NB the teardown is the SHARED shipping core
-  # (_teardownWorldStructureNoSettle) — NOT the TEST-REPO resetWorld/_resetWorldNoSettle, which
-  # lives in ../Fizzygum-tests/Automator-and-test-harness-src/WorldTestSupport.coffee and travels
-  # with the `harness` part, so this could never call it — and every step below is one half of that
-  # core's split contract: the core drops all references to what it destroyed, and this method fills
-  # the world back in.
+  # (_teardownWorldStructureNoSettle), the one resetWorld calls too: a reset then dissolves its
+  # world and constructs another, while a load keeps its world and restores the file onto it, so
+  # every step below is one half of that core's split contract: the core drops all references to
+  # what it destroyed, and this method fills the world back in.
+  #   The steps run in the order their comments argue. Each one that settles nothing and leaves no
+  # local for a later step is a private core below this method (steps 2, 4, 5 and 6, and step 7's
+  # body inside its settle), and the notice's text is composed by a pure core; what stays here is
+  # what must: the guards, every settle (the teardown, the note that code changed, the attach, the
+  # colour, the wallpaper and the informs), the try that guarantees a bin and a shelf, and the locals
+  # that try hands past itself (the restored registry, the notice, the deserialized result and its
+  # reader).
   loadWorldSnapshot: (envelopeOrString, opts = {}) ->
     # early-return-sanctioned: every guard below MUST precede the settle, and none of them can live
     # in a core that only runs after the teardown they exist to prevent — a format check that informs
@@ -2880,12 +2886,7 @@ class WorldWdgt extends IconGridPanelWdgt
       # 2. restore the per-class id counters into the freshly-zeroed space BEFORE deserializing,
       #    so assignUniqueID -- for a record that carries no iid, and for every widget built
       #    after the load -- continues past the restored high-water marks (§4.4/§4.9).
-      #    A key is a name read out of the file: classNamed, so one naming a native global or an
-      #    inherited/accessor property of window writes onto nothing.
-      if section.idCounters?
-        for own className, n of section.idCounters
-          klass = classNamed className
-          klass.lastBuiltInstanceNumericID = n if klass?
+      @_restoreSnapshotIdCounters section
       # 2b. replay CLASS-scope source edits against the live prototypes BEFORE deserializing, so
       #     restored shells (Object.create(prototype)) already see the edited methods (§12). The
       #     confirm above warned that a load can run code the snapshot carries. Instance-scope
@@ -2918,68 +2919,31 @@ class WorldWdgt extends IconGridPanelWdgt
       # composed here, where the counts are known; SAID once the rest has loaded (after step 9), with the
       # promise that everything else did -- or, if the restore throws, before its error, without it (the
       # return and the replay changed the page's code either way)
-      if unreplayedCount > 0 or stillEditedCount > 0
-        plural = (n) -> if n is 1 then "" else "s"
-        sourceEditsNotice = (if unreplayedCount > 0 then "This build cannot re-apply the " + unreplayedCount + " class-level source edit" + plural(unreplayedCount) + " this file carries.\n" else "") +
-          (if stillEditedCount is 1 then "The loaded world still runs 1 edited class member of this page: it did not return to its source at boot.\n" else "") +
-          (if stillEditedCount > 1 then "The loaded world still runs " + stillEditedCount + " edited class members of this page: they did not return to their source at boot.\n" else "")
+      sourceEditsNotice = @_sourceEditsNoticeFor unreplayedCount, stillEditedCount
       # 3. deserialize the object table (kind:"world" preserves each widget's iid).
       result = Deserializer.deserialize envelope
       # the section's references resolve through the Deserializer's own reader (the refusal above vetted
       # every one of them: Deserializer._worldSectionProblem)
       resolve = result.resolve
       # 4. restore the static preferences bag (values only) from its forced data record.
-      if section.preferences?
-        restoredPrefs = resolve section.preferences
-        if restoredPrefs?
-          WorldWdgt.preferencesAndSettings[k] = v for own k, v of restoredPrefs
-      # 5. apply the world-state scalars to the LIVE world.
-      @isDevMode = section.isDevMode if section.isDevMode?
-      @alpha = section.alpha if section.alpha?
-      @[name] = val for own name, val of (section.infoDocFlags or {})
-      if section.untitledNamingCounters? and @untitledNamingService?
-        @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
-        @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
-      # the people at this world: the file's state onto the LIVE users, positionally. Through the
-      # write VERBS, so the announcement reaches every palette the load has just restored -- and each
-      # verb states a fact and announces only a change, so re-stating what the live user already
-      # holds is simply quiet. The hand is re-stated (User.armDrawingTool); the edits of the tools
-      # BECOME the file's (User.replaceDrawingToolOverrides), since this world and its users outlive
-      # the load: an edit made here that the file lacks must not survive it, and a record carrying
-      # no edits means none.
-      for eachRecord, i in (section.users or [])
-        @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
-        @users?[i]?.replaceDrawingToolOverrides eachRecord.drawingToolOverrides
+      @_restoreSnapshotPreferences section, resolve
+      # 5. apply the world-state scalars, and the file's state of the people at this world, to the
+      #    LIVE world.
+      @_restoreSnapshotWorldState section
       # 6. install the restored (self-contained, off-tree) storage containers (the teardown
       #    destroyed the previous pair) so every $r pointer at them (the bin opener's target, ...)
       #    stays consistent, and re-bind the app windows into the registry, @appWindows
       #    (orphaned-but-revivable — NOT re-attached to the desktop here).
-      restoredBin = resolve section.bin
-      @binWdgt = restoredBin if restoredBin?
-      restoredShelf = resolve section.shelf
-      @shelfWdgt = restoredShelf if restoredShelf?
-      @appWindows.set appName, resolve(refVal) for own appName, refVal of (section.appWindows or {})
+      @_installSnapshotStorageAndAppWindows section, resolve
     catch error
       @inform sourceEditsNotice.trim() if sourceEditsNotice?
       throw error
     finally
       @binWdgt ?= new BinWdgt
       @shelfWdgt ?= new ShelfWdgt
-    # 7. attach the desktop children in ONE settle batch, via the base _addNoSettle so the
-    #    icon grid (IconGridPanelWdgt.add) does NOT re-place them (their restored positions are preserved) — the
-    #    sanctioned public-equivalent path (never a raw layout core; see DETERMINISM.md).
-    #    Clear each child's parent first (deserialize pre-set it to {"$wk":"world"}) so the
-    #    attach is a clean re-parent. The SNAPSHOT's attachment state is authoritative:
-    #    re-arm each child's deserialized spec explicitly, else the add would resolve
-    #    defaultLayoutSpecWhenAddedTo (undefined) over it — disarming the furniture's corner
-    #    knobs, and downgrading every stretch record to a geometry re-derive (the fraction
-    #    drift the record law forbids).
-    @_settleLayoutsAfter =>
-      for childRef in (section.children or [])
-        child = resolve childRef
-        if child?
-          child.parent = undefined
-          @_addNoSettle child, layoutSpec: child.layoutSpec
+    # 7. attach the desktop children in ONE settle batch, each at its restored position and with its
+    #    restored layout spec (the core says how).
+    @_settleLayoutsAfter => @_attachSnapshotChildrenNoSettle section, resolve
     # 8. desktop colour + wallpaper (sequential self-settling public ops).
     restoredColor = resolve section.desktopColor
     @setColor restoredColor if restoredColor?
@@ -2997,6 +2961,89 @@ class WorldWdgt extends IconGridPanelWdgt
     # the next cycle's sort (a snapshot saved with the sort still pending is
     # legitimate: each resident serialized wherever it rested, and re-sorts here).
     @noteStorageMembershipMayHaveChanged()
+    return
+
+  # loadWorldSnapshot's step 2: reads the file's per-class id counters (section.idCounters) and
+  # writes each onto its class, into the space the teardown zeroed; returns nothing.
+  # A key is a name read out of the file: classNamed, so one naming a native global or an
+  # inherited/accessor property of window writes onto nothing.
+  _restoreSnapshotIdCounters: (section) ->
+    if section.idCounters?
+      for own className, n of section.idCounters
+        klass = classNamed className
+        klass.lastBuiltInstanceNumericID = n if klass?
+    return
+
+  # loadWorldSnapshot's step 2b, the text of its notice: reads the two counts of what the return to
+  # boot and the replay did NOT do (the class-level records the replay did not apply, and the
+  # members of this page the loaded world still runs as the page edited them) and returns the
+  # notice telling them, or undefined when both are zero. Pure: the load decides when it is said.
+  _sourceEditsNoticeFor: (unreplayedCount, stillEditedCount) ->
+    return undefined unless unreplayedCount > 0 or stillEditedCount > 0
+    plural = (n) -> if n is 1 then "" else "s"
+    (if unreplayedCount > 0 then "This build cannot re-apply the " + unreplayedCount + " class-level source edit" + plural(unreplayedCount) + " this file carries.\n" else "") +
+      (if stillEditedCount is 1 then "The loaded world still runs 1 edited class member of this page: it did not return to its source at boot.\n" else "") +
+      (if stillEditedCount > 1 then "The loaded world still runs " + stillEditedCount + " edited class members of this page: they did not return to their source at boot.\n" else "")
+
+  # loadWorldSnapshot's step 4: reads the file's preferences record (section.preferences, through
+  # the deserialized result's reader) and writes its values into the static preferences bag,
+  # WorldWdgt.preferencesAndSettings; returns nothing.
+  _restoreSnapshotPreferences: (section, resolve) ->
+    if section.preferences?
+      restoredPrefs = resolve section.preferences
+      if restoredPrefs?
+        WorldWdgt.preferencesAndSettings[k] = v for own k, v of restoredPrefs
+    return
+
+  # loadWorldSnapshot's step 5: reads the file's world-state scalars, info-doc flags, naming
+  # counters and users (section) and writes them onto the LIVE world and the people at it;
+  # returns nothing.
+  _restoreSnapshotWorldState: (section) ->
+    @isDevMode = section.isDevMode if section.isDevMode?
+    @alpha = section.alpha if section.alpha?
+    @[name] = val for own name, val of (section.infoDocFlags or {})
+    if section.untitledNamingCounters? and @untitledNamingService?
+      @untitledNamingService.howManyUntitledShortcuts = section.untitledNamingCounters.howManyUntitledShortcuts or 0
+      @untitledNamingService.howManyUntitledFoldersShortcuts = section.untitledNamingCounters.howManyUntitledFoldersShortcuts or 0
+    # the people at this world: the file's state onto the LIVE users, positionally. Through the
+    # write VERBS, so the announcement reaches every palette the load has just restored -- and each
+    # verb states a fact and announces only a change, so re-stating what the live user already
+    # holds is simply quiet. The hand is re-stated (User.armDrawingTool); the edits of the tools
+    # BECOME the file's (User.replaceDrawingToolOverrides), since this world and its users outlive
+    # the load: an edit made here that the file lacks must not survive it, and a record carrying
+    # no edits means none.
+    for eachRecord, i in (section.users or [])
+      @users?[i]?.armDrawingTool eachRecord.armedDrawingTool
+      @users?[i]?.replaceDrawingToolOverrides eachRecord.drawingToolOverrides
+    return
+
+  # loadWorldSnapshot's step 6: reads the file's bin, shelf and app windows (section, through the
+  # deserialized result's reader) and installs them: the storage pair onto this world, each app
+  # window into @appWindows; returns nothing. A pair the file lacks is built by the load's finally.
+  _installSnapshotStorageAndAppWindows: (section, resolve) ->
+    restoredBin = resolve section.bin
+    @binWdgt = restoredBin if restoredBin?
+    restoredShelf = resolve section.shelf
+    @shelfWdgt = restoredShelf if restoredShelf?
+    @appWindows.set appName, resolve(refVal) for own appName, refVal of (section.appWindows or {})
+    return
+
+  # loadWorldSnapshot's step 7, run inside its one settle: reads the file's desktop children
+  # (section.children, through the deserialized result's reader) and attaches each to this world;
+  # returns nothing. Via the base _addNoSettle so the icon grid (IconGridPanelWdgt.add) does NOT
+  # re-place them (their restored positions are preserved) — the sanctioned public-equivalent path
+  # (never a raw layout core; see DETERMINISM.md). Clear each child's parent first (deserialize
+  # pre-set it to {"$wk":"world"}) so the attach is a clean re-parent. The SNAPSHOT's attachment
+  # state is authoritative: re-arm each child's deserialized spec explicitly, else the add would
+  # resolve defaultLayoutSpecWhenAddedTo (undefined) over it — disarming the furniture's corner
+  # knobs, and downgrading every stretch record to a geometry re-derive (the fraction drift the
+  # record law forbids).
+  _attachSnapshotChildrenNoSettle: (section, resolve) ->
+    for childRef in (section.children or [])
+      child = resolve childRef
+      if child?
+        child.parent = undefined
+        @_addNoSettle child, layoutSpec: child.layoutSpec
     return
 
   # A RESET IS A RECONSTRUCTION, not a cleaning. This world is torn down and DISSOLVED, a

@@ -23,7 +23,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U8 | The caret's margin includes the border | CLOSED 2026-11-22 (§U8) |
 | U9 | A re-click keeps a member's undo history | CLOSED 2026-11-22 (§U9) |
 | U10 | Six self-called helpers take their own tier | CLOSED 2026-11-22 (§U10) |
-| U11 | `loadWorldSnapshot` is its phases | not started |
+| U11 | `loadWorldSnapshot` is its phases | CLOSED 2026-11-22 (§U11) |
 | U12 | `takeInventory` is its walks | not started |
 | U13 | A type test says it is one, or the question names a capability | not started |
 | U14 | A low-level method that sizes or drives another widget: [A] against [U] | not started |
@@ -692,6 +692,28 @@ A pure refactor: no behaviour test is added; one plant that swaps two phases mus
 **Predicted pixel set.** Inspector churn only where a churn-set test shows the WORLD's own member list; else EMPTY.
 **Park when.** A phase cannot leave the `try` without changing what the `catch` restores. **Audit.** ratchet §1 (d).
 
+**Landed 2026-11-22.** `loadWorldSnapshot` keeps its four guards, its re-entry, every settle (the teardown,
+`noteCodeChanged`, the attach, `setColor`, `setPattern`, and the `inform`s), steps 2b, 3, 8 and 9, and its
+`try / catch / finally`; the steps that settle nothing and hand no local on are private cores it calls in the original
+order: `_restoreSnapshotIdCounters` (2), `_restoreSnapshotPreferences` (4), `_restoreSnapshotWorldState` (5) and
+`_installSnapshotStorageAndAppWindows` (6) inside the same `try`, `_attachSnapshotChildrenNoSettle` (7) after it inside
+the attach's settle, and `_sourceEditsNoticeFor` composing the notice's text (pure). The plan's `_applySnapshotWorldState` is `_restoreSnapshotWorldState`: on a widget class an `_apply*` name is the
+apply-2x2 geometry vocabulary, which the tier-naming gate wraps at run time (its first gauntlet failed on it). Corrected
+at research: step 2b SETTLES (`noteCodeChanged`), so it stays in the public
+method and only its pure notice text moves; steps 4 and 5 are two phases with different targets (a class-level
+setting through the reader; the live world and its users), not one core; four locals cross the `try`. The stale
+comment pointing at a test-repo reset now says that `resetWorld` calls the same shipping teardown core. Measured:
+the parent 23; the cores 6, 8, 6, 10, 4, 4. Ratchets: `WorldWdgt`'s method ceiling 130 → 136, dated, under the
+owner's standing ruling (the right shape over the count); `RECORDED['WorldWdgt#loadWorldSnapshot']` 67 → 23. Proof:
+both serialization rigs, the parts snapshot rig, the production smoke (the only gate that loads a snapshot on a
+production tree); two plants that swap phases — storage installed after the attach (fails
+`world.teardownHygiene.loadLeavesNoOrphanedWidgets`) and the deserialize before 2b (fails
+`sourceEdits.failedRestoreTellsTheCountsWithoutThePromise`). Pixels: none.
+Filed (measured at the gauntlet, nothing this unit reaches): the `refs` leg (`check-refs.js --pixels`, every
+reference decoded) took 348, 357, 416 and 401 s inside wave B across the day's gauntlets and was killed at its 420 s
+alarm on U11's second, then passed alone; `buildSystem/legs.js`'s comment on that leg asks for generous headroom
+(it measured 244–286 s on 2026-11-09), and the time grows with the reference count.
+
 ### U12 — `takeInventory` is its walks (needs U1 CLOSED)
 
 **Stands today.** `src/WorldInventory.coffee`, `takeInventory` (line 113), recorded at 129, the highest in the tree.
@@ -938,6 +960,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] W5 follow-up — a caret at the right edge of a padless scrolling viewport (a loose string in a scroll panel) has its last column under the 1 px border; `scrollCaretIntoView`'s margin should include the border. → "W5 follow-up — a caret at a padless viewport's edge under its border" — CLOSED 2026-11-22 (gate-contortions loop, U8): the border joins the caret's trigger and rest (`Theme.borderWidth`, `_borderWidthOverMyEdge`); both caret tests recaptured.
 - [x] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium. — CLOSED 2026-11-22 (gate-contortions loop, U9): the reload records itself as an undo step; another member forgets.
 - [x] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U10): eight helpers take the `_` tier; three markers.
+- [x] U11: `WorldWdgt.loadWorldSnapshot` stays at complexity 67 because its split adds methods to a class at its method ceiling — medium. — CLOSED 2026-11-22 (gate-contortions loop, U11): six phase cores; the ceiling +6, dated.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 
