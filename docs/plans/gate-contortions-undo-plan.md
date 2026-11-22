@@ -31,8 +31,9 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U16 | Two documents reach their clamp under a finger | CLOSED 2026-11-22 (§U16) |
 | U16b | `fg vmtruth` measures something under load (owner-added 2026-11-22, filed by U9) | CLOSED 2026-11-22 (§U16b) |
 | U17 | A menu row is found, not fetched | CLOSED 2026-11-22 (§U17) |
-| U18 | A capture that does not verify is UNSTABLE | not started |
+| U18 | A capture that does not verify is UNSTABLE | CLOSED 2026-11-22 (§U18) |
 | U18b | [A] gets a counted per-method marker; U14's three parked members take their tier (owner-ruled 2026-11-22) | not started |
+| U18c | [G]'s marker and [A]'s are one regime: one name, line-scoped, reason-required, stale-checked, counted (owner-added 2026-11-22) | not started |
 | U19 | Close | not started |
 
 ## 0. Orientation
@@ -1060,6 +1061,23 @@ mismatch reads UNSTABLE and exits non-zero; a measured-nothing run is retried; a
 with its two hashes (`DETERMINISM.md` has the playbook), never recaptured until stable.
 **Left out (R7):** `lib/shards.js`'s retry and the gauntlet's serial retry. **Audit.** runtime S4.
 
+**Landed 2026-11-22.** Corrected at research: exit 2 (measured nothing) has not been retried since `a58a54653` — a
+refusal repeats on every attempt; the run a retry can cure is a runner that DIED before its verdict (a crash, a
+signal), which exits 1 like a real failure, so only the transcript tells them apart; and the retry hid three outcomes,
+not one (a verify mismatch, a failed capture, a declared shot left without a reference). A pure module,
+`Fizzygum-tests/scripts/lib/capture-verdict.js`, judges each run: a verify that does not re-match the reference just
+captured reads UNSTABLE, exit 1, naming each shot with both hashes and keeping its live image, and nothing is captured
+again; a failed capture or a missing shot reads FAILED, exit 1, never retried; a refusal or a build changed between
+capture and verify, exit 2; the ONE retry left is a run that died before its verdict — and a run whose output already
+shows a pixel failure is never read as died (a review finding: the runner prints its result block before it dumps the
+images, so a browser lost mid-dump once read DIED and a passing re-run exited 0). Ruled: `recapture.js`'s CAPTURE
+retry takes the same split (the unit names it); its completeness gate's re-sample stays out under R7 (U19 files it).
+Neither capture script is a gate (an on-demand tool): its proof is a self-test found by name. Proof: the self-test
+(the old retry planted back fails it; the died-run retry removed fails it); a clean capture exits 0 changing no
+reference; a REAL runner transcript with one byte flipped before hashing reads UNSTABLE with both hashes. Ratchets:
+none. Pixels: none. Filed for U19: `recapture.js` lists a test it recaptured this run that then mismatches as "NEEDS
+RECAPTURE" (U18's own case at batch level).
+
 ### U18b — [A] gets a counted per-method marker; U14's three parked members take their tier (owner-ruled 2026-11-22)
 
 **Stands today.** Layering rule [A] (`buildSystem/check-layering.js`, `A_PUBLIC_SETTER` / `A_TEXT_SETTER`) forbids a
@@ -1098,11 +1116,51 @@ holder's `setExtent` — ruled: each font tool's ladder picks the value and ONE 
 complexity. [G]'s marker does NOT require a reason today (it matches the bare token and excuses its line downward;
 `lint-and-static-checks.md` §5 says otherwise): the new marker takes [D]'s required-reason form, and a marker without
 a reason excuses nothing. Two allowlist lines go, not three (the icon sizing never had one).
-**Ratchets.** The new marker budget (5 — the five marked calls), dated; [U]'s allowlist 17 → 15. **Proof.** The self-test plants (an
+**Owner ruling, final (2026-11-22, after an independent review).** The owner asked whether each public setter could
+instead be called by the PUBLIC caller after the private method returns ("no marker"), conditional on an
+independent Fable review corroborating it as the best shape. The review (`Fizzygum-tests/.scratch/
+gate-contortions-loop/u18b/FABLE-VERDICT.md`) did not: the house's own [A] advice names "a helper folded into its
+public caller" a quiet fix; [A] and [G] are one rule in two halves and each spot has a `nosettle-sanctioned` twin
+(`InspectorWdgt._notifyOfEdit`, `BinOpenerWdgt._activateMyTile`, `OverflowChevronButtonWdgt._miniatureOf`); at the
+tools it would repeat the family's refusal in six overrides. The owner confirmed (a) with guards, with the review's
+additions: a FOURTH spot of the kind — `CaretWdgt._deleteSelectionOrCharacter` takes its `setText` as a thunk written
+in the public verbs, placed there for [A] (`23573667`) — takes the marker too, so SIX marked calls; the marker is
+line-scoped and reason-required (a marker without a reason excuses nothing), and the count guard's advice says it is a
+tripwire (every new use a dated, visible raise). Filed, not in this unit: [G]'s `nosettle-sanctioned` converges on
+the same mechanics and one name (about 15 sites) — owner-added as U18c. **The one name** (U18c's research, so nothing
+is renamed twice): `# settling-call-sanctioned: <why>` — it states the act both halves judge; U18b builds it for [A]
+AND [G] with shared rule ids (`AG_STALE_MARKER`, `AG_MARKER_COUNT_ABOVE_CEILING`), never excusing `recalculateLayouts`,
+and leaves the old [G] sites to U18c.
+**Ratchets.** The new marker budget (7 — the six [A] calls and `SliderInCell`'s [G] `enterSource`), dated; [U]'s
+allowlist 17 → 15. **Proof.** The self-test plants (an
 unmarked call fires A; a marked one passes; a fourth marker fails the budget; a marker with no setter fails stale);
 `fg build`; the suite (no behaviour change: same calls, same order). **Predicted pixel set.** EMPTY (the overflow row's
 picture: size, then shoot, unchanged). **Park when.** A guard cannot be stated as a rule the self-test can plant.
 **Audit.** static C1, C5 (U14's parked half).
+
+### U18c — [G]'s marker and [A]'s are one regime (owner-added 2026-11-22)
+
+**Stands today.** Rules [A] and [G] of `buildSystem/check-layering.js` are one rule in two halves (the gate's header):
+low-level code must not reach a self-settling method — [A] the public geometry/text setters and `recalculateLayouts`,
+[G] the structural self-settling wrappers (`destroy`, `close`, `fullDestroy`, … discovered as the methods that call
+`@_settleLayoutsAfter`). [G]'s exemption `# nosettle-sanctioned` (about 15 sites) matches the bare token — no reason is
+required — and excuses every call from its own line DOWN to the method's end; nothing fails a marker that excuses
+nothing. U18b gives [A] a marker with better mechanics (line-scoped, reason required, a stale-marker rule, a counted
+ceiling as a tripwire). Two marker regimes for one rule is the non-uniformity the owner's principle (one of each
+thing) rejects; `lint-and-static-checks.md` §5 even claims [G]'s marker requires a reason.
+**The fix.** One marker and one name for both halves, with U18b's mechanics: line-scoped (the call's line, or the
+comment line(s) directly above it), reason required (no reason excuses nothing), stale-checked (a marker that excuses
+nothing fails), counted under ONE ceiling (a class-C tripwire: every new use a dated, reasoned raise). Every existing
+`nosettle-sanctioned` site is re-read: each marked call states its own checkable reason on its own line (a marker that
+today covers several calls below it becomes one per call that needs it; a call it covered that needs none loses it);
+the name chosen states the shared meaning (decided at research; U18b uses the same name, so nothing is renamed twice).
+`lint-and-static-checks.md` §5, `layering-naming-convention.md` §4, the gate's advice rows and every comment that
+names the old token follow.
+**Ratchets.** The one ceiling = the marked calls at landing, dated. **Proof.** The gate's self-test plants every rule
+for both halves (an unmarked call fires; a marked one passes; no reason excuses nothing; a stale marker fails; one over
+the ceiling fails); `fg build`; the suite (no behaviour change). **Predicted pixel set.** EMPTY (comments only, plus the
+gate). **Park when.** A [G] site needs a marker whose reason cannot be stated checkably (then it is a finding of its
+own). **Audit.** — (found by U18b's review).
 
 ### U19 — Close
 
@@ -1203,6 +1261,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U16b: `fg vmtruth` reads INVALID under machine load — a burst of a test's destroyed widgets, uncollected at the next sweep, fills the pin cap; find what holds them (owner-added; plan §U16b) — medium. — CLOSED 2026-11-22 (gate-contortions loop, U16b): every suspect pinned and answered (no cap), the sweep after a stackless collection.
 - [x] The `vmtruth` leg's pin cap is within reach of a green suite: a shard's spreadsheet tests leave 139 to 200+ uncollected (all UNRETAINED) cells at a sweep; past 200 a page it reads INVALID — medium: fg's serial retry absorbs it. → "The vmtruth leg's pin cap is within reach of a green suite" — CLOSED 2026-11-22 (gate-contortions loop, U16b): the same defect: the cap is gone (gate-contortions U16b).
 - [x] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first. — CLOSED 2026-11-22 (gate-contortions loop, U17): pure locators, a named fault, one centring wheel; 28 tests bring their row in.
+- [x] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium. — CLOSED 2026-11-22 (gate-contortions loop, U18): UNSTABLE is its own outcome; only a run that died before its verdict is retried.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 
