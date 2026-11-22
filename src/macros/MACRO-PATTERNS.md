@@ -1006,8 +1006,9 @@ assertion a recapture after a regression silently stores two different hashes an
   that need no pointer reach one drain more simply: set both through the setter a gesture ends in (`setValue`) inside ONE
   macro step, with no yield between them.
 - **Picking a row of a SPECIFIC list, and opening a covered widget's own menu** (`macroDuplicatedInspectorDrivesCopiedTargetOnly`):
-  `bringInViewAndClickOnListItem_InputEvents_Macro insp.list, "alpha"` scrolls the named row into view, corrects until it
-  is SHOWING and raises a fault rather than clicking a row that is not — never a hand-rolled thumb drag plus a blind click,
+  `bringInViewAndClickOnListItem_InputEvents_Macro insp.list, "alpha"` brings the named row into view (the bar's thumb,
+  then one wheel if the row does not show whole), faults a row that still does not show whole, and never presses a row
+  with no visible slice — never a hand-rolled thumb drag plus a blind click,
   which on a long list (one thumb pixel worth whole rows, a thin indicator changing its thumb's size under the drag) lands
   anywhere and selects nothing while the test stays green. Give that list HEIGHT: a finger's translated scroll is a bounded
   number of swipes, each inside the pane, so a short pane cannot reach a row far down. And `@openOwnMenuOf_InputEvents panel`
@@ -2388,10 +2389,9 @@ assertion a recapture after a regression silently stores two different hashes an
   CLASS inspector, anything else an object inspector. Drive it as real input on the row widget itself:
   `@doubleClickAtFractionOf_InputEvents (inspector.list.listContents.topWdgtSuchThat (w) -> w.labelString is "__super__"),
   [0.5, 0.5]`, then find the inspector it opened by its SUBJECT (`world.topWdgtSuchThat (w) -> w instanceof InspectorWdgt and
-  w.inspectedObject is X`), never as "the newest". The row must SHOW to take the press (the aim check fails it otherwise): pick
-  a subject whose row sorts into the first rows (a `RectangleWdgt`'s `constructor`, a class function's `__super__`, a
-  class inspector on `BoxWdgt.prototype`, whose only row is `constructor`), or scroll it in first
-  (`bringInViewAndClickOnListItem_InputEvents_Macro`). The double-click replays under a finger as a double tap, unchanged. A
+  w.inspectedObject is X`), never as "the newest". The row must SHOW to take the press (the aim check fails it otherwise): bring it
+  into view first, whatever the subject (`bringListItemInView_InputEvents_Macro inspector.list, "__super__"` —
+  `macroInspectorOpensAClassInItsClassInspector` does so for `ClippingBoxWdgt` and its superclass `ClippingWdgt`). The double-click replays under a finger as a double tap, unchanged. A
   class edit inside a test (a value class's member added through its class inspector) is taken off again in a `finally`,
   since the page outlives the test.
 

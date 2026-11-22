@@ -94,7 +94,6 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] ⛔ **T18 — halo crowding at touch scale** — at `handleSize 44` the five corner handles overlap on widgets below ~92 px; fewer handles, edge zones or a halo mode is decided with the owner-pending G2 halo feel-check.
 - [ ] **multi-user input attribution** — strokes carry `pointerId` and `world.users` exists; a User-per-pointer mapping is designed when a second input device exists.
 - [ ] **finger scrolling for the spreadsheet** — the sheet takes no drag-scroll (wheel/scrollbar only), so its three wheel tests are mouse-only on the finger axis; a finger-scrollable sheet is a product feature.
-- [ ] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim.
 
 ### `archive/editing-residue-plan.md` — the editing residue (✅ CLOSED 2026-11-19: U1–U12 landed, see its ledger; the items below were filed on the way)
 - [ ] **On a PC, Ctrl+Alt on a key with no AltGr character can type that key's own character** — AltGr is told from a chord by the key's code, which names a US-layout place, so a punctuation key, or any key on another layout, types where Windows types nothing (F6 review; plan §U3) — reachable, low.
@@ -322,7 +321,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
 - [ ] Owner question (gate-contortions U14): does layering rule [A] get a per-method marker for a member that drives another widget's public setter at event time, or do `bringTextAndCaretToState`, `actOn` and the `InertIconHolderWdgt` sizing stay public with reasons that say what they are (plan §U14) — small.
-- [ ] U15: the list-row macro verb keeps a drag, nudges and a wheel so old shots keep their offsets; a class-inspector test changed its example class so a row shows — medium, a recapture.
 - [ ] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium.
 - [ ] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first.
 - [ ] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium.

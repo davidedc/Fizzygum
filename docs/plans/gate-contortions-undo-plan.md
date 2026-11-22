@@ -27,7 +27,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U12 | `takeInventory` is its walks | CLOSED 2026-11-22 (§U12) |
 | U13 | A type test says it is one, or the question names a capability | CLOSED 2026-11-22 (§U13) |
 | U14 | A low-level method that sizes or drives another widget: [A] against [U] | CLOSED 2026-11-22 (§U14; three PARKED for the owner) |
-| U15 | The list-row verb scrolls one way | not started |
+| U15 | The list-row verb scrolls one way | CLOSED 2026-11-22 (§U15) |
 | U16 | Two documents reach their clamp under a finger | not started |
 | U17 | A menu row is found, not fetched | not started |
 | U18 | A capture that does not verify is UNSTABLE | not started |
@@ -874,6 +874,24 @@ the list's resting offset differs. Each diff must be exactly that. This is the u
 under the pixel policy; the diff page stays for the owner.
 **Park when.** A diff shows anything but the list's offset. **Audit.** runtime S5, S13.
 
+**Landed 2026-11-22.** Corrected at research and measured: the plan's "the wheel alone, once" FAILS under a finger (a
+finger's wheel is at most 12 swipes, each no longer than the pane, ≈ 32 rows on the member pane, while tests press rows
+~54 and ~151 deep): the bar's thumb drag is the REACH (one gesture, both pointers; with it a no-op, the finger's wheel
+runs out short and the click finds no slice), the wheel the PRECISION, the nudges the redundant stage. So
+`bringListItemInView_InputEvents_Macro` is the drag, then ONE wheel only when the row does not show whole, then
+`assertListItemInView` — a named fault, never a retry — and `bringInViewAndClickOnListItem_InputEvents_Macro` is that
+plus the click; `listItemIsAimable_InputEvents` goes; the nudge verb stays for the nudge pin, the only value pin of
+its product rule. Measured on the day's build: with the wheel a no-op, six calls of the 17-test family leave their row
+not whole — `ClassEditShowsOnTheNextFrame`'s 'linePitch' (wholly out of view: the click finds no slice) and
+`ObjectInspectorShowsTheFunctionItsSubjectHolds`' 'color' (twice) and 'createAppearance' (three times) — and those two
+tests fail, both assertion-only; every other call's row the drag leaves whole. The class-inspector test returns to its authored subject (`ClippingBoxWdgt`,
+whose `__super__` row opens `ClippingWdgt`'s class inspector), bringing each row into view before its double-click;
+`MACRO-PATTERNS.md`'s sentence that taught picking a near-top subject goes. The AddEdit test's LONG-DRAG PIN, which the
+one wheel would have absorbed, drives the thumb drag ALONE and checks the row whole before the verb: a plant that makes
+the drag measure a wrong travel (the bug class `a93c222d` fixed) fails it on both pointers. (The literal thin-look
+plant moves nothing on today's geometry: the thin indicator's frame and thumb shrink by the same insets, so its travel
+equals the pressed one's.) Ratchets: none. Pixels: none (presuite and the finger suite green).
+
 ### U16 — Two documents reach their clamp under a finger
 
 **Stands today.** `SystemTest_macroSimpleDocumentAllReflowsCorrectlyAsIChangeFontSize` and
@@ -1031,6 +1049,8 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U12: `WorldInventory.takeInventory` stays at complexity 129 because a split's child above 15 could not be recorded — medium. — CLOSED 2026-11-22 (gate-contortions loop, U12): its steps + `InventoryWalker`; real offences prove every walk.
 - [x] U13: six type tests in disguise: a soak on `updateVisibility`, one on `_materializedBySugar`, and `isDivider`, `isGlassBoxWrapper`, `isGlassBoxLid`, `isLayoutChrome` — small each. — CLOSED 2026-11-22 (gate-contortions loop, U13): a verb, a query, two capability names, a field, a hook.
 - [x] U14: five methods stay public and a `setExtent` sits in a constructor because layering rule [A] has no per-method marker: the canonical NoSettle shape where it exists, else the owner rules — medium. — CLOSED 2026-11-22 (gate-contortions loop, U14): three land; three parked for the owner (the open item above).
+- [x] U15: the list-row macro verb keeps a drag, nudges and a wheel so old shots keep their offsets; a class-inspector test changed its example class so a row shows — medium, a recapture. — CLOSED 2026-11-22 (gate-contortions loop, U15): drag for reach, one wheel for precision, a named fault, the click.
+- [x] **inspector row-locator: scroll-further beyond 3 nudges** — a row still off-window after 3 nudges throws a named error (never fired in a green run); if a deeper list trips it, extend the nudge loop, not the aim. — CLOSED 2026-11-22 (gate-contortions loop, U15): no nudge loop remains; a row not whole after the one wheel is the verb's named fault.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

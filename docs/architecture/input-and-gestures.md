@@ -342,8 +342,8 @@ lifted from, so `processPointerDown` reads the absence before clearing it and ru
 whenever it was set. Skipped, a re-landing on the lift pixel would meet the over-list its lift
 emptied: the same thin bar and the same fall-through onto the row beneath. That re-landing is
 routine, not contrived — a one-pixel thumb drag lifts exactly where the next one-pixel drag of the
-moved thumb presses, so the macro toolkit's corrective list nudge would lose every second step to
-a stray row click.
+moved thumb presses, so two one-pixel thumb drags in a row would lose the second to a stray row
+click.
 
 The fattening and the press are therefore ALWAYS in one event for a finger, which is why a
 dataflow drain must not depend on whether they share a cycle (`Fizzygum-tests/DETERMINISM.md`

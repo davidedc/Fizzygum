@@ -2147,6 +2147,18 @@ class MacroToolkit
     found = (aWdgt.children.filter (c) -> c instanceof HandleWdgt).length
     world.automator.player.recordMacroAssertion (found == expectedCount), "handle count on " + aWdgt.toString(), expectedCount, found
 
+  # Assert that the named row of `list` shows WHOLE in its pane: the promise bringListItemInView makes,
+  # checked where it is made, so that it fails the same way whatever gesture presses the row next (a
+  # double-click at the row's centre meets the row only where the row shows). It records only a FAULT,
+  # as a failed press check does (verifyPressLanding), and the macro runs on, so a passing run's log does
+  # not change. Pushes no input events and does not yield. A toolkit method for the same reason as the
+  # menu assertions above.
+  assertListItemInView: (list, listItemString) ->
+    v = @_listRowVisibility list, listItemString
+    return  if v? and @_listRowShowsWhole v
+    found = if v? then "row #{v.label.top()}..#{v.label.bottom()}, pane #{v.paneTop}..#{v.paneBottom}" else "no such row"
+    world.automator.player.recordMacroAssertion false, "LIST ROW NOT IN VIEW: row '#{listItemString}' of #{list} after its scroll", "whole in the pane", found
+
   # Assert that two screenshots ALREADY TAKEN in this test are byte-identical — the explicit
   # form of the no-op / round-trip idiom (undo restores the pre-edit pixels, collapse →
   # uncollapse restores the window, a cancelled prompt leaves zero residue, …). Pass the two
@@ -2242,10 +2254,13 @@ class MacroToolkit
 
   # WHERE A PRESS MEETS A SLIDER, on the screen: the frame its button travels along and the button's
   # own box, as a press finds them. A plain slider is pressed as it is drawn. A THIN scroll indicator
-  # is not: the pointer's arrival fattens it first (see sliderButtonPressPoint), and the fat thumb can
-  # be longer than the thin one drawn at rest — a 10px thumb where 4px show — so a travel measured on
-  # the thin look carries the button further than the verb meant, by a share that grows with the
-  # distance dragged. Its viewport answers for the look the press meets.
+  # is not: the pointer's arrival fattens it first (see sliderButtonPressPoint), so a press meets a
+  # longer bar and a longer thumb than the ones drawn at rest — a 10px thumb where 4px show. For a
+  # thumb at its minimum size the two looks give the same travel (the thin bar is the fat one less an
+  # end inset at each end, and its thumb is shorter by the same 6px: a member list measures 171/4 at
+  # rest and 177/10 pressed, 167px either way); a proportional thumb's thin travel is a little
+  # shorter. The travel is measured on the look the press meets all the same, so a drag carries the
+  # button as far as the verb means whatever either look becomes. Its viewport answers for that look.
   _sliderFrameAndButtonAsPressed: (slider) ->
     if slider.indicatorIsIntangible?()
       frame: slider.parent.barScreenFrameOnArrival slider
@@ -2263,14 +2278,15 @@ class MacroToolkit
     seenFrom = slider.button.localPointToScreen slider.button.center()
     @_dragSliderButtonFromTo_InputEvents slider, seenFrom, seenFrom.translateBy new Point 0, displacement
 
-  # Robustly scroll an inspector member/property `list` so `itemString`'s row lands a couple of rows
-  # BELOW the pane's top edge -- clear of both clip edges and reliably clickable -- regardless of how
-  # long the list is. It uses the REAL row pitch + visible pane height (not the plain index/(total-1)
-  # fraction, which lands the target at the pane's BOTTOM edge for large indices; adding a single
-  # inherited member then tips it out of view and a click on the clipped row selects the wrong
-  # property). Number of scroll positions = total - visibleRows (rows you can put at the top), so
-  # aiming (index - 2) at the top puts the target 2 rows down. Robust to member-list length: the
-  # target always lands at the same safe offset, to within one thumb pixel of the bar's travel.
+  # Scroll an inspector member/property `list` by its bar's thumb so `itemString`'s row lands a couple
+  # of rows BELOW the pane's top edge, to within one thumb pixel of the bar's travel. It uses the REAL
+  # row pitch + visible pane height (not the plain index/(total-1) fraction, which lands the target at
+  # the pane's BOTTOM edge for large indices; adding a single inherited member then tips it out of view
+  # and a click on the clipped row selects the wrong property). Number of scroll positions = total -
+  # visibleRows (rows you can put at the top), so aiming (index - 2) at the top puts the target 2 rows
+  # down. That one thumb pixel is the drag's whole error, and on a long list it can be worth more than
+  # the pane is tall, so the row may still land clipped or out of the window: bringListItemInView
+  # corrects what is left with one wheel (wheelListTowardItem_InputEvents).
   # A list whose rows all fit shows no vertical bar and has nothing to bring into view, so nothing is
   # pressed (as bringcodeStringFromTopInspectorInView_InputEvents does for the code pane): a press
   # where the bar would be lands on the pane beneath it.
@@ -2316,7 +2332,7 @@ class MacroToolkit
     @_findTopInspector()?.list
 
   # WHERE THE NAMED ROW SITS RELATIVE TO THE PANE'S VISIBLE WINDOW — the one place that geometry is
-  # computed, shared by the aimability check, the corrective nudge and the click itself. The row is
+  # computed, shared by the wheel's correction, the in-view check, the nudge and the click itself. The row is
   # found by identity (_listRowOf) and measured by its LABEL, the part of the row a click aims into.
   # The pane's window is expressed in the label's plane (screenPointToMyPlane — identity when the list
   # is unscrolled) so label and window are comparable numbers. undefined when the list has no such row.
@@ -2334,16 +2350,15 @@ class MacroToolkit
     visibleTop: Math.max label.top(), paneTop
     visibleBottom: Math.min label.bottom(), paneBottom
 
-  # Is the named row of `list` actually SHOWING, i.e. does it have a slice a click can land in?
-  listItemIsAimable_InputEvents: (list, listItemString) ->
-    v = @_listRowVisibility list, listItemString
-    v? and v.visibleBottom > v.visibleTop
+  # Does the row a _listRowVisibility measured show WHOLE in the pane — its label's top and bottom
+  # both inside the window, not merely a slice of it?
+  _listRowShowsWhole: (v) ->
+    v.label.top() >= v.paneTop and v.label.bottom() <= v.paneBottom
 
-  # ONE SCROLLBAR PIXEL of correction toward the named row. The scroll verb aims by INDEX, and on a
-  # long member list one thumb pixel is worth many content pixels (a 10px thumb on a 140px bar over a
-  # 10,000px list moves ~80px per pixel — nearly two rows), so the rounding any drag ends on can leave
-  # the target row just outside the window. This nudges the thumb the single pixel that carries the
-  # window over the row: up when the row sits above the window, down when it sits below.
+  # ONE THUMB PIXEL toward the named row: the smallest drag of the list's bar, up when the row sits
+  # above the window, down when it sits below, nothing when the row overlaps the window. On a long
+  # member list one thumb pixel is worth many content pixels (a 10px thumb on a 140px bar over a
+  # 10,000px list moves ~80px per pixel — nearly two rows).
   nudgeListTowardItem_InputEvents: (list, listItemString) ->
     v = @_listRowVisibility list, listItemString
     return  unless v?
@@ -2356,15 +2371,15 @@ class MacroToolkit
     from = thumb.center()
     @_dragSliderButtonFromTo_InputEvents v.list.vBar, (thumb.localPointToScreen from), (thumb.localPointToScreen new Point from.x, from.y + direction)
 
-  # THE WHEEL'S CORRECTION toward the named row, for a row NO thumb position shows: on a long enough
-  # list one thumb pixel carries the window further than the pane is tall (measured: 228px of a
-  # 21,000px class-member list per pixel, under a 141px pane), so the window steps right over a row
-  # that falls between two of its stops, and the thumb nudges above only swing across it. A wheel
-  # notch scrolls by CONTENT pixels, so it carries the window the distance that centres the row in
-  # the pane.
+  # THE WHEEL'S CORRECTION toward the named row, for a row the thumb drag left not WHOLE in the pane.
+  # The drag lands within one thumb pixel, and on a long enough list one thumb pixel carries the window
+  # further than the pane is tall (measured: 228px of a 21,000px class-member list per pixel, under a
+  # 141px pane), so the window can step right over a row that falls between two of its stops. A wheel
+  # notch scrolls by CONTENT pixels, so it carries the window the distance that centres the row in the
+  # pane. A row already whole, or no such row, queues nothing.
   wheelListTowardItem_InputEvents: (list, listItemString) ->
     v = @_listRowVisibility list, listItemString
-    return  unless v?
+    return  unless v? and not @_listRowShowsWhole v
     delta = Math.round ((v.label.top() + v.label.bottom()) - (v.paneTop + v.paneBottom)) / 2
     return  if delta is 0
     @wheelOn_InputEvents v.list, delta
@@ -2377,7 +2392,7 @@ class MacroToolkit
       throw new Error "#{list} has no row for '#{listItemString}'"
 
     # AIM INTO THE ROW'S VISIBLE SLICE — the intersection of its label's box with the pane's
-    # visible window. The scroll verb's handle-drag is quantized to scrollbar pixels, so a
+    # visible window. A list scrolled by a thumb drag alone is quantized to scrollbar pixels, so a
     # member-list length change can leave the found row EDGE-CLIPPED at the pane's top or
     # bottom, and the aim must stay inside what is actually showing: a point above the window
     # lands on the TOGGLE STRIP that sits directly above the pane, which flips a toggle
@@ -2477,27 +2492,28 @@ class MacroToolkit
     """
 
     macroSubroutines.add Macro.fromString """
-      bringInViewAndClickOnListItem_InputEvents_Macro = (list, whichItem) ->
-        # SCROLL UNTIL THE ROW IS ACTUALLY SHOWING, which is what this verb's name promises. The
-        # index-derived scroll lands within a scrollbar pixel, and on a long member list one such
-        # pixel is worth nearly two rows, so the row can end up just outside the window -- on either
-        # pointer kind. Each corrective nudge carries the window one pixel toward it; bounded, because
-        # a row that will not come into view is a fault to raise (the click verb does) rather than a
-        # loop to spin. It acts on the list it is GIVEN, so a test holding two inspectors names the
-        # one it means instead of arranging which one is on top.
+      bringListItemInView_InputEvents_Macro = (list, whichItem) ->
+        # BRING THE NAMED ROW INTO VIEW, WHOLE: the list's bar for REACH, one wheel for PRECISION. The
+        # thumb drag carries the window to the row's share of the list in one gesture, however long the
+        # list, which no wheel stands in for: a finger's wheel is a bounded number of swipes, each no
+        # longer than the pane. The drag runs even when the row already shows, so where the list comes
+        # to rest depends on the row alone, never on how the list was scrolled before. It lands within
+        # one thumb pixel, and on a long list that pixel is worth whole rows, so a row it leaves not
+        # whole is centred by ONE wheel, which scrolls by content pixels (wheelListTowardItem_InputEvents).
+        # A row still not whole after that is a fault, recorded (assertListItemInView), never a scroll to
+        # try again. It acts on the list it is GIVEN, so a test holding two inspectors names the one it
+        # means instead of arranging which one is on top.
         @scrollInspectorListItemIntoView_InputEvents list, whichItem
         yield "waitNoInputsOngoing"
-        for attempt in [0..2]
-          break if @listItemIsAimable_InputEvents list, whichItem
-          @nudgeListTowardItem_InputEvents list, whichItem
-          yield "waitNoInputsOngoing"
-        # a row between two thumb stops is shown by no thumb nudge: the wheel, which scrolls by content
-        # pixels, brings it in (wheelListTowardItem_InputEvents) -- only once the nudges have failed,
-        # so every scroll the nudges already finish replays as it is
-        for attempt in [0..2]
-          break if @listItemIsAimable_InputEvents list, whichItem
-          @wheelListTowardItem_InputEvents list, whichItem
-          yield "waitNoInputsOngoing"
+        @wheelListTowardItem_InputEvents list, whichItem
+        yield "waitNoInputsOngoing"
+        @assertListItemInView list, whichItem
+    """
+
+    macroSubroutines.add Macro.fromString """
+      bringInViewAndClickOnListItem_InputEvents_Macro = (list, whichItem) ->
+        # the row brought into view, whole, then clicked: the click verifies its press meets the row
+        bringListItemInView_InputEvents_Macro list, whichItem
         @clickOnListItem_InputEvents list, whichItem
         yield "waitNoInputsOngoing"
     """

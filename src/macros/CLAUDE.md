@@ -290,7 +290,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings` — both on a SHOWN menu only,
   `popUpIsShown menu` being the query they share,
   `assertHandleCountOn` — the resize/move-chrome count on a widget, for claims screenshots cannot see
-  (stacked duplicate handles paint near-identically), `assertScreenshotsIdentical` — MANDATORY for every
+  (stacked duplicate handles paint near-identically), `assertListItemInView` — a list's named row shows whole in
+  its pane (recorded like a failed press check: the macro runs on), `assertScreenshotsIdentical` — MANDATORY for every
   within-test byte-equality claim: call it right after the
   later shot with both full image names, earlier first). Menu READERS: `tickedRowLabelOfMenu` — the
   plain label of a menu's one ticked row, read from the rows' tick STATE (the tick is drawn, never
@@ -302,8 +303,10 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   asserted through `assertValuesEqual`. All `…_InputEvents`.
 - **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
-  `bringInViewAndClickOnListItem` (the same verified scroll-correct-click on a list you NAME — a test holding two
-  inspectors passes the one it means; the top-inspector verb is this one applied to `topInspectorList()`),
+  `bringListItemInView` (a list's named row brought in view WHOLE: the bar's thumb for reach, then one wheel for
+  precision only if the row does not show whole, then `assertListItemInView` — a fault, never a retry),
+  `bringInViewAndClickOnListItem` (that, then the click, on a list you NAME — a test holding two inspectors passes
+  the one it means; the top-inspector verb is this one applied to `topInspectorList()`),
   `openOwnMenuAtFractionOf` (right-click a widget at a fraction and land in its OWN menu, stepping through the
   hierarchy menu by the widget's own row where one opens instead),
   `setControllerTargetToWidgetProperty` (controller, target WIDGET, pin label — "Connect" → "Connect to" → the
