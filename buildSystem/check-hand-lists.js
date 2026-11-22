@@ -86,6 +86,10 @@
 // name lists per repo. Above its baseline a repo FAILS, printing every unsanctioned list it holds; below
 // it, a NOTE asks for the baseline to be tightened here. A list leaves the count by being DERIVED from
 // where its names are declared, or by being ASSERTED both ways and sanctioned naming the guard that fails.
+// A half whose baseline is above zero (the Fizzygum half) is a BUDGET (docs/architecture/
+// lint-and-static-checks.md §3b): over it, the run also prints what the number holds back and when a
+// raise is the answer (lib/gate-advice.js); a half at zero (the tests half) is a convention, and prints
+// its FIX lines alone.
 //
 // BLIND SPOTS, plainly. It sees string-list LITERALS only — not object tables keyed by names, regex
 // alternations, `switch`/`when` arms, sequences of pushes, or names assembled at runtime; those mirror
@@ -112,6 +116,7 @@ const { testNames } = require('./lib/tests-repo-code');
 const { rejectUnknownArgs } = require('./lib/cli-args');
 const { srcFiles, harnessFiles, compiledFiles, sourceRoots, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines } = require('./lib/gate-advice');
 // the four failing sanction tokens
 rules.declare(['SANCTION_NAMES_NO_GUARD', 'SANCTION_GUARD_NEVER_RUNS', 'SANCTION_EMPTY', 'SANCTION_STALE']);
 const { runSet, scriptFiles, DEFAULT_LAYOUT: WHAT_RUNS_LAYOUT } = require('./lib/what-runs');
@@ -497,6 +502,7 @@ function main(argv) {
   const nameLists = lists.filter(l => l.isName);
   const countOf = (ls, state) => ls.filter(l => l.state === state).length;
   let over = false;
+  let budgetOver = false;   // a half whose baseline is above zero (a BUDGET) is over it: the run prints its advice
 
   if (given) {
     const unsanctioned = nameLists.filter(l => l.state === 'UNSANCTIONED');
@@ -518,6 +524,7 @@ function main(argv) {
         `${countOf(own, 'SANCTIONED')} sanctioned + ${unsanctioned.length} unsanctioned (baseline ${h.baseline})`);
       if (unsanctioned.length > h.baseline) {
         over = true;
+        if (h.baseline > 0) budgetOver = true;
         console.error(`\n[hand-lists] FAIL — ${h.label} holds ${unsanctioned.length} unsanctioned name list(s), over its baseline of ${h.baseline}. Every one:`);
         for (const l of unsanctioned) console.error(rules.fired('OVER_BASELINE', `  ${where(l)}  [${preview(l.items)}]`));
       } else if (unsanctioned.length < h.baseline) {
@@ -540,6 +547,7 @@ function main(argv) {
     console.error(`\n[hand-lists] FAIL — ${problems.length} sanction marker(s) are wrong (never ratcheted):`);
     printProblems(problems);
   }
+  if (budgetOver) { console.error(''); for (const l of adviceLines(rules.gate, ['OVER_BASELINE'])) console.error(l); }
   return over || problems.length ? 1 : 0;
 }
 

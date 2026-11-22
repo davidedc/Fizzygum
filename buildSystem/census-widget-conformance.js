@@ -15,10 +15,12 @@
 //              either rises above its baseline. This is what the build runs.
 // Facets 3-6 are heuristics with known false positives and must NEVER gate — each says why below.
 //
-// ⚠⚠ THE BASELINES ARE FLOORS, NOT INVENTORIES. Both are non-zero on purpose, and every remaining
-// occurrence is a STATED DECISION listed beside it. A green run means "nothing got worse" — it never
-// means "nothing is left". Lowering a baseline after clearing occurrences is part of the work; raising
-// one needs a one-line reason here, exactly like check-stinks.js.
+// ⚠⚠ THE PROLOGUE BASELINE IS A FLOOR, NOT AN INVENTORY: every remaining copy is a STATED DECISION
+// listed beside it, and a green run means "nothing got worse", never "nothing is left". It is a BUDGET
+// (docs/architecture/lint-and-static-checks.md §3b): lowered as copies go, raised only for a genuinely
+// different shape, named and dated beside the number — a rise prints what the number holds back and
+// when a raise is the answer (lib/gate-advice.js). The undeclared-field baselines are ZERO, an
+// invariant: a written field is declared at class level, never excused.
 
 // It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
 // Run from the Fizzygum/ repo root: node ./buildSystem/census-widget-conformance.js [--gate] [--json] [--src=DIR]
@@ -31,6 +33,7 @@ const { methodSpans } = require('./lib/coffee-method-header');   // facet 5's se
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines } = require('./lib/gate-advice');
 rejectUnknownArgs(process.argv.slice(2), ['--gate', '--json', ...SOURCE_RAILS], 'widget-conformance');
 rejectPositionalArgs(process.argv.slice(2), 'widget-conformance', 'a src tree is named with --src=DIR');
 const ROOTS = sourceRoots(process.argv.slice(2), 'widget-conformance');
@@ -205,14 +208,17 @@ if (GATE) {
   if (fails.length) {
     console.error('\n[widget-conformance] FAIL -- a ratcheted count rose above its baseline:');
     for (const f of fails) console.error('  ' + f);
-    console.error('\nFix the occurrence (preferred) -- declare the field at class level, or take');
-    console.error('Widget._reLayoutWithOwnContents. If the new occurrence is genuinely intentional, raise the');
-    console.error('baseline in buildSystem/census-widget-conformance.js WITH a one-line reason, as check-stinks.js does.');
+    if (rules.firedIds.has('UNDECLARED_FIELD')) {
+      console.error('\nAn undeclared field is invisible to a copy, a save and the inspector until the method that writes it has run: declare it at class level (`name: undefined`).');
+    }
+    // the prologue floor is the one BUDGET here: it prints what the number holds back and when a raise is the answer
+    if (rules.firedIds.has('PROLOGUE_COPY')) { console.error(''); for (const l of adviceLines(rules.gate, ['PROLOGUE_COPY'])) console.error(l); }
     process.exit(1);
   }
   console.log(`[widget-conformance] OK -- undeclared fields ${undeclared.length}/${undeclaredFieldCount} ` +
               `(baseline ${BASELINE_UNDECLARED_CLASSES}/${BASELINE_UNDECLARED_FIELDS}), ` +
-              `prologue copies ${prologues.length} (baseline ${BASELINE_PROLOGUE_COPIES}). Baselines are FLOORS, not inventories.`);
+              `prologue copies ${prologues.length} (baseline ${BASELINE_PROLOGUE_COPIES}). The undeclared fields are held at zero; ` +
+              `the prologue baseline is a FLOOR, not an inventory.`);
   process.exit(0);
 }
 
@@ -241,7 +247,7 @@ if (JSON_OUT) {
 }
 
 console.log(`\n[widget-conformance] ${widgetCount} widget classes under src/.\n`);
-console.log(`RATCHETED (these two also run as --gate on the build; both baselines are FLOORS)`);
+console.log(`RATCHETED (these two also run as --gate on the build; the first is held at zero, the second's baseline is a FLOOR)`);
 console.log(`  1. undeclared instance fields : ${undeclared.length} class(es) / ${undeclaredFieldCount} field(s)  [baseline ${BASELINE_UNDECLARED_CLASSES}/${BASELINE_UNDECLARED_FIELDS}]`);
 for (const r of undeclared) console.log(`       ${r.cls.padEnd(38)} ${r.fields.join(', ')}`);
 console.log(`  2. _reLayout prologue copies  : ${prologues.length}  [baseline ${BASELINE_PROLOGUE_COPIES}]`);

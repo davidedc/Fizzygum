@@ -13,7 +13,9 @@
 // ceiling is INVALID, and `--write-baseline` refuses (INVALID, nothing written) an item over 400 characters — both on
 // a throwaway baseline (`--baseline=`), never the real one. The instruction files the same way, against the REAL
 // ceilings (the baseline file): one a byte over its ceiling fails, named; one exactly at it rides the control; an
-// umbrella missing one is INVALID. Run by buildSystem/run-selftests.js on every build.
+// umbrella missing one is INVALID. The instruction-file ceiling, a budget, prints its advice (lib/gate-advice.js);
+// narration, closed items, long items, every INVALID run and the control none. Run by buildSystem/run-selftests.js on
+// every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -158,6 +160,8 @@ proveGate({
       [DOCS + 'architecture/bite-proof-clean.md']: '# Clean\n',
     },
     expect: { INSTRUCTION_FILE_OVER_CEILING: new RegExp(`^  ${esc(F)}: ${CEILINGS[F] + 1} bytes > ceiling ${CEILINGS[F]}$`, 'm') },
+    // the ceiling is a budget and prints its advice; every other run of this proof prints none
+    advised: ['INSTRUCTION_FILE_OVER_CEILING'],
     lines: [new RegExp(`^  ${esc(T)}: ${CEILINGS[T] + 1} bytes > ceiling ${CEILINGS[T]}$`, 'm'),
       /^INSTRUCTION FILE OVER ITS CEILING — 2 file\(s\):$/m],
   }, {

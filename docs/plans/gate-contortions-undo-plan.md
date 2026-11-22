@@ -13,7 +13,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 
 | Unit | What | State |
 |---|---|---|
-| U1 | A firing ratchet says what its number holds back and when a raise is the answer | not started |
+| U1 | A firing ratchet says what its number holds back and when a raise is the answer | CLOSED 2026-11-22 (§U1) |
 | U2 | Every other gate names its quiet fix as the wrong answer | not started |
 | U3 | The words say what is true again | not started |
 | U4 | Three spellings a gate's blind spot chose | not started |
@@ -115,8 +115,12 @@ quiet".
 - `buildSystem/check-complexity-ratchets.js:281` ends every failure with `A ratchet may fall and may not rise: split
   the function or the class rather than raising a number here.` Its header (lines 3–29) says a new function above the
   ceiling fails. Directly above, `METHOD_CEILINGS` (line 48) carries the dated reasons of the eight raises made since 2026-11-16,
-  and `RECORDED` gained a new entry on 2026-11-19 (`9c5d1076`), so the mechanism already takes a raise and a new
-  record: only the text forbids them.
+  and `RECORDED` gained a new entry on 2026-11-19 (`9c5d1076`; deleted the next day, `0cfa93dd`, when its core fell
+  to 11) and a raise (`Serializer._buildObjectTable` 106 → 109), so the mechanism already takes a raise and a new
+  record: the header and the `RECORDED` comment are false, not only forbidding. (Corrected at U1's research: also
+  `census-widget-conformance.js`'s footer invites raising its class-A undeclared-field ZERO and its header calls both
+  baselines floors; `check-stinks.js:316` prints for zero stinks too; `gates.js` and `lint-and-static-checks.md`'s §3
+  row restate the old policy; `BASELINE_U_QUERY` measured 102 under its 103.)
 - `buildSystem/check-call-separation.js:90`: `… mark the CALLER  # public-call-sanctioned: <why>); never raise the
   baseline to ship.`
 - `buildSystem/check-stinks.js:316`: `Either fix the smell (preferred) or, if genuinely intentional, raise that
@@ -207,6 +211,32 @@ quiet fix is wrong" (section "Gate audit 2026-11-16"); its to-do list is in
 **Predicted pixel set.** EMPTY (build tooling and docs).
 **Park when.** A gate's self-test harness cannot assert printed text without a redesign of `prove-rules.js`: park
 that gate's assertion alone, keep the text.
+
+**Landed 2026-11-22.** One module, `buildSystem/lib/gate-advice.js`: `ROWS[<gate>][<rule id>]` holds each budget
+rule's own advice (what its number holds back, or first the invariant's question; the legitimate raise; the wrong
+answers) and `CLASSES.C` the text every budget shares (when a raise is right, the forbidden answers, how to raise).
+`adviceLines(gate, ids)` prints one `[<gate>] ADVICE <ID> — …` header per fired rule, however many lines it fired on,
+then the class text once, on lines of their own after the gate's report. The GATE chooses the ids, because the class
+is sometimes a property of the moment: a stink is a budget only while its baseline is above zero, and
+`check-hand-lists`' one `OVER_BASELINE` is a budget in the Fizzygum half and a convention in the tests half. The seven
+gates print it (`check-complexity-ratchets` all three rules, `check-stinks` the six stinks above zero,
+`check-call-separation` [U] query, `check-plane-discipline` B's rise, `check-hand-lists` the Fizzygum half,
+`census-widget-conformance` the prologue copies, `check-doc-narration` the instruction-file ceiling); their footers and
+headers state the policy (the complexity header and the `RECORDED` comment were false, not only forbidding: a record
+had been raised and one added; the conformance footer invited raising the class-A undeclared-field zero and its header
+called both baselines floors; the stinks footer invited raising a hard rule). `lib/prove-rules.js` holds each run,
+the control included, to printing the advice of exactly the rules its `advised` names (`lib/planted-src.js` parses it),
+so each self-test proves its budget rules advise and every other rule and the control do not; `prove-rules-selftest.js`
+proves that check bites both ways, and `lib/gate-advice-selftest.js` proves the module (a row naming a rule its gate
+no longer has fails). `lint-and-static-checks.md` §3b gained "What a finding MEANS" (the three classes, the raise
+policy, the four budgets that ask an invariant's question first, the R1 sentence, the class of every gate, rule and
+token); `Fizzygum/CLAUDE.md` gained the one rule. Ruled here: a stink that keeps a `sanctioned` list (`null-literal`,
+`clock-read`, `instanceof-type-test`) names a site that is not the smell THERE, with its why, and its bare baseline
+rises only for one more of the tolerated tail, so U13's rank-3 answer for an honest `instanceof` is a `sanctioned`
+entry; classes the §0 table left unstated are in the §3b table (`check-relayout-repaints` and `aim-census
+--tables-only` B; the runtime `STALE_ALLOWLIST_ENTRY` stays A with every token). Ratchets: `BASELINE_U_QUERY` 103 → 102
+(a gain already landed, banked as the gate's own NOTE line asks); no raise — the CLAUDE.md rule fits under its ceiling
+(35364 of 35421), so `check-doc-narration-baseline.json` is untouched.
 
 ### U2 — Every other gate names its quiet fix as the wrong answer
 

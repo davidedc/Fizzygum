@@ -26,6 +26,7 @@
 //              unplant: ['boot/x.coffee'],                            // removed files
 //              edits: [['WorldWdgt.coffee', /^  _repaint…:/m, '  x:']], // an in-copy edit; must match, else the case fails
 //              expect: { A_RULE: /^  BiteProofA\.coffee:3$/m, … },     // each rule id → its OWN violation line
+//              advised: ['A_RULE'],                                   // the rules whose advice it prints (lib/gate-advice.js)
 //              absent: [/BiteProofSanctioned/],                       // what the run must not print
 //              lines: [/a line it must print that no rule owns/],
 //              args: ['--tests-dir=…'] }],                              // this run's extra gate arguments
@@ -34,7 +35,8 @@
 //
 // What the runs must show is lib/prove-rules.js's, shared with the browser rigs' proofs: the CONTROL (the unplanted
 // copy plus the sanctioned forms) passes firing no rule; each PLANTED run fails naming exactly the rules it planted,
-// each by its own violation line; together they plant EVERY rule the gate can fire.
+// each by its own violation line, and prints the advice of exactly the rules its `advised` names; together they plant
+// EVERY rule the gate can fire.
 // `why` on a failed case carries the gate's own failure lines — what names the offender — not its advice footer.
 
 const fs = require('fs');
@@ -42,6 +44,7 @@ const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { parseRulesLine } = require('./gate-rules');
+const { parseAdvice } = require('./gate-advice');
 const { proveRules } = require('./prove-rules');
 
 const { SRC, TESTS_REPO, HARNESS_DIR } = require('./source-files');
@@ -153,7 +156,8 @@ function runGate(script, treeDir, { rail = '--src=', args = [], cwd = FIZZYGUM }
   const lines = out.split('\n').filter(Boolean);
   const verdictAt = lines.findIndex((l) => /FAIL|ERROR|RULELESS|operational error|^\s+\S.*\.coffee:\d+/.test(l));
   const shown = verdictAt < 0 ? lines.slice(-4) : lines.slice(verdictAt, verdictAt + 8);
-  return { status: r.status, out, rules: parseRulesLine(out, path.basename(file).replace(/\.js$/, '')),
+  const name = path.basename(file).replace(/\.js$/, '');
+  return { status: r.status, out, rules: parseRulesLine(out, name), advised: parseAdvice(out, name),
            why: `exit ${r.status}${r.error ? ' error ' + r.error.code : ''}: ${shown.join(' | ')}` };
 }
 

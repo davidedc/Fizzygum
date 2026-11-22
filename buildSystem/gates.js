@@ -469,10 +469,12 @@ const GATES = [
     banner: "checking the aim census's tables against the source ...",
     failure: "!!!!!!!!!!! error: the aim census's tables are stale -- aborting build." },
   // --- the method-count and cognitive-complexity ratchets ----------------------------------------
-  // Two recorded values that may fall and may not rise, in the stinks' style: the methods of the four
-  // classes that grew with nothing holding them (Widget, WorldWdgt, ActivePointerWdgt, FrameWdgt), and
-  // the cognitive complexity of every function of the compiled sources (above 15, only the functions
-  // recorded when the ratchet landed, each at its value). Its analyzer is the package package.json pins
+  // Two budgets (docs/architecture/lint-and-static-checks.md §3b) in the stinks' style — recorded values
+  // that may fall, and rise only with a dated reason beside them: the methods of the four classes that
+  // grew with nothing holding them (Widget, WorldWdgt, ActivePointerWdgt, FrameWdgt), and the cognitive
+  // complexity of every function of the compiled sources (above 15, only the RECORDED functions, each at
+  // its value). A rise prints what its number holds back and when a raise is the answer
+  // (lib/gate-advice.js). Its analyzer is the package package.json pins
   // (coffeescript-cognitive-complexity) and runs on the CoffeeScript package.json pins, the one the build
   // compiles its boot files with. A class or function under its record prints UNDER: lower the record, to lock the
   // gain in.

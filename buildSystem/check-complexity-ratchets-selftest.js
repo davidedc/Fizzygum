@@ -4,8 +4,9 @@
 // ceiling, and a recorded function made more complex its record; a new tangled function fails the complexity ceiling,
 // in src and in the harness alike, named by its key and line; a recorded function renamed leaves its record STALE
 // (and its new name above the ceiling unrecorded); a held class's file removed leaves its ceiling STALE; a source the
-// analyzer cannot parse is read INVALID (exit 2) before any rule is judged. Run by buildSystem/run-selftests.js on
-// every build.
+// analyzer cannot parse is read INVALID (exit 2) before any rule is judged. Each budget rule that fires prints its
+// advice (lib/gate-advice.js), the budgets' shared text once, and the control and the stale entry none. Run by
+// buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -40,10 +41,13 @@ proveGate({
       METHOD_COUNT_ABOVE_CEILING: /^  METHOD_COUNT_ABOVE_CEILING  Widget: \d+ methods \(ceiling \d+\) — basic-widgets\/Widget\.coffee$/m,
       COMPLEXITY_ABOVE_RECORD: /^  COMPLEXITY_ABOVE_RECORD  WorldInventory#takeInventory: 132 \(recorded 129\) — WorldInventory\.coffee:\d+$/m,
     },
+    advised: ['METHOD_COUNT_ABOVE_CEILING', 'COMPLEXITY_ABOVE_RECORD'],
   }, {
     label: 'a new function above the ceiling, in src and in the harness',
     plants: { 'BiteProofTangled.coffee': TANGLED('BiteProofTangled'), 'harness/BiteProofHarnessTangled.coffee': TANGLED('BiteProofHarnessTangled') },
     expect: { COMPLEXITY_ABOVE_CEILING: /^  COMPLEXITY_ABOVE_CEILING  BiteProofTangled#tangled: 20 \(ceiling 15\) — BiteProofTangled\.coffee:2$/m },
+    // two findings of one rule: its advice, and the budgets' shared text, each printed once (the judge counts them)
+    advised: ['COMPLEXITY_ABOVE_CEILING'],
     lines: [/^  COMPLEXITY_ABOVE_CEILING  BiteProofHarnessTangled#tangled: 20 \(ceiling 15\) — harness\/BiteProofHarnessTangled\.coffee:2$/m],
   }, {
     label: 'a recorded function renamed, and a held class file removed',
@@ -53,6 +57,7 @@ proveGate({
       STALE_ALLOWLIST_ENTRY: /^  STALE_ALLOWLIST_ENTRY  RECORDED\['WorldInventory#takeInventory'\] \(129\) names no function above the ceiling/m,
       COMPLEXITY_ABOVE_CEILING: /^  COMPLEXITY_ABOVE_CEILING  WorldInventory#takeInventoryRenamed: 129 \(ceiling 15\)/m,
     },
+    advised: ['COMPLEXITY_ABOVE_CEILING'],
     lines: [/^  STALE_ALLOWLIST_ENTRY  METHOD_CEILINGS\.FrameWdgt names FrameWdgt\.coffee, which does not exist/m],
   }, {
     // measured FIRST: a source it cannot parse makes the run INVALID before any rule is judged — even with a class

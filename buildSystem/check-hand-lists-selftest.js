@@ -1,7 +1,8 @@
 'use strict';
 // check-hand-lists-selftest.js — check-hand-lists.js's engine on an in-memory corpus, each direction both ways:
-// every list state, every marker problem, and the controls that keep both verdicts non-vacuous. Run by
-// buildSystem/run-selftests.js on every build.
+// every list state, every marker problem, and the controls that keep both verdicts non-vacuous; then the real gate on
+// a planted copy, where a list over the Fizzygum half's baseline (a budget) prints its advice (lib/gate-advice.js) and
+// one over the tests half's zero (a convention) none. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { analyse, evaluate, guardTokensOf, gateFileNames, harvestUniverse, preview, LANG_OF_EXT } = require('./check-hand-lists');
@@ -307,12 +308,17 @@ function proveTheGate() {
         SANCTION_NAMES_NO_GUARD: /^  SANCTION_NAMES_NO_GUARD  \S*BiteProofHandLists\.coffee:7  /m,
         SANCTION_GUARD_NEVER_RUNS: new RegExp(`^  SANCTION_GUARD_NEVER_RUNS  \\S*BiteProofHandLists\\.coffee:9  [\\s\\S]*?\\(named, never run: ${neverRun.replace(/\./g, '\\.')}\\)`, 'm'),
       },
+      // the Fizzygum half's baseline is above zero, a budget: its rise prints the advice, the sanctions beside it none
+      advised: ['OVER_BASELINE'],
       absent: [/BiteProofHandListsOk/],
     }, {
       // the tests repo's half reads the harness of the copy, its run set the copy's scripts (lib/what-runs.js)
       label: 'a harness file: a list over the tests repo\'s baseline',
       plants: { 'harness/BiteProofHarnessHandLists.coffee': cls('BiteProofHarnessHandLists', '  @bpThings: ["Widget", "PanelWdgt"]') },
       expect: { OVER_BASELINE: /^  \S*Automator-and-test-harness-src\/BiteProofHarnessHandLists\.coffee:2  \[Widget, PanelWdgt\]$/m },
+      // the same rule in the tests half, whose baseline is zero — a convention: its FIX lines, and no budget advice
+      advised: [],
+      lines: [/^FIX: derive the list from where its names are declared/m],
     }, {
       label: '--files: a planted list, and a plant that cannot vouch for itself',
       args: ['--files', path.join(given, 'bite-proof-list.js'), path.join(given, 'BiteProofSelfVouch.coffee')],

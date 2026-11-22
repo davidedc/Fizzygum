@@ -6,7 +6,11 @@
 // Each stink carries a `baseline` — the max occurrences currently tolerated. The build FAILS when a
 // stink EXCEEDS its baseline (a regression). When a stink drops BELOW its baseline you have driven
 // it down: tighten the baseline in THIS file to lock the gain in (the check prints a reminder). A
-// stink at baseline 0 is a HARD rule — any occurrence fails the build. There is no separate
+// stink at baseline 0 is a HARD rule — any occurrence fails the build. A stink above zero is a BUDGET
+// (docs/architecture/lint-and-static-checks.md §3b): a new occurrence that is not the smell is named in
+// the stink's `sanctioned` list where it keeps one, or raises the baseline with a dated reason in its
+// trailing comment; a failing run prints, once per budget stink over its baseline, what the number
+// holds back and when a raise is the answer (lib/gate-advice.js). There is no separate
 // allowlist file: the baseline lives inline next to the rule, since a smell is a count, not a set of
 // named methods.
 //
@@ -62,6 +66,7 @@ const path = require('path');
 const { rejectUnknownArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines } = require('./lib/gate-advice');
 
 // Run from the Fizzygum/ repo root (build_it_please.sh does): node ./buildSystem/check-stinks.js [--src=DIR]
 // [--tests-repo=DIR] [--list <id>] — the rails scan another src tree or tests repo (a copy carrying a plant); the
@@ -235,6 +240,8 @@ if (listIdx >= 0 && !STINKS.some(s => s.id === listId)) {
 rules.declare(STINKS.map((s) => s.id));
 const files = compiledFiles(ROOTS);
 let over = 0;       // total occurrences ABOVE baseline (a build failure)
+let hardOver = 0;   // stinks at baseline 0 (HARD rules) with an occurrence
+const budgetsOver = []; // the ids of stinks above zero that rose over their baseline: each prints its advice
 let ratchetable = 0; // stinks now BELOW baseline (a chance to tighten)
 let badSanctions = 0; // STALE or COUNT-mismatched `sanctioned` entries (a build failure)
 let staleExcludes = 0; // `exclude` prefixes no src path starts with (a build failure)
@@ -301,6 +308,7 @@ for (const stink of STINKS) {
   console.log(n > baseline ? rules.fired(stink.id, statusLine) : statusLine);
   if (n > baseline) {
     over += n - baseline;
+    if (baseline > 0) budgetsOver.push(stink.id); else hardOver++;
     console.error(`    ${stink.why}`);
     for (const h of hits) console.error(`    ${h}`);
   } else if (n < baseline) {
@@ -313,7 +321,8 @@ if (ratchetable) {
 }
 
 if (over) {
-  console.error(`\n[stinks] FAIL -- ${over} occurrence(s) over baseline. Either fix the smell (preferred) or, if genuinely intentional, raise that stink's baseline in buildSystem/check-stinks.js with a one-line reason.`);
+  console.error(`\n[stinks] FAIL -- ${over} occurrence(s) over baseline.`);
+  if (hardOver) console.error('A stink at baseline 0 is a HARD rule: fix each occurrence; where the stink keeps a `sanctioned` list, a site that is not the smell is named there with its why.');
 }
 if (badSanctions) {
   console.error(`\n[stinks] FAIL -- ${badSanctions} sanctioned entr${badSanctions === 1 ? 'y no longer matches' : 'ies no longer match'} the code it names (see above).`);
@@ -321,6 +330,7 @@ if (badSanctions) {
 if (staleExcludes) {
   console.error(`\n[stinks] FAIL -- ${staleExcludes} exclude prefix${staleExcludes === 1 ? ' names' : 'es name'} no src path (see above).`);
 }
+if (budgetsOver.length) { console.error(''); for (const l of adviceLines(rules.gate, budgetsOver)) console.error(l); }
 if (over || badSanctions || staleExcludes) process.exit(1);
 
 console.log(`[stinks] OK -- all stinks within baseline.`);

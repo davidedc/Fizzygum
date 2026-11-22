@@ -7,7 +7,8 @@
 // take the query count over its baseline (the plant is sized from the count the control prints); an allowlist entry
 // that gained a real outside reference fails as stale. A self-call is seen whatever comes before it on its line or
 // as its argument: one after a regex holding `#`, and a paren-less one given a string. The caller marked
-// `# public-call-sanctioned:` passes. The census's
+// `# public-call-sanctioned:` passes. The query count, the one budget, prints its advice (lib/gate-advice.js); the
+// other rules and the control none. The census's
 // call-shape decisions are census-public-private-calls-selftest.js; this is the verdict over them. Run by
 // buildSystem/run-selftests.js on every build.
 
@@ -49,6 +50,8 @@ proveGate({
         U_QUERY_SELF_ONLY: /^  \[U\] QUERY self-only public methods: \d+ EXCEEDS the baseline/m,
         U_STALE_ALLOWLIST_ENTRY: new RegExp(`^      STALE_ALLOWLIST_ENTRY ${allowlisted} — no longer a self-only public method`, 'm'),
       },
+      // the query count is the one budget: the four hard rules beside it print no advice
+      advised: ['U_QUERY_SELF_ONLY'],
       lines: [/candidates include: .*bpSelfOnlyCmd/,
         /^      BiteProofCallSeparationWdgt\._bpAfterRegexCaller -> @bpEffectfulCmd  /m,
         /^      BiteProofCallSeparationWdgt\._bpStringArgCaller -> @bpEffectfulCmd  /m],

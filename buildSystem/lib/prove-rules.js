@@ -5,15 +5,18 @@
 // runs together must show, so the two kinds of proof cannot drift into two different ideas of "it bites".
 //
 //   proveRules(t, spec, exec)        t: a selftest-verdict case set
-//     exec(run) → { status, out, rules, why, missed }
+//     exec(run) → { status, out, rules, advised, why, missed }
 //                 ONE gate run carrying `run`'s plants (the control is a run too); `rules` is the gate's parsed RULES
-//                 line (lib/gate-rules.js parseRulesLine), `missed` the plants that did not apply (an in-copy edit
-//                 that matched nothing), `why` what a failed case needs to be read
+//                 line (lib/gate-rules.js parseRulesLine), `advised` the ADVICE the run printed, counted (a Map from
+//                 each rule id to the times its header printed, a class's shared text printed other than once among
+//                 them: lib/gate-advice.js parseAdvice; absent reads as none), `missed` the plants that did not apply
+//                 (an in-copy edit that matched nothing), `why` what a failed case needs to be read
 //     spec.pass          the control's pass line
 //     spec.controlLabel  how the control's case names it
 //     spec.control       { absent: [re], lines: [re], …plants } — the unplanted input plus every sanctioned form
-//     spec.runs          [{ label, expect: { RULE_ID: /its own violation line/ }, absent, lines, exit, …plants }],
-//                        or a function of the control's result (a ratchet's plant sized by the count it printed)
+//     spec.runs          [{ label, expect: { RULE_ID: /its own violation line/ }, advised: [RULE_ID], absent, lines,
+//                        exit, …plants }], or a function of the control's result (a ratchet's plant sized by the count
+//                        it printed); `advised` is the rules whose advice the run prints — exactly those, none when absent
 //
 // What it holds:
 //   - the CONTROL exits 0 with its pass line and fires no rule; its absent/lines hold;
@@ -22,9 +25,28 @@
 //   - a run planting a MEASUREMENT failure (`exit: 2` — an INVALID verdict: an unobserved bucket, a dose not taken)
 //     exits 2 with its lines and fires no rule: an INVALID is the absence of a verdict, never a rule, so it never
 //     counts toward coverage;
+//   - each run, the control included, prints the ADVICE of exactly the rules its `advised` names, each header once and
+//     each class's shared text once (lib/gate-advice.js): a rule its gate advises on prints, when it fires, what its
+//     number holds back and when a raise is the answer, however many lines it fired on, and no other rule prints any.
+//     Judged wherever a run prints advice or a run of the spec names `advised`, so a proof whose gate prints no advice
+//     and names none is held to nothing more;
 //   - over all planted runs, the rules fired are EVERY rule the gate can fire (its `of`, the unplantable ones its
 //     header states excluded): a gate that grows a rule fails its proof until the proof plants it.
 // Returns { control, runs } — each exec result — for a proof's own `after` checks.
+
+const ruleNames = (ids) => (ids.size ? [...ids].join(' ') : 'no rule');
+// what a run printed, read for a failed case: each entry once, or with the times it printed (`timer ×2`)
+const printedOf = (got) => (got.size ? [...got].map(([id, n]) => (n === 1 ? id : `${id} ×${n}`)).join(' ') : 'none');
+
+// `r` printed the advice of exactly the rules `run.advised` names, each once
+function checkAdvice(t, r, run, label, judged) {
+  const got = r.advised || new Map();
+  const want = new Set(run.advised || []);
+  if (!judged && !got.size && !want.size) return;
+  t.check(got.size === want.size && [...want].every((id) => got.get(id) === 1),
+    `${label} prints ${want.size ? `the advice of exactly ${ruleNames(want)}, each once` : 'the advice of no rule'}`,
+    `it printed the advice ${printedOf(got)} — ${r.why}`);
+}
 
 function proveRules(t, spec, exec) {
   const control = spec.control || {};
@@ -39,6 +61,9 @@ function proveRules(t, spec, exec) {
   let of;
   const results = { control: c, runs: [] };
   const runs = typeof spec.runs === 'function' ? spec.runs(c) : spec.runs;
+  // a proof that names advice anywhere judges it everywhere: the control and every run say which advice they print
+  const judged = control.advised !== undefined || runs.some((run) => run.advised !== undefined);
+  checkAdvice(t, c, control, 'the control', judged);
   for (const run of runs) {
     const r = exec(run);
     results.runs.push(r);
@@ -60,6 +85,7 @@ function proveRules(t, spec, exec) {
     t.check(!unexpected.length, `${label}: fires only the rules it plants`, `also fired: ${unexpected.join(' ')}`);
     for (const re of run.absent || []) t.check(!re.test(r.out), `${label}: prints nothing matching ${re}`, r.why);
     for (const re of run.lines || []) t.check(re.test(r.out), `${label}: prints ${re}`, r.why);
+    checkAdvice(t, r, run, `${label}:`, judged);
   }
   const missing = of ? [...of].filter((id) => !firedAll.has(id)) : ['(no RULES line read)'];
   t.check(!missing.length, `every rule the gate can fire is planted (${firedAll.size} of ${of ? of.size : '?'})`,

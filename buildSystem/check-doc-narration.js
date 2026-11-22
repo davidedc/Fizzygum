@@ -35,7 +35,9 @@
 //                                        commands, the rules that change what a reader does next, and one line per rig
 //                                        pointing at its header; mechanism, history, measurements and case law live in
 //                                        the rig's header or the architecture doc that owns the subsystem. Their prose
-//                                        is not judged for narration.
+//                                        is not judged for narration. The ceiling is a BUDGET
+//                                        (docs/architecture/lint-and-static-checks.md §3b): over it, the run prints
+//                                        what it holds back and when a raise is the answer (lib/gate-advice.js).
 //   SKIPPED   specs/                     a spec states what the product must do, and its
 //                                        landing/change statements are load-bearing (owner
 //                                        direction 2026-08-09)
@@ -64,6 +66,7 @@ const fs = require('fs');
 const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs, dirArg } = require('./lib/cli-args');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines } = require('./lib/gate-advice');
 
 // [--umbrella=DIR] reads another umbrella — `DIR/Fizzygum/docs` and the instruction files under `DIR` (a planted one: the
 // bite-proof's input, check-doc-narration-selftest.js, which proves every rule below BITES). [--baseline=FILE] reads,
@@ -301,8 +304,7 @@ if (over.length) {
   for (const line of over) console.log(rules.fired('INSTRUCTION_FILE_OVER_CEILING', line));
   console.log('\nAn instruction file keeps routing, the commands, the rules that change what a reader does next, and one');
   console.log("line per rig pointing at its header; mechanism, history, measurements and case law go to the rig's header");
-  console.log('or the architecture doc that owns them (docs/architecture/lint-and-static-checks.md §3b-docs). A rule a reader');
-  console.log('must meet before any work may raise the ceiling: `--write-baseline`, in the same commit.');
+  console.log('or the architecture doc that owns them (docs/architecture/lint-and-static-checks.md §3b-docs).');
 }
 if (longItems.length) {
   if (closedItems.length || risen.length || over.length) console.log('');
@@ -311,6 +313,9 @@ if (longItems.length) {
   console.log('\ndocs/BACKLOG.md is an INDEX (docs/README.md filing rule 5): an item says what is wrong or what is to do, its');
   console.log('reach or severity, and where its detail lives; the detail goes, verbatim, to the plan that owns it.');
 }
+// the instruction-file ceiling is the one BUDGET here: after the whole report, what it holds back and when a raise is
+// the answer; every other rule's own lines say what to do
+if (over.length) { console.log(''); for (const l of adviceLines(rules.gate, ['INSTRUCTION_FILE_OVER_CEILING'])) console.log(l); }
 if (closedItems.length || risen.length || over.length || longItems.length) process.exit(1);
 
 console.log(`OK — ${scanned} docs in ${BUCKETS.join('/')}; ${total} narration line(s), baseline ${baseTotal}; ` +

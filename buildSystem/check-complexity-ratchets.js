@@ -1,19 +1,24 @@
 #!/usr/bin/env node
 'use strict';
-// check-complexity-ratchets.js — two RATCHETS in the check-stinks.js style: a recorded value that may fall and may
-// not rise (docs/archive/top-10-cleanups-plan.md §8 step 1).
+// check-complexity-ratchets.js — two RATCHETS in the check-stinks.js style, each a BUDGET
+// (docs/architecture/lint-and-static-checks.md §3b): a recorded value that may fall, and rises only in the change that
+// needs it, its dated reason beside it (docs/archive/top-10-cleanups-plan.md §8 step 1).
 //
 // METHOD COUNT. The four classes that grew with nothing holding them — Widget, WorldWdgt, ActivePointerWdgt and
 // FrameWdgt — each hold at most METHOD_CEILINGS' count of methods: the lines of its file that open a method, instance
 // or class-side, by the ONE definition of a method header (lib/coffee-method-header.js METHOD_HEADER and
 // STATIC_METHOD_HEADER — a wrapped signature counts once, a parameter default holding a call counts). Methods, not
 // lines: a line ceiling would punish the comments this project asks for. A class under its ceiling prints UNDER:
-// lower the ceiling here, to lock the gain in.
+// lower the ceiling here, to lock the gain in. A class over it fails; when the right shape needs the member — a named
+// helper, a public door, an intent-named notification, the member's natural home, a long method split into its
+// phases — the ceiling rises in the same change.
 //
 // COGNITIVE COMPLEXITY. No function of the compiled sources (src/ and the tests repo's harness, lib/source-files.js
 // compiledFiles) scores above COMPLEXITY_CEILING — 15, the published default of SonarSource rule S3776, which the
-// analyzer implements — but those RECORDED below at the value they had when this ratchet landed: each may fall and
-// may not rise, and a new function above the ceiling fails. A function's key is `Class#method` (instance side),
+// analyzer implements — unless it is RECORDED below: a record may fall, and rises only with a dated reason beside it.
+// A function above the ceiling with no record fails. It is RECORDED, its dated reason beside the entry, when it is born
+// of a split that lowers a recorded parent, or when no real seam remains to split it along (state threaded through
+// many-parameter helpers, or a cut across a try/finally, is no seam). A function's key is `Class#method` (instance side),
 // `Class.method` (class side), or `<file>#name` for one outside any class (a boot file's). A recorded one that fell
 // prints UNDER (lower its record); one that fell to the ceiling or below, or that no longer exists, leaves its entry
 // excusing nothing: STALE, delete it. The harness's records (RECORDED_IN_HARNESS) are judged like src's: the harness is
@@ -22,7 +27,9 @@
 //
 // RULES: METHOD_COUNT_ABOVE_CEILING, COMPLEXITY_ABOVE_CEILING (a function above the ceiling, not recorded),
 // COMPLEXITY_ABOVE_RECORD (a recorded function risen), STALE_ALLOWLIST_ENTRY (a ceiling naming no class file, a record
-// naming no function above the ceiling). Exit 0 clean, 1 a rule fired, 2 nothing could be measured — no CoffeeScript
+// naming no function above the ceiling). A failing run prints, once per budget rule that fired (the three but the stale
+// entry, whose own line says what to do), what its number holds back and when a raise is the answer
+// (lib/gate-advice.js). Exit 0 clean, 1 a rule fired, 2 nothing could be measured — no CoffeeScript
 // MEASURED_ON found, no analyzer installed (`npm ci` in Fizzygum/), or a source the analyzer cannot parse (it parses each whole file as CoffeeScript 2.7 does, so a
 // spelling only the browser's meta-system accepts — a bare `super` followed by a postfix `if` — must be spelled
 // `super(…)` or stand on its own line). That every rule bites is proven on every build by
@@ -37,14 +44,16 @@ const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const { METHOD_HEADER, STATIC_METHOD_HEADER } = require('./lib/coffee-method-header');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'complexity-ratchets');
 rejectPositionalArgs(ARGV, 'complexity-ratchets', 'a src tree is named with --src=DIR');
 const ROOTS = sourceRoots(ARGV, 'complexity-ratchets');
 
-// the classes held, their files (src-relative) and their ceilings — recorded 2026-11-13 at the tree's own counts, and
-// lowered whenever a class holds fewer
+// the classes held, their files (src-relative) and their ceilings — recorded 2026-11-13 at the tree's own counts,
+// lowered whenever a class holds fewer, and raised, the dated reason beside the number, when the right shape needs a
+// member
 const METHOD_CEILINGS = {
   // raised 391 -> 392 on 2026-11-16, owner-approved (the right shape over the count): sitsInViewModeContent, the one
   // question "do I sit in content in view mode", asked by the world's editable focus and by a text's own menu.
@@ -92,7 +101,8 @@ const METHOD_CEILINGS = {
 const COMPLEXITY_CEILING = 15;
 // the CoffeeScript the records were measured on: another version's AST may score differently
 const MEASURED_ON = '2.7.0';
-// every function above the ceiling when the ratchet landed (2026-11-13), at the value it had: it may fall, not rise
+// every function above the ceiling, at the value it may not rise above: the tree's own scores on 2026-11-13, and each
+// later record or raise with its dated reason beside it
 const RECORDED = {
   'ActivePointerWdgt#_advancePressAndHoldRecognition': 29,
   'ActivePointerWdgt#_declareDragEmbedEphemerals': 19,
@@ -278,7 +288,10 @@ for (const n of notes) console.log(n);
 if (failures.length) {
   console.error(`\n[complexity-ratchets] FAIL — ${failures.length} problem(s):`);
   for (const f of failures) console.error(f);
-  console.error('\nA ratchet may fall and may not rise: split the function or the class rather than raising a number here.');
+  // a stale entry's own line says what to do; the three budgets print what their numbers hold back and when a raise is
+  // the answer
+  const budgets = [...rules.firedIds].filter((id) => id !== 'STALE_ALLOWLIST_ENTRY');
+  if (budgets.length) { console.error(''); for (const l of adviceLines(rules.gate, budgets)) console.error(l); }
   process.exit(1);
 }
 console.log('[complexity-ratchets] OK -- every held class at or under its method ceiling, every function at or under its record.');

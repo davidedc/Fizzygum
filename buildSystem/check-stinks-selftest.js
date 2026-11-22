@@ -6,7 +6,8 @@
 // `#` on its line, while a string that only mentions it, or holds a comment's words, is no hit. A sanctioned member holding one literal more than its entry says fails as
 // SANCTION COUNT; in a second run, the sanctioned file deleted fails as STALE SANCTION and an excluded directory deleted
 // fails as a stale exclude; in a third, a harness file carrying (baseline − count + 1) `nil` lines fails nil-literal,
-// its hit lines named harness/<path>. Run by buildSystem/run-selftests.js on every build.
+// its hit lines named harness/<path>. Each stink above zero that rises prints its advice (lib/gate-advice.js), a stink
+// at zero, a stale entry and the control none. Run by buildSystem/run-selftests.js on every build.
 
 const path = require('path');
 const { proveGate } = require('./lib/planted-src');
@@ -35,7 +36,11 @@ proveGate({
   testsRepo: true,
   pass: /^\[stinks\] OK -- all stinks within baseline\.$/m,
   runs: (control) => {
-    const counts = new Map([...control.out.matchAll(/^\[stinks\] (\S+): (\d+) site\(s\) \(baseline (\d+)\)/gm)].map((m) => [m[1], Number(m[3]) - Number(m[2]) + 1]));
+    const status = [...control.out.matchAll(/^\[stinks\] (\S+): (\d+) site\(s\) \(baseline (\d+)\)/gm)];
+    const counts = new Map(status.map((m) => [m[1], Number(m[3]) - Number(m[2]) + 1]));
+    // the BUDGETS — the stinks above zero, as the control prints their baselines: each prints its advice once it
+    // rises over its baseline, and a stink at zero (a hard rule) none
+    const budgets = status.filter((m) => Number(m[3]) > 0).map((m) => m[1]);
     const lines = ['class BiteProofStinks', '  bpAll: ->'];
     for (const [id, text] of Object.entries(PLANT)) for (let k = 0; k < Math.max(1, counts.get(id) || 1); k++) lines.push('    ' + text);
     lines.push('    bpH = "#"; bpNullAfterHash = null', '    bpS = "null"', '    bpQ = "# this used to be text, not a comment"');
@@ -57,7 +62,8 @@ proveGate({
         ...Object.fromEntries(Object.entries(PLANT).map(([id, text]) => [id, new RegExp(`^    BiteProofStinks\\.coffee:\\d+: ${esc(text)}$`, 'm')])),
         SANCTION_COUNT: /^    SANCTION COUNT WorldWdgt\.coffee::_showDamageRects — expects 1, found 2/m,
       },
-      lines: [/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m,
+      advised: budgets,
+      lines: [/^A stink at baseline 0 is a HARD rule: fix each occurrence/m,/^    BiteProofStinks\.coffee:\d+: bpH = "#"; bpNullAfterHash = null$/m,
               /^    BiteProofStinks\.coffee:\d+: if bpZ then debugger$/m,
               /^    BiteProofStinks\.coffee:\d+: bpF = -> debugger$/m,
               ...['bpT2 = Date.now()', 'bpT3 = (new Date).getTime()', 'bpT4 = new Date - bpStart', 'bpT5 = [new Date]', 'bpT6 = new Date or bpY',

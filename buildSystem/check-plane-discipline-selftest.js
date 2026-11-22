@@ -8,7 +8,8 @@
 // scroll provider's escalated `activated` reading its `pos` fails, in a subclass too; C2: `nonFloatDragging` reading
 // its raw screen `pos` unmapped fails. The accepted forms ride the control: the write inside _writeScrollOffset, a
 // class-level offset declaration, a comparison; one receiver's own positions; a mapped mix; the escalated-pos marker,
-// an `ignored` parameter, a handler that only forwards; a mapped raw position. Run by buildSystem/run-selftests.js on
+// an `ignored` parameter, a handler that only forwards; a mapped raw position. B's rise, the one budget, prints its
+// advice (lib/gate-advice.js); B's drop, the other rules and the control none. Run by buildSystem/run-selftests.js on
 // every build.
 
 const path = require('path');
@@ -57,6 +58,8 @@ proveGate({
       C1_ESCALATED_POS: /^    BiteProofEscalatedPosWdgt\.coffee:7: BiteProofEscalatedPosWdgt\.activated reads its escalated 'pos'/m,
       C2_RAW_SCREEN_POS: /^    BiteProofRawScreenPosWdgt\.coffee:3: BiteProofRawScreenPosWdgt\.nonFloatDragging reads the raw screen 'pos' unmapped/m,
     },
+    // rule B's rise is the one budget: the A, C and stale-entry rules beside it print no advice
+    advised: ['B_MIX_ROSE'],
     lines: [/^    BiteProofOffsetWriteWdgt\.coffee:5: \[in bpNudge\] @scrollOffsetY \+= d$/m,
       /^    BiteProofOffsetWriteWdgt\.coffee:7: \[in bpAfterRegex\] r = \/#x\/; @scrollOffsetX = x$/m,
             /^    BiteProofMixWdgt\.coffee:3: \[a vs b\] @bpGap = a\.left\(\) - b\.left\(\)$/m,

@@ -18,9 +18,12 @@
 //    and silently wrong otherwise, dormant at scroll offset 0 / identity transform (the
 //    class every hard bug of the paint-time scroll arc belonged to). Same-plane-by-
 //    construction sites are legitimate and EXPECTED (a container laying out its own
-//    children), so this is a BASELINE, not a ban: a count above it fails the build and
-//    prints the new lines — classify each (same-plane ⇒ raise the baseline with a reason;
-//    cross-plane ⇒ map through localPointToScreen / screenPointToMyPlane / screenBounds).
+//    children), so this is a BASELINE, not a ban — a BUDGET that asks an invariant's question
+//    first (docs/architecture/lint-and-static-checks.md §3b): a count above it fails the build
+//    and prints the new lines, then that question and when a raise is the answer
+//    (lib/gate-advice.js) — classify each (same-plane ⇒ raise the baseline, a dated reason in
+//    the comment above it; cross-plane ⇒ map through localPointToScreen / screenPointToMyPlane /
+//    screenBounds).
 //    A count BELOW baseline also fails, loudly asking to ratchet down — that is the win
 //    being locked in. Known blind spots (by design — line-level only): a positional value
 //    stored in one method and consumed in another plane elsewhere; a position forwarded
@@ -66,6 +69,7 @@ const path = require('path');
 const { rejectUnknownArgs, rejectPositionalArgs } = require('./lib/cli-args');
 const { compiledFiles, sourceRoots, sourceName, SOURCE_RAILS } = require('./lib/source-files');
 const rules = require('./lib/gate-rules').forGate(__filename);
+const { adviceLines } = require('./lib/gate-advice');
 
 const ARGV = process.argv.slice(2);
 rejectUnknownArgs(ARGV, [...SOURCE_RAILS], 'plane-discipline');
@@ -280,7 +284,7 @@ if (mixLines.length !== CROSS_PLANE_MIX_BASELINE) {
   failed = true;
   console.error(`[plane-discipline B] FAIL — cross-plane positional-mix count ${mixLines.length} != baseline ${CROSS_PLANE_MIX_BASELINE}.`);
   if (mixLines.length > CROSS_PLANE_MIX_BASELINE)
-    console.error(rules.fired('B_MIX_ROSE', '    New mixed-positional line(s) — classify each: same-plane-by-construction => raise the baseline with a one-line reason in the commit; cross-plane => map it. Current lines:'));
+    console.error(rules.fired('B_MIX_ROSE', '    New mixed-positional line(s) — classify each by the question below the report, first. Current lines:'));
   else
     console.error(rules.fired('B_MIX_DROPPED', '    Count DROPPED — good: lower the baseline to lock it in. Current lines:'));
   mixLines.forEach((l) => console.error('    ' + l));
@@ -291,5 +295,9 @@ if (escalationViolations.length) {
   console.error(`[plane-discipline C] FAIL — ${escalationViolations.length} read(s) of a pointer position not in the receiver's plane:`);
   escalationViolations.forEach((v) => console.error(v.c1 ? rules.fired('C1_ESCALATED_POS', '    ' + v.text) : rules.fired('C2_RAW_SCREEN_POS', '    ' + v.text)));
 } else console.log(`[plane-discipline C] positions not in the receiver's plane: 0 reads -- OK (C1: ${c1Bodies} escalated-pos handler bodies [${[...escalatedPosHandlers].sort().join(', ')}] on ${providerDefiners.size} provider class(es) + subclasses; C2: ${c2Bodies} raw-screen-pos bodies [${[...RAW_SCREEN_POS_HANDLERS.keys()].join(', ')}]; ${classFile.size} classes scanned)`);
+
+// rule B's rise is the one BUDGET here: after the whole report, its question and when a raise is the answer; every
+// other rule's own line says what to do (a drop is banked, a stale entry deleted, A and C fixed)
+if (rules.firedIds.has('B_MIX_ROSE')) { console.error(''); for (const l of adviceLines(rules.gate, ['B_MIX_ROSE'])) console.error(l); }
 
 process.exit(failed ? 1 : 0);

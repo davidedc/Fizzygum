@@ -143,7 +143,9 @@ reformatted line goes blind). Three pieces hold it:
   rails keeping it cheap (`--tests=`, `--apps=`, `--sections=`, `--expectations=`, `--baseline=`, `--audit-dir=`).
   The judge holds: the CONTROL (the input unplanted, plus every sanctioned form) passes firing no rule; each planted
   run fails naming exactly the rules it planted, each matched by ITS OWN violation line (a crash is no bite, and a
-  summary count matches whatever happens); every plant APPLIES (a page plant that cannot find its hook says
+  summary count matches whatever happens); each run, the control included, prints the ADVICE of exactly the rules
+  its `advised` names (`lib/gate-advice.js`: a budget rule that fires prints what its number holds back and when a
+  raise is the answer, and no other rule prints any — §3b); every plant APPLIES (a page plant that cannot find its hook says
   `PLANT_NOT_APPLIED` — an inline one through `gate-bite-proof.js` `whenPresent`, which gives up at the world, or once a
   lazy part has arrived, so inside the run; a file plant 60 frames after the world); a plant of a
   measurement failure reads INVALID (exit 2, never a rule); and
@@ -174,7 +176,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
 | hand-lists | `buildSystem/check-hand-lists.js` | row 7 | a STRING-LIST literal naming classes or members (at least two items, and at least half of them, are class or member names) is a DECLARATION (`@serializationTransients`, `requiredParts`, `optionalParts`) or carries `# hand-list-sanctioned: <what fails>` naming a guard that RUNS — a gate/rig file the build, a discovered self-test or an `fg` presuite/gauntlet leg launches (`lib/what-runs.js`), a `SystemTest_<name>`, or a failure token a running file emits, resolved mechanically — or it counts as UNSANCTIONED. Multi-line by design (the lists that rot are one name per line). Scans src + buildSystem and the tests repo's scripts + harness. ⚠ Blind to object tables, regex alternations, `switch` arms, push sequences and runtime-built names (§5). Modes: `--census` (every list, classified, each guard as runs / never runs), `--files` (plants: every unsanctioned list fails); its self-test is `check-hand-lists-selftest.js` | inline per-repo `BASELINE_FIZZYGUM` / `BASELINE_TESTS` of unsanctioned lists (the stinks idiom); a sanction naming no guard, one whose every guard never runs (`SANCTION_GUARD_NEVER_RUNS`), an empty one and a stale one (sanctioning no name list) fail outright |
 | **unresolved-sends** | **`buildSystem/check-unresolved-sends.js`** | **row 8** | the INVERSE of dead-method: a CALL `[@.]name(` in src, the harness or a test's macro source that NOBODY implements — a guaranteed runtime `TypeError` on any path reaching it (a macro's own definitions resolve only its own calls) | allowlist `unresolved-sends-allowlist.txt` (vendor + dynamic, `name # reason`); in-file `BUILTINS` for platform API, BARE (`push`) by default and KEYED by receiver (`Math.round`) for a name Fizzygum also defines that only a platform global sends — the form held to the sends (`BUILTINS_NOT_KEYED`, `BUILTINS_KEYED_NOTHING_TO_UNMASK`, `BUILTINS_KEYED_OFF_PLATFORM`, a stated `PLATFORM_GLOBALS`) — and an entry excusing nothing fails (`STALE_ALLOWLIST_ENTRY`) in either |
 | stinks | `buildSystem/check-stinks.js` | row 9 | named smells driven to a baseline COUNT | per-smell inline `baseline`; fails on EXCEEDING it |
-| complexity ratchets | `buildSystem/check-complexity-ratchets.js` | row 33 | two recorded values that may fall and may not rise: the METHOD COUNT of `Widget`, `WorldWdgt`, `ActivePointerWdgt` and `FrameWdgt` (the lines opening a method, instance or class-side, by the ONE definition of a method header, `lib/coffee-method-header.js` — methods, not lines, so comments cost nothing), and the COGNITIVE COMPLEXITY of every function of the compiled sources (src and the harness): above 15 (the published default of SonarSource rule S3776) only the functions recorded when the ratchet landed, each at its value, keyed `Class#method` / `Class.method` (class side) / `<file>#name` (outside any class); a new one above 15 fails; the harness's records are judged only when the harness is read. Its analyzer is the `coffeescript-cognitive-complexity` package `package.json` pins exactly, and runs, through `lib/cognitive-complexity.js`, ONLY on the CoffeeScript the records were measured on (2.7.0, the package `package.json` pins and the build compiles its boot files with; another version installed, or none, is INVALID). CANNOT see: a function's complexity until it is above 15, a split that moves complexity into a sibling just under the line, file-level code outside any function, any class but the four; two functions of one class sharing a name (the functions of a class-body table) share one key and are each judged against its one record; a source vanilla CoffeeScript 2.7 cannot parse (a bare `super` followed by a postfix `if`, which only the browser's meta-system accepts) is INVALID, not judged | inline `METHOD_CEILINGS` / `RECORDED` / `RECORDED_IN_HARNESS` in the gate, each printing UNDER when it can be lowered; an entry excusing nothing (a class file gone, a function at or under 15 or gone) is STALE and fails |
+| complexity ratchets | `buildSystem/check-complexity-ratchets.js` | row 33 | two BUDGETS (§3b): recorded values that may fall, and rise only in the change that needs them, a dated reason beside each: the METHOD COUNT of `Widget`, `WorldWdgt`, `ActivePointerWdgt` and `FrameWdgt` (the lines opening a method, instance or class-side, by the ONE definition of a method header, `lib/coffee-method-header.js` — methods, not lines, so comments cost nothing), and the COGNITIVE COMPLEXITY of every function of the compiled sources (src and the harness): above 15 (the published default of SonarSource rule S3776) only the RECORDED functions, each at its value (the tree's own when the ratchet landed, and each later record or raise with its dated reason: a function born of a split that lowers a recorded parent, or with no real seam left, is recorded), keyed `Class#method` / `Class.method` (class side) / `<file>#name` (outside any class); an unrecorded one above 15 fails; the harness's records are judged only when the harness is read. Its analyzer is the `coffeescript-cognitive-complexity` package `package.json` pins exactly, and runs, through `lib/cognitive-complexity.js`, ONLY on the CoffeeScript the records were measured on (2.7.0, the package `package.json` pins and the build compiles its boot files with; another version installed, or none, is INVALID). CANNOT see: a function's complexity until it is above 15, a split that moves complexity into a sibling just under the line, file-level code outside any function, any class but the four; two functions of one class sharing a name (the functions of a class-body table) share one key and are each judged against its one record; a source vanilla CoffeeScript 2.7 cannot parse (a bare `super` followed by a postfix `if`, which only the browser's meta-system accepts) is INVALID, not judged | inline `METHOD_CEILINGS` / `RECORDED` / `RECORDED_IN_HARNESS` in the gate, each printing UNDER when it can be lowered; an entry excusing nothing (a class file gone, a function at or under 15 or gone) is STALE and fails |
 | call-arguments | `buildSystem/check-call-arguments.js` | row 10 | every call's ARGUMENTS against its callee, over EVERY call site of BOTH repos (src, the harness, every macro source, the `MacroToolkit` heredocs, the tests repo's scripts), read by real parsers (`lib/call-sites.js`: the browser's own meta-compiler and CoffeeScript 2.0.3, acorn for JS — an implicit object is ONE argument, a string is never a call). Three rules, the law in [`constructor-and-parameter-conventions.md`](constructor-and-parameter-conventions.md) §5: `HOLE` — R3's **hole test** with its CALLERS TEST mechanized (an `undefined` before a present argument is a hole iff another call of the same callee reaches less far; that WITNESS is printed; otherwise a VALUE, `--values` lists them); `EXTRA_ARGUMENT` — more arguments than any definition the call can reach declares (judged only where its TARGET is certainly among the definitions it reaches — what runs where it runs (page code, a macro program, a script module), a bare call resolved lexically, a `new` of the one class its name means there, a send to `@`/`this` or `X.` of a class whose whole chain was read — the widest of them; by name alone `Math.max a, b, c` would read against `Point::max`); `POSITIONAL_INTO_OPTIONS` — `@`, a literal, an array, a function or a `new` in an `opts = {}` slot. INVALID (exit 2) for a source it cannot read, a super it cannot place, or a half that read nothing. `census-call-arity.js` queries the same table (§3c) | none — an exact zero: no baseline and no sanction marker (a call the gate misjudges is reshaped). Its stated limits — foreign callees, a dynamic `new`, this-args, code in strings other than the heredocs, unknown-arity calls; for the arity rules a receiver the parse cannot see or a class with a foreign ancestor, a callee also bound or assigned as a value (`canvas.width = …` leaves `@width()` unjudged), a callee taking any number, a method no code defines as a member or field, a script's call of a name its module neither binds nor imports, `new @constructor`, a lone variable in an options slot — are in its header and the conventions doc's §5 |
 | **menu-actions** | **`buildSystem/check-menu-actions.js`** | **row 11** | **menu-item wiring. A menu action is dispatched through ButtonWdgt's fixed four-slot convention (`@target[@action].call @target, menuItem, panelTarget, arg1, arg2`), which the call site never names. HARD (sound): a function literal in the action slot (`@target[@action]` coerces it to a string key, so the click throws); a string literal where `opts` goes; and — RULE 1b — a `@`-targeted string action that RESOLVES nowhere. RATCHET at 0: an UNREAD parameter on a menu-dispatched verb must be NAMED as unread (`ignored`/`unused`) — padding a signature to reach the slot you want puts widgets into parameters whose names promise otherwise, and forces every other caller to punch `undefined` through.** ⚠ TWO blind spots, both structural: it cannot see whether a parameter that IS read is read as the right THING; and it cannot see a parameter that is MISSING — a verb needing a subject it never declares reads as clean, because there is nothing unread to flag. (A THIRD is covered by RULE 1b: an action naming a method NOTHING defines. The general case stays unresolvable — the receiver of `addMenuItem "…", someExpression, "verb"` is a runtime value — but `@` names its receiver structurally, so the rule resolves the string against the union of `chainOf(X)` over every X whose chain contains the enclosing class, which is exactly the set `@` could be an instance of, plus the methods a `*TestSupport` class installs onto a core class. That union is what makes it SOUND: `Widget` wires `"setTargetAndActionWithOnesPickedFromMenu"`, which lives in `ControllerWdgt`. 136 rows covered; the dead `"pin"` row of 2018 is the shape it catches. The runtime twin still owns the rest: non-`@` targets, and the dispatch itself.) Those blind spots are the class of bug only a rig that CLICKS the item can catch, which is why `fg menusweep` exists beside it — it resolves every row's action against its target BEFORE the liveness skip (so a row sitting behind a destructive one in the same walk is resolution-checked even where it is never dispatched) and carries a `MenuWdgt` and a `PromptWdgt` root, the two classes whose own context menu no other root stands in. It is also where a row's `opensSubmenu` flag (the drawn chevron) meets the act: each dispatched row must open a menu exactly when it is flagged (`SUBMENU_FLAG_MISMATCH`, allowlist `CONDITIONAL_OPENERS`), because no text scan can tell what an action opens — and where its LABEL meets the act too: "…" ends it exactly when the act asks for more from you (`ELLIPSIS_MISMATCH`, allowlist `ELLIPSIS_EXCEPTIONS`; ASCII "..." fails on its own, `ASCII_ELLIPSIS`), and every row seen is in sentence case (`SENTENCE_CASE`, allowlist `SENTENCE_CASE_EXCEPTIONS`). ⓘ RULE 1 has TWO DOORS: besides `addMenuItem`/`prependMenuItem`, `prompt`/`textPrompt` take a `callback` that the prompt's OK delivers to (`PromptWdgt.deliverValue`: `@target[@callback].call @target, value`) — the same proof applies, and those callbacks count as menu-dispatched verbs for the RULE 3 ratchet too. ⚠ A prompt's BUTTONS themselves (`PromptWdgt._addButtonsInto`: `close`, `deliverValue`; the save-shortcut prompt's `destroy`, `close`, `createReferenceAndCloseFromMenu`) are `new SimpleButtonWdgt target, "action"` constructions, which this gate does not read; `fg menusweep` covers the OK at runtime (it presses every prompt's `okButton` and fails on a prompt with none, `PROMPT_OK_MISSING`, or a run under its prompt floor, `PROMPT_OK_CHECK_VACUOUS`), and Close / Cancel / Don't save dispatch the parameterless `Widget.close` / `Widget.destroy`, which only the suite presses | rules 1–2 are HARD; the unread-parameter rule is the inline `RULE3_BASELINE = 0` ratchet |
 | thin-wrap | `buildSystem/check-thin-wraps.js` | row 12 | a method owning a `_<name>NoSettle` twin — public `<name>` or private `_<name>` — is the ONE canonical mechanical wrap | per-method `# thin-wrap-exempt: <reason>`; SKIPS a twinless `*NoSettle` |
@@ -530,6 +532,97 @@ people to reach for `--noSyntaxCheck`, and — worse — a false gate-PASS bakes
 The same safety asymmetry is documented for `fg classify` (a BENIGN? verdict is a hint for reading a diff faster, never
 permission to recapture). When in doubt, ship the rule one tier weaker and promote it once the evidence is in.
 
+### What a finding MEANS, and which answers are right (the three classes)
+
+The tiers above place a RULE by how sound its signal is. A FINDING is answered by what it means, and it means one of
+three things, whatever tier its rule sits in (a ratchet held at zero is a ratchet by tier and a convention by class):
+
+| Class | A finding means | The answers | Never |
+|---|---|---|---|
+| **A. Invariant** | the product is wrong: a crash, a wrong pixel, a broken settle, a leak, a nondeterminism | fix the cause; when the cause cannot be fixed in scope, stop and report | a raise, a new exemption or allowlist entry, a flag that suppresses the check, a recapture that banks the wrong picture |
+| **B. Convention at zero** | a house rule is broken; the code may still run correctly | comply honestly, or the gate's own marker (§5) with a reason a reviewer can check | a design bent to avoid writing the marker; a marker with a boilerplate reason |
+| **C. Budget** (a ratchet above zero) | something grew: look at it | classify the new occurrence: the smell is fixed; a site that is not the smell is named in the gate's per-site list where it keeps one (a stink's `sanctioned`), with its why; otherwise the right shape raises the number in the same change | inlining a helper that deserves its name, folding two concepts into one, an odd home, an offsetting trade, a wording chosen by its length, a true fact dropped: any shape chosen for the count |
+
+**A raise answers a budget, and it is never the first answer**: first ask whether the new occurrence is redundant or
+misplaced. A raise is right when the right shape needs it (a named helper, a public door, an intent-named
+notification, the natural home), when a refactor one ratchet exists to drive crosses another (a split adds methods to
+a class at its ceiling), when the gate's measurement widened, or when an instruction file's sentence must grow to stay
+true. It is written in the same change, its dated reason beside the number (`raised 394 -> 395 on <date>: <the
+member, and the one question it answers>`; the baseline file of `check-doc-narration` is JSON, so that reason goes in
+the commit message), and the commit message names the ratchet. A function above the complexity ceiling is RECORDED
+the same way when it is born of a split that lowers a recorded parent, or when no real seam remains. A number is
+never raised ahead of the change that needs it (slack lets the next occurrence in unread): the raise and its reason
+are the record a reader reads.
+
+**Four budgets ask an invariant's question first.** The stinks `clock-read`, `timer` and `math-random`: does the new
+occurrence reach render, layout or input? Then it is a determinism bug whatever the count
+(`Fizzygum-tests/DETERMINISM.md`). `check-plane-discipline` B: are both receivers in one plane by construction? If
+not, the line is a bug dormant at offset 0, and it is mapped. Only the answer that clears the invariant opens the
+budget's answers.
+
+**An invariant's gate has quiet fixes too** (an exemption entry, a suppression flag, a stub, a guard at the one leaf
+that threw), and each hides a bug, which is worse than a bent shape. Its finding is answered at its cause. Where a
+class-A rule keeps a marker ([F], [G], [T], a thin wrap, a cross-object invalidation), the marker answers a scanner that
+cannot tell a sound flow, and its reason shows the flow is sound.
+
+**A count never constrains a shape in advance.** A plan, a brief or a session never states a ratchet as a constraint on
+a shape ("add no method to X", "find another seat", "net-zero"): the shape is chosen on its merits, before any count is
+read, and the number follows it.
+
+**The gates say so when they fire.** Each budget rule prints (but `BACKLOG_ITEM_TOO_LONG`, whose own line gives its
+one answer), on lines of its own after its findings and once however many of them fire, what its number holds back, the question it asks first where it has one, when a raise is the
+answer, the answers that are wrong, and how to raise (`buildSystem/lib/gate-advice.js`); each gate's bite-proof holds
+it to printing exactly that advice, and none for its other rules (`lib/prove-rules.js`, a run's `advised`).
+
+Every gate, rule and token, by class:
+
+| Gate, rule or token | Class | A finding is |
+|---|---|---|
+| `run-selftests.js`: every self-test's verdict, `SELFTEST_*`, `GATE_WITHOUT_REGISTRY`, `GATE_WITHOUT_PROOF` | A | a proof that broke, or a gate no proof holds: no verdict worth reading |
+| `check-coffee-syntax.js`, `check-tests-syntax.js` | A | a source that boots nothing; a test that loads nothing |
+| `check-shippable-coverage.js` | A | a source no part ships: `X is not defined` where it runs |
+| `check-layering.js` [A] [B] [C] [E] [F] [G] [I] [J] [K] [O] [P] [Q] [T] | A | a flush the settle engine does not survive (§4) |
+| `check-layering.js` [D] [L] [M] [N] [R], and its tables' stale entries | B | a tier or naming rule broken; an entry that names nothing |
+| `check-invalidation-receivers.js` | A | a widget marking another changed: the receiver's own intent-named door is the answer |
+| `check-dead-methods.js` | B | a member nothing reaches; one reached by a string name is allowlisted with its reason |
+| `check-hand-lists.js`: its sanctions, the tests half (`BASELINE_TESTS`, 0), `--files` | B | a name list neither derived nor asserted; a sanction naming no guard that runs |
+| `check-hand-lists.js`: the Fizzygum half (`BASELINE_FIZZYGUM`) | C | one more second source of truth |
+| `check-unresolved-sends.js` | A | a send nothing answers: a `TypeError` on any path that reaches it |
+| `check-stinks.js` `debugger-statement`, `nil-literal` | A | a stop only devtools see; a `ReferenceError` |
+| `check-stinks.js` `raw-chrome-color`, `comment-meta-edit`, `commented-out-debug`, `comment-past-receipt` (each at 0), and the stale `sanctioned` / `exclude` entries | B | a look decided outside `Theme`; a comment that argues, narrates or keeps dead debug; a declaration that no longer matches its sites |
+| `check-stinks.js` `null-literal`, `instanceof-type-test`, `comment-narration` | C | one more of a smell held at its count |
+| `check-stinks.js` `clock-read`, `timer`, `math-random` | C, asking A first | a determinism bug when it reaches render, layout or input; else one more of a tolerated count |
+| `check-call-arguments.js` | A | an argument that reaches no parameter, or the wrong one |
+| `check-menu-actions.js` rules 1, 1b, 2 | A | a menu row that throws when clicked |
+| `check-menu-actions.js` rule 3 | B | a padded slot not named for what it skips |
+| `check-thin-wraps.js`, `check-constructors-build.js`, `check-relayout-bounds-first.js` | A | a settle-tier shape the flush does not survive (the last: the dpr-2 one-cadence lag) |
+| `check-trailing-whitespace.js`, `check-scheduled-checks.js` | B | hygiene; a dated reminder come due: acting on it is the answer, a later date alone is not |
+| `check-stringified-scripts.js`, `check-region-markers.js`, `check-source-vault.js`, `check-whole-file-markers.js`, `check-relayout-repaints.js` | B | a retired mechanism brought back |
+| `check-part-edges.js` | A | a core reference that throws in an artifact without the part |
+| `check-call-separation.js` [S], [U] effectful, its stale allowlist entries | B | a private method reaching a public command; a public command only its own class calls |
+| `check-call-separation.js` [U] query (`BASELINE_U_QUERY`) | C | one more public query only its own class asks |
+| `census-widget-conformance.js --gate` undeclared fields | A | a field a copy, a save and the inspector cannot see |
+| `census-widget-conformance.js --gate` prologue copies (`BASELINE_PROLOGUE_COPIES`) | C | one more hand-copied `_reLayout` prologue |
+| `check-back-buffer-memos.js`, `check-page-loaded-elements.js` | A | a memo a save carries; an element a save or a copy loses |
+| `check-raw-pointer-reads.js`, `check-plane-discipline.js` A, C1, C2 | A | input read in the wrong plane, silent until tilted or scrolled |
+| `check-plane-discipline.js` B (`CROSS_PLANE_MIX_BASELINE`) | C, asking A first | a cross-plane bug dormant at offset 0, unless both receivers share a plane by construction |
+| `check-plane-discipline.js` B's exact count dropping, its stale tables | B | a gain to bank; an entry that names nothing |
+| `check-macro-source-discipline.js` | A | an eval that repaints the whole world and masks missing damage; a verb name the rewriter mangles |
+| `check-refs.js` | A | a reference that lets a wrong render pass |
+| `aim-census.js --tables-only` | B | the census's tables disagree with the toolkit it reads |
+| `check-complexity-ratchets.js`: the method ceilings, the complexity ceiling and its records | C | one more method in a held class; one more tangled function |
+| `check-complexity-ratchets.js`: a stale entry | B | an entry that excuses nothing |
+| every static gate's stale-entry rule (an allowlist, sanction or table entry that excuses nothing: `STALE_ALLOWLIST_ENTRY`, `STALE_SANCTION`, `U_STALE_ALLOWLIST_ENTRY`, the `*_STALE_*` table rules), whatever its gate's class | B | an entry that names nothing: it is deleted |
+| `census-hierarchy-duplication.js --gate` | B | an override identical to what it inherits |
+| `check-doc-narration.js` narration, `BACKLOG_CLOSED_ITEM` | B | history in a present-tense doc; a closed item left in the index |
+| `check-doc-narration.js` the instruction-file ceilings | C | bytes every session pays before any work |
+| `check-doc-narration.js` `BACKLOG_ITEM_TOO_LONG` | C, one answer | detail that belongs in the plan: it moves there |
+| every token of `GATE_TOKENS` (`Fizzygum-tests/scripts/lib/gate-tokens.js`), and the runners' `UNTOKENIZED_CONSOLE_ERROR` and `UNCAUGHT_PAGE_ERROR` | A | the world is wrong: geometry, layout, paint, step, input, storage, lifetime, boot (a stale allowlist entry's one answer is to delete it). `PAINT_ERROR`, `STEP_ERROR` and `INPUT_ERROR` are excused only in a test whose subject throws on purpose (`expectsCaughtErrors`, with its reason) |
+| `NOT_GATED` (`DATAFLOW_ERROR`, `FIZZYGUM_USE_SWCANVAS`) | none | not a gate: a green run emits it, or the word is too common to match |
+| the macro discipline: `AIM MISSED`, the `pointerKinds` declaration | B | an aim that names no meaning; a test declared mouse-only whose subject is no mouse mechanism |
+| every gauntlet leg (`fg gauntlet` lists them; `refs` also runs `check-doc-narration.js`, classed above) and the presuite's `fracplane` rider | A | a wrong pixel, a broken settle, a leak, a nondeterminism, a part, menu or pin that does not work |
+| `fg fuzz` | none | not a gate: a read that does not wait for its screenshot, fixed at the read, never by a recapture |
+
 ## 3b-docs. The DOCS ratchet — `check-doc-narration.js` (`fg doc-narration`)
 
 The docs-side twin of the `comment-narration` stink. `docs/README.md` files every doc by what it IS,
@@ -582,8 +675,10 @@ always, and one line per rig that names it, says what it is for and points at it
 history, measurements and case law live in the rig's script (its header, or beside the code a comment
 describes) or in the architecture doc that owns the subsystem (the criterion is cleanup round 2's §9,
 `docs/archive/top-10-cleanups-round-2-plan.md`). A file under its ceiling prints in the IMPROVED block,
-so the ceiling comes down as a file shrinks; a rule every reader must meet before any work may raise
-it, in the same commit. Their prose is not judged for narration. The gate reads both repos, so its
+so the ceiling comes down as a file shrinks; a rule every reader must meet before any work, or a
+sentence that must grow to stay true, may raise it, in the same commit, its reason in the commit
+message (the file is JSON, with no room for a reason beside the number; `--write-baseline` re-records
+every number in it, so a raise of one ceiling alone is a hand edit of that number). Their prose is not judged for narration. The gate reads both repos, so its
 rail is `--umbrella=DIR` (as `run-selftests.js`'s is); an umbrella missing either file, or a baseline
 with no ceiling for one, is INVALID (exit 2). The bite proof plants a file one byte over the REAL
 ceiling, and one exactly at it in the control.
@@ -892,7 +987,10 @@ Write it anyway — a marker without a reason is exactly the silent allowlist th
 tighten incrementally):
 - **baseline / allowlist** (`check-dead-methods`, `check-stinks`, `check-unresolved-sends`, `check-call-separation`,
   `check-complexity-ratchets`):
-  record the current count/set, fail on *regression*, drive the baseline down over time. To drive down: fix occurrences,
+  record the current count/set, fail on *regression*, drive the baseline down over time. What a rise MEANS is the
+  rule's class (§3b): a baseline above zero is a budget, which rises only when the right shape needs it, dated
+  beside the number, and never as the first answer; a baseline at zero and an allowlist answer as their class
+  does. To drive down: fix occurrences,
   then tighten the inline `baseline` (stinks, call-separation) or remove from `dead-method-allowlist.txt` /
   `unresolved-sends-allowlist.txt` to lock the gain. Baseline 0 / empty allowlist = a hard rule.
   **The central allowlist files** (each `name # reason`, one per line, `#` comments):
@@ -1202,6 +1300,10 @@ source to satisfy a new rule.
 ---
 
 ## Appendix — file:line anchors (grep the symbol; numbers drift)
+
+- `buildSystem/lib/gate-advice.js` — `ROWS` (each budget rule's own advice, keyed by gate and rule id), `CLASSES` (the
+  text a class shares), `adviceLines` (what a gate prints for the rules it fired), `parseAdvice` (the proof's reader);
+  `buildSystem/lib/prove-rules.js` `checkAdvice` (a run's `advised`, judged exactly).
 
 - `buildSystem/check-layering.js` — `PUBLIC_SETTERS`/`TEXT_SETTERS`/`RECALC_WHITELIST`; `isLowLevel` /
   `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the
