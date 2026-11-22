@@ -18,7 +18,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U3 | The words say what is true again | CLOSED 2026-11-22 (§U3) |
 | U4 | Three spellings a gate's blind spot chose | CLOSED 2026-11-22 (§U4) |
 | U5 | One answer on `Widget`, asked plainly | CLOSED 2026-11-22 (§U5) |
-| U6 | Three checks get a witness of their own | not started |
+| U6 | Three checks get a witness of their own | CLOSED 2026-11-22 (§U6) |
 | U7 | The world steps what is attached; a row with nothing to load says so | not started |
 | U8 | The caret's margin includes the border | not started |
 | U9 | A re-click keeps a member's undo history | not started |
@@ -488,6 +488,24 @@ The owner's rule from the dup-caret arc: a check must not ask the product's own 
 (`run-sequence-headless.js`), `fg serialization`. **Predicted pixel set.** No existing reference moves; part 3 adds
 finger references for its own test; part 2 adds none (a pixel probe is a value). **Audit.** static C10; runtime S9, S3.
 
+**Landed 2026-11-22.** (1) The serialization rig's pane check names the pane's seven runtime fields as a literal —
+`surface`, `depth`, `engine`, `imageData`, `meshCache`, `transforms`, `lclCodeCompiler` — and holds it both ways
+against the pane (each named field declared and holding a stamped object, read by a plain `typeof`, never by
+`rebuildsItself`; every declared transient holding one named), sanctioned `// hand-list-sanctioned:` naming the rig.
+The rig's bite-proof gains a standing run that unstamps `meshCache` and expects `CHECK_MISMATCH`, so a list derived
+again from the rule it judges goes red. Corrected at research: the literal never reached git (the derivation was the
+check's first form), and the plan's plant (drop a transient) already failed the derived check; the discriminating
+plants unstamp a field or add a stamped one, and each fails the literal. (2)
+`SystemTest_macroThumbHighlightOnlyUnderAPointer` reads the PAINTED thumb: the bright fixture's colours, a probe of the
+canvas at the thumb's centre after `waitForScreenshotReady`, compared with the pointer kind (a mouse rests where it let
+go, a finger nowhere) — the over-list stays as its own claim against the same witness, and the sweep is the thumb the
+pointer left, painted at rest. The plan's plant (`_showsHover` true) now fails under a mouse too; a no-op
+`notePointerStateChanged` (lime left on the canvas, every predicate right) fails it under both pointers — the old test,
+which read the predicates alone, passes it by construction. (3) `SystemTest_macroPointerCancelEndsNonFloatDrag` runs under a finger: its one mouse-shaped assertion
+expects "atRest" there, image_1's claim is worded per pointer, the `pointerKinds` declaration and its reason are gone,
+and its two shots have finger references at both densities; under a finger every other assertion passed first time.
+Ratchets: none.
+
 ### U7 — The world steps what is attached; a row with nothing to load says so (parts INDEPENDENT)
 
 1. **`src/demos/BouncerWdgt.coffee`, `step`:** `return unless @parent?`, added 2026-11-21 when the menu sweep
@@ -828,6 +846,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U3: four facts cut from `Fizzygum-tests/CLAUDE.md` by byte count, three tests' prose that stopped naming `catchesPointerAt`, a layering-doc shape bent to hold one site, two stale sanction pointers — small. — CLOSED 2026-11-22 (gate-contortions loop, U3): the facts restored where true, the tests name `catchesPointerAt` in words true of the code, §2.5 has a third shape, the two pointers corrected.
 - [x] U4: four platform calls respelled for unresolved-sends (one dropped a Duplicator hardening), eleven `new (window["X"])` sites, and `isDesktopShortcut`, alive only for two rigs — small. — CLOSED 2026-11-22 (gate-contortions loop, U4): the plain platform calls, the Duplicator hardening with a rig check, the classes named bare under their await, the predicate deleted.
 - [x] U5: `isVisuallyTransformed` duplicates a private twin made so a macro could call it; `boxPresentedToOverlays` has its default written at four readers — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U5): one public name; the base answer on `Widget`, a viewport overriding it.
+- [x] U6: three checks take their expected value from the rule they judge, or dodge a finger failure: the serialization rig's pane list, the thumb-highlight test, the pointer-cancel test's mouse-only declaration — small. — CLOSED 2026-11-22 (gate-contortions loop, U6): the literal list both ways, the painted thumb against a pointer-kind witness, the cancel test under a finger.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

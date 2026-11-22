@@ -323,7 +323,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
-- [ ] U6: three checks take their expected value from the rule they judge, or dodge a finger failure: the serialization rig's pane list, the thumb-highlight test, the pointer-cancel test's mouse-only declaration — small.
 - [ ] U7: two dev-menu rows throw when clicked before anything is serialised, excused in the menu sweep's `KNOWN` table; the bouncer's `return unless @parent?` guards the stepping defect filed in this file — small.
 - [ ] U9: re-clicking a member in an inspector forgets its undo history, so Cmd+Z no longer brings back unsaved typing; a comment was reworded to call that the rule — reachable, medium.
 - [ ] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn.
