@@ -12,8 +12,9 @@ class WorldWdgt extends IconGridPanelWdgt
   # separate user actions -- the "Serialise widget to memory" test-menu row (or a macro's
   # evaluateString step) writes it, and the "Deserialize from memory and attach to …" rows
   # that follow read it back -- which is what lets serialization be driven as two menu picks instead of one
-  # atomic call. Nothing else reads it, and its value means nothing outside the pair.
-  lastSerializationString: ""
+  # atomic call. It is undefined until a widget has been serialised to memory. Nothing else reads it, and its
+  # value means nothing outside the pair.
+  lastSerializationString: undefined
 
   # these variables shouldn't be static to the WorldWdgt, because
   # in pure theory you could have multiple worlds in the same
@@ -364,24 +365,37 @@ class WorldWdgt extends IconGridPanelWdgt
   # flush, so the re-record reads the settled fixed point. Cleared in the world teardown.
   pendingFractionalReRecords: undefined
 
+  # Does the world step this member of its stepping set now? A widget steps while it is on the world or on
+  # the hand (TreeNode.isOrphan): off them -- taken off its holder, closed into the bin or onto the shelf, a
+  # copy or a loaded widget not placed yet -- it keeps its membership and waits, and steps again once it is
+  # back, so a step may read its parent and where it stands. A member whose step threw waits for code to
+  # change (giveBannedWidgetsAnotherChance). A member that is no widget (a dataflow time source) has no tree
+  # and always steps. The stepping station asks it of every member, and so do the two "still moving?"
+  # queries below: what the world does not step cannot finish moving, so nothing waits for it.
+  _stepsMember: (member) ->
+    !member.isOrphan?() and !@widgetsGivingErrorWhileStepping.includes member
+
   # Is a viewport's post-release MOMENTUM glide still running (ViewportWdgt's drag-to-scroll step decaying
   # its last delta by friction each frame)? It is frame-cadence driven, so the macro pump holds
   # "waitNoInputsOngoing" and screenshots until it settles — the same idea as waiting for font atlases
   # before a capture. Asked of the stepping set rather than kept in a set of its own, as a knob's slide is
-  # below, so there is no second registry for a gesture's end, a destroy or a teardown to forget.
+  # below, so there is no second registry for a gesture's end, a destroy or a teardown to forget; and only
+  # of the members the world steps (_stepsMember): one put away mid-glide holds nothing until it is back.
   anyScrollMomentumOngoing: ->
     gliding = false
-    @steppingWdgts.forEach (eachSteppingWidget) ->
-      gliding = true if eachSteppingWidget.isScrollGliding?()
+    @steppingWdgts.forEach (eachSteppingWidget) =>
+      gliding = true if @_stepsMember(eachSteppingWidget) and eachSteppingWidget.isScrollGliding?()
     gliding
 
   # Is an edit-mode toggle's knob still on its way (EditIconButtonWdgt)? A slide is cycle-clock driven,
   # so the macro pump holds until it has landed, as it does for a scroll glide. Asked of the stepping
-  # set rather than kept in a set of its own, so there is no second registry for a teardown to forget.
+  # set rather than kept in a set of its own, so there is no second registry for a teardown to forget;
+  # and only of the members the world steps (_stepsMember): one put away mid-slide holds nothing until
+  # it is back.
   anyKnobSlideOngoing: ->
     sliding = false
-    @steppingWdgts.forEach (eachSteppingWidget) ->
-      sliding = true if eachSteppingWidget.isKnobSliding?()
+    @steppingWdgts.forEach (eachSteppingWidget) =>
+      sliding = true if @_stepsMember(eachSteppingWidget) and eachSteppingWidget.isKnobSliding?()
     sliding
 
   binWdgt: undefined
@@ -415,8 +429,8 @@ class WorldWdgt extends IconGridPanelWdgt
   paintErrorReportsWritten: undefined
   paintingWidget: undefined
   widgetsGivingErrorWhileRepainting: undefined
-  # widgets whose step threw: the stepping loop passes them by until code changes give them another chance
-  # (giveBannedWidgetsAnotherChance), as the paint offenders above stay hidden until then. They stay members of
+  # widgets whose step threw: the stepping loop passes them by (_stepsMember) until code changes give them another
+  # chance (giveBannedWidgetsAnotherChance), as the paint offenders above stay hidden until then. They stay members of
   # steppingWdgts: membership is theirs (a saved world keeps it), the ban is mine.
   widgetsGivingErrorWhileStepping: undefined
 
@@ -2470,8 +2484,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # TODO all these set modifications should be immutable...
     @steppingWdgts.forEach (eachSteppingWidget) =>
 
-      # a widget whose step threw waits for code to change (giveBannedWidgetsAnotherChance)
-      return if @widgetsGivingErrorWhileStepping.includes eachSteppingWidget
+      # a member off the world and the hand, or banned for a throw, waits (_stepsMember)
+      return unless @_stepsMember eachSteppingWidget
 
       # for objects where @fps is defined, check which ones are due to be stepped
       # and which ones want to wait.

@@ -16,11 +16,8 @@ class BouncerWdgt extends Widget
     while !@velocity? or @velocity.x == 0 or @velocity.y == 0
       @velocity = new Point Math.getRandomInt(-10,10), Math.getRandomInt(-10,10)
 
-  
-  # I bounce inside my parent, so without one (a bouncer not attached yet, or taken off its holder,
-  # stays in the world's stepping set) there is nothing to bounce inside, and my step does nothing.
+
   step: ->
-    return unless @parent?
     p = @position()
     vx = @velocity.x
     vy = @velocity.y

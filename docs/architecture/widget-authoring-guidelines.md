@@ -943,6 +943,12 @@ a `setTimeout` does not.
 Set `@fps` to the slowest rate that looks right, and `@synchronisedStepping = true` when the tick
 should align to wall-clock boundaries rather than to construction time (a clock's second hand).
 
+The world steps a member only while it is on the world or held by the hand (`TreeNode.isOrphan`, the one
+definition of attached; `WorldWdgt._stepsMember`, which the step station and the macro pump's two
+"still moving?" queries ask alike). Membership stays the widget's to manage: a widget taken off the tree
+(a closed window in the bin, a widget awaiting a re-attach) stays in the set and resumes when it is back,
+so a `step` needs no guard for being detached.
+
 A step that THROWS bans its widget from stepping: the world shows the error once in the error console
 (which says so), soft-resets, and passes the widget by — it stays a member of the set — until code
 changes give it another chance (`WorldWdgt._stepWidget`, `giveBannedWidgetsAnotherChance`, which both

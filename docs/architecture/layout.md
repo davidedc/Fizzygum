@@ -30,7 +30,7 @@ the whole cycle:
   consumer that never sees another cycle still sees it.
 - **(b) input + stepping** — `_playQueuedEvents` drains the *whole* event backlog this frame, returning only at a
   future-timed event; then the test replay, `progressFramePacedActions` (the frame-paced source-batch fetch that
-  brings a lazy part in) and `_runChildrensStepFunction` (animation, stepping widgets); then
+  brings a lazy part in) and `_runChildrensStepFunction` (animation: each stepping widget on the world or the hand); then
   `_keepEditingOnScreenNoSettle`, which keeps editing true to what the events and steps left on screen (an edit
   whose text left the screen ends, and a move of where the editor focus stands is announced, for the dataflow
   drain right after it to carry to the toolbars).

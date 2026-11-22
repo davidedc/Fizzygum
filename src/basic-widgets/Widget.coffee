@@ -1055,13 +1055,16 @@ class Widget extends TreeNode
     visit @
 
 
-  # What the world calls for me on each frame my fps is due, while — and only while — I am in
-  # world.steppingWdgts. That set is FLAT: a widget steps because it joined it (a clock, a blinker,
-  # a gesture's scroll), never because an ancestor did, and my children are not visited. The no-op
-  # is what a member of the set without a step of its own runs. A step that throws (an undefined one
-  # included) is caught by the loop: the world soft-resets, shows the error once in the error console,
-  # and passes me by -- I stay a member -- until code changes give me another chance, as a widget whose
-  # paint throws is hidden until then (WorldWdgt._stepWidget, giveBannedWidgetsAnotherChance).
+  # What the world calls for me on each frame my fps is due, while I am in world.steppingWdgts and on
+  # the world or the hand (WorldWdgt._stepsMember): taken off my holder, closed into the bin or onto the
+  # shelf, or a copy not yet placed, I keep my membership and wait, and step again once I am back -- so
+  # a step may read my parent and my place. That set is FLAT: a widget steps because it joined it (a
+  # clock, a blinker, a gesture's scroll), never because an ancestor did, and my children are not
+  # visited. The no-op is what a member of the set without a step of its own runs. A step that throws
+  # (an undefined one included) is caught by the loop: the world soft-resets, shows the error once in
+  # the error console, and passes me by -- I stay a member -- until code changes give me another
+  # chance, as a widget whose paint throws is hidden until then (WorldWdgt._stepWidget,
+  # giveBannedWidgetsAnotherChance).
   step: noOperation
   
   
@@ -3443,7 +3446,12 @@ class Widget extends TreeNode
 
     return result
   
+  # Take me off my parent, settled: the removal marks my parent's layout while I am still attached, so
+  # the one settle round it re-lays my parent out now rather than at the end of the cycle.
   removeFromTree: ->
+    @_settleLayoutsAfter => @_removeFromTreeNoSettle()
+
+  _removeFromTreeNoSettle: ->
     # FREEFLOATING-skip centralized in _invalidateLayout(triggeringChild): pass @ so the parent skips
     # when I'm freefloating -- removing a freefloating child doesn't change the parent's layout.
     @parent?._invalidateLayout(@)

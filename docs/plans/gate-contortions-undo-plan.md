@@ -19,7 +19,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U4 | Three spellings a gate's blind spot chose | CLOSED 2026-11-22 (§U4) |
 | U5 | One answer on `Widget`, asked plainly | CLOSED 2026-11-22 (§U5) |
 | U6 | Three checks get a witness of their own | CLOSED 2026-11-22 (§U6) |
-| U7 | The world steps what is attached; a row with nothing to load says so | not started |
+| U7 | The world steps what is attached; a row with nothing to load says so | CLOSED 2026-11-22 (§U7) |
 | U8 | The caret's margin includes the border | not started |
 | U9 | A re-click keeps a member's undo history | not started |
 | U10 | Six self-called helpers take their own tier | not started |
@@ -531,6 +531,33 @@ stepping set is a world collection). **Predicted pixel set.** EMPTY; a test that
 widget would be a finding. **Park when.** Part 1's research finds a product that RELIES on a detached widget stepping
 (an animation that runs while its widget is off-tree): park with the list. **Audit.** runtime S11, S12.
 
+**Landed 2026-11-22.** (1) The world steps a member only while it is on the world or held by the hand:
+`WorldWdgt._stepsMember` (`TreeNode.isOrphan`, the one definition of attached, and not banned for a throw) is asked
+by the step station and by the macro pump's two "still moving?" queries alike, so a knob put away mid-slide holds no
+wait. Membership stays the widget's to manage (no second registry, no detach hook): a widget taken off its holder,
+closed into the bin or not placed yet waits, and steps again once it is back. `BouncerWdgt.step`'s
+`return unless @parent?` is gone. Corrected at research: "attached" is not `@parent?` (a widget in a closed window
+has one) nor `root() is world` (a carried widget would freeze); the menu sweep's bite-proof planted a stepper that was
+never attached, and each sweep root's restore destroys what it adds, so the plant now puts its stepper on the desktop
+at the first world cycle after the walk. Ruled: a clock closed into the bin stops ticking and, reopened, shows its
+closing time until its next due step (at most a second): the fix entails it, and a fresh face at once would need
+per-member bookkeeping the plan does not name. Proof: `SystemTest_macroAWidgetOffTheWorldIsNotStepped` (values only,
+both pointers) — taken off its holder by "Make pointer", closed into the bin, carried by the hand, never placed (a
+bouncer and its copy), and a knob put away mid-slide — each leg failed by its own plant (the old membership, a
+`@parent?` test, a `root() is world` test, queries that ask every member). Writing it showed that `close()` on the
+bin's own window does nothing (the window would file itself into the bin inside it; the close button's path puts the
+bin away): FILED. (2) "Deserialise from memory…" with nothing serialised says so (`world.inform`) and returns;
+`lastSerializationString` is `undefined` until something is serialised (a `""` default made a `?` guard pass and the
+parse throw). The menu sweep's two `KNOWN` entries for those throws are gone, and its header admits an entry only for
+a row whose behaviour IS the throw. (3) A class-A finding on the way, fixed at its cause: the end-of-cycle capstone
+probe of the new test found two careless pushes — `Widget.removeFromTree`, a public structural mutator, did not
+self-settle, so the bin's close button (`BinWdgt.closeFromContainerFrame`) and "Make pointer" left the removal's
+layout to the end of the cycle. It is the canonical wrap now, `removeFromTree: -> @_settleLayoutsAfter =>
+@_removeFromTreeNoSettle()`; the probe reads clean. Pixels: the new `Widget` member moves
+`SystemTest_macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2 and image_3 (its inherited member list rests 15 px
+higher after the scroll to `alpha`), recaptured at both densities and pointers. Ratchets: `WorldWdgt`'s method
+ceiling raised 129 → 130 (`_stepsMember`) and `Widget`'s 394 → 395 (`_removeFromTreeNoSettle`), each dated.
+
 ### U8 — The caret's margin includes the border
 
 **Stands today.** `src/basic-widgets/ViewportWdgt.coffee`, `scrollCaretIntoView`: `marginAroundCaret = @planeMargin +
@@ -847,6 +874,8 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U4: four platform calls respelled for unresolved-sends (one dropped a Duplicator hardening), eleven `new (window["X"])` sites, and `isDesktopShortcut`, alive only for two rigs — small. — CLOSED 2026-11-22 (gate-contortions loop, U4): the plain platform calls, the Duplicator hardening with a rig check, the classes named bare under their await, the predicate deleted.
 - [x] U5: `isVisuallyTransformed` duplicates a private twin made so a macro could call it; `boxPresentedToOverlays` has its default written at four readers — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U5): one public name; the base answer on `Widget`, a viewport overriding it.
 - [x] U6: three checks take their expected value from the rule they judge, or dodge a finger failure: the serialization rig's pane list, the thumb-highlight test, the pointer-cancel test's mouse-only declaration — small. — CLOSED 2026-11-22 (gate-contortions loop, U6): the literal list both ways, the painted thumb against a pointer-kind witness, the cancel test under a finger.
+- [x] U7: two dev-menu rows throw when clicked before anything is serialised, excused in the menu sweep's `KNOWN` table; the bouncer's `return unless @parent?` guards the stepping defect filed in this file — small. — CLOSED 2026-11-22 (gate-contortions loop, U7): the rows inform and return; the entries are gone.
+- [x] The world steps every registered stepper, attached or not: a detached widget and a never-attached copy of a stepping widget keep stepping and stay in the set. Reached by the menu sweep (a detached bouncer threw). Medium-low. Detail: the plan's §U4e. — CLOSED 2026-11-22 (gate-contortions loop, U7): `WorldWdgt._stepsMember` — the world steps a member only while on the world or the hand; the bouncer's guard is gone.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

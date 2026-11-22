@@ -67,16 +67,21 @@ const METHOD_CEILINGS = {
   // isVisuallyTransformed is the one answer to whether an island turns or scales a widget, so its private twin,
   // which only the dock band asked, is gone. Raised 393 -> 394 on 2026-11-22 under the owner's standing ruling of
   // 2026-11-16 (the right shape over the count): boxPresentedToOverlays, the box every widget presents to an overlay
-  // laid over it, answered on Widget, overridden by a viewport keeping a margin, and asked plainly by its readers
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 394 },
+  // laid over it, answered on Widget, overridden by a viewport keeping a margin, and asked plainly by its readers.
+  // Raised 394 -> 395 on 2026-11-22 under the same ruling: _removeFromTreeNoSettle, the core of removeFromTree, which
+  // settles round it as every public structural mutator does (the end-of-cycle capstone found the bin's close button
+  // and "Make pointer" leaving the removal's layout to the end of the cycle)
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 395 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
   // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on
   // the owner's request for the clean shape: _keepEditingOnScreenNoSettle, the once-per-cycle station that ends an
   // edit whose text left the screen and announces where the editor focus stands, so a tool's look follows what it may
   // act on whatever put the focus away (a close, a hide, a collapse, a drag out of a window), with no hook in those
-  // cores
-  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 129 },
+  // cores. Raised 129 -> 130 on 2026-11-22 under the owner's standing ruling of 2026-11-16 (the right shape over the
+  // count): _stepsMember, the one question the step station and the two pump queries ask of a member: is it on the
+  // world or the hand, and not banned
+  WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 130 },
   ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
   // raised 170 -> 171 on 2026-11-17 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
   // window is a holder of a paint tool and answers the person's pair (armedDrawingTool / armDrawingTool), offers its
