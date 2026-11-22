@@ -82,7 +82,7 @@ class ToolPanelWdgt extends PanelWdgt
       if !aWdgt.extentToGetWhenDraggedFromGlassBox?
         aWdgt.extentToGetWhenDraggedFromGlassBox = aWdgt.extent()
 
-      if !(aWdgt.isGlassBoxWrapper?())
+      unless aWdgt.standsAsAToolCell?()
         glassBoxBottom = new GlassBoxBottomWdgt
         glassBoxBottom.add aWdgt
 
@@ -94,6 +94,7 @@ class ToolPanelWdgt extends PanelWdgt
           # with neither gets a lid with no tooltip
           glassBoxTop.toolTipMessage = aWdgt.toolName ? aWdgt.toolTipMessage
           glassBoxBottom.add glassBoxTop
+          glassBoxBottom.lid = glassBoxTop
 
         # a provisional seat inside my padding: the arrange this add schedules places the cell
         glassBoxBottom._applyMoveTo @topLeft().add new Point @_crossPadding(), @_crossPadding()

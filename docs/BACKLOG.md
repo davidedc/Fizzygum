@@ -321,7 +321,6 @@ The arc that fixed SWCanvas's queued defects and the egregious ones it found (ow
 - [ ] **`PaletteAppearance`'s rings sit at a radius ± 0.5 about a pixel centre** (Fizzygum) — both ring edges fall on pixel centres, so the 3.5 ring is asymmetric at dpr 1; radius 3 is symmetric; cosmetic, a recapture.
 
 ### `plans/gate-contortions-undo-plan.md` — the gates say what a finding means, and the shapes bent round them are undone (AUTHORED 2026-11-21; its U1, U2 and U19 own the two items of "Gate audit 2026-11-16" below, its U7 and U8 the stepping and caret-border lines elsewhere in this file)
-- [ ] U13: six type tests in disguise: a soak on `updateVisibility`, one on `_materializedBySugar`, and `isDivider`, `isGlassBoxWrapper`, `isGlassBoxLid`, `isLayoutChrome` — small each.
 - [ ] U14: five methods stay public and a `setExtent` sits in a constructor because layering rule [A] has no per-method marker: the canonical NoSettle shape where it exists, else the owner rules — medium.
 - [ ] U15: the list-row macro verb keeps a drag, nudges and a wheel so old shots keep their offsets; a class-inspector test changed its example class so a row shows — medium, a recapture.
 - [ ] U16: two document tests are declared mouse-only because a finger's over-scroll stops 19 px short of a clamp — medium.

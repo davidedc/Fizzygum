@@ -37,11 +37,10 @@ class LayoutChromeWdgt extends Widget
   # frame-bar chrome / handles / scrollbars; honored by ancestry at ActivePointerWdgt's focus-set sites.
   excludedFromEditorFocusTracking: -> true
 
-  # Capability query (duck-typed at the call sites): am I layout-editing chrome? A divider
-  # IS a division cell, and the adder/droplet/spacer carry division boxes too — but their
-  # boxes are machinery working state, not user knobs, so the widget menu gate uses this to
-  # withhold the division-cell spec submenu from all three.
-  isLayoutChrome: -> true
+  # A divider IS a division cell, and the adder/droplet/spacer carry division boxes too, but each box is
+  # machinery working state, not a user knob: I offer no division-cell submenu
+  # (Widget._addMyDivisionCellMenuEntries).
+  _addMyDivisionCellMenuEntries: (widgetOpeningThePopUp, menu) ->
 
   # The drawing tail: runs in logical pixels with the origin already translated to my position,
   # over my plate, in the normal pass only. Default: nothing -- StackElementsSizeAdjustingWdgt draws

@@ -214,6 +214,13 @@ class TransformFrameWdgt extends PanelWdgt
   _soleContent: ->
     @childrenNotHandlesNorCarets()?[0]
 
+  # Am I an island round `aWidget` alone -- is it all I hold, handles and carets aside? At identity too:
+  # a sole-content island is transform plumbing round ONE figure whoever authored it, which is what a
+  # re-home moves and what a classification looks through (Widget._enclosingSoleContentIsland).
+  isSoleContentIslandOf: (aWidget) ->
+    kids = @childrenNotHandlesNorCarets()
+    kids.length == 1 and kids[0] == aWidget
+
   # Affine transforms (§6 Phase 4D-2b): RE-EXPRESS a dropped SUGAR FIGURE relative to the plane it lands in.
   # When a _materializedBySugar figure (from a 4D-2a pick-out or a 4C rotate/scale) is float-dropped into a
   # container that lives inside a non-identity island, its spec is ABSOLUTE (Σ degrees / ∏ scales over its

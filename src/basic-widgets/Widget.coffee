@@ -1026,17 +1026,12 @@ class Widget extends TreeNode
       @desiredExtent = undefined
       @desiredPosition = undefined
 
-    # The resizing handle becomes visible/invisible
-    # when the layout spec of the parent changes
-    # (typically it's visible only when freefloating)
-    # TODO unclear if we should rather have handles subscribe to the parent
-    # layout change ??? What if there are multiple handles or they are
-    # nested deeper?
-    # only HandleWdgt defines updateVisibility, so the ?-existence filter is exactly the old
-    # `m instanceof HandleWdgt` (type-test-elimination ε — the keep-links-back precedent)
-    isThereAnHandle = @firstChildSuchThat (m) ->
-      m.updateVisibility?
-    isThereAnHandle?.updateVisibility()
+    # Every handle on me shows only while I am free-floating (HandleWdgt.wouldShow asks my spec), so
+    # each one re-asks now. A handle is my direct child whoever I am: it corner-attaches to the widget
+    # it is added to (HandleWdgt.defaultLayoutSpecWhenAddedTo; a viewport takes it directly,
+    # attachesToViewportDirectly). So my children are every handle there is to tell, and a widget
+    # carrying several -- its own resizer and a halo's, or two attached -- has each follow.
+    child.updateVisibility?() for child in @children
 
   # MY CORNER CHAIN CHANGED: the resizer over my bottom-right corner came or went
   # (HandleWdgt.updateVisibility). Every
@@ -2133,13 +2128,11 @@ class Widget extends TreeNode
   # (materialize/dissolve/unwrap, halo anchor) keeps using _enclosingSugarIsland — an explicit island
   # must never auto-dissolve or be reused by the property sugar.
   # An island at IDENTITY counts too (an explicit identity island travels whole), so this cannot ask
-  # the plane-mapping protocol, which an identity island answers nothing to: only islands define
-  # _materializedBySugar (as _dropPolicyProxy relies on), so its presence is the island test.
+  # the plane-mapping protocol, which an identity island answers nothing to: it asks my parent, and
+  # only an island answers (TransformFrameWdgt.isSoleContentIslandOf).
   _enclosingSoleContentIsland: ->
     p = @parent
-    return undefined if !p?._materializedBySugar?
-    kids = p.childrenNotHandlesNorCarets()
-    return p if kids? and kids.length == 1 and kids[0] == @
+    return p if p?.isSoleContentIslandOf?(@)
     undefined
 
   # Affine transforms (§7.5 Bug B + latent 2, Option B): the outermost island of which I am (transitively)
@@ -5225,17 +5218,21 @@ class Widget extends TreeNode
       if @parent?.constrainContentWidth
         @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
     # a DIVISION cell gets its spec's own submenu ("Layout in row" / "Layout in column" — desired/max
-    # size + cross-alignment). The layout CHROME (divider / adder / spacer) is a division
-    # cell too, but its box is machinery working state, not a user knob — excluded by
-    # capability, never a type test.
-    else if @layoutSpec?.isDivisionElement?() and !@isLayoutChrome?()
-      @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
+    # size + cross-alignment), through the one step a cell whose box is no user knob overrides
+    else if @layoutSpec?.isDivisionElement?()
+      @_addMyDivisionCellMenuEntries widgetOpeningThePopUp, menu
     # a DIVISION container — or a drop-slot-hosting CONTENT stack (a document's inner
     # stack) — gets the layout-scaffold toggle: "Edit layout" shows the drop-slot adders
     # between the cells (fetching the lazy authoring part that carries them), "Done
     # editing layout" removes them
     if @_divisionChildrenAxis()? or @hostsContentStackDropSlots?()
       @addLayoutEditingMenuEntries menu
+
+  # MY DIVISION CELL'S SUBMENU, offered while a division places me: my spec's own entries
+  # (DivisionStackLayoutSpec.addWidgetSpecificMenuEntries). The layout chrome offers none
+  # (LayoutChromeWdgt): its division box is machinery working state, not a user knob.
+  _addMyDivisionCellMenuEntries: (widgetOpeningThePopUp, menu) ->
+    @layoutSpec.addWidgetSpecificMenuEntries widgetOpeningThePopUp, menu
 
   # The edit-layout toggle pair, on whatever widget OWNS the scaffold — called on self by
   # the gate above, and by a VIEWPORT on its contained stack (a document surfaces the

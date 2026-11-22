@@ -406,9 +406,10 @@ wrappers. A DIVISION CELL's knobs are menu-reachable: its spec's "Layout in row"
 column" submenu (desired/max size prompts, cross-alignment entries — the settle-on-element setter
 family on `DivisionStackLayoutSpec`, `element` bound at `_ensureDivisionBox`; the VSLS idiom; every row,
 like the "Layout in stack" submenu's, targets the cell and names its box by reader through
-`Widget.actOnLayoutKnobFromMenu`, so a copied pinned submenu drives the cell's real box), the
-chrome excluded by the `isLayoutChrome` capability. A border layout is COMPOSITION, not an engine: a
-'y' division stack whose middle cell is an 'x' row, dividers at the seams
+`Widget.actOnLayoutKnobFromMenu`, so a copied pinned submenu drives the cell's real box), offered
+through the cell's own step, `Widget._addMyDivisionCellMenuEntries`, which the chrome
+(`LayoutChromeWdgt`: the size-adjusting divider, the spacer, the adder) overrides with nothing.
+A border layout is COMPOSITION, not an engine: a 'y' division stack whose middle cell is an 'x' row, dividers at the seams
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
 
 **hug vs grow.** `grow 0` is a size-stability choice (a size-stable window content declares it in its

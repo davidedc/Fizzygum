@@ -70,8 +70,10 @@ const METHOD_CEILINGS = {
   // laid over it, answered on Widget, overridden by a viewport keeping a margin, and asked plainly by its readers.
   // Raised 394 -> 395 on 2026-11-22 under the same ruling: _removeFromTreeNoSettle, the core of removeFromTree, which
   // settles round it as every public structural mutator does (the end-of-cycle capstone found the bin's close button
-  // and "Make pointer" leaving the removal's layout to the end of the cycle)
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 395 },
+  // and "Make pointer" leaving the removal's layout to the end of the cycle). Raised 395 -> 396 on 2026-11-22 under
+  // the owner's standing ruling of 2026-11-16 (the right shape over the count): _addMyDivisionCellMenuEntries, the
+  // division-cell submenu step every cell offers and the layout chrome overrides with nothing
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 396 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
   // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on

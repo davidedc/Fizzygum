@@ -1,7 +1,6 @@
 # The band between two GROUPS of rows in a menu or a prompt (and in any row-stack that mints one
-# via CommandPanelWdgt.createLine). It is a first-class type so removeConsecutiveLines can identify
-# dividers via the isDivider role query rather than by `instanceof RectangleWdgt` — the latter
-# mistakes ANY stray RectangleWdgt in a menu for a divider.
+# via CommandPanelWdgt.createLine). A class of its own, so a row-stack tells a group boundary from
+# any other row by asking it (separatesRowGroups), and a RectangleWdgt in a menu is never taken for one.
 #
 # The look (redesign plan §2, rule D: a band whose look is its own rule): a band menuDividerGap +
 # menuDividerRuleWidth + menuDividerGap tall with NO fill of its own, so the pop-up's body shows
@@ -25,8 +24,8 @@ class DividerWdgt extends RectangleWdgt
     @_applyHeight 2 * theme.menuDividerGap + theme.menuDividerRuleWidth
 
 
-  # Role query for removeConsecutiveLines' "is this row a divider?" test, dispatched
-  # via ?() so non-divider rows (which do not answer it) read falsy -- a duck-typed
-  # role query in place of an `instanceof DividerWdgt` chain (type-test elimination).
-  isDivider: ->
+  # I separate two groups of rows: a boundary standing right after another bounds an empty group (its
+  # rows were removed once the menu was built), so it goes (CommandPanelWdgt.removeConsecutiveLines,
+  # which asks every row; only a boundary answers).
+  separatesRowGroups: ->
     true

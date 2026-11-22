@@ -25,7 +25,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U10 | Six self-called helpers take their own tier | CLOSED 2026-11-22 (§U10) |
 | U11 | `loadWorldSnapshot` is its phases | CLOSED 2026-11-22 (§U11) |
 | U12 | `takeInventory` is its walks | CLOSED 2026-11-22 (§U12) |
-| U13 | A type test says it is one, or the question names a capability | not started |
+| U13 | A type test says it is one, or the question names a capability | CLOSED 2026-11-22 (§U13) |
 | U14 | A low-level method that sizes or drives another widget: [A] against [U] | not started |
 | U15 | The list-row verb scrolls one way | not started |
 | U16 | Two documents reach their clamp under a finger | not started |
@@ -775,6 +775,23 @@ the answer must fail a test that exists; a site no test reaches gets a value-onl
 **Out of scope (R7):** `isFrame`, `isLayoutAdderOrDroplet`, the five layout-spec predicates. **Audit.** static C6, C7,
 C11.
 
+**Landed 2026-11-22.** None of the six takes rank 3 (no `sanctioned` entry; `instanceof-type-test` stays 64): every one
+has behaviour to move or a capability to name. (1) `Widget._setLayoutSpec` tells EVERY child `updateVisibility?()`
+(a handle is always its widget's direct child), and the TODO is answered; ruled, the set widens knowingly: a widget
+carrying several handles has each follow a spec change, where only the first child handle was told. (2)
+`_enclosingSoleContentIsland` asks the parent `isSoleContentIslandOf?(@)`, answered by `TransformFrameWdgt`. (3)
+`DividerWdgt.isDivider` is `separatesRowGroups` and (4) `GlassBoxBottomWdgt.isGlassBoxWrapper` is `standsAsAToolCell`,
+each named for what its caller relies on (ruled: kept, a reviewer read the second as identity). (5) The cell holds its
+lid in a field, `lid` (one writer, `ToolPanelWdgt`; cleared by the cell's `_reactToChildRemoved` when the lid leaves —
+a review finding: without it a destroyed lid stayed named and that tool's overflow row threw); `isGlassBoxLid` goes.
+(6) A Widget step, `_addMyDivisionCellMenuEntries`, which `LayoutChromeWdgt` overrides with nothing; `isLayoutChrome`
+goes. Proof: three new value-only tests (`EveryHandleOnAWidgetFollowsItsPlacement`,
+`ToolCellAddedToAToolPanelIsNotWrappedAgain`, `LayoutChromeOffersNoDivisionCellMenu`), followers clean on both
+pointers; a plant per site (and one for the lid's clearing), each failing exactly its predicted tests on both pointers.
+Ratchets: `Widget`'s method ceiling 395 → 396, dated; `BASELINE_U_QUERY` 102 → 101 banked (`isLayoutChrome` was a
+self-only public query). Pixels: the predicted inspector churn only, `DuplicatedInspectorDrivesCopiedTargetOnly`
+image_2 and image_3 at both densities on both pointers.
+
 ### U14 — A low-level method that sizes or drives another widget: [A] against [U]
 
 **Stands today.** Five allowlisted methods whose reason is "[A] forbids the _-form" (`buildSystem/public-api-allowlist.txt`):
@@ -980,6 +997,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U10: six self-called helpers are spelled public and excused as end-user API because [S] and [G] refuse the `_` form, though each rule has a per-method marker — small, inspector churn. — CLOSED 2026-11-22 (gate-contortions loop, U10): eight helpers take the `_` tier; three markers.
 - [x] U11: `WorldWdgt.loadWorldSnapshot` stays at complexity 67 because its split adds methods to a class at its method ceiling — medium. — CLOSED 2026-11-22 (gate-contortions loop, U11): six phase cores; the ceiling +6, dated.
 - [x] U12: `WorldInventory.takeInventory` stays at complexity 129 because a split's child above 15 could not be recorded — medium. — CLOSED 2026-11-22 (gate-contortions loop, U12): its steps + `InventoryWalker`; real offences prove every walk.
+- [x] U13: six type tests in disguise: a soak on `updateVisibility`, one on `_materializedBySugar`, and `isDivider`, `isGlassBoxWrapper`, `isGlassBoxLid`, `isLayoutChrome` — small each. — CLOSED 2026-11-22 (gate-contortions loop, U13): a verb, a query, two capability names, a field, a hook.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

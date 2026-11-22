@@ -31,17 +31,22 @@
 
 class GlassBoxBottomWdgt extends BoxWdgt
 
+  # The LID over my tool, when my tool is there only to be dragged out (not actionableAsThumbnail): the
+  # GlassBoxTopWdgt the tool panel that wraps the tool puts on me and records here
+  # (ToolPanelWdgt._addNoSettle); undefined when my tool catches its own taps, and once my lid has left
+  # me (_reactToChildRemoved). A reference into my own subtree, so a copy holds its own lid and a save
+  # keeps it.
+  lid: undefined
+
   colloquialName: -> "tool cell"
 
   # my rounding is the tool cell's, from the theme, as I am built; my fill is read as I am painted
   constructor: ->
     super WorldWdgt.theme.toolCellCornerRadius
 
-  # Role query (replaces the `aWdgt instanceof GlassBoxBottomWdgt` wrap-idempotency guard in
-  # ToolPanelWdgt._addNoSettle): "am I already a glass-box template wrapper?" -- true
-  # here only, so a widget is never wrapped twice. Dispatched via ?() (nothing on Widget).
-  # (type-test-elimination campaign)
-  isGlassBoxWrapper: ->
+  # I already stand in a tool panel's grid as a cell, so a panel I am added to seats me as I am and
+  # wraps me in no second cell (ToolPanelWdgt._addNoSettle asks whatever it is given; only I answer).
+  standsAsAToolCell: ->
     true
 
   # The one widget I wrap -- the tool this cell offers, which is what names the cell in a menu.
@@ -56,7 +61,13 @@ class GlassBoxBottomWdgt extends BoxWdgt
   # handles its own clicks wears none and catches its taps itself. It is also the widget whose
   # pointer state my look shows.
   thumbnailClickReceiver: ->
-    (@firstChildSuchThat (eachChild) -> eachChild.isGlassBoxLid?()) ? @glassBoxItem()
+    @lid ? @glassBoxItem()
+
+  # MY LID LEFT ME, wherever it went (destroyed, or re-parented by "Attach"): I forget it, so a tap on
+  # me reaches my tool again and I never name a widget standing elsewhere, or a destroyed one (the dock
+  # slots' rule, FrameWdgt._freeDockSlotOf). A lid re-added to me is still mine.
+  _reactToChildRemoved: (child) ->
+    @lid = undefined if child is @lid and child.parent isnt @
 
   # ===== my look =====
 

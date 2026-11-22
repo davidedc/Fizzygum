@@ -278,9 +278,9 @@ class CommandPanelWdgt extends VerticalStackPanelWdgt
     # while looping over it
     destroyNextLines = false
     for item in @children.slice()
-      if destroyNextLines and item.isDivider?()
+      if destroyNextLines and item.separatesRowGroups?()
         item.fullDestroy()
-      if item.isDivider?()
+      if item.separatesRowGroups?()
         destroyNextLines = true
         continue
       else
