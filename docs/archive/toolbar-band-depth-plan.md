@@ -1,9 +1,10 @@
 # Toolbar band depth — a band as deep as a strip, pictures in a mark box
 
-**Status: PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-AUTHORED 2026-11-23, NOT STARTED. The shape is owner-approved ("A with smaller pictures", 2026-11-23,
-chosen from five rendered geometries). Phase 3 (the state plate's inset) is the planner's addition to that
-choice: it is independent of Phases 1–2 and the owner may strike it.
+**Status: COMPLETE 2026-11-23.** Authored 2026-11-23 and executed cold the same day; Phases 1–6 landed as
+written, Phase 3 included, with the deviations the ledger at the end records. The living truth is
+`docs/architecture/toolbars.md` §1 and `docs/architecture/visual-design-system.md` ("The tool cell", the
+embedded toolbar row). The shape is owner-approved ("A with smaller pictures", 2026-11-23, chosen from five
+rendered geometries). Below, the plan as it was executed.
 
 **Mandate: transformation, not accommodation.** After this plan there is ONE depth for a row of chrome
 targets in a frame — a window's strip, a band's grip strip and a toolbar band are all 46 px — so any
@@ -686,4 +687,35 @@ Reach: every Maker's toolbar, at a glance. Severity: low (a look, nothing refuse
 
 ## BACKLOG ledger
 
-(empty until the arc closes)
+**Landed (2026-11-23).** Phases 1–3 as written: `toolCrossPadding` deleted (a band 46 deep), `toolMarkSize` 32 and
+the cell seating by role (`_seatAtSide`), `drawsFaceInToolMarkBox` and `glyphSize` on the four families (creators;
+the paint tools, through `_faceBoundsIn`; the property tools, the bucket and the slider node saying true; the
+Templates-glyph creator false), `ToolCellAppearance` with its `fillStatePlate` shared by the overflow chevron and
+its own `opaqueCoveredRect`. Phase 4: the new `SystemTest_macroToolbarBandIsAsDeepAsAStrip`, its three plants each
+failing it by its own line, its followers clean under both pointers, the end-of-cycle probe silent on it; 70
+tests recaptured under the mouse and 66 under the finger (the mouse-only ones skipped) at densities 1 and 2,
+`RECAPTURE COMPLETE` both times, nothing filed as needs-a-fix or UNSTABLE. Phase 5's docs, and the comment drift the mark box made in
+`IconAppearance` and `SizeAwareIconAppearance` (a toolbar thumbnail named no glyph side).
+
+**Deviations from the plan as written.**
+- The complexity record `GlassBoxBottomWdgt#_reLayoutSelf` was DELETED, not lowered: the split took the function
+  under the ceiling, and the gate reads a record of a function below it as stale.
+- One test besides the plan's four candidates stated the old geometry in its premises:
+  `SystemTest_macroCollapsedDockIsAnEdgeSliver` held a collapsed band thinner than the expanded one and an
+  expanded grip taller than wide. A collapsed band is now exactly as thick as the expanded one, so the expansion is
+  read by the collapsed state and the grip's place. The four candidates passed their assertions unchanged.
+- Five tests shaped a floating toolbar into a column 58 wide, the width a one-column toolbar hugged; it is 46, and
+  at 58 the column stood packed left with 12 px over. They shape it 46 wide.
+- The new test's hovered cell is hovered AFTER a click into the page: a property tool with nothing to act on is
+  dimmed and shows no hover plate.
+- Step 7's `fg diffpage` was replaced by a comparison of the committed references with the recaptured ones (after a
+  recapture a diff page has nothing to show) on a Docs, a Slides and a Draw test: the band, the pictures and the
+  plate change, and content takes the room a thinner band gives (a slide scales up a little).
+- One finger reference newly differs from its mouse twin, and it is no translation defect:
+  `SystemTest_macroDrawingTakesNoClickPlacedWidget` image_1. The thinner floating Slides bar puts its text creator
+  6 px nearer the desktop's left edge; the mouse lifts the made text after 7 px of travel, where it would stand at
+  x = -5, so the grab fits it inside the desktop (`ActivePointerWdgt.grab`, `_moveWithin world`) and it lands 5 px
+  right of the finger's, which lifts after 24 px with nothing to fit. Both behaviours predate this arc.
+
+**Left open (BACKLOG).** The picture faces' size-aware redraw (below, "BACKLOG detail"); and what extent a
+Template placed by a CLICK on its lid takes (see BACKLOG).

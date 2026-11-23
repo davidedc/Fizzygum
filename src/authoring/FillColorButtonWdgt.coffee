@@ -7,6 +7,10 @@ class FillColorButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "fill color"
 
+  # my face, the paint bucket, is a PICTURE that fills its box, unlike my family's glyphs: the tool
+  # cell I stand in names it the mark box's side
+  drawsFaceInToolMarkBox: true
+
   verb: "pickFillColor"
 
   createAppearance: -> new PaintBucketIconAppearance @

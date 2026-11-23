@@ -57,6 +57,17 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
 
   actionableAsThumbnail: true
 
+  # The family's faces are GLYPHS drawn for the whole tool cell, carrying their own white space (the
+  # script A, B, I, `</>`, the align trio, ...), so the cell I stand in names me no smaller side to
+  # draw at. A tool whose face is a PICTURE that fills its box says true (the paint bucket, the slider
+  # node), and the cell then names it the mark box's side (GlassBoxBottomWdgt._reLayoutSelf).
+  drawsFaceInToolMarkBox: false
+
+  # THE SIDE MY FACE IS DRAWN AT inside my box, read by my icon appearance: the tool cell I stand in
+  # writes it as it seats me, when I declare my face a picture (drawsFaceInToolMarkBox), my box staying
+  # the cell's whole target; unset, my face fills my box.
+  glyphSize: undefined
+
   # MY VERB: the name of the one method -- or field -- a subject must offer for me to act on it: the
   # method my press calls on it (the default act, _actOn), or what my own act reads. Named once, here,
   # by each subclass. (subclass responsibility)

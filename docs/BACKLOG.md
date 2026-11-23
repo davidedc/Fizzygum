@@ -102,7 +102,7 @@ One chrome container (`FrameWdgt`) with a runtime `lifetime` state and manifesta
 - [ ] **A pinned layout submenu keeps the rows it was built with** — the current alignment (or cross alignment) is left out, nothing ticked, so after a press, here or in its copy, a pinned "Layout in stack"/"Layout in row" menu offers that choice, not the old one (§10; H4b review) — reachable, low.
 - [ ] **A duplicated pinned layout prompt writes a clone of the spec** — the size and elasticity prompts (`VerticalStackLayoutSpec`, `DivisionStackLayoutSpec`) still target the spec itself, so a Duplicate of a pinned prompt edits a clone and nothing moves (H4b review A2) — reachable (dev menu), low.
 - [ ] **A pinned pop-up dragged back out of the bin does not rejoin `world.openPopUps`** — so a font tool whose pinned Fonts menu was closed to the bin and dragged back opens a SECOND Fonts menu (its lookup derives the open menu from that set); only a pop-up's lifetime write adds to it (H4a review A1) — reachable, low.
-- [ ] **A floating toolbar's strip, at the width it is born at, offers close only** — born 58 wide, its collapse and edit toggle drop out of the graded roster; a born-size question no grip floor answers (untitled strips are not floored, plan §1; R4 §E9 Q1; owner postponed 2026-11-19) — reachable, low.
+- [ ] **A floating toolbar's strip, at the width it is born at, offers close only** — born 46 wide, its collapse and edit toggle drop out of the graded roster; a born-size question no grip floor answers (untitled strips are not floored, plan §1; R4 §E9 Q1; owner postponed 2026-11-19) — reachable, low.
 - [ ] **After Disconnect, a pinned wire menu's rows stay, unticked, and do nothing** — they could grey, enabled while the controller still holds the wire they name (`isWiredToActionOf`; the enablement door would need `readerArguments` too; R2 §Q5, §U11 "Landed"; grey or not: postponed 2026-11-19) — reachable, low.
 
 ### `archive/toolbar-arc-residue-plan.md` — the toolbar arc's residue (✅ CLOSED 2026-11-18: U1–U7 landed, see its ledger; living truth `architecture/toolbars.md`; the items below were filed on the way)
@@ -249,10 +249,10 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 - [ ] §4.3: fold the creator zoo (CreatorButton/WidgetFactory/MenusHelper "new X") onto the two primitives — second wave
 - [ ] §4.4: (bank) templates as first-class editable objects
 
-### `plans/toolbar-band-depth-plan.md`
-AUTHORED 2026-11-23, NOT STARTED; a toolbar band becomes as deep as a strip (46 px: one row of 44 px cells and two lines) and a tool's picture stands in a 32 px mark box inside its cell; the shape is owner-approved.
-- [ ] Phases 1–6: thin bands, the mark box, the state plate's inset, tests and recapture, docs, close.
+### `archive/toolbar-band-depth-plan.md` — a toolbar band as deep as a strip (✅ CLOSED 2026-11-23: Phases 1–6 landed, see its ledger; living truth `architecture/toolbars.md` and `architecture/visual-design-system.md`, "The tool cell")
+A toolbar band is 46 px deep, a strip's thickness (one row of 44 px cells and two lines), and a tool's picture stands in a 32 px mark box inside its cell; the items below were left open.
 - [ ] **The toolbars' picture faces scale a fixed drawing** — the creator, paint and Template faces are rough at the 32 px mark box on the software backend; redraw them size-aware, one at a time (owner-deferred 2026-11-23) — every Maker's toolbar, low.
+- [ ] **A Template placed by a CLICK on its lid takes its thumbnail's size** — 32 × 32 since the mark box (44 × 44 before), where a drag inflates it to its own size (50 × 40, a speech bubble 105 × 80): should a click place what a drag places? (`GlassBoxTopWdgt`; owner question) — reachable, low.
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.

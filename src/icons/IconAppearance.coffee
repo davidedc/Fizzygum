@@ -67,9 +67,10 @@ class IconAppearance extends Appearance
 
     # THE INK'S OWN SIDE, where my widget names one: a chrome icon is a TARGET first (ruling G3 --
     # "the bar arrange must never equate glyph with box"), so a title-strip button sized to the
-    # whole slot the strip reserved for it still draws the smaller glyph, centred in that slot.
-    # A widget naming no glyph side -- a desktop icon, a toolbar thumbnail -- has its mark fill
-    # its box, which is what those want.
+    # whole slot the strip reserved for it still draws the smaller glyph, centred in that slot; so
+    # does a toolbar tool that is its own target in a tool cell, its picture in the cell's mark box
+    # (GlassBoxBottomWdgt). A widget naming no glyph side -- a desktop icon, a Template's
+    # thumbnail, a glyph-faced toolbar tool -- has its mark fill its box, which is what those want.
     glyphSide = @widget.glyphSize
     height = if glyphSide? then Math.min boxHeight, glyphSide else boxHeight
     width = if glyphSide? then Math.min boxWidth, glyphSide else boxWidth

@@ -58,10 +58,11 @@ class ToolbarWdgt extends ViewportWdgt
 
   # MY CROSS-AXIS SIZE when docked: width for left/right, height for top/bottom -- what I ask the
   # band to grant me, which the band then wraps in its own chrome. DERIVED from my grid's own cell
-  # metrics (ToolPanelWdgt.naturalGridCrossExtent: one strip-depth of cells plus the grid's cross
-  # padding) -- the same capability the FLOATING manifestation hugs its payload with, so a band is
-  # exactly as deep as its cells need and no constant anywhere says otherwise (owner ruling: one
-  # criterion for every toolbar, docked or free). Answered at every measure and never recorded
+  # metrics (ToolPanelWdgt.naturalGridCrossExtent: one strip-depth of cells, with no padding across
+  # them, so a one-row band with its card's two lines is a frame strip's 46) -- the same capability
+  # the FLOATING manifestation hugs its payload with, so a band is exactly as deep as its cells
+  # need and no constant anywhere says otherwise (owner ruling: one criterion for every toolbar,
+  # docked or free). Answered at every measure and never recorded
   # (the band's edge spec asks me, EdgeDockLayoutSpec.thicknessGrantedTo), so a host saved and
   # loaded, or duplicated, lays its band out in the current theme. Never a laid-out size -- the
   # host's PURE measures read it through the band's spec (§6.1 rule 1), so it must not depend on

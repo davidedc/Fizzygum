@@ -473,6 +473,10 @@ class Theme
     @toolCellHoverFill = @desk
     @toolCellPressedFill = @chrome
     @toolCellActiveFill = @desk
+    # how far inside a tool cell's box its state PLATE is painted (ToolCellAppearance), on every side:
+    # the cell stays the 44 target (G3), and the plate keeps clear of the border lines of a band as
+    # deep as its cells. The overflow chevron's plate takes it too.
+    @toolCellPlateInset = 3
     # the ink of a TOOLBAR's glyphs -- a text tool's face, a creator button's, a paint tool's, the
     # overflow chevron -- the same in every pointer state (the cell under a glyph shows the state) ...
     @toolbarGlyph = @ink
@@ -962,13 +966,18 @@ class Theme
     # a strip is ONE row, as a tablet toolbar is.
     @toolThumbnailSize = 44
     @toolInternalPadding = 6
-    # the grid's padding, one per axis. ALONG the strip: the side padding before its first slot
-    # and after its last, with whatever run is left between them shared evenly between
-    # the cells (space-between). ACROSS it: around its toolRows of cells, so a one-row strip is
-    # 44 + 2 x 6 = 56 deep.
+    # the grid's padding, ALONG the strip only: the side padding before its first slot and after
+    # its last, with whatever run is left between them shared evenly between the cells
+    # (space-between). ACROSS it the grid has none: a one-row strip is one cell deep, 44, so its
+    # band is 46 with the card's two border lines -- a strip's thickness (FrameWdgt._barSpec), and
+    # docked bands of any kind line up on every side.
     @toolAlongPadding = 8
-    @toolCrossPadding = 6
     @toolRows = 1
+    # the side of a tool's MARK BOX: the square a tool's PICTURE stands in, centred in its cell,
+    # while the cell stays the 44 target (G3; GlassBoxBottomWdgt._reLayoutSelf). The 6 px it leaves
+    # around a picture is the margin a picture keeps from the band's border, the grid having no
+    # padding across the strip.
+    @toolMarkSize = 32
     # (a docked strip's own cross-axis extent is no constant: it DERIVES from the dials above --
     # ToolPanelWdgt.naturalGridCrossExtent, the same arithmetic that hugs a floating toolbar
     # around its cells -- and is read at every measure, so a band is laid out in the theme of the

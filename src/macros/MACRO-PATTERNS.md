@@ -952,12 +952,14 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A collapsed docked frame is an edge SLIVER, not a bar-shaped rectangle** (`macroCollapsedDockIsAnEdgeSliver`):
   the docked counterpart of the collapsed-window entries above. `@collapseOrUncollapseWindow_InputEvents band`
   collapses a docked frame exactly like a free window, but a docked frame's collapsed shape follows its dock
-  AXIS: expanded, a TOP-docked band's own bar runs ACROSS it (`band.bar.height() > band.bar.width()` — taller
-  than wide, at the strip's leading end, C13); collapsed, the band IS its bar, so it flips to
-  `band.bar.width() > band.bar.height()` and the whole band shrinks to exactly one bar thick
-  (`band.height() == band.bar.height()`), still spanning the full body width. C17 (tap-anywhere-to-expand)
+  AXIS: expanded, a TOP-docked band's own bar runs ACROSS it at the strip's leading end (C13: as tall as the
+  band, `band.bar.height() == band.height()`, at its left end and short of its right); collapsed, the band IS
+  its bar, so it flips to `band.bar.width() > band.bar.height()` and the whole band is exactly one bar thick
+  (`band.height() == band.bar.height()`), still spanning the full body width. A toolbar band is as deep as a
+  strip, so a collapsed toolbar band is exactly as thick as the expanded one: tell the two states apart by
+  `band.contents.collapsed` and the bar's extent, never by the band's height. C17 (tap-anywhere-to-expand)
   applies here too: `@moveToAndClickAtFractionOf_InputEvents band.titlebarBackground, [0.7,0.5]` (a tap on the
-  strip BACKGROUND, clear of the collapse button) re-expands it to its pre-collapse thickness.
+  strip BACKGROUND, clear of the collapse button) re-expands it.
 - **The toolbar grid: packed while it fits, spread only while full, a grid in a box**
   (`macroToolbarGridPacksAndSpreadsOnlyWhenFull`, decision record `docs/archive/toolbar-grid-and-bar-run.md`): read a toolbar's
   cells from its grid, `toolbar.contents.childrenNotHandlesNorCarets()` less `toolbar.contents.overflowChevron` and less any
@@ -967,6 +969,15 @@ assertion a recapture after a regression silently stores two different hashes an
   and the full one by its chevron's distance from the far end (`toolAlongPadding`) and by the total spread being under one
   pitch. A box shape needs a floating toolbar shaped by its grip (see the bar-run entry), its rows told apart by `top()`.
   No new verb.
+- **A toolbar band is as deep as a strip; a cell is the target, its picture the mark** (`macroToolbarBandIsAsDeepAsAStrip`,
+  `docs/architecture/toolbars.md` §1): line docked bands up by EQUALITIES between independently laid-out widgets (the left
+  band's `right()` against `band.bar.right()` of the bands above and below it; its width, a top band's height and the
+  window's own `bar.height()`), never against a theme dial. A cell's two roles are read off the cell: what a tap reaches is
+  `cell.thumbnailClickReceiver()` (its box must be the cell's), the tool is `cell.glassBoxItem()`, a lidded cell answers
+  `cell.lid?`; a tool that is its own target and draws a picture carries the side it is drawn at as `glyphSize` (a paint
+  tool's `faceWidget` box shows it), a glyph-faced tool carries none. Read the tools by class within a bar
+  (`bar.topWdgtSuchThat (w) -> w instanceof BoldButtonWdgt`). A collapse that keeps the band's depth is read by
+  `band.contents.collapsed` and by the page's `top()` staying put. No new verb.
 - **View mode DISENGAGES every dock; the user's own collapse state survives the round trip**
   (`macroViewModeDisengagesDocks`): a host's mode flip (`@moveToAndClick_InputEvents win.editButton`) sets
   `dockedFrame.layoutSpec.engaged` for every docked frame — disengaged in view mode (zero layout contribution,
@@ -2114,7 +2125,7 @@ assertion a recapture after a regression silently stores two different hashes an
   pin the menu (`@clickMenuHeaderToPin_InputEvents`), set it aside by its title, then move the state and read
   `@tickedRowLabelOfMenu` again. A toolbar overflow: build a window too narrow for its docked strip
   (`world.openFrameWith (new DocumentWdgt), (new Point 300, 330), …` hides the align tools) or a floating
-  `PaintToolbarWdgt` shaped into a short column (`@resizeWindowTo_InputEvents paint, new Point 58, 160` hides all
+  `PaintToolbarWdgt` shaped into a short column (`@resizeWindowTo_InputEvents paint, new Point 46, 160` hides all
   four), and pop it from `<strip>.contents.overflowChevron`; its rows reflect their tool cells, so a text tool's
   tick follows the EDITED text (click into a paragraph first — a desktop click leaves no row ticked) and a paint
   tool's the armed tool (one cycle later: every toolbar tells its cells from the dataflow station,

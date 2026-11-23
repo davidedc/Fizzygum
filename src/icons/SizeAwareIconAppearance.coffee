@@ -97,11 +97,12 @@ class SizeAwareIconAppearance extends IconAppearance
   # art it shadows. glyphSide is my widget's glyphSize when I am its
   # appearance, and the wearer's side when I am the mark on its look
   # (paintAsMarkInSquare).
-  #   No glyphSide (a desktop icon's glyph square, a toolbar thumbnail): my
+  #   No glyphSide (a desktop icon's glyph square, a glyph-faced toolbar tool): my
   # widget's WHOLE box, and each subclass centres its own square in it with
   # Math.floor in device px -- which any box that is not square relies on.
   #   A glyphSide (a chrome button sized to its whole slot, ruling G3 -- see
-  # IconButtonWdgt.glyphSize): the g x g square, g = min(glyphSide, width,
+  # IconButtonWdgt.glyphSize --, or a toolbar tool drawing its picture in its
+  # cell's mark box, GlassBoxBottomWdgt): the g x g square, g = min(glyphSide, width,
   # height) logical px, centred in my box the way calculateRectangleOfIcon
   # centres a legacy glyph (Math.round of the logical offset). It is computed
   # here in integers rather than read from calculateRectangleOfIcon, which

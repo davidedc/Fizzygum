@@ -7,6 +7,11 @@ class SliderInCellButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   toolTipMessage: "slider in cell"
 
+  # my face, the slider node, is a PICTURE that fills its box, unlike my family's glyphs: the tool cell
+  # I stand in names it the mark box's side, the side the Patch programming toolbar's slider node is
+  # drawn at too
+  drawsFaceInToolMarkBox: true
+
   # the formula a cell gets: from 1 to 100, at 50, in steps of 1
   sliderSource: "new SliderWdgt 1, 100, 50, 1"
 

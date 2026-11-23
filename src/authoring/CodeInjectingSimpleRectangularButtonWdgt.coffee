@@ -27,6 +27,15 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   # and the dispatch law on CommandSpec).
   actionableAsThumbnail: true
 
+  # MY FACE IS A PICTURE that fills the room my box gives it, so the tool cell I stand in -- whose whole
+  # square is my target -- names the side it is drawn at (GlassBoxBottomWdgt._reLayoutSelf, the mark
+  # box), and I seat my face in that side (_faceBoundsIn).
+  drawsFaceInToolMarkBox: true
+
+  # THE SIDE MY FACE IS DRAWN AT inside my box: the tool cell I stand in writes it as it seats me, my
+  # box staying the cell's whole target; unset, my face fills the room my padding leaves.
+  glyphSize: undefined
+
   # WHAT I AM AS A TOOL, in a word: my face's (the icon's toolName -- "pencil", "brush"), which I show
   # as my tooltip too, and by which a toolbar's overflow row names me (OverflowChevronButtonWdgt).
   toolName: undefined
@@ -60,6 +69,14 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
   # presses.
   _showsChildAsAPicture: (child) ->
     child is @faceWidget
+
+  # MY FACE'S BOX in the room my padding leaves (ButtonWdgt._reLayout's soft hook): the mark box my cell
+  # names (glyphSize), centred, never larger than the room; all of the room while no cell has named one.
+  _faceBoundsIn: (room) ->
+    return room unless @glyphSize?
+    side = Math.min @glyphSize, room.width(), room.height()
+    origin = new Point room.left() + Math.round((room.width() - side) / 2), room.top() + Math.round((room.height() - side) / 2)
+    origin.extent new Point side, side
 
   # WHO HOLDS MY TOOL: the window my toolbar works for, else the person. Read at every asking, never
   # stored, so a palette that docks or floats away is answered by its new holder at once.

@@ -3,9 +3,20 @@
 # first child -- and, over a tool that is there only to be dragged out (not actionableAsThumbnail),
 # the LID a press lands on (GlassBoxTopWdgt).
 #
+# MY CHILDREN HAVE TWO ROLES (ruling G3: a target and its mark are separate dials). What a tap on me
+# reaches -- my lid, or a tool that takes its own taps (thumbnailClickReceiver) -- is the TARGET, and
+# fills my whole square. My tool's PICTURE is the MARK, and stands in the MARK BOX, a toolMarkSize
+# square centred in me, which keeps the picture clear of the band's border: a tool under my lid is
+# sized to the mark box; a tool that is its own target keeps my whole square and draws its picture at
+# the mark box's side when it declares its face a picture (drawsFaceInToolMarkBox; I write it the
+# side, glyphSize); a face drawn as a glyph for my whole square carries its own white space and is
+# left as it is (_reLayoutSelf).
+#
 # MY LOOK is my tool's state and nothing else, every value a Theme role or metric (the draft's tool
-# button): a square rounded at toolCellCornerRadius with no border; no fill at rest, so the glyph
-# stands alone on whatever the strip stands on; toolCellHoverFill while my tool is hovered,
+# button): a PLATE toolCellPlateInset inside my square, rounded at toolCellCornerRadius, with no
+# border (ToolCellAppearance), so it keeps clear of the border lines of a band as deep as I am; no
+# fill at rest, so the glyph stands alone on whatever the strip stands on; toolCellHoverFill while
+# my tool is hovered,
 # toolCellPressedFill while it is pressed, toolCellActiveFill while it is the ACTIVE tool (hovered or
 # not; pressed shows pressed). While my tool has NOTHING TO ACT ON (a property tool handed no subject
 # that offers its verb) I am DIMMED: no fill in any pointer state -- the disabled look every control
@@ -23,10 +34,10 @@
 # or its mode moved, a paint tool's holder changed its tool, or the toolbar docked or left). No tool
 # pushes a colour onto me, and I keep none, so no family can leave one behind.
 #
-# MY TOOL IS CUT TO MY OUTLINE: it lies flush in my square, so I paint my children inside my rounded
-# outline, and a press in one of my corner notches reaches neither me nor my tool but whatever lies
+# MY TARGET IS CUT TO MY OUTLINE: it lies flush in my square, so I paint my children inside my rounded
+# outline, and a press in one of my corner notches reaches neither me nor my target but whatever lies
 # behind me (_roundedChildClipRadii: the rounded frame's mechanism, visual-design-system §4.7).
-# Anywhere else in my square a press lands on my tool, at rest as much as hovered: a fill of no
+# Anywhere else in my square a press lands on my target, at rest as much as hovered: a fill of no
 # colour changes how I paint, never my shape.
 
 class GlassBoxBottomWdgt extends BoxWdgt
@@ -43,6 +54,11 @@ class GlassBoxBottomWdgt extends BoxWdgt
   # my rounding is the tool cell's, from the theme, as I am built; my fill is read as I am painted
   constructor: ->
     super WorldWdgt.theme.toolCellCornerRadius
+    @appearance = @createAppearance()
+
+  # my look is the tool cell's: my state's fill painted as a PLATE inset in my box, my shape and my
+  # children's clip staying my whole box
+  createAppearance: -> new ToolCellAppearance @
 
   # I already stand in a tool panel's grid as a cell, so a panel I am added to seats me as I am and
   # wraps me in no second cell (ToolPanelWdgt._addNoSettle asks whatever it is given; only I answer).
@@ -144,30 +160,39 @@ class GlassBoxBottomWdgt extends BoxWdgt
         @_paintChildrenInsideMyRoundedOutline aContext, damagedPartOfMe, appliedShadow, radii
     @_paintEditorSelectionOverlayIfSelected aContext, clippingRectangle, appliedShadow
 
+  # I SEAT EACH CHILD BY ITS ROLE (the two roles, my header): the target at my whole side, a tool under
+  # my lid at the mark box's. A target whose face is a picture is told the mark box's side (glyphSize)
+  # BEFORE it is seated, since a button lays its face out as its box is applied.
   _reLayoutSelf: ->
 
     @_repaintAsOneUnit =>
 
-      thumbnailSize = @width()
+      markSide = WorldWdgt.theme.toolMarkSize
+      target = @thumbnailClickReceiver()
 
-      childrenNotHandlesNorCarets = @childrenNotHandlesNorCarets()
+      for w in @childrenNotHandlesNorCarets()
 
-      for w in childrenNotHandlesNorCarets
-
-        # a menu item is sized to its text; other contents become square thumbnails
+        # a menu item is sized to its text
         # (instead of `w instanceof MenuItemWdgt`; type-test-elimination campaign)
         if w.isTextSizedGlassBoxItem?()
           w._applyMoveTo @topLeft().add((new Point 0 ,(@height() - w.height())/2 ).round())
+        else if w is target
+          w.glyphSize = markSide if w.drawsFaceInToolMarkBox
+          @_seatAtSide w, @width()
         else
-          if w.idealRatioWidthToHeight?
-            ratio = w.idealRatioWidthToHeight
-            if ratio > 1
-              # more wide than tall
-              w._applyExtent new Point thumbnailSize, thumbnailSize / ratio
-            else
-              # more tall than wide
-              w._applyExtent new Point thumbnailSize * ratio, thumbnailSize
-          else
-            w._applyExtent new Point thumbnailSize, thumbnailSize
+          @_seatAtSide w, markSide
 
-          w._applyMoveTo @topLeft().add((new Point (thumbnailSize - w.width())/2 ,(thumbnailSize - w.height())/2 ).round())
+  # size `w` to a square of `side` -- to that square's fit of its own ratio, where it locks one
+  # (idealRatioWidthToHeight: its longer side is `side`) -- and centre it in my box
+  _seatAtSide: (w, side) ->
+    if w.idealRatioWidthToHeight?
+      ratio = w.idealRatioWidthToHeight
+      if ratio > 1
+        # more wide than tall
+        w._applyExtent new Point side, side / ratio
+      else
+        # more tall than wide
+        w._applyExtent new Point side * ratio, side
+    else
+      w._applyExtent new Point side, side
+    w._applyMoveTo @topLeft().add((new Point (@width() - w.width())/2 ,(@height() - w.height())/2 ).round())

@@ -20,6 +20,15 @@ nothing: a docked toolbar never falls back to working for the person.
   (`GlassBoxBottomWdgt`). An item that acts on its own press (`actionableAsThumbnail: true`) is wrapped bare,
   and a tap on its cell reaches it. Any other item is there to be dragged out, and the cell puts a **lid**
   over it (`GlassBoxTopWdgt`), which takes the press and hands out a copy.
+- **A cell's two roles.** What a tap on a cell reaches (its lid, or the tool itself) is the TARGET and fills the
+  44 cell; the tool's PICTURE stands in the 32 **mark box** centred in it (`GlassBoxBottomWdgt._reLayoutSelf`). A
+  tool under a lid is sized to the mark box. A tool that is its own target keeps the whole cell and draws its face
+  at the mark box's side when its face is a picture filling its box (`drawsFaceInToolMarkBox`, written by the cell
+  as `glyphSize`); a face drawn as a glyph for the whole cell keeps its size. The look and the faces:
+  [`visual-design-system.md`](visual-design-system.md), "The tool cell".
+- **A band is as deep as a strip.** The grid has padding along its strip only (`ToolPanelWdgt`), so a one-row
+  toolbar is one cell deep and its band, with its card's two border lines, 46: a frame strip's thickness. Bands
+  docked on different sides line up, and a collapsed band, which is its strip, leaves its host's page where it was.
 - **A subclass is an item list.** `_toolbarItems` returns the items, each a literal `new X` so the boot
   dependency finder sees the edge, and `dockSide` names the edge slot it takes by default (`'left'`; the text
   bar, and the sheet bar with it, say `'top'`). Everything else (docking, the refresh, the transfers of a paint tool) is the
@@ -381,6 +390,11 @@ event stream, with no timer.
   edit marks both come from `_tools`). Nothing else: holders, take-up, transfers and the refresh are keyed generically.
 - **A creator.** Subclass `CreatorButtonWdgt` (or `CreatorWdgt`) and answer `_createWidgetToBeHandled`. Placement
   is the base's; never search for a target yourself.
+- **Its face, in a cell.** A tool that is its own target (`actionableAsThumbnail: true`) and whose face is a
+  PICTURE filling its box declares `drawsFaceInToolMarkBox: true` and a `glyphSize` field its appearance reads (the
+  creator and paint-tool bases declare both); one whose face is a GLYPH drawn for the whole cell, with its own white
+  space, declares false (the property-tool base does, and its picture-faced tools say true). A tool under a lid
+  declares nothing: the cell sizes it to the mark box.
 - **A subject-less action.** Its own `activated`; answer no `hasSomethingToActOn` (or `true`, as Templates does).
 - **A toolbar.** Subclass `ToolbarWdgt`: `_toolbarItems` (literal `new X` forms) and `dockSide` when not `'left'`.
   A Maker docks it by answering `buildToolbar`. A toolbar may mix kinds freely.
