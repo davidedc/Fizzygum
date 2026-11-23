@@ -864,7 +864,7 @@ class InspectorWdgt extends ClippingWdgt
   # The one notification each of my edit gestures ends in, once its edit is made: my subject's
   # (Widget.sourceChanged), since the edit was made under it. ClassInspectorWdgt's is the world's.
   _notifyOfEdit: ->
-    # nosettle-sanctioned: the tail of my edit steps, which only my public gestures reach (Save, and
+    # settling-call-sanctioned: the tail of my edit steps, which only my public gestures reach (Save, and
     # the Add…, Rename… and Remove buttons), at event time and never inside a settle -- the
     # notification is the edit's own settle
     @inspectedObject.sourceChanged()

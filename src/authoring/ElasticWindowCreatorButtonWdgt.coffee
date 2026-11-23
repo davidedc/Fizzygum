@@ -7,9 +7,9 @@ class ElasticWindowCreatorButtonWdgt extends CreatorButtonWdgt
   createAppearance: -> new ElasticWindowIconAppearance @, WorldWdgt.theme.toolbarGlyph
 
   _createWidgetToBeHandled: ->
-    # nosettle-sanctioned: titles the fresh orphan window built here, at event time (a click or a drag on
-    # this button), outside any pass
     genericPanel = new GenericPanelWdgt
+    # settling-call-sanctioned: titles the fresh orphan window built just above, at event time (CreatorWdgt's
+    # press, or a drag on this button, asks me for it), outside any settle or pass
     genericPanel.setTitleWithoutPrependedContentName "elastic panel"
     genericPanel._applyExtent new Point 200, 200
 

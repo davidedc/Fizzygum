@@ -88,7 +88,7 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   #   An undefined icon is simply a label-only row (MenuItemWdgt), so a tool that cannot be copied
   # costs its row its picture (its copy's refusal is told, Widget.fullCopy).
   _miniatureOf: (tool) ->
-    # nosettle-sanctioned: fullCopy has no NoSettle core -- it self-settles only to file copied
+    # settling-call-sanctioned: fullCopy has no NoSettle core -- it self-settles only to file copied
     # referent figures to the shelf, which a toolbar tool contributes none of, and to tell a refused
     # copy (an inform). The picture settles too, sizing a copy that has children
     # (InertIconHolderWdgt._takePictureOf). I am reached ONLY

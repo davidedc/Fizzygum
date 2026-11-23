@@ -2266,7 +2266,7 @@ class Widget extends TreeNode
     # throws if reached inside an open settle's mutation window; neither caller is (both run from event handling)
     figure ?= @_settleLayoutsAfter => @_pickOutRotatedFigureNoSettle()
     if figure._materializedBySugar and figure.transformSpec?.isIdentity()
-      # nosettle-sanctioned: called ONLY from event-stream contexts (the drag pipeline determineGrabs and
+      # settling-call-sanctioned: called ONLY from event-stream contexts (the drag pipeline determineGrabs and
       # the menu pickUpMenuAction), never mid-pass, so the deliberate self-settling dissolve is correct:
       # it settles on its own before the grab starts, as the extraction above does.
       figure = figure._unwrapIfIdentitySugar()
@@ -5746,7 +5746,7 @@ class Widget extends TreeNode
     try
       run()
     finally
-      # nosettle-sanctioned: reached from a person's run gesture at event time, never inside a settle --
+      # settling-call-sanctioned: reached from a person's run gesture at event time, never inside a settle --
       # the receiver's notification is the run's own settle
       receiver.sourceChanged() unless receiver.destroyed
 

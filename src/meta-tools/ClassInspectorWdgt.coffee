@@ -19,7 +19,7 @@ class ClassInspectorWdgt extends InspectorWdgt
   # re-lays and repaints whatever derives from it -- the base's is my subject's alone, and my subject
   # is a class.
   _notifyOfEdit: ->
-    # nosettle-sanctioned: the tail of my edit gestures (Save, Add…, Rename…, Remove), reached at
+    # settling-call-sanctioned: the tail of my edit gestures (Save, Add…, Rename…, Remove), reached at
     # event time and never inside a settle -- the notification is the edit's own settle
     world.noteCodeChanged()
 

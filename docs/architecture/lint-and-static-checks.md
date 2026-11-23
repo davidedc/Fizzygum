@@ -170,7 +170,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
 | aim-census tables | `Fizzygum-tests/scripts/aim-census.js --tables-only` | row 32 | the aim census's own TABLES — every MacroToolkit verb classified, every class and member they name declared — held to Fizzygum's source and to the tests' calls both ways (`AIM-CENSUS STALE NAME` / `UNCLASSIFIED VERB` / `UNKNOWN VERB`, exit 1; `EMPTY DERIVATION`, exit 2), so a verb deleted or renamed in `src/macros` fails the change that did it. Its MEASUREMENT (where each test aims, and how much each aim assumes) stays advisory. ~0.2 s | — (runs on every build, whatever the profile ships) |
 | syntax | `buildSystem/check-coffee-syntax.js` | row 2 | CoffeeScript *parse* errors, compiled the **fragmented** way the browser does; and a class MEMBER that LOSES A NAME to the meta-system's helper strip (its compiled `var` head declares anything outside the helper globals boot provides — a `modulo`/`splice` helper, a hoisted compiler temporary) | — (the provided set is read from `Class._memberNamesThatMustStayAnonymous` and held against boot's `window.<helper> =` assignments) |
 | shippable-coverage | `buildSystem/check-shippable-coverage.js` | row 3 | every directory of the compiled sources (§3c: `src/` and the harness) holding `.coffee` files is CLAIMED BY A PART in `parts.json`, and every `src/boot` file DECLARED by one (its `bootPrelude` or `bootScripts`) — a dir no part claims, or a boot file none declares, ships NOTHING (`UNSHIPPED`); and boot's by-name fetches (`js/src/<name>-min.js` in a boot file's CODE, comments blanked) agree with the declared boot scripts of the fetcher's own part, both ways (`BOOT_FETCH_UNDECLARED`, naming file:line; `BOOT_SCRIPT_UNFETCHED`), so a rename on one side fails the build instead of 404ing at every boot, exits 0, and surfaces only at runtime (a `<NewClass> is not defined`) | none: a `src/boot` file is held to a declaration too — its part's `bootPrelude` or `bootScripts` (`build.js --list-boot`) |
-| **layering** | **`buildSystem/check-layering.js`** | **row 4** | **flow soundness + the naming convention — rules [A]–[T] (§4); a class-side method's tier is read from its bare name (§6b)** | per-method `# layout-apply-sanctioned` [F] / `# nosettle-sanctioned` [G] / `# early-return-sanctioned` [H] markers; per-LINE `# settling-call-sanctioned: <reason>` [A] [G] (a self-settling call a low-level method makes where no settle or pass is open, counted); per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
+| **layering** | **`buildSystem/check-layering.js`** | **row 4** | **flow soundness + the naming convention — rules [A]–[T] (§4); a class-side method's tier is read from its bare name (§6b)** | per-method `# layout-apply-sanctioned` [F] / `# early-return-sanctioned` [H] / `# double-settle-sanctioned` [T] markers; per-LINE `# settling-call-sanctioned: <reason>` [A] [G], the one form either half takes (a self-settling call a low-level method makes where no settle or pass is open, counted); per-line `# macro-private-call-sanctioned: <reason>` [D] for a test ORACLE that must call a private verb (the `world._fullChanged()` ground-truth repaints) |
 | **invalidation-receivers** | **`buildSystem/check-invalidation-receivers.js`** | **row 5** | **widget-citizenship point 2: invalidation is SELF-invalidation, and PRIVATE (`_changed`/`_fullChanged`) — no `<expr>._changed()`/`<expr>._fullChanged()` on another widget (if A's action affects B, B marks itself changed in the method A invoked on it). The ONLY allowed receiver is `@` (dotless, never matches); the singletons are NOT exempt — cross-object repaint goes through their intent-named public methods (`noteWallpaperChanged`/`resetImmutableBackBuffersCache`/`noteTextChanged`/`noteCarriedWidgetChanged`); there is NO general-purpose public repaint verb. The paint executor `_repaintDamagedRects` (the world's once-per-cycle damage-rect flush) is in the same gated private family. The gated names are READ, not spelled: the repaint verbs from Widget's own definitions (`lib/repaint-verbs.js`, shared with `check-layering` and the call census), each also in its legacy public spelling so it cannot slip back in, plus the paint executor, whose name is asserted against `WorldWdgt.coffee` (stale ⇒ fail)** | `# cross-invalidation-sanctioned: <reason>` on or directly above the line (the structural add (the re-homed widget's old footprint and its new one)/drop/z-order/shadow dispatchers, the world's selection-overlay reconciler (two), the world's atlas-warm orchestration, FileLoading's async-asset repaint, the own-sub-part marks in FrameWdgt (its rows, after a pin) and FrameBarWdgt (its background), and the harness's paint-truthfulness audit (three: the oracle's frame completion, its forced full repaint and the flush that paints it)) |
 | dead-method | `buildSystem/check-dead-methods.js` | row 6 | a method defined in the compiled sources, src and the harness (class methods and class-side methods alike — the latter inventoried under their BARE name) that nothing REACHES, by the one reference rule `lib/method-references.js` (a property access, a whole-name string, a name template, a computed access on a named class — §3c) read from the CODE of src and the tests repo (harness, macro sources, `scripts/` rigs; never prose); a name ASSEMBLED with `+` or dispatched through an arbitrary object (`@target[action]`) reads dead | allowlist `dead-method-allowlist.txt`; fails on a NEW dead method, and on an entry no longer dead (`STALE_ALLOWLIST_ENTRY`) |
 | hand-lists | `buildSystem/check-hand-lists.js` | row 7 | a STRING-LIST literal naming classes or members (at least two items, and at least half of them, are class or member names) is a DECLARATION (`@serializationTransients`, `requiredParts`, `optionalParts`) or carries `# hand-list-sanctioned: <what fails>` naming a guard that RUNS — a gate/rig file the build, a discovered self-test or an `fg` presuite/gauntlet leg launches (`lib/what-runs.js`), a `SystemTest_<name>`, or a failure token a running file emits, resolved mechanically — or it counts as UNSANCTIONED. Multi-line by design (the lists that rot are one name per line). Scans src + buildSystem and the tests repo's scripts + harness. ⚠ Blind to object tables, regex alternations, `switch` arms, push sequences and runtime-built names (§5). Modes: `--census` (every list, classified, each guard as runs / never runs), `--files` (plants: every unsanctioned list fails); its self-test is `check-hand-lists-selftest.js` | inline per-repo `BASELINE_FIZZYGUM` / `BASELINE_TESTS` of unsanctioned lists (the stinks idiom); a sanction naming no guard, one whose every guard never runs (`SANCTION_GUARD_NEVER_RUNS`), an empty one and a stale one (sanctioning no name list) fail outright |
@@ -564,7 +564,7 @@ budget's answers.
 
 **An invariant's gate has quiet fixes too** (an exemption entry, a suppression flag, a stub, a guard at the one leaf
 that threw), and each hides a bug, which is worse than a bent shape. Its finding is answered at its cause. Where a
-class-A rule keeps a marker ([A] and [G]'s settling-call marker, [G]'s per-method one, [F], [T], a thin wrap, a cross-object invalidation), the marker answers a scanner that
+class-A rule keeps a marker ([A] and [G]'s settling-call marker, [F], [T], a thin wrap, a cross-object invalidation), the marker answers a scanner that
 cannot tell a sound flow, and its reason shows the flow is sound.
 
 **A count never constrains a shape in advance.** A plan, a brief or a session never states a ratchet as a constraint on
@@ -930,7 +930,7 @@ lint works at all (§6).
 | **[D]** | every macro source (`lib/macro-sources.js`): each test's (its command file's sources) and each verb's (a `Macro.fromString` literal anywhere in src) | calling a `_private` method or a `raw*` (pixel) accessor | macros must drive only the public surface (the gate that would have caught the original 16-macro mess) | — | — (HARD ban; the construction measure-and-size carve-out is now CLOSED — attach the widget first, then public setters, see §7) |
 | **[E]** | `isImmediateMutator` (the `_apply*`/`_commit*` corners + the `_move*`/`_set*`/`_resize*` convenience) | calling `_invalidateLayout` | an immediate mutator may MUTATE geometry, never SCHEDULE a layout — scheduling during a pass re-dirties a container mid-pass and the convergence loop never terminates (the Phase-3b app-freeze) | `FLOWRULE_VIOLATION` (`Widget._invalidateLayout`) | — |
 | **[F]** | a method that is NEITHER low-level NOR an immediate mutator (handler / property setter / menu action / gesture / constructor) | calling a container-refit apply (`_reLayoutChildren`/`_positionAndResizeChildren`/`_reLayoutScrollbars`/`_reLayout`) synchronously OFF-settle | such a handler must DEFER (record intent via `_invalidateLayout`; let the cycle apply it), unless the apply is genuinely AT a settle point / a documented determinism-exempt family | — | **`# layout-apply-sanctioned: <why>`** |
-| **[G]** | `isLowLevel` method (not a settle tier) | calling a STRUCTURAL self-settling wrapper — discovered structurally as the `_settleLayoutsAfter` callers (`destroy`/`close`/`fullDestroy`/`createReference*`/`grab`/`drop`/`slideBackTo`/`setLabel`/`buildAndConnectChildren`/`resetWorld`/`sizeToTextAndDisableFitting`) — OR the unambiguous self-add `@add` | the structural-wrapper extension of [A]: each wrapper self-settles via `_settleLayoutsAfter`, so reaching one from a core/raw/pass re-enters the flush; low-level code must call the `_<name>NoSettle` core | the one-flush throw | **`# settling-call-sanctioned: <why>`** (per LINE, shared with [A]); **`# nosettle-sanctioned`** (from its line to the method's end) |
+| **[G]** | `isLowLevel` method (not a settle tier) | calling a STRUCTURAL self-settling wrapper — discovered structurally as the `_settleLayoutsAfter` callers (`destroy`/`close`/`fullDestroy`/`createReference*`/`grab`/`drop`/`slideBackTo`/`setLabel`/`buildAndConnectChildren`/`resetWorld`/`sizeToTextAndDisableFitting`) — OR the unambiguous self-add `@add` | the structural-wrapper extension of [A]: each wrapper self-settles via `_settleLayoutsAfter`, so reaching one from a core/raw/pass re-enters the flush; low-level code must call the `_<name>NoSettle` core | the one-flush throw | **`# settling-call-sanctioned: <why>`** (per LINE, shared with [A] — the one form either half takes — each excused call counted) |
 | **[H]** *(WARNING, non-fatal)* | a method that self-settles via `@_settleLayoutsAfter` | a GUARD `return` / `return if\|unless …` BEFORE the settle | a public settle-wrapper should be THIN; that early-return guard belongs INSIDE the `_<name>NoSettle` core (else the "already in this state" skip is split across wrapper + core) | — | **`# early-return-sanctioned: <why>`** |
 | **[I]** | a `__` leaf method (HARD-FAIL) | `@`-self-calling the re-fit seam (`_reFitContainer*`/`_announce*`), a react step (`_reLayout*`, or a repaint verb — read from Widget by `lib/repaint-verbs.js`), a schedule/settle (`_invalidateLayout`/`recalculateLayouts`/`_settleLayoutsAfter*`), or a public setter | a `__` leaf is a true bottom — it triggers NO orchestration (the lowest tier of the naming convention, §1) | tier-naming runtime audit | — (DENYLIST; `@`-self-scoped) |
 | **[J]** | a notification callback (`_reactTo*`/`_before*`) | calling `_settleLayoutsAfter` | a callback is a settle-neutral core; the gesture/structural DISPATCHER owns the one settle | notification-settle runtime audit | — |
@@ -949,7 +949,10 @@ whose body calls `@_settleLayoutsAfter` (`SETTLE_CALL` anchors on that exact nam
 `…OrJoinEnclosingPass` lane is not swept in), minus the geometry/text setters ([A] reports those, sharper) and minus
 `WRAPPER_EXCLUDED` (§7). So a NEW single-settling wrapper is auto-covered. The `@add` self-form is checked separately (`SELF_ADD_CALL =
 /@\s*add\b/`): inside a Widget method `@` is a Widget, so `@add child` is unambiguously `Widget.add` — the `\b` excludes
-`@addMany`/`@_addNoSettle`, and the leading `@` (not `.`) excludes the Point#add-ambiguous member form.
+`@addMany`/`@_addNoSettle`, and the leading `@` (not `.`) excludes the Point#add-ambiguous member form. A member named
+and tested for presence (`x.close?` closing its expression, `if x.close? then …`) is no call; a soak call (`x.close?()`,
+`x.close? arg`, and `x.close? if …` / `x.close? unless …`, whose argument can be an inline if) is judged. [A], [C] and
+[T] read their calls the same way (`PRESENCE_TEST_AFTER`).
 
 ---
 
@@ -961,8 +964,7 @@ comment carrying a reason. All of them, in one place:
 | Marker | Gate / rule | Exempts |
 |---|---|---|
 | `# layout-apply-sanctioned: <why>` | `check-layering` [F] | a non-mutator method consciously applying a container refit off-settle (an in-pass deferred-seam arm, or a determinism-exempt family: scroll-input / collapse / construction) |
-| `# settling-call-sanctioned: <why>` | `check-layering` [A] [G] | one LINE in a low-level method making a self-settling call — a public geometry or text setter, a settling wrapper, `@add` — where no settle or pass is open (event time, a press's hook) or on a receiver of a plain class; every excused call counted against `SETTLING_CALL_MARKER_CEILING`, stale when its line makes no such call; never for `recalculateLayouts` |
-| `# nosettle-sanctioned` | `check-layering` [G] | every [G] finding from its line to the method's end: a low-level method consciously reaching a settling wrapper / `@add` (e.g. a method mis-tagged low-level, or a genuinely safe outside-any-pass case). It matches the bare token, so no reason is required (write one anyway) |
+| `# settling-call-sanctioned: <why>` | `check-layering` [A] [G] | one LINE in a low-level method making a self-settling call — a public geometry or text setter, a settling wrapper, `@add` — where no settle or pass is open (event time, a press's hook, a catch path, the cycle's own reconciler) or on a receiver of a plain class; every excused call counted against `SETTLING_CALL_MARKER_CEILING`, stale when its line makes no such call; never for `recalculateLayouts` |
 | `# early-return-sanctioned: <why>` | `check-layering` [H] *(warning)* | a public settle-wrapper that consciously keeps a guard `return` BEFORE its `_settleLayoutsAfter` (suppresses the non-fatal [H] warning) |
 | `# double-settle-sanctioned: <why>` | `check-layering` [T] | a directly-settling method that consciously ALSO `@`-calls a settling public method — a deliberate sequential-flush design (`grab`, `newParentChoice`) or a branch-exclusive pair the line scanner cannot tell apart |
 | `# public-call-sanctioned: <why>` | `check-call-separation` [S] | a private method consciously `@`-self-calling a public COMMAND (the census subtracts the site; use sparingly — the default fix is rename-to-`_` or the `_<name>NoSettle` core) |
@@ -980,9 +982,9 @@ comment carrying a reason. All of them, in one place:
 | `# page-element-not-held: <reason>` | `check-page-loaded-elements` | a line that constructs an element the page loads into no field — why no widget holds it (one site: the Deserializer's `$Canvas` decoder image, dropped once its pixels are in the canvas) |
 | `<!-- narration-ok: reason -->` | `check-doc-narration` | one docs LINE that must quote the narration trigger words (this doc's stink table does) |
 
-**Placement is per-gate, and it is not decorative.** The `check-layering` per-method markers [F], [G]
-(`# nosettle-sanctioned`) and [H] act from the marker's line to the method's end ([H]'s must also precede the settle),
-[T]'s and `# public-call-sanctioned` anywhere in the body; each resets at each method header.
+**Placement is per-gate, and it is not decorative.** The `check-layering` per-method markers [F] and [H] act from the
+marker's line to the method's end ([H]'s must also precede the settle), [T]'s and `# public-call-sanctioned` anywhere
+in the body; each resets at each method header.
 `# thin-wrap-exempt`, `# relayout-bounds-first-exempt` and `# raw-screen-pointer-sanctioned` are read ONLY from the
 contiguous comment block *directly above the header* — one in the body does not exempt; `# constructor-build-exempt`
 is read from either. The rest are per-LINE: `# cross-invalidation-sanctioned`, `# macro-private-call-sanctioned`,
@@ -993,7 +995,7 @@ is read from either. The rest are per-LINE: `# cross-invalidation-sanctioned`, `
 ⚠ **The reason is required by convention everywhere, but only some gates enforce it.** Thin-wrap,
 relayout-bounds-first, raw-screen-pointer, constructor-build, cross-invalidation, stringified-script, [D]'s macro
 marker and [A]/[G]'s settling-call marker match `<marker>:\s*\S` and so reject a bare marker (the settling-call
-marker excuses nothing without a reason and says so on the finding's line); the `check-layering` [F]/[G]/[H]/[T] and
+marker excuses nothing without a reason and says so on the finding's line); the `check-layering` [F]/[H]/[T] and
 call-separation per-method markers match the bare string, so nothing but review makes you write the *why*.
 Write it anyway — a marker without a reason is exactly the silent allowlist this idiom exists to avoid.
 
@@ -1243,7 +1245,7 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
   `Widget.implementsDeferredLayout` (`@_reLayout != Widget::_reLayout`, a method-REFERENCE comparison) to non-low-level
   makes it an `[F]` subject, and its `@_reLayout` would false-match `APPLY_CALL`. So the arm removal was PAIRED with a
   second `APPLY_CALL` lookahead that skips a comparison / `is` / `isnt` right after the name (a value compared, never
-  applied), so `newParentChoiceWithHorizLayout` needs no `# nosettle-sanctioned` marker.
+  applied), so `newParentChoiceWithHorizLayout` needs no [G] marker.
   Self-tested: `[F]` still flags a real `@_reLayout()` apply, skips `@_reLayout != Widget::_reLayout`. Gate green + suite
   165/165 byte-identical + apps 12/12.
 
@@ -1254,8 +1256,9 @@ What the layering gate deliberately does NOT cover, and why — so a maintainer 
 **Add a new `check-layering` rule.** (1) Add the call-detecting regex/predicate near the other constants, comment the
 rule (subject / forbidden / why / runtime twin / marker) the way [A]–[T] are. (2) Add the check inside `checkFile`'s
 per-method loop, under the right tier guard (`isLowLevel(method)` / `isImmediateMutator(method)` / the non-mutator
-branch). (3) If it needs an escape hatch, add a per-method marker (mirror the `methodNoSettleMarked` logic) rather than a
-central allowlist. (4) Update the summary line + the failure footer to name the new letter. (5) **Land it green** — see
+branch). (3) If it needs an escape hatch, add a per-LINE marker that requires a reason, read on the line or the comment
+line(s) directly above it, with a stale rule failing one that excuses nothing (mirror the settling-call marker:
+`SETTLING_CALL_SANCTION`, `AG_STALE_MARKER`) rather than a central allowlist. (4) Update the summary line + the failure footer to name the new letter. (5) **Land it green** — see
 self-test below; triage every hit (fix the code, or mark with a reason); record the marker count.
 
 **Add a new rule — pick the TIER first (§3b): sound negative ⇒ gate · count-shaped ⇒ ratcheted stink ⇒ heuristic ⇒
@@ -1322,9 +1325,9 @@ source to satisfy a new rule.
   `buildSystem/lib/prove-rules.js` `checkAdvice` (a run's `advised`, judged exactly).
 
 - `buildSystem/check-layering.js` — `PUBLIC_SETTERS`/`TEXT_SETTERS`/`RECALC_WHITELIST`; `isLowLevel` /
-  `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL`/`NOSETTLE_MARKER` (the
-  [G] constants); `SETTLING_CALL_MARKER`/`SETTLING_CALL_SANCTION`/`SETTLING_CALL_MARKER_CEILING` (the [A] [G] per-line
-  marker and its count); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_POLY_APPLY` ([K]);
+  `isImmediateMutator` (the tier predicates, §2); `SETTLE_CALL`/`WRAPPER_EXCLUDED`/`SELF_ADD_CALL` (the [G]
+  constants); `SETTLING_CALL_MARKER`/`SETTLING_CALL_SANCTION`/`SETTLING_CALL_MARKER_CEILING` (the [A] [G] per-line
+  marker and its count), `PRESENCE_TEST_AFTER`/`everyCall` (what counts as a call); `LEAF_FORBIDDEN` ([I]); `APPLY_CORNER`/`K_SEAM_CALL`/`K_REACT_CALL`/`K_POLY_APPLY` ([K]);
   `CALLBACK_PREFIX`/`CALLBACK_SHAPE`/`LEGACY_CALLBACK_FRAGMENT` ([L]); `FRAGMENT_BANNED` ([M]);
   `SEAM_VERB_BANNED` ([N]); `COALESCED_CALL`/`COALESCED_CALLER_ALLOWLIST` ([O]);
   `CONNECTOR_CALL`/`CONNECTOR_CALLER_ALLOWLIST` ([Q]); `USERLAND_FILES`/`USERLAND_PRIVATE_CALL`/`PRIVATE_USE_MARKER`

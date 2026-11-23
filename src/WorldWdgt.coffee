@@ -1728,9 +1728,6 @@ class WorldWdgt extends IconGridPanelWdgt
 
   
   _addHighlightingWidgets: ->
-    # nosettle-sanctioned: a call outside any pass — doOneCycle runs me once a frame, after its layout
-    # flush and before its paint, never inside a settle, so the stale highlighter's fullDestroy settles
-    # on its own, as each add below does, and the world is settled again before _repaintDamagedRects
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
       target = eachHighlightingWidget.wdgtThisWdgtIsHighlighting
       if @widgetsToBeHighlighted.has target
@@ -1752,6 +1749,9 @@ class WorldWdgt extends IconGridPanelWdgt
         @currentHighlightingWidgets.delete eachHighlightingWidget
         @widgetsBeingHighlighted.delete target
         eachHighlightingWidget.wdgtThisWdgtIsHighlighting = undefined
+        # settling-call-sanctioned: doOneCycle runs me once a frame, after its layout flush and before its paint,
+        # outside any settle or pass, so the stale highlighter's own destroy settles here (as each add of mine
+        # does), and the world is settled again before _repaintDamagedRects
         eachHighlightingWidget.fullDestroy()
 
     @widgetsToBeHighlighted.forEach (styleDescriptor, eachWidgetNeedingHighlight) =>
@@ -2696,8 +2696,9 @@ class WorldWdgt extends IconGridPanelWdgt
   # dragging an invisible widget, etc.
   # So, try to clean-up things as much as possible.
   _softResetWorld: ->
-    # nosettle-sanctioned: error-recovery reset, reached only from the catch paths outside any
-    # settle/pass — the hand's public self-settling drop() is exactly what a cleanup wants here.
+    # settling-call-sanctioned: the world's error recovery (the input, step and paint catches; the layout errors'
+    # report at the next cycle's start) and resetWorld's first step, each outside any settle or pass: the hand's own
+    # drop settles here, which is what a cleanup wants
     @hand.drop()
     # where the pointer is and what it non-float drags are the hand's facts, so the hand forgets them
     # itself, and tells whoever shows a look by them

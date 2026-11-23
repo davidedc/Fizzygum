@@ -9,8 +9,10 @@
 // marker excuses its one line, on it or on the comment lines right above it, and only with a reason; every call it
 // excuses is counted against the ceiling -- the last two runs, sized from the control's count, are where a marked call
 // is seen passing and a second call on a marked line is seen counting, since a tree at its ceiling cannot carry one
-// more in the control -- and a marker marking no settling call (a blank line below it included) is stale. Run by
-// buildSystem/run-selftests.js on every build.
+// more in the control -- and a marker marking no settling call (a blank line below it included) is stale. It is the one
+// form either half takes: the retired per-method [G] sign-off excuses nothing. A member tested for presence is no call,
+// to [A] [G] [C] or [T], whichever way the test ends or goes on (the control's probes); a soak call is one, an inline if
+// as its argument included (the first run). Run by buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
 const os = require('os');
@@ -46,7 +48,18 @@ proveGate({
         '  _biteProofLowLevelCanvas: (ctx) ->', '    ctx.moveTo 0, 0',
         '  doOneCycle: ->', '    world.recalculateLayouts()',
         '  biteProofHandler: ->', '    # layout-apply-sanctioned: the bite-proof fixture', '    @_reLayoutChildren()',
-        '  _biteProofLowLevelSanctioned: (w) ->', '    # nosettle-sanctioned: the bite-proof fixture', '    @add w',
+        // a member named and tested for presence is no call, to either half: a wrapper's and a text setter's (a
+        // one-liner's body), a geometry setter's and @add's
+        '  _biteProofPresenceProbe: (w) -> w.close? and w.setText?',
+        '  _biteProofPresenceProbes: (w) ->', '    if w.setExtent? then @add?',
+        // ... and every way a test of presence ends or goes on: a closing bracket or a separator, an operator
+        '  _biteProofPresenceEnds: (w) ->', '    x = [(w.close?), w.setText?, {a: w.setExtent?}, w.close?]; y = @add?; @bpValue = x',
+        '  _biteProofPresenceOperators: (w) ->', '    w.close? or w.setText? is true or w.setExtent? isnt false',
+        '    w.setExtent? && @add? || w.close? == w.setText? != true',
+        // [C] and [T] read a presence test as no call too
+        '  setHeight: (h) ->', '    super', '    @bpValue = h if @setExtent?',
+        '  biteProofSettlingProbe: ->', '    @_settleLayoutsAfter => @_biteProofCoreNoSettle()',
+        '    @bpValue = 2 if @setExtent? and @setText? and @biteProofGuardedWrapper? and @add?',
         '  biteProofGuardedWrapper: (v) ->', '    return if v', '    # early-return-sanctioned: the bite-proof fixture',
         '    @_settleLayoutsAfter => @_biteProofCoreNoSettle()',
         '  _biteProofCoreNoSettle: ->', '    @bpValue = 1',
@@ -82,13 +95,22 @@ proveGate({
         // the line scope: a marker above a block marks the block's head, not the call inside it; and a blank line
         // between a marker and its call leaves it marking nothing
         '  _biteProofMarkerOverBlock: (w) ->', '    # settling-call-sanctioned: the bite-proof fixture, above a block', '    if w?', '      w.setText "d"',
-        '  _biteProofMarkerOverBlank: (w) ->', '    # settling-call-sanctioned: the bite-proof fixture, a blank line below', '', '    w.setText "e"'),
+        '  _biteProofMarkerOverBlank: (w) ->', '    # settling-call-sanctioned: the bite-proof fixture, a blank line below', '', '    w.setText "e"',
+        // a soak call still calls (a wrapper's, a text setter's with an argument), and so does the call beside a
+        // presence test of the same member; and the retired per-method [G] sign-off excuses nothing, on its line or below
+        '  _biteProofSoakCall: (w) ->', '    w.close?()', '    w.setText? "f"',
+        '  _biteProofPresenceThenCall: (w) ->', '    w.close? and w.close()',
+        '  _biteProofRetiredSignOff: (w) ->', '    # nosettle-sanctioned: the bite-proof fixture, a retired token', '    @add w', '    w.close()',
+        // a soak call whose argument is an inline if, which the `? if` / `? unless` starting it must not hide
+        '  _biteProofInlineIfSoak: (w, c) ->', '    w.setText? if c then "a" else "b"', '    w.close? unless c then 1 else 2', '    @add? if c then w'),
       'BiteProofBWdgt.coffee': cls('BiteProofBWdgt', '  biteProofRecalc: ->', '    world.recalculateLayouts()'),
       // [D] a verb anywhere in src, in a '''-heredoc: every Macro.fromString literal is a macro source
       'BiteProofVerbHost.coffee': ['class BiteProofVerbHost', '  biteProofVerbs: ->', "    Macro.fromString '''",
         '      biteProofOtherFile_Macro = (w) ->', '        w._biteProofVerbElsewhere()', "    '''", ''].join('\n'),
       'BiteProofHeregexWdgt.coffee': cls('BiteProofHeregexWdgt', '  biteProofAfterHeregex: ->', "    r = ///'''///", '    world.recalculateLayouts()'),
-      'BiteProofCWdgt.coffee': cls('BiteProofCWdgt', '  setWidth: (w) ->', '    super', '    @setExtent new Point w, 10'),
+      // [C] judges a soak call, an inline if as its argument included
+      'BiteProofCWdgt.coffee': cls('BiteProofCWdgt', '  setWidth: (w) ->', '    super', '    @setExtent new Point w, 10',
+        '  setHeight: (h) ->', '    super', '    @setExtent? new Point 10, h', '    @setExtent? if h then new Point 10, h'),
       'BiteProofEWdgt.coffee': cls('BiteProofEWdgt', '  _moveLeftSideTo: (x) ->', '    @_invalidateLayout()', '  _moveRightSideTo: (x) ->', '    @_scheduleRelayoutRespectingPhase()'),
       'BiteProofFWdgt.coffee': cls('BiteProofFWdgt', '  biteProofHandler: ->', '    @_reLayoutChildren()'),
       'BiteProofGWdgt.coffee': cls('BiteProofGWdgt',
@@ -117,7 +139,9 @@ proveGate({
         '  biteProofTWrapper: ->', '    @_settleLayoutsAfter => @_biteProofTCoreNoSettle()',
         '  _biteProofTCoreNoSettle: ->', '    @bpValue = 1',
         '  biteProofDoubleSettle: (w) ->', '    @_settleLayoutsAfter => @_biteProofTCoreNoSettle()',
-        '    @setExtent new Point 5, 5', '    @setText "x"', '    @biteProofTWrapper()', '    @add w'),
+        '    @setExtent new Point 5, 5', '    @setText "x"', '    @biteProofTWrapper()', '    @add w',
+        // [T] judges a soak call, an inline if as its argument included
+        '  biteProofSoakDoubleSettle: (w) ->', '    @_settleLayoutsAfter => @_biteProofTCoreNoSettle()', '    @setText? if w then "z"'),
     },
     edits: [
       // [D] the toolkit's heredoc half: a private call, a raw* call, a marker with no reason, and a marker ending one
@@ -186,6 +210,17 @@ proveGate({
       line('[A] low-level _biteProofMarkerOverBlock() calls self-settling text setter .setText()', 'BiteProofAGMarkerWdgt', 19),
       /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:21 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:22, a blank line\)/m,
       line('[A] low-level _biteProofMarkerOverBlank() calls self-settling text setter .setText()', 'BiteProofAGMarkerWdgt', 23),
+      line('[G] low-level _biteProofSoakCall() calls self-settling wrapper .close()', 'BiteProofAGMarkerWdgt', 25),
+      line('[A] low-level _biteProofSoakCall() calls self-settling text setter .setText()', 'BiteProofAGMarkerWdgt', 26),
+      line('[G] low-level _biteProofPresenceThenCall() calls self-settling wrapper .close()', 'BiteProofAGMarkerWdgt', 28),
+      line('[G] low-level _biteProofRetiredSignOff() calls @add (self == Widget.add)', 'BiteProofAGMarkerWdgt', 31),
+      line('[G] low-level _biteProofRetiredSignOff() calls self-settling wrapper .close()', 'BiteProofAGMarkerWdgt', 32),
+      line('[A] low-level _biteProofInlineIfSoak() calls self-settling text setter .setText()', 'BiteProofAGMarkerWdgt', 34),
+      line('[G] low-level _biteProofInlineIfSoak() calls self-settling wrapper .close()', 'BiteProofAGMarkerWdgt', 35),
+      line('[G] low-level _biteProofInlineIfSoak() calls @add (self == Widget.add)', 'BiteProofAGMarkerWdgt', 36),
+      line('[C] public setter setHeight() calls another public setter .setExtent()', 'BiteProofCWdgt', 7),
+      line('[C] public setter setHeight() calls another public setter .setExtent()', 'BiteProofCWdgt', 8),
+      /^  \[T\] biteProofSoakDoubleSettle\(\) self-settles \(src\/BiteProofTWdgt\.coffee:13\) AND @-calls settling text setter @setText\(\) — .*  — src\/BiteProofTWdgt\.coffee:14$/m,
     ],
     absent: [/_biteProofLowLevelPlainSelf/, /_applyExtentBase/],
   }, {

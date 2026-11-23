@@ -16,11 +16,13 @@
  *      [A] and [G] below are one rule in two halves, and both take ONE sanctioned form, per LINE and COUNTED: a call
  *      on a line carrying `# settling-call-sanctioned: <why>` (or under it, alone on the comment line(s) directly
  *      above, no blank line between) is excused — a self-settling call a low-level method makes where no settle or pass is open (at event
- *      time, from a press's hook), or on a receiver of a plain class. Everything else in the method is still judged,
- *      recalculateLayouts always. Two guards hold it: the calls it excuses, each one counted, are a BUDGET held at
- *      SETTLING_CALL_MARKER_CEILING (AG_MARKER_COUNT_ABOVE_CEILING), and a marker whose line makes no settling call
- *      [A] or [G] judges fails as stale (AG_STALE_MARKER). A marker with no reason excuses nothing. ([G] also reads
- *      its per-method sign-off, `# nosettle-sanctioned`, from its line to the method's end.)
+ *      time, from a press's hook, a catch path, the cycle's own reconciler), or on a receiver of a plain class. Everything
+ *      else in the method is still judged, recalculateLayouts always. Two guards hold it: the calls it excuses, each one
+ *      counted, are a BUDGET held at SETTLING_CALL_MARKER_CEILING (AG_MARKER_COUNT_ABOVE_CEILING), and a marker whose
+ *      line makes no settling call [A] or [G] judges fails as stale (AG_STALE_MARKER). A marker with no reason excuses
+ *      nothing, and it is the one form either half takes. A member named and tested for presence (`x.close?` closing
+ *      its expression) is no call to either half, nor to [C] or [T]; a soak call (`x.close?()`, `x.close? arg`,
+ *      `x.close? if …`) is one.
  *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame), the settle tier
  *      _settleLayoutsAfter (the public-setter flush), and the reactive-connection settle lane
  *      _settleLayoutsAfterOrJoinEnclosingPass (which OPENS a settle just like _settleLayoutsAfter on a
@@ -302,18 +304,23 @@ const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collaps
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
                                           // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.
-const NOSETTLE_MARKER = 'nosettle-sanctioned';              // the [G] per-method conscious sign-off (mirrors [F])
-const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-method conscious sign-off (mirrors [F]/[G])
+const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-method conscious sign-off (mirrors [F])
 // [A] and [G]'s one per-LINE sanctioned form (the header's [A] paragraph): on the call's line, or alone on the comment
 // line(s) directly above it, consumed by the next line holding code; a blank line between leaves it marking nothing,
 // so it is stale. Only the marker WITH a reason excuses, and it excuses that line's [A] setter and [G] wrapper/@add
 // calls, every one of them, never A_RECALC.
-// every match of a one-match call regex on a line, in order (its global twin, made once per regex)
+// A member NAMED and tested for presence, not called: `x.name?` closing its expression (`wdgt.scrolledBy?`, `if x.close?
+// and …`) — what follows the `?` can only end or continue the test, never begin an argument. A soak call (`x.name?()`,
+// `x.name? arg`) and a soak access (`x.name?.y`) still reach the member, so they are still judged; so is `x.name? if …`
+// and `x.name? unless …`, since an inline if can be the argument (`w.setText? if c then "a" else "b"` calls setText).
+const PRESENCE_TEST_AFTER = /^\?\s*(?:$|[)\]},;]|(?:and|or|then|is|isnt)\b|&&|\|\||[!=]=)/;
+// every CALL a one-match call regex finds on a line, in order (its global twin, made once per regex): a match that is a
+// presence test is none
 const GLOBAL_FORMS = new Map();
-const everyMatch = (code, re) => {
+const everyCall = (code, re) => {
   if (!re) return [];
   if (!GLOBAL_FORMS.has(re)) GLOBAL_FORMS.set(re, new RegExp(re.source, re.flags + 'g'));
-  return [...code.matchAll(GLOBAL_FORMS.get(re))];
+  return [...code.matchAll(GLOBAL_FORMS.get(re))].filter((m) => !PRESENCE_TEST_AFTER.test(code.slice(m.index + m[0].length)));
 };
 const SETTLING_CALL_MARKER = 'settling-call-sanctioned';
 const SETTLING_CALL_SANCTION = /#\s*settling-call-sanctioned:\s*\S/;
@@ -326,7 +333,17 @@ const SETTLING_CALL_SANCTION = /#\s*settling-call-sanctioned:\s*\S/;
 // its children are re-laid before the shot); SliderInCellButtonWdgt._actOn ([G]: a SheetCellStyle's plain enterSource,
 // which its sheet settles). Each is reached outside any settle or pass: from a press or a key (the icon holder also
 // from a script).
-const SETTLING_CALL_MARKER_CEILING = 7;
+// Raised 7 -> 19 on 2026-11-23 under the same ruling: [G]'s per-method sign-off retired onto this marker, so the
+// measurement widened and no call is new — WorldWdgt._addHighlightingWidgets (the cycle's own reconciler, between its
+// layout flush and its paint) and _softResetWorld (the error recovery, and resetWorld's first step);
+// BinOpenerWdgt._activateMyTile; ShortcutWdgt._bringUpReferencedWidgetNow (a tile press or the "Edit script" row, or
+// its referent's part arriving); Widget._resolvePickUpFigure and _runningAPersonsCode; InspectorWdgt and
+// ClassInspectorWdgt._notifyOfEdit; ElasticWindowCreatorButtonWdgt and GlassBoxTopWdgt._createWidgetToBeHandled;
+// OverflowChevronButtonWdgt._miniatureOf; the harness's AutomatorPlayer._takeTestStartStep (the cycle's replay
+// station). Each of their settles is reached where none is open. The old sign-off also covered three self-calls of the
+// caller's own thin wraps, in FolderWindowWdgt's and MakerDocumentWdgt's close-from-bar hooks: those take their own
+// close and destroy cores inside one settle, and no marker.
+const SETTLING_CALL_MARKER_CEILING = 19;
 // [H] a GUARD return: a bare `return`, or a postfix `return if … / return unless …`. NOT `return <value>`
 // (that is a legit return-the-result, e.g. `return @_settleLayoutsAfter => …` — what follows `return` is an
 // expression, not if/unless/end-of-line). This is the early-return guard that should live INSIDE the
@@ -540,7 +557,6 @@ function checkFile(file, violations, gCtx, warnings) {
   const { lines, masked } = readingOf(file);
   let method = null;          // current method name (null = not inside a 2-space method)
   let methodMarked = false;   // [F]: has a `# layout-apply-sanctioned` sign-off appeared in the current method?
-  let methodNoSettleMarked = false;   // [G]: has a `# nosettle-sanctioned` sign-off appeared in the current method?
   let methodGuardReturnLine = -1;     // [H]: line of a GUARD return seen before any _settleLayoutsAfter in this method
   let methodHWarned = false;          // [H]: already emitted the early-return-before-settle warning for this method
   let methodEarlyReturnMarked = false;// [H]: has a `# early-return-sanctioned` sign-off appeared in the current method?
@@ -564,7 +580,7 @@ function checkFile(file, violations, gCtx, warnings) {
       const b = methodBoundary(raw);
       if (b) {
         method = b.method;
-        methodMarked = false; methodNoSettleMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false;
+        methodMarked = false; methodGuardReturnLine = -1; methodHWarned = false; methodEarlyReturnMarked = false;
         if (b.kind === 'header') {
           // [L] callback NAME convention (checked once, at the def): derivable shape + legacy-fragment ban (see consts above).
           if (b.method) {
@@ -587,7 +603,6 @@ function checkFile(file, violations, gCtx, warnings) {
     if (!method) continue;
     const tier = tierName(method);   // what every name-classifying rule below reads; messages name `method`
     if (marks(masked[n], SANCTION_MARKER)) methodMarked = true;  // [F] per-method conscious sign-off (any body line)
-    if (marks(masked[n], NOSETTLE_MARKER)) methodNoSettleMarked = true;  // [G] per-method conscious sign-off (any body line)
     if (marks(masked[n], EARLY_RETURN_MARKER)) methodEarlyReturnMarked = true;  // [H] per-method conscious sign-off
     // [H] EARLY-RETURN-BEFORE-SETTLE (a WARNING, not a hard failure): a method that self-settles via
     // @_settleLayoutsAfter should be a THIN public wrapper. A GUARD return BEFORE that settle is an early-return
@@ -604,7 +619,7 @@ function checkFile(file, violations, gCtx, warnings) {
     }
     const at = `${rel}:${n + 1}`;
     // [C]'s public setter call (the line's first; [A] reads every one, below)
-    let pub = code.match(PUB_CALL);
+    let pub = everyCall(code, PUB_CALL)[0];
     // R2: ignore the HTML5-canvas moveTo (context.moveTo / @moveTo in the canvas extensions), not Widget.moveTo.
     if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
     const recalc = RECALC_CALL.test(code);
@@ -618,18 +633,18 @@ function checkFile(file, violations, gCtx, warnings) {
       const nb = mark && !mark.reasoned ? ` NB the # ${SETTLING_CALL_MARKER} at ${mark.at} gives no reason, so it excuses nothing: write why after its colon.` : '';
       // R2: on a canvas line (a canvas receiver, or a canvas-extension file) a moveTo is the HTML5 context's, not Widget.moveTo
       const canvasLine = CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code);
-      for (const p of everyMatch(code, PUB_CALL)) {
+      for (const p of everyCall(code, PUB_CALL)) {
         if (!(p[1] === 'moveTo' && canvasLine)) found.push(() => rules.fired('A_PUBLIC_SETTER', `[A] low-level ${method}() calls public setter .${p[1]}()${nb}  — ${at}`));
       }
-      for (const t of everyMatch(code, TEXT_SETTER_CALL)) found.push(() => rules.fired('A_TEXT_SETTER', `[A] low-level ${method}() calls self-settling text setter .${t[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter${nb}  — ${at}`));
+      for (const t of everyCall(code, TEXT_SETTER_CALL)) found.push(() => rules.fired('A_TEXT_SETTER', `[A] low-level ${method}() calls self-settling text setter .${t[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter${nb}  — ${at}`));
       // recalc is OK from a whitelisted flush driver (the settle tiers are now _-prefixed, hence
       // low-level by name, but they ARE the flush — rule [B] below governs who may call recalc).
       if (recalc && !RECALC_WHITELIST.has(tier)) violations.push(rules.fired('A_RECALC', `[A] low-level ${method}() calls recalculateLayouts()  — ${at}`));
       // [G] structural self-settling wrapper (discovered from _settleLayoutsAfter callers): low-level code
       // must reach the _<name>NoSettle core, never the public wrapper (it re-enters the single-mutation
       // flush). The settle tiers themselves (RECALC_WHITELIST) ARE the flush, so they are not [G] subjects.
-      if (!RECALC_WHITELIST.has(tier) && !methodNoSettleMarked) {
-        for (const wrap of everyMatch(code, gCtx.WRAPPER_CALL)) {
+      if (!RECALC_WHITELIST.has(tier)) {
+        for (const wrap of everyCall(code, gCtx.WRAPPER_CALL)) {
           const sigil = wrap[1], wname = wrap[2];
           // NAME-QUALIFIED [G] (plan P4.3; regression pair: TransformSpec.setScale — a plain
           // data-holder setter — vs TransformFrameWdgt.setScale — a self-settling wrapper).
@@ -651,7 +666,7 @@ function checkFile(file, violations, gCtx, warnings) {
         }
         // the unambiguous self-add @add (Widget.add) — the one add shape a name scanner can attribute (`.add` member
         // stays excluded as Point#add-ambiguous). Low-level code must use @_addNoSettle, not the self-settling add().
-        for (const _add of everyMatch(code, SELF_ADD_CALL)) found.push(() => rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add()${nb}  — ${at}`));
+        for (const _add of everyCall(code, SELF_ADD_CALL)) found.push(() => rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add()${nb}  — ${at}`));
       }
       judged = found.length > 0;
       // excused, and counted: every call the marker excuses is one against the ceiling
@@ -804,20 +819,21 @@ function checkDoubleSettle(file, gCtx, violations) {
     if (!m) continue;
     if (marks(masked[n], DOUBLE_SETTLE_MARKER)) m.marked = true;
     if (m.settleLine < 0 && SETTLE_CALL.test(code)) m.settleLine = n + 1;
-    let pub = code.match(T_SELF_PUB_CALL);
+    // each family's first CALL on the line: a presence test is none (everyCall, as for [A] [G])
+    let pub = everyCall(code, T_SELF_PUB_CALL)[0];
     if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
     if (pub) m.sites.push({ n: n + 1, label: `public setter @${pub[1]}()` });
-    const txt = code.match(T_SELF_TEXT_CALL);
+    const txt = everyCall(code, T_SELF_TEXT_CALL)[0];
     if (txt) m.sites.push({ n: n + 1, label: `text setter @${txt[1]}()` });
     if (gCtx.WRAPPER_CALL) {
-      const wrap = code.match(gCtx.WRAPPER_CALL);
+      const wrap = everyCall(code, gCtx.WRAPPER_CALL)[0];
       // @-SELF only; resolve to the nearest definer up the extends-chain so a same-named PLAIN
       // (non-settling) method on this class never false-trips (mirrors the [G] name qualification)
       if (wrap && wrap[1] === '@' && nearestDefinerKind(wrap[2], selfClass, gCtx) !== 'plain') {
         m.sites.push({ n: n + 1, label: `wrapper @${wrap[2]}()` });
       }
     }
-    if (SELF_ADD_CALL.test(code)) m.sites.push({ n: n + 1, label: '@add (self == Widget.add)' });
+    if (everyCall(code, SELF_ADD_CALL).length) m.sites.push({ n: n + 1, label: '@add (self == Widget.add)' });
   }
   flush();
 }

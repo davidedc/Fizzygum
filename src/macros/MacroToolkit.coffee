@@ -714,8 +714,6 @@ class MacroToolkit
   # (ViewportWdgt.claimsPlainDragsForScrolling, which the hand asks of a touch press's ancestry).
   _takesScrollsItself: (wdgt, isTouch) ->
     return wdgt.claimsPlainDragsForScrolling?() is true  if isTouch
-    # nosettle-sanctioned: scrolledBy is PROBED for presence, never called — the question
-    # processWheel's own walk asks before it dispatches
     wdgt.scrolledBy?
 
   # WHAT A PRESS AT THIS SCREEN POINT MEETS: the product's own hit test (_topWdgtAtScreenPoint),

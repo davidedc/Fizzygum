@@ -31,17 +31,16 @@ class MakerDocumentWdgt extends FrameWdgt
   # taking me in both roles (I am the window and the thing saved). Something reaching in: just close
   # it, since what references or wires into it keeps it reachable already.
   _closeFromFrameBarWhenSaveOrAsk: ->
-    # public-call-sanctioned + nosettle-sanctioned: this IS the close-from-bar action (a top-level
-    # bar-button event handler), so fullDestroy and close are the public self-settling close verbs
-    # it means to trigger. Reaching the NoSettle cores would leave the world unsettled after a
-    # top-level bar press.
+    # the close-from-bar press (a top-level bar-button event handler), at event time and outside any
+    # settle: each branch that ends me is ONE settle round my own core, as Widget.fullDestroy and
+    # Widget.close are, so the world is settled after the press
     if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceOrWireIntoWdgt @
-      @fullDestroy()
+      @_settleLayoutsAfter => @_fullDestroyNoSettle()
     else if !world.anyReferenceOrWireIntoWdgt @
       prompt = new SaveShortcutPromptWdgt @, @
       prompt.popUpAtHand()
     else
-      @close()
+      @_settleLayoutsAfter => @_closeNoSettle()
 
   # Losing the payload rebuilds a FRESH one of my kind, in MY mode and in MY box: drops stay disabled
   # (the frame is occupied again), my mode and my extent stay put, and my title is my kind's name

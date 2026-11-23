@@ -1225,7 +1225,7 @@ separates a deviation from a scar is that the deviation **says why, in the code,
 will be**: `SliderWdgt` argues its mixed constructor shape, `FrameWdgt` argues its trailing public
 `setExtent`, `ViewportWdgt` argues its differently-named builder, `PanelWdgt` argues the one place
 that tests a class. A gated rule additionally has a marker for this
-(`# layout-apply-sanctioned:`, `# nosettle-sanctioned:`, `# cross-invalidation-sanctioned:`,
+(`# layout-apply-sanctioned:`, `# settling-call-sanctioned:`, `# cross-invalidation-sanctioned:`,
 `# constructor-build-exempt:`, …) — each takes a reason, and the reason is the point.
 
 Two things a deviation may not do: state history instead of the surviving constraint (a comment says

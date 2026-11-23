@@ -279,10 +279,11 @@ predicates, the markers, and the gate mechanics live in `docs/architecture/lint-
 The convention is also why the flow rules work: because every immediate geometry mutator is recognizably low-level
 (`_`/`__`-prefixed or `*NoSettle`) and named in the apply 2×2, rules **[A]** (low-level must not reach the public
 self-flushing layer) and **[E]** (an immediate mutator must MUTATE, never SCHEDULE) have no blind spot. Where
-low-level code reaches a self-settling method deliberately and soundly — where no settle or pass is open, driving
-ANOTHER object's public setter whose own settle is the point (a text door a subclass extends, a style subject that
-settles itself, a free-floating widget handed in), with no core of its own or of a part it holds to serve — the CALL
-carries `# settling-call-sanctioned: <why>` on its line, the one marker [A] and [G] share, counted
+low-level code reaches a self-settling method deliberately and soundly — where no settle or pass is open (at event
+time, a catch path, the cycle's own reconciler), driving ANOTHER object's public setter or wrapper whose own settle is
+the point (a text door a subclass extends, a style subject that settles itself, a free-floating widget handed in, the
+hand's drop in the error recovery), with no core of its own or of a part it holds to serve — the CALL carries
+`# settling-call-sanctioned: <why>` on its line, the one form [A] and [G] take, counted
 (`docs/architecture/lint-and-static-checks.md` §5); it never reaches that object's `_<name>NoSettle` core instead. See
 `docs/architecture/lint-and-static-checks.md` §2/§4 for `isLowLevel` / `isImmediateMutator` and rules [A]–[H].
 

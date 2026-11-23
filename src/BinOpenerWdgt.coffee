@@ -51,10 +51,10 @@ class BinOpenerWdgt extends DesktopLinkWdgt
       return
 
     if @target.isOrphan()
-      # nosettle-sanctioned: this hook runs a click at event time, off any settle (the dispatcher's
-      # activated hands it here), so the public, self-settling calls below settle here: the bin's
-      # unCollapse, and the world's one fresh-window door (WorldWdgt.openFrameWith), which wraps the bin
-      # in a window, sizes and places it while it is still detached, and then adds it
+      # settling-call-sanctioned: a press on my tile, at event time and outside any settle or pass
+      # (WidgetHolderWithCaptionWdgt.activated hands it here): the bin's own unCollapse settles here, before the
+      # world's one fresh-window door (WorldWdgt.openFrameWith) wraps the bin in a window, sizes and places it while
+      # it is still detached, and then adds it
       @target.unCollapse()
       world.openFrameWith @target, (new Point 460, 400), (new Point 140, 90)
     else

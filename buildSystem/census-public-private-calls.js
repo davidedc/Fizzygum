@@ -96,7 +96,7 @@ const path = require('path');
 const { compiledFiles, sourceName, sourceRoots, SOURCE_RAILS, SRC, TESTS_REPO } = require('./lib/source-files');
 
 // the [S] per-method conscious sign-off: a hard R1 site whose CALLER carries this marker is
-// reported but NOT counted by the gate (mirror of check-layering's nosettle-sanctioned mechanics)
+// reported but NOT counted by the gate (read anywhere in the CALLER's body, as check-layering's [T] marker is)
 const PUBLIC_CALL_MARKER = 'public-call-sanctioned';
 // rule [T]'s marker (owned by check-layering.js) — the census reads it too so its narrowed-R2
 // report shows which double-settle shapes are consciously signed off

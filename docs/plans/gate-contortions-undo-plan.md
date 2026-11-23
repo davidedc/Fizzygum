@@ -33,7 +33,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U17 | A menu row is found, not fetched | CLOSED 2026-11-22 (§U17) |
 | U18 | A capture that does not verify is UNSTABLE | CLOSED 2026-11-22 (§U18) |
 | U18b | [A] gets a counted per-line marker; U14's three parked members take their tier (owner-ruled 2026-11-22) | CLOSED 2026-11-23 (§U18b) |
-| U18c | [G]'s marker and [A]'s are one regime: one name, line-scoped, reason-required, stale-checked, counted (owner-added 2026-11-22) | not started |
+| U18c | [G]'s marker and [A]'s are one regime: one name, line-scoped, reason-required, stale-checked, counted (owner-added 2026-11-22) | CLOSED 2026-11-23 (§U18c) |
 | U19 | Close | not started |
 
 ## 0. Orientation
@@ -1181,6 +1181,22 @@ the ceiling fails); `fg build`; the suite (no behaviour change). **Predicted pix
 gate). **Park when.** A [G] site needs a marker whose reason cannot be stated checkably (then it is a finding of its
 own). **Audit.** — (found by U18b's review).
 
+**Landed 2026-11-23.** Every `nosettle-sanctioned` site (15 sites, 16 calls, both repos) moved onto
+`# settling-call-sanctioned:` — one marker per call, on or directly above its line, each with a checkable reason —
+and the gate no longer reads the old token (an old marker excuses nothing). Three of the old [G] calls were SELF-calls
+of the caller's own thin wraps (FolderWindow's `close`, MakerDocument's `fullDestroy` and `close`, from close-button
+hooks): ruled on the house rule (§2.5 shape 3; U18b's `gotoSlot` precedent), they reach their OWN core inside one
+settle and carry no marker — the marker stays "a call into ANOTHER object at event time". The gate tells a member
+tested for PRESENCE (`x.close?` ending its expression) from a call (a soak `x.close?()` is still one), for [A], [G],
+[C] and [T] alike, without the `if`/`unless` forms (which compile to a call). Fixed on the way: `_softResetWorld`'s
+reason (`resetWorld` reaches it too); MacroToolkit's marker (its line called nothing) gone; ShortcutWdgt's
+`# nosettle-exempt:` look-alike a plain comment. Ratchets: the marker ceiling 7 → 19, dated, naming every member; [S] sanctioned 43 → 40 (the close hooks' two
+`public-call-sanctioned` markers go with their public calls).
+Proof: the gate's self-test (every rule planted: presence, soak, presence-then-call, the `if` form that is a call, the
+old token excusing nothing; mutations of the presence filter each fail it); the suites green, no reference moved.
+Docs: `lint-and-static-checks.md` §3–§5, §7, §8 (the how-to now teaches the per-line marker),
+`layering-naming-convention.md` §4, `widget-authoring-guidelines.md` §19.
+
 ### U19 — Close
 
 1. File, in `docs/BACKLOG.md` under this plan's heading (one line each, at most 325 characters, each naming the audit
@@ -1282,6 +1298,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first. — CLOSED 2026-11-22 (gate-contortions loop, U17): pure locators, a named fault, one centring wheel; 28 tests bring their row in.
 - [x] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium. — CLOSED 2026-11-22 (gate-contortions loop, U18): UNSTABLE is its own outcome; only a run that died before its verdict is retried.
 - [x] U18b: layering rule [A] gets a counted, line-scoped, reason-required marker (owner-ruled (a) with guards, confirmed after an independent review) so U14's three parked members and `CaretWdgt._deleteSelectionOrCharacter` take the `_` tier (plan §U18b) — small. — CLOSED 2026-11-23 (gate-contortions loop, U18b): `settling-call-sanctioned`, two guards, seven marked calls.
+- [x] U18c: [G]'s `nosettle-sanctioned` (bare token, excuses its line downward, ~15 sites) and [A]'s new marker become ONE regime — one name, line-scoped, reason-required, stale-checked, one counted ceiling (owner-added; plan §U18c) — small. — CLOSED 2026-11-23 (gate-contortions loop, U18c): one regime; the self-calls take their own core.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

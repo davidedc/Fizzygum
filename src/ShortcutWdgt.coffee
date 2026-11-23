@@ -148,9 +148,9 @@ class ShortcutWdgt extends DesktopLinkWdgt
     # building content; _reactToBeingAdded is not, since it fires INSIDE the add's own settle.
     @referencedWidget.whenReadyToBeBroughtUp => @_bringUpReferencedWidgetNow()
 
-  # nosettle-exempt: not a _NoSettle twin — this is the second half of _bringUpReferencedWidget,
-  # split out so the content-readiness seam above has something to call back into. It settles
-  # exactly as the undivided method did, through spawnNextTo.
+  # THE SECOND HALF of _bringUpReferencedWidget, split out so the content-readiness seam above has
+  # something to call back into. It is no _NoSettle core of anything: it settles exactly as the
+  # undivided method did, through spawnNextTo and the re-title.
   _bringUpReferencedWidgetNow: ->
     whatToBringUp = @referencedWidget.findRootForGrab()
     # findRootForGrab can return undefined (e.g. a draggable graph has no grabbable
@@ -168,7 +168,8 @@ class ShortcutWdgt extends DesktopLinkWdgt
       # fractional bookkeeping from an earlier desktop/storage life, which the fill-only
       # seed respects -- re-derive at the spawned position explicitly.
       whatToBringUp._rememberFractionalSituationInHoldingPanel()
-      # nosettle-sanctioned: the second half of _bringUpReferencedWidget, never inside a
-      # settle (see the exemption above) -- the re-title settles on its own, as spawnNextTo does.
+      # settling-call-sanctioned: reached from my bring-up (_bringUpReferencedWidget: a press on my tile, or a
+      # script shortcut's "Edit script" row) at once, or when my referent's part arrives (a promise callback),
+      # never inside a settle or pass: the referent's own re-title settles here, as spawnNextTo does
       whatToBringUp.setTitle? @label.text
 

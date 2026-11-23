@@ -51,14 +51,13 @@ class FolderWindowWdgt extends FrameWdgt
   # A folder always has real content, so no "nothing to save" branch (§5.E E2:
   # the 'saveOrAsk' hook, routed through FrameWdgt.closeFromFrameBar's dispatch).
   _closeFromFrameBarWhenSaveOrAsk: ->
-    # public-call-sanctioned + nosettle-sanctioned: this IS the close-from-bar
-    # action; @close is the public self-settling close verb it legitimately
-    # triggers (as the public closeFromFrameBar it replaced did).
     if !world.anyReferenceOrWireIntoWdgt @
       prompt = new SaveShortcutPromptWdgt @, @
       prompt.popUpAtHand()
     else
-      @close()
+      # the close-from-bar press, at event time and outside any settle: my close, as the one settle round my
+      # own close core (what Widget.close is), so the world is settled after the press
+      @_settleLayoutsAfter => @_closeNoSettle()
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
