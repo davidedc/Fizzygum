@@ -40,9 +40,10 @@ Creation is scattered across at least five bespoke paths:
 - **App launchers:** `WindowedApp` (plain factory base) + 14 `*App` subclasses; each
   `buildWindow` news-up a content widget and calls `world.openFrameWith(...)`. The desktop launcher widget
   is `AppLauncherWdgt` (double-click → `app.launch()`).
-- **Creator buttons:** `CreatorButtonWdgt` (`app-kit/`, `extends Widget`) + subclasses (the
+- **Creator buttons:** `CreatorButtonWdgt` (`app-kit/`, `extends CreatorWdgt`) + subclasses (the
   `*CreatorButtonWdgt` "switcheroo" creators, the `ToolbarCreatorButtonWdgt` family) that spawn widgets on
-  click.
+  click. The lid of a Template's tool cell (`GlassBoxTopWdgt`) is a `CreatorWdgt` too, whose product is a copy
+  of its cell's tool, by click and by drag (`docs/architecture/toolbars.md` §1).
 - **`WidgetFactory`** (`WidgetFactory.coffee`) — a direct construction helper.
 - **`DemoMenus`** (`demos/`) — the "new X" / `createEmptyWindow*` menu entries; **`MenusHelper`** keeps
   `newScriptWindow` (+ `popUpDevToolsMenu`, `binIconAndText`). Both were God-class-split out of `WorldWdgt`

@@ -205,8 +205,11 @@ that territory), and a booked non-float target that has already MOVED away from 
 yet, so a finger resting on a slider still gets its hold. And a move past `grabDragThreshold`
 before the hold fires does NOT re-anchor the way the dwell's linger does: it commits the stroke as
 a plain drag — a scroll — for the rest of its life, and if a hold menu was already standing, that
-move dismisses it (the same dismissal sweep the press-down path itself runs,
-`cleanupMenuWdgts alsoKillFreshMenus: true`).
+move dismisses it: the same dismissal sweep the press-down path runs, asked to take the pop-up the
+hold opened (`_pressHoldMenu`, booked as its menu request opens it) and no other fresh one
+(`cleanupMenuWdgts alsoKillTheseFreshMenus:`). That move's own lift runs first (`determineGrabs`),
+so a pop-up the lift raises — the message a refused copy shows — is fresh too, and stays for the
+person to read. Test: `SystemTest_macroRefusedToolCopyIsNotCarried` under the finger.
 
 ### Arming and its two capabilities
 
@@ -365,8 +368,8 @@ dissolution runs on cancel exactly as it does on an ordinary up.
 
 A press books widgets the rest of its stroke acts on — `wdgtToGrab` (what a drag picks up),
 `mouseDownWdgt` (what the release's click and a finger's hold are about), `nonFloatDraggedWdgt`
-(what a non-float drag steps), the pane that took the press and the one its latch chose — and the
-hand carries a float drag's payload. A booking left naming a widget that has left the world the
+(what a non-float drag steps), the pane that took the press and the one its latch chose, the
+pop-up a finger's hold opened — and the hand carries a float drag's payload. A booking left naming a widget that has left the world the
 stroke acts on would be acted on at a later event of the same stroke: a pressed move lifts it onto
 the hand, and the release drops it back on the desktop. A widget leaves that world two ways, and
 each way has ONE funnel that tells the hand:
@@ -403,7 +406,7 @@ drop —; a program does (a formula fed by the stroke's own slider, a timer). Te
 A press lifts nothing until the pointer has travelled `grabDragThreshold` from where it went down,
 and what lifts then is the widget under the PRESS; `grab` moves it by that travel, so the hand
 carries it by the very point the press went down on. That correction — and every other placement
-relative to the hand, the switcheroo centring and the glass-box inflate — is applied only AFTER the
+relative to the hand, and the switcheroo centring — is applied only AFTER the
 release settle (`_beforeBeingGrabbed`): the release re-lays the host being left, and a host that
 places its children (a document's flow) would otherwise put the widget back, leaving it riding the
 hand off by the threshold travel. Playback runs these exact rules: there is no Automator carve-out,
@@ -412,13 +415,16 @@ so a replayed mouse drag waits out the threshold as a user's does, and a test ca
 Pinned by the value assertions of `SystemTest_macroSimpleDocumentHandlesOldInspector` (a window
 dragged out of a document lands exactly where the drag puts it, on either pointer).
 
-The glass-box inflate is decided by WHERE THE PICK-UP STARTED (`@grabOrigin.origin`, the fact the
-drop's sticky re-embed reads too), never by the grabbed widget's parent. A tool dragged out of a
-toolbar is a fresh copy of its template, and a copy is a detached root
-(`serialization-duplication-reference.md` §2) that stands nowhere yet; so the template branch of
-`determineGrabs` states the origin itself (`grab`'s `origin`: the template's situation), and a
-copy that leaves a glass box takes `extentToGetWhenDraggedFromGlassBox`, centred under the pointer.
-Pinned by `SystemTest_macroTemplateDraggedOutOfToolbarInflates`.
+A tool dragged out of a toolbar's cell is a CREATOR's product: the cell's lid answers the drag
+through `grabbedWidgetSwitcheroo` with the cell's one copy, already at the size the tool came into the
+cell at ([`toolbars.md`](toolbars.md) §1), and the switcheroo centring puts it under the pointer. A
+creator that makes nothing (a refused copy, the person told why) gives the hand nothing to carry, and
+the rest of that press tries nothing again. A Template standing anywhere else (a snippet in the
+snippets window, a sample magnet) takes the template branch of `determineGrabs`: its copy is a
+detached root (`serialization-duplication-reference.md` §2) that stands nowhere yet, so the branch
+states where the pick-up starts itself (`grab`'s `origin`: the template's situation), which the drop's
+sticky re-embed reads (`@grabOrigin.origin`). Pinned by `SystemTest_macroTemplateDraggedOutOfToolbarInflates`
+and `SystemTest_macroRefusedToolCopyIsNotCarried`.
 
 `checkDraggingThreshold` (reached from `determineGrabs`) carries two touch-specific rules ahead
 of the ordinary grab-threshold test: a zero-displacement move on a touch stroke NEVER grabs — a

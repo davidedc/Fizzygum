@@ -343,7 +343,9 @@ const SETTLING_CALL_SANCTION = /#\s*settling-call-sanctioned:\s*\S/;
 // station). Each of their settles is reached where none is open. The old sign-off also covered three self-calls of the
 // caller's own thin wraps, in FolderWindowWdgt's and MakerDocumentWdgt's close-from-bar hooks: those take their own
 // close and destroy cores inside one settle, and no marker.
-const SETTLING_CALL_MARKER_CEILING = 19;
+// Lowered 19 -> 18 on 2026-11-23 (toolbar-template-one-size Phase 2): GlassBoxTopWdgt._createWidgetToBeHandled asks its
+// cell for the copy it hands out (GlassBoxBottomWdgt.copyOfToolToHandOut, a public door), so its marked fullCopy goes.
+const SETTLING_CALL_MARKER_CEILING = 18;
 // [H] a GUARD return: a bare `return`, or a postfix `return if … / return unless …`. NOT `return <value>`
 // (that is a legit return-the-result, e.g. `return @_settleLayoutsAfter => …` — what follows `return` is an
 // expression, not if/unless/end-of-line). This is the early-return guard that should live INSIDE the

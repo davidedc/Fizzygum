@@ -14,13 +14,16 @@ class SpeechBubbleWdgt extends Widget
   cornerRadius: undefined
   # the TextWdgt child holding @contents
   contentsWidget: undefined
-  # the size a bubble takes when dragged out of the glass box
-  extentToGetWhenDraggedFromGlassBox: undefined
 
   # what I am as a tool in a panel, in a word: the lid over me in a tool cell shows it as its tooltip
   # (ToolPanelWdgt), and a toolbar's overflow row names me by it (OverflowChevronButtonWdgt). I show
   # no tooltip of my own.
   toolName: "speech bubble"
+
+  # the size I have as a tool: a toolbar builds me at it before my cell takes me in (ToolbarWdgt), so a
+  # copy of me leaves the cell at it. Outside a toolbar's own roster it is read by nothing: built anywhere
+  # else I am born at Widget's size, and put into a toolbar by a person I keep the size I arrive at.
+  toolExtent: new Point 130, 100
 
   # no fill or stroke colour of my own until one is set on me (my color is declared undefined here,
   # over Widget's content default; my strokeColor is Widget's, undefined): until then my
@@ -35,7 +38,6 @@ class SpeechBubbleWdgt extends Widget
     @appearance = new BubblyAppearance @
     @_buildAndConnectChildren()
     @minimumExtent = new Point 10,10
-    @extentToGetWhenDraggedFromGlassBox = new Point 105,80
 
   # the fill and the 1 px border my BubblyAppearance paints me in while I hold no colour of my own
   _surfaceFill: ->

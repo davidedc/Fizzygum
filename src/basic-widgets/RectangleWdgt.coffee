@@ -16,6 +16,9 @@ class RectangleWdgt extends Widget
   # no tooltip of my own.
   toolName: "rectangle"
 
+  # the size I have as a tool, which a toolbar builds me at (the rule: SpeechBubbleWdgt's toolExtent)
+  toolExtent: new Point 200, 130
+
   constructor: (extent, color) ->
     super()
     @appearance = new RectangularAppearance @

@@ -76,11 +76,10 @@ class ToolPanelWdgt extends PanelWdgt
       if aWdgt.grabbedWidgetSwitcheroo == Widget::grabbedWidgetSwitcheroo
         aWdgt.isTemplate = true
 
-      if !aWdgt.extentToGetWhenDraggedFromGlassBox?
-        aWdgt.extentToGetWhenDraggedFromGlassBox = aWdgt.extent()
-
       unless aWdgt.standsAsAToolCell?()
         glassBoxBottom = new GlassBoxBottomWdgt
+        # the size the tool comes in at, read before the cell fits it: what a copy of it leaves the cell at
+        glassBoxBottom.toolOwnExtent = aWdgt.extent()
         glassBoxBottom.add aWdgt
 
         if !aWdgt.actionableAsThumbnail

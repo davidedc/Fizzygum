@@ -96,6 +96,16 @@ class ToolbarWdgt extends ViewportWdgt
   _toolbarItems: ->
     []
 
+  # MY ROSTER, EACH TOOL AT ITS OWN SIZE: a tool whose class states the size it has as a tool (toolExtent:
+  # a map pin's, a speech bubble's) is given it before its cell takes it in, so that is the size the cell
+  # keeps (GlassBoxBottomWdgt.toolOwnExtent) and a copy leaves at. A tool that states none comes in as it
+  # is built. Only my own roster passes here: a widget a person puts into a toolbar comes in at the size
+  # the person gave it.
+  _rosterAtToolExtents: ->
+    for tool in @_toolbarItems()
+      tool._applyExtent tool.toolExtent if tool.toolExtent?
+      tool
+
   # ===== who I work for =====
 
   # The window I work for: the one whose edge slot my frame occupies (FrameWdgt.dockHost), asked of my
@@ -227,7 +237,7 @@ class ToolbarWdgt extends ViewportWdgt
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
-    @_addManyNoSettle @_toolbarItems()
+    @_addManyNoSettle @_rosterAtToolExtents()
     # born LOCKED: a toolbar's items are template thumbnails (dragging one out
     # yields a copy), not editable content -- every home wants the drops/edits
     # lock, so the build applies it once instead of each call site.

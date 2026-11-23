@@ -130,11 +130,19 @@ const MEASURED_ON = '2.7.0';
 // every function above the ceiling, at the value it may not rise above: the tree's own scores on 2026-11-13, and each
 // later record or raise with its dated reason beside it
 const RECORDED = {
-  'ActivePointerWdgt#_advancePressAndHoldRecognition': 29,
+  // raised 29 -> 32 on 2026-11-23 under the owner's standing ruling of 2026-11-16 (the right shape over the count),
+  // owner-approved fix: the hold books the pop-up its menu request opened (_pressHoldMenu), at the request, so the
+  // lift that follows puts away that menu and no other fresh pop-up — the message a refused copy raises in the
+  // lift's own move stays for the person to read (toolbar-template-one-size plan, the finger finding)
+  'ActivePointerWdgt#_advancePressAndHoldRecognition': 32,
   'ActivePointerWdgt#_declareDragEmbedEphemerals': 19,
   'ActivePointerWdgt#_dispatchEventsFollowingMouseMove': 30,
   'ActivePointerWdgt#_updateDragEmbedStateMachine': 17,
-  'ActivePointerWdgt#determineGrabs': 37,
+  // raised 37 -> 41 on 2026-11-23 under the owner's standing ruling of 2026-11-16 (the right shape over the count):
+  // the creator arm's guard for a creator that makes nothing (a tool cell's copy refused, and the person told), the
+  // twin of the Template arm's own guard beside it, at its arm's nesting depth; the lid of a tool cell drags through
+  // this arm (toolbar-template-one-size plan, Phase 2)
+  'ActivePointerWdgt#determineGrabs': 41,
   'ActivePointerWdgt#drop': 42,
   'ActivePointerWdgt#processPointerDown': 17,
   'ActivePointerWdgt#processPointerUp': 76,

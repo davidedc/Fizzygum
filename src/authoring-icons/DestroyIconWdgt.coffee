@@ -8,6 +8,9 @@ class DestroyIconWdgt extends IconWdgt
   # no tooltip of my own.
   toolName: "explosion"
 
+  # the size I have as a tool, which a toolbar builds me at (the rule: SpeechBubbleWdgt's toolExtent)
+  toolExtent: new Point 80, 80
+
   createAppearance: -> new DestroyIconAppearance @
 
   constructor: (@color) ->

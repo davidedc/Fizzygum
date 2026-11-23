@@ -3,6 +3,11 @@
 # first child -- and, over a tool that is there only to be dragged out (not actionableAsThumbnail),
 # the LID a press lands on (GlassBoxTopWdgt).
 #
+# WHAT I HAND OUT, under a lid, is ONE thing however it is taken: a fresh copy of my tool, at the size
+# my tool came in at (copyOfToolToHandOut). The lid is a creator, so a click on it places that copy and
+# a drag out of it carries it. I keep that size myself (toolOwnExtent), because I am what fits my tool
+# to my mark box: the tool standing in me has my mark box's size, not its own.
+#
 # MY CHILDREN HAVE TWO ROLES (ruling G3: a target and its mark are separate dials). What a tap on me
 # reaches -- my lid, or a tool that takes its own taps (thumbnailClickReceiver) -- is the TARGET, and
 # fills my whole square. My tool's PICTURE is the MARK, and stands in the MARK BOX, a toolMarkSize
@@ -49,6 +54,13 @@ class GlassBoxBottomWdgt extends BoxWdgt
   # keeps it.
   lid: undefined
 
+  # THE SIZE MY TOOL CAME IN AT: its extent as the tool panel stood it in me (ToolPanelWdgt._addNoSettle
+  # records it), before I fitted it to my mark box or to my whole square. A copy of my tool leaves me at
+  # this size (copyOfToolToHandOut), so a tool comes out of a toolbar as large as it went in. A cell no tool
+  # panel filled keeps none, and its copy leaves at the size the tool stands at in it. A value of my own,
+  # so a copy of me and a save keep it.
+  toolOwnExtent: undefined
+
   colloquialName: -> "tool cell"
 
   # my rounding is the tool cell's, from the theme, as I am built; my fill is read as I am painted
@@ -65,10 +77,21 @@ class GlassBoxBottomWdgt extends BoxWdgt
   standsAsAToolCell: ->
     true
 
-  # The one widget I wrap -- the tool this cell offers, which is what names the cell in a menu.
-  # (GlassBoxTopWdgt's grab reads the same first child.)
+  # The one widget I wrap -- the tool this cell offers, which is what names the cell in a menu, and
+  # what my copyOfToolToHandOut copies.
   glassBoxItem: ->
     @children[0]
+
+  # THE ONE THING I HAND OUT, whichever gesture takes it: a fresh copy of my tool, no Template itself, at
+  # the size my tool came in at. A click on my lid places it and a drag out of my lid carries it
+  # (GlassBoxTopWdgt, through CreatorWdgt's two doors), so the two cannot disagree. Undefined when the copy
+  # is refused (Widget.fullCopy has told the person why).
+  copyOfToolToHandOut: ->
+    copy = @glassBoxItem().fullCopy()
+    return undefined unless copy?
+    copy.isTemplate = false
+    copy.setExtent @toolOwnExtent if @toolOwnExtent?
+    copy
 
   # The widget a TAP on me actually reaches, which is therefore what any PROJECTION of this cell
   # -- a toolbar overflow menu's row -- must click: one dispatch contract for every tool family.

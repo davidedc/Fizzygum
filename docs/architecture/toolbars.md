@@ -20,6 +20,14 @@ nothing: a docked toolbar never falls back to working for the person.
   (`GlassBoxBottomWdgt`). An item that acts on its own press (`actionableAsThumbnail: true`) is wrapped bare,
   and a tap on its cell reaches it. Any other item is there to be dragged out, and the cell puts a **lid**
   over it (`GlassBoxTopWdgt`), which takes the press and hands out a copy.
+- **One way out of a cell, at one size.** A lidded cell hands out ONE thing however it is taken:
+  `GlassBoxBottomWdgt.copyOfToolToHandOut`, a fresh copy of its tool (no Template), at the size the tool came
+  into the cell at. The lid is a creator (§6): a click on it places that copy and a drag out of it carries it.
+  The CELL keeps the size (`toolOwnExtent`, recorded by `ToolPanelWdgt._addNoSettle` before the cell fits the
+  tool to its mark box), so no size travels on the widget or its copies: a widget a person resizes and puts
+  into a toolbar comes out of it, by a click or a drag, at the size it went in at. A toolbar builds its own
+  roster at each tool's `toolExtent`, where the tool's class states one (`ToolbarWdgt._rosterAtToolExtents`);
+  a tool that states none goes in, and comes out, at the size it is built at.
 - **A cell's two roles.** What a tap on a cell reaches (its lid, or the tool itself) is the TARGET and fills the
   44 cell; the tool's PICTURE stands in the 32 **mark box** centred in it (`GlassBoxBottomWdgt._reLayoutSelf`). A
   tool under a lid is sized to the mark box. A tool that is its own target keeps the whole cell and draws its face
@@ -338,9 +346,12 @@ by the world at every flip).
 A content takes no placed widget while its editing is off (a window in view mode), nor when it stamps what is
 dropped on it (`StretchableWidgetContainerWdgt.acceptsSmartPlacedWidgets` asks its canvas
 `stampsDroppedWidgets`: a drawing). So a click ends in the same KIND of result a drop there would, and a floating
-creator's search passes over such a window to the next one down. A DRAG out of a creator is no click: the drop
-names its own target, docked or not. The lid of a drag-out cell (`GlassBoxTopWdgt`) is a creator and inherits all
-of this. `ToolbarCreatorButtonWdgt` overrides `activated`: it opens a window beside itself (a toolbar, or the snippets
+creator's search passes over such a window to the next one down. A DRAG out of a creator carries what a click
+would place, made by the same method (`CreatorWdgt.grabbedWidgetSwitcheroo` answers `_createWidgetToBeHandled`),
+and the drop names its own target, docked or not. The drag takes hold of the creator itself, never of the cell it
+stands in (`grabsToParentWhenDragged` answers false); the hand centres what it is handed under the pointer, and
+carries nothing when nothing is made (a refused copy, the person told why). The lid of a drag-out cell
+(`GlassBoxTopWdgt`) is a creator and inherits all of this: what it makes is its cell's one copy (§1). `ToolbarCreatorButtonWdgt` overrides `activated`: it opens a window beside itself (a toolbar, or the snippets
 window) and is untouched by docking.
 
 ## 7. The refresh
@@ -390,6 +401,10 @@ event stream, with no timer.
   edit marks both come from `_tools`). Nothing else: holders, take-up, transfers and the refresh are keyed generically.
 - **A creator.** Subclass `CreatorButtonWdgt` (or `CreatorWdgt`) and answer `_createWidgetToBeHandled`. Placement
   is the base's; never search for a target yourself.
+- **A Template.** Any widget with no drag product of its own: list it in `_toolbarItems`, and its cell puts a lid
+  over it and hands out copies of it (§1). One that should come out at a size of its own declares
+  `toolExtent: new Point w, h` at class level, beside its `toolName` (`SpeechBubbleWdgt` states the rule); its
+  thumbnail is the mark box's whatever that size is.
 - **Its face, in a cell.** A tool that is its own target (`actionableAsThumbnail: true`) and whose face is a
   PICTURE filling its box declares `drawsFaceInToolMarkBox: true` and a `glyphSize` field its appearance reads (the
   creator and paint-tool bases declare both); one whose face is a GLYPH drawn for the whole cell, with its own white
@@ -412,6 +427,9 @@ SystemTests:
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;
+- one way out of a cell, at one size, and a refused copy carried nowhere:
+  `SystemTest_macroToolCellHandsOutOneSizeHoweverTaken`, `SystemTest_macroTemplateDraggedOutOfToolbarInflates`,
+  `SystemTest_macroRefusedToolCopyIsNotCarried`;
 - reach of docked tools and the mixed bar's refresh: `SystemTest_macroDockedTextBarActsOnlyInItsWindow`,
   `SystemTest_macroDockedCreatorPlacesOnlyIntoItsHost`, `SystemTest_macroMixedToolbarKeepsEveryLookCurrent`;
 - dimming: `SystemTest_macroDimmedToolsWakeWithTheirSubject`, `SystemTest_macroDimmedToolCellStaysDarkUnderThePointer`,

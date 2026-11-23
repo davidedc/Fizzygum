@@ -5,6 +5,9 @@ class MapPinIconWdgt extends IconWdgt
   # no tooltip of my own.
   toolName: "map pin"
 
+  # the size I have as a tool, which a toolbar builds me at (the rule: SpeechBubbleWdgt's toolExtent)
+  toolExtent: new Point 35, 50
+
   createAppearance: -> new MapPinIconAppearance @
 
   constructor: (@color) ->

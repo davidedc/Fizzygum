@@ -6,8 +6,9 @@
 #   - FLOATING (or standing in no toolbar), I work for the person: the widget goes into the topmost
 #     window whose content takes a click-placed widget, else beside me on the desktop.
 # A window in view mode takes none, and neither does a content that stamps what is dropped on it (a
-# drawing): a click ends in the same kind of result a drop would. A DRAG out of me is no click: the
-# drop names its own target. The base of the creator buttons and of a tool cell's lid
+# drawing): a click ends in the same kind of result a drop would. A DRAG out of me carries the very
+# thing a click would place, made by the same method (grabbedWidgetSwitcheroo), and where it lands is
+# the drop's to name, not mine. The base of the creator buttons and of a tool cell's lid
 # (GlassBoxTopWdgt).
 
 class CreatorWdgt extends Widget
@@ -22,6 +23,16 @@ class CreatorWdgt extends Widget
   # answers nothing.
   notePointerStateChanged: ->
     @parent?.noteItemStateChanged?()
+
+  # A DRAG OUT OF ME carries what a click on me would place: the hand asks me what comes onto it
+  # (ActivePointerWdgt.determineGrabs), and I make it there and then, so my two gestures make one thing.
+  grabbedWidgetSwitcheroo: ->
+    @_createWidgetToBeHandled()
+
+  # I am what the drag takes hold of, never the tool cell I stand in: otherwise the cell would answer the
+  # drag and the hand would carry my cell's tool away instead of what I make
+  grabsToParentWhenDragged: ->
+    false
 
 
   activated: (ignored, ignored2, ignored3, ignored4, ignored5, ignored6, ignored7, partOfDoubleClick) ->

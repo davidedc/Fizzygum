@@ -252,7 +252,6 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 ### `archive/toolbar-band-depth-plan.md` — a toolbar band as deep as a strip (✅ CLOSED 2026-11-23: Phases 1–6 landed, see its ledger; living truth `architecture/toolbars.md` and `architecture/visual-design-system.md`, "The tool cell")
 A toolbar band is 46 px deep, a strip's thickness (one row of 44 px cells and two lines), and a tool's picture stands in a 32 px mark box inside its cell; the items below were left open.
 - [ ] **The toolbars' picture faces scale a fixed drawing** — the creator, paint and Template faces are rough at the 32 px mark box on the software backend; redraw them size-aware, one at a time (owner-deferred 2026-11-23) — every Maker's toolbar, low.
-- [ ] **A Template placed by a CLICK on its lid takes its thumbnail's size** — 32 × 32 since the mark box (44 × 44 before), where a drag inflates it to its own size (50 × 40, a speech bubble 105 × 80): should a click place what a drag places? (`GlassBoxTopWdgt`; owner question) — reachable, low.
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.

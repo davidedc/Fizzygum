@@ -1283,11 +1283,16 @@ assertion a recapture after a regression silently stores two different hashes an
   (`world.openFrameHuggingPayload (new SlidesToolbarWdgt), new Point 40, 40` shows every tool in a column), find the tool by
   its class (`bar.topWdgtSuchThat (w) -> w instanceof SpeechBubbleWdgt`) and drag its CELL (`template.parent`, the press
   may meet the cell's lid) with `@dragWidgetTo_InputEvents cell, point`. What lands is a fresh copy of the template (the
-  template stays in its cell): it leaves the glass box at its `extentToGetWhenDraggedFromGlassBox` (a speech bubble 105 x
-  80, any other tool the extent it had before the cell fitted it), centred under the pointer, so its top-left is the
-  drop point minus half its extent, floored. Assert the copy's extent and place by value. That inflate is decided by
-  the grab's stated origin (`grab`'s `origin`), because a copy is a detached root: prove such a test by dropping
-  the origin through a `--prelude=` plant (the copy then arrives at the cell's 44 x 44). No new verb.
+  template stays in its cell): the cell's one copy (`GlassBoxBottomWdgt.copyOfToolToHandOut`), at the size the tool came
+  into the cell at (the cell keeps it, `toolOwnExtent`: a tool's `toolExtent` where its class states one, a speech
+  bubble's 130 x 100, else the size it was built at), centred under the pointer, so its top-left is the drop point minus
+  half its extent, floored. A CLICK on the cell (`@moveToAndClick_InputEvents cell`) places the very same copy, at the
+  same size, through the lid's creator door (`CreatorWdgt.activated`: floating, with no window to take it, beside the
+  tool on the desktop). Assert the copy's extent and place by value; the size is the cell's, so prove such a test by
+  making `copyOfToolToHandOut` skip its resize through a `--prelude=` plant (the copy then leaves at the thumbnail's
+  32 x 32). A tool whose copy is refused hands out nothing, by either gesture
+  (`macroRefusedToolCopyIsNotCarried`: a `DOMRect` planted on the tool; the message the copier shows is found by the
+  widget that raised it, `m.target`). No new verb.
 - **Drag a widget into a container** (`macroSimpleDocumentManualBuildAndScroll`, `macroIconDroppedIntoDocumentFlows`):
   `@dragWidgetTo_InputEvents widget, target` float-grabs at the widget's centre (press-drag past the grab threshold) and drops it
   at a Point or onto a widget's centre. A SimpleDocument's INNER content panel (`VerticalStackPanelWdgt`,

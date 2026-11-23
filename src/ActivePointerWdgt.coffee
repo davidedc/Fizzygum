@@ -30,8 +30,10 @@ class ActivePointerWdgt extends Widget
   _dragEmbedOutlinedWdgt: undefined          # which widget we currently declare into the highlight style channel
   # --- press-and-hold recognizer (the touch grammar, ruling I2) ----------------------------------
   # Per STROKE, not per device: every field here is re-established at the press and answers for
-  # that one press. Plain scalars and booleans — no widget references — so a teardown owes them
-  # nothing beyond the shared press clear (_forgetPressBookkeeping) that a cancel also reaches. The
+  # that one press. Plain scalars and booleans, but for the pop-up the hold opened: a WIDGET
+  # reference, so a pop-up that dies or is put away is also forgotten from it
+  # (_forgetBookingsLeavingWith), and a teardown owes the rest nothing beyond the shared press clear
+  # (_forgetPressBookkeeping) that a cancel also reaches. The
   # last one is kept for EVERY pointer: with the stroke's pane below, it is what decides whether the
   # stroke is a scroll (_strokeScrolls) — which cancels part of the press's audience, and makes the
   # release owe no click.
@@ -39,7 +41,7 @@ class ActivePointerWdgt extends Widget
   pressOriginEventTime: undefined            # EVENT.time at that press — the hold's ONE clock
   _pressArmedForMouseSemantics: false        # do this stroke's drags mean what a mouse's would?
   _pressHoldFired: false                     # the hold opened its menu, so this stroke owes no click
-  _pressHoldMenuStands: false                # that menu is still up, and a move dismisses it
+  _pressHoldMenu: undefined                  # the pop-up that hold opened, while it stands: a move that lifts puts it away, and no other
   _pressTravelledPastDragThreshold: false    # the press went past grabDragThreshold of its origin
   # --- the stroke's SCROLL (ViewportWdgt's direction latch) ---------------------------------------
   # Per stroke too, and cleared with the recognizer above — at the next press, a cancel, a teardown
@@ -215,7 +217,8 @@ class ActivePointerWdgt extends Widget
   # THE BOOKINGS A WIDGET LEAVING MID-STROKE TAKES WITH IT, dead or put away. A press books widgets
   # the rest of its stroke acts on — what a drag picks up, the widget the release's click and a
   # finger's hold are about, the widget a non-float drag steps, the pane that took the press and the
-  # one its latch chose to scroll, the audience still owed an ending — and a booking left naming a
+  # one its latch chose to scroll, the pop-up a finger's hold opened, the audience still owed an
+  # ending — and a booking left naming a
   # widget that has left is acted on at a later event of the stroke: a pressed move lifts it onto me,
   # the release drops it back on the desktop, and an ending tells it its press is over. So every
   # booking the leaving widget is or contains is forgotten, and the stroke goes on without it. The
@@ -239,6 +242,7 @@ class ActivePointerWdgt extends Widget
     @nonFloatDraggedWdgt = undefined  if leavesWithIt @nonFloatDraggedWdgt
     @_pressScrollOwner = undefined  if leavesWithIt @_pressScrollOwner
     @_strokeScrollPane = undefined  if leavesWithIt @_strokeScrollPane
+    @_pressHoldMenu = undefined  if leavesWithIt @_pressHoldMenu
     @_pressAudience = (member for member in @_pressAudience when not leavesWithIt member)
     @_tellPointerStateChanged forgottenPress
     return
@@ -251,7 +255,7 @@ class ActivePointerWdgt extends Widget
     @pressOriginEventTime = undefined
     @_pressArmedForMouseSemantics = false
     @_pressHoldFired = false
-    @_pressHoldMenuStands = false
+    @_pressHoldMenu = undefined
     @_pressTravelledPastDragThreshold = false
     @_pressScrollOwner = undefined
     @_strokeScrollPane = undefined
@@ -587,7 +591,7 @@ class ActivePointerWdgt extends Widget
       world.stopEditing()
 
       # WHERE THE PICK-UP STARTED, for the drop's sticky re-embed, which compares its target with
-      # @grabOrigin.origin, the PRE-GRAB parent, and for the glass-box inflation below. Read before the
+      # @grabOrigin.origin, the PRE-GRAB parent. Read before the
       # release below takes the widget out of its host's layout. A widget made to be carried away
       # stands nowhere yet (a template's fresh copy is a detached root), so its caller states where the
       # pick-up starts (`origin`: the template's situation, determineGrabs).
@@ -604,20 +608,12 @@ class ActivePointerWdgt extends Widget
       # document flows it back to its slot in the flow), so a placement decided before it is undone by
       # it: the widget would ride the hand as far from the press point as the threshold travel.
       if switcherooHappened
-        # in this case the widget being grabbed is created on the fly
-        # so just like the next case it's OK to center it under the pointer
+        # in this case the widget being grabbed is created on the fly (a creator's product, a tool cell's
+        # copy among them), at its own size: nothing the person saw stood where it now appears, so there
+        # is no visual reference to keep. Centre it under the pointer, and fit it within the desktop
+        # (useful when it is made near the screen's edges)
         aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
         aWdgt._moveWithin world # raw flush+clamp here; a deferred moveWithin now exists, but switching this real-time grab to it is a Path-A determinism call
-      else if aWdgt.extentToGetWhenDraggedFromGlassBox? and (@grabOrigin?.origin instanceof GlassBoxBottomWdgt)
-        # in this case the widget is "inflating". So, all
-        # visual references that the user might have around the
-        # position of the grab go out of the window: just center
-        # the widget under the pointer and fit it within the
-        # desktop bounds since we are at it (useful in case the
-        # widget is inflating near the screen edges)
-        aWdgt.setExtent aWdgt.extentToGetWhenDraggedFromGlassBox
-        aWdgt.moveTo @position().subtract aWdgt.extent().floorDivideBy 2
-        aWdgt._moveWithin world
       else if displacementDueToGrabDragThreshold?
         # keep visual consistency: move the widget by the travel the threshold let pass before the lift
         # (checkDraggingThreshold), so the hand carries it by the point the press went down on. Don't
@@ -1037,13 +1033,16 @@ class ActivePointerWdgt extends Widget
       # its life. And if the hold already opened a menu, this move IS the lift: the menu goes and
       # the drag proceeds with the mouse semantics the hold armed.
       @_notePressTravelledPastDragThreshold()
-      if @_pressHoldMenuStands
-        @_pressHoldMenuStands = false
+      if @_pressHoldMenu?
+        holdMenu = @_pressHoldMenu
+        @_pressHoldMenu = undefined
         if @mouseDownWdgt?
           # public-call-sanctioned: cleanupMenuWdgts IS my own dismissal sweep — the press path calls
-          # it the same way. The hold menu is FRESH, so the sweep is asked to take fresh menus too,
-          # exactly as the press path asks.
-          @cleanupMenuWdgts @mouseDownWdgt, alsoKillFreshMenus: true
+          # it the same way. The hold's menu is FRESH, so the sweep is asked to take it by name, and
+          # no other fresh pop-up: this move's own lift ran before me (determineGrabs), and a pop-up
+          # it raised is fresh too -- the message a refused copy shows -- which the person must still
+          # read.
+          @cleanupMenuWdgts @mouseDownWdgt, alsoKillTheseFreshMenus: [holdMenu]
       return
 
     return if @_pressHoldFired or @_pressTravelledPastDragThreshold
@@ -1067,7 +1066,6 @@ class ActivePointerWdgt extends Widget
     return if (decisionTime - @pressOriginEventTime) < WorldWdgt.preferencesAndSettings.pressAndHoldMs
 
     @_pressHoldFired = true
-    @_pressHoldMenuStands = true
     # from the hold on, this stroke's drags mean what a mouse's would
     @_pressArmedForMouseSemantics = true
     if @mouseDownWdgt?
@@ -1092,7 +1090,11 @@ class ActivePointerWdgt extends Widget
         if not w?
           break
       if w?
+        freshBefore = world.freshlyCreatedPopUps.size
         w.contextMenuRequested @_pointerPositionInPlaneOf(w)
+        # the pop-up the request opened is the hold's own, the one a move that lifts puts away: the newest
+        # fresh one, when the request added one (a Set keeps the order its members came in)
+        @_pressHoldMenu = Array.from(world.freshlyCreatedPopUps).pop()  if world.freshlyCreatedPopUps.size > freshBefore
 
   # THE PRESS LEAVES THE GRAB RADIUS — once per stroke, at the drained event that carries it past
   # grabDragThreshold of its origin (a move, or a release that states its place). That event is also
@@ -1600,10 +1602,14 @@ class ActivePointerWdgt extends Widget
 
   # Dismiss the open pop-up cascade around a click on `clickedWdgt`: everything that asked to be
   # told about a click outside itself, and is not in that widget's ancestry, gets its callback.
-  # `alsoKillFreshMenus` rides opts because only the mouse-DOWN path wants it (a bare boolean is
-  # never a head operand, R1) — the mouse-UP path passes the widget alone.
+  # A pop-up FRESH in this gesture (built since its press, world.freshlyCreatedPopUps) is spared,
+  # unless opts name it: `alsoKillFreshMenus` takes every fresh one (the mouse-DOWN path), and
+  # `alsoKillTheseFreshMenus` takes just the ones it lists (a finger's lift takes its hold's menus,
+  # sparing a pop-up the lift itself raised). Both ride opts (a bare boolean is never a head operand,
+  # R1) — the mouse-UP path passes the widget alone.
   cleanupMenuWdgts: (clickedWdgt, opts = {}) ->
     alsoKillFreshMenus = opts.alsoKillFreshMenus
+    alsoKillTheseFreshMenus = opts.alsoKillTheseFreshMenus ? []
 
     world.hierarchyOfClickedWdgts.clear()
     world.hierarchyOfClickedMenus.clear()
@@ -1652,7 +1658,7 @@ class ActivePointerWdgt extends Widget
          (!world.hierarchyOfClickedWdgts.has eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if alsoKillFreshMenus or !world.freshlyCreatedPopUps.has eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren
+        if alsoKillFreshMenus or (eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren in alsoKillTheseFreshMenus) or !world.freshlyCreatedPopUps.has eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren
           if eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
@@ -1797,6 +1803,9 @@ class ActivePointerWdgt extends Widget
 
           originalWdgtToGrab = @wdgtToGrab
           @wdgtToGrab = @wdgtToGrab.grabbedWidgetSwitcheroo()
+          # nothing made (a copy refused, and the person told why): nothing to carry, and with nothing left
+          # to grab the next move of this press tries nothing again
+          return unless @wdgtToGrab?
           switcherooHappened = (originalWdgtToGrab != @wdgtToGrab)
           # Affine transforms (§6 Phase 4D-2a): PICK-OUT + Bug-F identity-wrapper dissolve. Resolve the
           # FIGURE that comes onto the hand — reuse the sole-content island, extract a genuine sub-part into
