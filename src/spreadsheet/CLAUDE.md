@@ -344,12 +344,24 @@ focus:** every sheet joins `world.keyboardEventsReceivers` when built (a copy or
 membership it carries), and `processKeyDown` acts only while that sheet is `world.editorFocusWdgt`,
 shows on a screen and no caret is live (`_keysAreMine`) — so of several sheets only the focused one acts (a
 duplicate never edits in lockstep), a sheet worked on earlier never takes keys typed into another text, and a
-focused sheet put away (its window collapsed or closed) stays the focus but clears and edits nothing unseen. **A sheet in view-mode
-content takes no entry** (`Widget.sitsInViewModeContent`: a sheet nested in a document whose window shows the
-eye; a sheet in its own window has no view mode): `_startEditNoSettle`, `_commitEditNoSettle` (an edit open
-across the flip ends without writing at its next key in view mode; back in edit mode a key resumes it), `_clearSelectedCellNoSettle` and `CellWdgt`'s drop door each ask it,
-and no drag takes anything out of a cell there, since the grab door (`Widget.grabsToParentWhenDragged`) and a button's
-`isDetachablePayloadOfMyParent` ask it of every holder first; the arrows, Tab, the wheel and the zoom still act.
+focused sheet put away (its window collapsed or closed) stays the focus but clears and edits nothing unseen. **A sheet holds an
+edit mode, and in view mode takes no entry.** The mode is the grid's own (`providesAmenitiesForEditing: true`, its
+`dragsDropsAndEditingEnabled`, its two mode cores), switched by the pencil of the window around it: every Maker's
+document offers the toggle (`MakerDocumentWdgt`). It takes no entry in its own view mode, nor while it sits in
+view-mode content (`Widget.sitsInViewModeContent`: a grid nested bare in a document whose window shows the eye):
+`_startEditNoSettle`, `_commitEditNoSettle` and `_clearSelectedCellNoSettle` ask ONE door, `_takesEntry` (its own
+mode and the content around it), and `CellWdgt`'s drop door asks the walk, which a viewing grid answers for its
+cells; no drag takes anything out of a cell there, since the grab door (`Widget.grabsToParentWhenDragged`) and a
+button's `isDetachablePayloadOfMyParent` ask it of every holder first. The grid's own flip to view mode commits an
+open edit first (acting elsewhere commits); an edit open across a flip it does not hear (the document's around it)
+ends without writing at its next key in view mode, and back in edit mode a key resumes it. The arrows, Tab, the
+wheel, the zoom and a widget living in a cell (a slider) still act: view mode is a use mode. **Its own view mode
+is also a LOOK**, which follows its own mode alone (`showsHeaders`, heard at the flip: `_noteMyModeFlippedNoSettle`):
+the headers are put away (`_headerW` / `_headerH` answer 0, so the cells start at the sheet's corner and the view
+re-derives; `_deriveHeadersNoSettle` keeps none), a gridline is the fainter `spreadsheetGridlineViewing`
+(`paintGridEdges`), a cell's edges beside the headers are none (`CellAppearance`), and the formula bar's field
+shows no well (`SheetFormulaBarWdgt.fieldTakesTyping`). The window puts the sheet toolbar away with its docks.
+A Sheets Maker nested in a document answers to its own pencil, as every nested Maker does.
 
 ## Design north star (spec §9, F5, and the UX arc `docs/archive/spreadsheet-ux-plan.md`)
 
@@ -560,7 +572,8 @@ time, so a saved or duplicated sheet wears the current look.
   formula bar's field reaches the same two); acting elsewhere COMMITS (the pointer's click-away
   funnel calls `caret.accept()`, the wheel commits before scrolling — tearing down a
   still-live caret in the same settle). A DANGLING edit — its caret ended by a path that fires
-  no escalation: a put-away (`WorldWdgt._keepEditingOnScreenNoSettle`) or the flip to view mode —
+  no escalation: a put-away (`WorldWdgt._keepEditingOnScreenNoSettle`) or the flip to view mode of a
+  document the grid stands bare in —
   RESUMES on the sheet's next key while its editor stands in the sheet, shows on a screen and takes typing
   (`StringWdgt.isTextEntryField`; owner ruling 2026-11-19): the caret comes back at the text's end and takes
   the key, so Escape cancels, Enter commits and moves down, Backspace deletes one character;

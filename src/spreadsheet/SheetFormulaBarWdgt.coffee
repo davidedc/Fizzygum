@@ -147,6 +147,14 @@ class SheetFormulaBarWdgt extends Widget
     @textWdgt?._setTextNoSettle text
     return
 
+  # DOES MY FIELD TAKE TYPING: is my sheet in edit mode? What my appearance reads as it paints the
+  # field's well, the look of a field to type in (SheetFormulaBarAppearance). In view mode the field
+  # is read-only: it shows the selected cell's source and a click on it starts nothing (the sheet's
+  # one door for an edit refuses, SimpleSpreadsheetWdgt._startEditNoSettle). The sheet's OWN mode,
+  # as its headers (showsHeaders): a flip of it repaints me.
+  fieldTakesTyping: ->
+    !!@_sheetWidget?.isInEditMode()
+
   # a click on my field (on the text, which escalates its activation to me, or on the well around
   # it) edits the selected cell here, the caret at the clicked slot; a click anywhere else on me is
   # nothing. The dispatcher's pos is already plane-mapped and the sheet shares my plane.

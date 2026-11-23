@@ -2,7 +2,7 @@
 # page edge): the cell's FILL when its format sets one (SimpleSpreadsheetWdgt.fillOfAddress), then
 # its top+left grid edges (ALWAYS — even when hosting/editing/empty; the F5
 # edge-ownership convention, the edge kinds + crossing rule in
-# SimpleSpreadsheetWdgt.paintGridEdges), then its selection ring (spreadsheetSelectionRing) when it
+# SimpleSpreadsheetWdgt.paintGridEdges, which also inks a gridline by the sheet's mode), then its selection ring (spreadsheetSelectionRing) when it
 # is the selected cell (F2: drawn fully INSIDE — band [1,3), touching no edge pixel, under the
 # cell's children since children paint after it — the scalar-text child included). Clipped to the
 # cell. The cell's VALUE is not painted here: it is a child widget in every branch (hosted value /
@@ -24,16 +24,19 @@ class CellAppearance extends Appearance
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx) =>
       # the header RULE runs along the header separators: the left edge of the viewport's FIRST
       # visible column and the top edge of its FIRST visible row (viewport-relative, F1 — at
-      # origin 0 that is sheet col/row 0); every other edge of a cell is a gridline
+      # origin 0 that is sheet col/row 0); every other edge of a cell is a gridline. While the
+      # sheet's headers are put away (showsHeaders: view mode) those two edges lie on the sheet's
+      # outer left, where its page edge is the line, and under the formula bar, whose rule is: none
       fill = sheetWidget.fillOfAddress @widget.address
       if fill?
         ctx.fillStyle = fill.toString()
         ctx.fillRect 0, 0, @widget.width(), @widget.height()
       colRow = sheetWidget.model.colRowFor @widget.address
-      leftEdge = if colRow?.col is sheetWidget.viewOriginCol then "rule" else "gridline"
+      besideTheHeaders = if sheetWidget.showsHeaders() then "rule" else undefined
+      leftEdge = if colRow?.col is sheetWidget.viewOriginCol then besideTheHeaders else "gridline"
       # a neighbour's text spills over me (R12): no gridline cuts through it
       leftEdge = undefined if @widget.spillCovered
-      topEdge = if colRow?.row is sheetWidget.viewOriginRow then "rule" else "gridline"
+      topEdge = if colRow?.row is sheetWidget.viewOriginRow then besideTheHeaders else "gridline"
       sheetWidget.paintGridEdges ctx, @widget.width(), @widget.height(), leftEdge, topEdge
       # the cell's MODEL selection ring (F5 receipt B): drawn INLINE here, in the cell's own logical-pixel
       # scope, fully INSIDE it (band [1,3), under its hosted child). This is a distinct concern from the

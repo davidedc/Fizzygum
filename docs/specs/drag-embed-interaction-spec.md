@@ -150,7 +150,7 @@ preference is deliberately ≥ the strip's thickness, `frameBorderWidth + barIco
 band is never thinner than the grip a drop produces) — are drop candidates `ActivePointerWdgt._dockBandUnderPointerFor`
 checks **before** the tier climb of §4/§5 even starts, and the climb never runs at all once a band answers: a
 host offering a band under the pointer wins outright over its own ordinary content receptivity, whatever tier
-that content is in. Two gates keep the offer narrow:
+that content is in. Three gates keep the offer narrow:
 - **Frame payload only.** `_dockBandUnderPointerFor` returns nothing unless the payload's real class answers
   `isFrame?()` (through `_dropPolicyProxy()`, so a tilted window's sugar wrapper is seen through too) — a
   plain widget never sees a band, and neither does a menu/prompt's own rows-viewport content (only the FRAME
@@ -158,6 +158,14 @@ that content is in. Two gates keep the offer narrow:
 - **Never into your own subtree.** A host skips the offer when the dragged frame is one of ITS OWN
   ancestors (`not payloadPolicy.isAncestorOf wdgt`) — a frame never offers a slot to something it currently
   lives inside.
+- **Never in view mode.** A host that holds an edit mode and is viewing offers no band, and neither does one
+  standing in view-mode content (`FrameWdgt.dockSideAt` asks `_myModeEngagesMyDocks` and
+  `sitsInViewModeContent`): view mode disengages every dock, so a band landing there would land hidden, and
+  content in view mode takes nothing. The climb of §5 then runs as over any point of that host, finds its
+  content the reluctant target (§7's `LOCKED_CUE`: the neutral outline and the view-only badge), and the
+  release leaves the frame on the desktop. A toolbar is born locked, so a frame holding one, in a slot or
+  floating, offers no band either: a frame released over a docked band docks at the HOST's side, when the
+  point is in the host's own offer.
 - Each host answers `dockSideAt(pointInItsOwnPlane)` with the point already mapped into ITS plane
   (`screenPointToMyPlane`), so a host inside a rotated/scaled island offers the band the user is actually
   pointing at, not the unmapped screen point.
@@ -173,13 +181,21 @@ promoted it to `'persistent'` before the drag even begins (`FrameWdgt._reactToBe
 menu makes it furniture at the grab, not the drop), so whatever actually lands in a slot is always persistent
 furniture, never mid-gesture UI.
 
-**Candidate highlight = the whole band**, not the host's outline: the reconciler declares
-`world.dragEmbedDockBandDeclared {host, box}` and stands the host's per-widget outline down while the band is
-offered, drawing a dedicated `HighlighterWdgt` around the band's own rectangle instead — the SAME
+**Candidate highlight = the band the release would MAKE**, not the host's outline and not the strip the offer
+is made from: the hand declares `world.dragEmbedDockBandDeclared {host, box}` with the host's answer to
+`bandBoxIfDocked(theFrame, side)`, and the reconciler stands the host's per-widget outline down while the band is
+offered, drawing a dedicated `HighlighterWdgt` around that box instead — the SAME
 candidate-accent style §11's highlight row already specifies (`HighlighterWdgt.candidateOutlineStyle`,
 the accent `dropCandidateOutline`, 2 px `dropOutlineWidth` inside the box, its corners following the host's where
 they meet them), just applied to a region of the host's body rather than to a widget, and mapped through the
-host's screen bounds so it renders correctly inside a rotated/scaled island too (§11).
+host's screen bounds so it renders correctly inside a rotated/scaled island too (§11). The box is the band's
+place and size once docked: a toolbar's is its own `dockThickness` thick, a window's as thick as its payload
+arrives, a side column starts below a top band, and a slot already held outlines the band that would replace
+its holder. `bandBoxIfDocked` docks nothing and writes nothing. It derives the box from the terms the dock
+itself would produce, each with one home the host's arrange and measure share: the spec the dock would hand
+over (`_edgeDockSpecFor`), the thickness the frame measures under it (`_bandThicknessUnder`), the host's
+content height with its chrome so changed (`_steadyContentHeight`), the placement of a band (`_bandBoundsAt`),
+and what the frame takes of the box it is granted (`_bandBoxTakenOf`).
 
 **Release outcome (§7): docks, not embeds.** An ARMED release resolved to a band skips the ordinary
 `_beforeChildDropped` content hand-off (a dock takes a slot BESIDE the host's content, never instead of it)
@@ -384,7 +400,7 @@ highlighted/decorated carries any state about its own decoration. Per element:
 | Element | Mechanism | Spec |
 |---|---|---|
 | Candidate highlight | **EPHEMERAL — the existing `HighlighterWdgt` flow, almost verbatim** (`widgetsToBeHighlighted.add candidate` on resolution, remove on candidate change) | 2px (logical) rounded outline just inside the box the candidate presents to an overlay (`boxPresentedToOverlays`: its `clippedThroughBounds`; a viewport keeping a margin presents its plane box); the accent (`dropCandidateOutline`), 2 px (`dropOutlineWidth`), its corners following the target's own (`Widget.cornerRadiiFollowingMyOutline`). Needs a STYLE CHANNEL the current mechanism lacks (today: hardcoded blue fill, alpha 50) — either per-target style descriptors (Set → Map target→style) or distinct ephemeral declaration sets per style; owner/implementation choice |
-| Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, the accent), drawn around the band's WHOLE rectangle rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
+| Dock band highlight (§4.1) | **EPHEMERAL — its own `HighlighterWdgt`, keyed to a BOX, not a widget** (`world.dragEmbedDockBandDeclared {host, box}`): a band is a region of its host's body, not a widget, so it rides its own declare-and-reconcile slot instead of the `widgetsToBeHighlighted` channel above — the host's own candidate outline stands down for as long as a band is offered | Same candidate-accent outline style as the row above (`HighlighterWdgt.candidateOutlineStyle`, the accent), drawn around the box of the band the release would make (`FrameWdgt.bandBoxIfDocked`: its place and size once docked) rather than a widget's bounds; mapped through the host's screen bounds so it renders correctly inside a rotated/scaled island too |
 | Charging ring (the radial timeout) | **EPHEMERAL — new cursor-anchored type, and a STEPPING one** (the analog-clock pattern, `AnalogClockWdgt.coffee:99-108`): fills over wall time from the linger origin in production; while a test plays (`aTestIsPlaying()`) follows the harness's virtual pacing like the clocks already do in byte-exact tests. Reconciler positions it at hand + (16,16); repaints only on quantized step change | Radius ~9px; RING_STEPS discrete segments; PRESENTATION ONLY — the armed decision is §6's event-time elapsed check and never reads ring state |
 | Armed label | **EPHEMERAL — text type** (the pinout `StringWdgt` readout is the in-code precedent) | Near cursor: "Drop to insert into '<title>'" (title truncated ~24 chars) |
 | Lock badge (reluctant) | **EPHEMERAL anchored to the destination's title bar** — deliberately NOT a state change of the real edit toggle: it never leaks state into `FrameWdgt`/button rendering, and vanishes by undeclaration | A `line`-coloured outline (`dropReluctantOutline`, the candidate's width) on the destination + small "view-only" badge at title-bar right |

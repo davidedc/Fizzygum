@@ -528,6 +528,9 @@ class Theme
     # edge: the window's strip rule and frame border are the lines there ...
     @spreadsheetHeaderRule = @line
     @spreadsheetGridline = @chrome
+    # ... a gridline of a sheet in VIEW mode, fainter: there the grid is nothing to aim at, and it
+    # recedes behind what the cells say ...
+    @spreadsheetGridlineViewing = @item
     # ... the 2 px ring the SELECTED cell draws inside its own edges ...
     @spreadsheetSelectionRing = @accent
     # ... and the ink of a cell's text: a value's -- at rest, and typed into the cell's editor --

@@ -9,7 +9,9 @@
 #     is destroyed when they have not, and simply closes when a reference or a wire reaches into it
 #     (_closeFromFrameBarWhenSaveOrAsk below);
 #   - losing its payload, by any door, builds a fresh one of its kind, in its mode and at its extent,
-#     rather than falling back to the empty-window placeholder.
+#     rather than falling back to the empty-window placeholder;
+#   - it holds an EDIT MODE, which its strip's toggle switches between the pencil and the eye
+#     (providesAmenitiesForEditing, below).
 #   A subclass states: _makeStartingPayload, colloquialName, buildToolbar,
 # hasStartingContentBeenChangedByUser (whether the user has put anything in it) and the picture its
 # icons show, representativeIcon (its own, or its payload's through FrameWdgt's).
@@ -17,6 +19,14 @@
 # or 'destroy', which bypasses the save offer (FrameWdgt.closeFromFrameBar).
 
 class MakerDocumentWdgt extends FrameWdgt
+
+  # Every Maker's document is made in edit mode and used in view mode, so every one offers the
+  # toggle (FrameWdgt.offersEditToggle reads this) and, being the window that holds the mode, makes
+  # its own chrome answer to it (Widget.sitsInViewModeContent). Declared here, on the frame, because
+  # a framed citizen provides the amenities itself, whatever its payload is; the mode's FLAG is the
+  # payload's (FrameWdgt.isInEditMode), and the payload's own cores do what a flip means for its
+  # kind (a document's items melt into the page, a panel's lock, a sheet puts its headers away).
+  providesAmenitiesForEditing: true
 
   constructor: ->
     super @_makeStartingPayload()

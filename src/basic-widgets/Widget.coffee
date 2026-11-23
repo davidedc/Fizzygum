@@ -751,7 +751,7 @@ class Widget extends TreeNode
   # The window title-bar edit toggle announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
   # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt
-  # on contents, and by the framed citizens (DocumentWdgt, GenericPanelWdgt, §5.B)
+  # on contents, and by the framed citizens (the Makers' documents, MakerDocumentWdgt, §5.B)
   # on the frame itself -- so this shared press body lives here on the base.
   editButtonPressedFromFrameBar: ->
     if @isInEditMode()
@@ -782,9 +782,10 @@ class Widget extends TreeNode
   # window's CONTENTS; coming up through its chrome (its bar, its title, its docked bands) the walk
   # passes on, so chrome answers to the content around the window -- and to the window's own view
   # mode as well, where the window itself holds a mode (a Docs Maker is one).
-  # An ancestor answering providesAmenitiesForEditing false (a spreadsheet, a sheet's cell panel, a
-  # command panel) holds no mode and is passed over: a sheet in a document in view mode sits in
-  # view-mode content, a sheet in its own window sits in none. My ROOT is never asked: the root (on
+  # An ancestor answering providesAmenitiesForEditing false (a sheet's cell panel, a command panel)
+  # holds no mode and is passed over. A spreadsheet holds one (its own, which its window's pencil
+  # switches), so what stands in a sheet in view mode sits in view-mode content, as does what stands
+  # in an edit-mode sheet nested bare in a view-mode document. My ROOT is never asked: the root (on
   # screen, the world) holds no mode for what stands on it, so a text on the desktop is never in view
   # mode. A mode held FIXED (alwaysInEditMode: a folder window, the bin, the links to them) is always
   # edit mode: such a widget answers false itself, and a window holding one -- itself (a folder window)

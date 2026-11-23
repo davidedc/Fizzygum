@@ -2,7 +2,8 @@
 # spreadsheet does that others do not. A slider lives in a cell (B3) and drives the formulas that read
 # it (C3, then the total and what is left); a cell's formula returns a COLOUR (C8: green while the
 # total is within the budget, red over it), which the cell shows as a swatch. Drag the slider and the
-# totals and the swatch follow. Every entry is CoffeeScript, so text needs quotes.
+# totals and the swatch follow, in view mode too, which it opens in. Every entry is CoffeeScript, so
+# text needs quotes.
 #   One of the five doors of the Examples folder, alone in its own one-class LAZY part
 # ('example-sheet'): opening the folder fetches the five doors and nothing else, and clicking this one
 # fetches the grid through the `requiredParts` the inherited `launch` awaits. Its title and icon live in
@@ -44,6 +45,10 @@ class SampleSheetApp extends WindowedApp
     sheet.model.getOrCreateCellAt(@BOLD).format = {bold: true}
     world.openFrameWith sheetWindow, (sheetWindow.extentWrappingPayloadAt sheet.defaultExtent()), (new Point 150, 110)
     sheetWindow.setTitleWithoutPrependedContentName @_title()
+    # a sample opens in VIEW mode, as every Examples door's does: a sheet to use, its slider live and
+    # its entries held; the pencil in its strip shows how it is made (the headers, the formulas'
+    # field, the toolbar)
+    sheetWindow.disableDragsDropsAndEditing()
     # closing just closes (no save prompt) -- a sample is not worth saving (the SampleDocApp policy)
     sheetWindow.closeFromFrameBarPolicy = 'close'
     # return the WINDOW: the base registers it in world.appWindows for the bring-forward-on-relaunch path

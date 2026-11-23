@@ -78,9 +78,13 @@
 # Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers, which
 # I join when built, + processKeyDown, which acts while I am the editor focus, show and no caret is
 # live); never a DOM listener.
-# While I sit in view-mode content (sitsInViewModeContent: nested in a document whose window shows the
-# eye) I take no entry -- my edit start, commit and clear, and my cells' drop and drag-out, refuse --
-# and the arrows, Tab, the wheel and the zoom still act.
+# I HOLD AN EDIT MODE, my own (providesAmenitiesForEditing; my window's strip switches it with its
+# pencil, as every Maker's). In VIEW mode I am a sheet to read and to use: I take no entry -- my edit
+# start, commit and clear refuse (_takesEntry), and my cells' drop and drag-out with them -- my headers
+# are put away, my gridlines recede and my formula bar shows the selected cell's source as plain text;
+# the arrows, Tab, the wheel, the zoom and a widget living in a cell (a slider) still act. I take no
+# entry either while I sit in view-mode content (sitsInViewModeContent: nested in a document whose
+# window shows the eye), whatever my own mode.
 
 class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
 
@@ -237,16 +241,73 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
   # was, as the wheel and my window's title strip do.
   focusesAsAWhole: -> true
 
-  # ...and, being the focus, I show my selection myself (the selected cell's ring), so I opt out of
-  # the editor-focus outline explicitly (WorldWdgt._widgetBeingEdited); my window shows no edit
-  # toggle either way (FrameWdgt asks this too).
-  providesAmenitiesForEditing: false
+  # ...and, being the focus, I show my selection myself (the selected cell's ring), so no
+  # editor-focus outline frames me (WorldWdgt._widgetBeingEdited asks focusesAsAWhole).
+
+  # I hold an edit mode: my own dragsDropsAndEditingEnabled, which a window around me switches with
+  # its pencil and answers its mode by (FrameWdgt.offersEditToggle, isInEditMode). So everything in
+  # me, my cells and what they host, sits in view-mode content while I am viewing
+  # (Widget.sitsInViewModeContent stops at a holder answering true), in my own window or bare.
+  providesAmenitiesForEditing: true
+
+  # ── my edit mode ─────────────────────────────────────────────────────────────────────────────
+
+  # DO I TAKE ENTRY: a typed source, a clear, an edit's commit? While I am in edit mode myself and
+  # sit in no view-mode content. Both halves, as every holder's own door asks them: my own mode is
+  # mine to read (the walk of sitsInViewModeContent starts at my parent, so it never asks me about
+  # me), and content in view mode around me holds me whatever my own mode. The ONE door of my three
+  # entries (_startEditNoSettle, _commitEditNoSettle, _clearSelectedCellNoSettle); my cells' drop
+  # and drag-out ask the walk, which my own view mode answers for them.
+  _takesEntry: ->
+    @isInEditMode() and not @sitsInViewModeContent()
+
+  # DO MY HEADERS SHOW? While I am in edit mode: the column letters and row numbers are what a
+  # formula names a cell by, so they belong to writing one. In view mode they are put away and my
+  # cells take their room. My OWN mode decides, never the content around me: my geometry follows
+  # this answer (_headerW, _headerH), and I re-derive it only when my own mode flips, which I hear
+  # (_noteMyModeFlippedNoSettle). PUBLIC: my cells' and my formula bar's paint read it.
+  showsHeaders: ->
+    @isInEditMode()
+
+  # MY TWO MODE CORES (the family every holder of a mode writes: Widget's, ViewportWdgt's). Mine
+  # write my flag, tell the world I stand in and the bar of the window around me, and re-derive my
+  # look. To view mode an edit open in me is COMMITTED first, while I still take entry: acting
+  # elsewhere commits (a click on another cell, a scroll, a zoom), and my own flip is one more
+  # elsewhere. I enable no drops on myself: a drop lands on a CELL, whose door asks where it stands.
+  _enableDragsDropsAndEditingNoSettle: ->
+    return if @dragsDropsAndEditingEnabled
+    @dragsDropsAndEditingEnabled = true
+    @_noteMyModeFlippedNoSettle()
+    # told once my mode has changed, as every core in this family tells it
+    @parent?.showEditModeInBar?()
+
+  _disableDragsDropsAndEditingNoSettle: ->
+    return unless @dragsDropsAndEditingEnabled
+    @_commitEditNoSettle() if @_editing
+    @dragsDropsAndEditingEnabled = false
+    @_noteMyModeFlippedNoSettle()
+    @parent?.showViewModeInBar?()
+
+  # My mode flipped: the world I stand in announces it to whatever reads a mode (its editing tools,
+  # a menu left open: WorldWdgt.noteEditModeChanged; the root is asked, never the global world,
+  # since I can flip while detached), my least extent and my view re-derive (my headers come or go,
+  # so every cell is placed again and my formula bar re-syncs: the view funnel), and I repaint
+  # whole: my cells' gridlines and my formula bar's field read my mode as they paint, and a flip
+  # moves none of them.
+  _noteMyModeFlippedNoSettle: ->
+    @root().noteEditModeChanged?()
+    @minimumExtent = @_leastExtent()
+    @_reDeriveViewNoSettle()
+    @_fullChanged()
+    return
 
   # ── geometry at the current zoom: every placement reads these, never the 100% sizes above ──
   _colW: -> Math.round @colWidth * @zoomFactor
   _rowH: -> Math.round @rowHeight * @zoomFactor
-  _headerW: -> Math.round @headerColWidth * @zoomFactor
-  _headerH: -> Math.round @headerRowHeight * @zoomFactor
+  # the headers' room: nothing while they are put away (showsHeaders), so the cells start at my
+  # left edge and right under the formula bar
+  _headerW: -> if @showsHeaders() then Math.round @headerColWidth * @zoomFactor else 0
+  _headerH: -> if @showsHeaders() then Math.round @headerRowHeight * @zoomFactor else 0
   textInsetPx: -> Math.round @textInset * @zoomFactor
   # the formula bar's height: where the column headers start. It does not zoom.
   _gridTop: -> WorldWdgt.theme.spreadsheetFormulaBarHeight
@@ -271,7 +332,7 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
     base = WorldWdgt.theme.fonts.spreadsheetHeader
     {family: base.family, size: base.size * @zoomFactor, bold: base.bold}
 
-  # the smallest extent: the formula bar, the headers and one cell
+  # the smallest extent: the formula bar, the headers while they show, and one cell
   _leastExtent: ->
     new Point (@_headerW() + @_colW()), (@_gridTop() + @_headerH() + @_rowH())
 
@@ -403,10 +464,23 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
     @_formulaBar.syncNoSettle()
     # the panel spans the data region: from the headers to my bottom-right corner, re-applied
     # every pass, since the region follows my extent
-    gridTop = @_gridTop()
     @_cellsPanel._applyBounds @_dataRegionBox()
     @_cells.forEach (cell) =>
       @_cellsPanel._addNoSettle cell unless cell.parent is @_cellsPanel
+    @_deriveHeadersNoSettle()
+    return
+
+  # MY HEADERS, re-derived from my current frame, my view origin and my mode: the chrome build's
+  # second half (_buildChromeNoSettle, which says when it runs). One SheetHeaderCellWdgt per VISIBLE
+  # column and row, and the corner, each built when missing, placed and relabelled; the ones past
+  # the viewport destroyed. Put away (showsHeaders: view mode) I keep none: the ones a flip left
+  # are destroyed, and none is built until my mode shows them again.
+  _deriveHeadersNoSettle: ->
+    unless @showsHeaders()
+      @_headerCells.forEach (header) -> header._fullDestroyNoSettle()
+      @_headerCells.clear()
+      return
+    gridTop = @_gridTop()
     # (kind, topLeftOffset, extent, viewportSlot): the four loose geometry numbers are the two Point
     # tuples they always were, and `viewportSlot` moved to the TAIL because the corner header has none
     # -- with it in slot 2 the corner call had to write `undefined` past it to reach the
@@ -704,7 +778,10 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
   # here at paint time). `leftEdge` and `topEdge` each name what that edge is:
   #   "rule"     — the header rule (spreadsheetHeaderRule): an edge on the line under the letter
   #                row or on the line right of the number column;
-  #   "gridline" — a gridline (spreadsheetGridline): any other edge between two cells or headers;
+  #   "gridline" — a gridline: any other edge between two cells or headers, in spreadsheetGridline
+  #                while I am in edit mode and in the fainter spreadsheetGridlineViewing in view
+  #                mode, where the grid is nothing to aim at and recedes behind what the cells
+  #                say (my own mode, as my headers: showsHeaders);
   #   undefined  — no line: the edge lies on the sheet's OUTER left boundary, where the sheet's
   #                own page edge is the line (SheetAppearance paints it over every child), or
   #                under the formula bar, whose bottom rule is the line (a second one there would
@@ -717,8 +794,9 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
   # page edge is the line.
   paintGridEdges: (aContext, width, height, leftEdge, topEdge) ->
     theme = WorldWdgt.theme
+    gridline = if @isInEditMode() then theme.spreadsheetGridline else theme.spreadsheetGridlineViewing
     edgeColorString = (edge) ->
-      (if edge is "rule" then theme.spreadsheetHeaderRule else theme.spreadsheetGridline).toString()
+      (if edge is "rule" then theme.spreadsheetHeaderRule else gridline).toString()
     aContext.lineWidth = 1
     strokeLeftEdge = ->
       return unless leftEdge?
@@ -967,10 +1045,10 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
     return
 
   # clear the selected cell: a blank commit through the ordinary path (which also drops a dropped
-  # widget entry), keeping the record and so its format. Content in view mode (sitsInViewModeContent:
-  # a sheet in a document whose window shows the eye) refuses it, as it refuses every entry.
+  # widget entry), keeping the record and so its format. A sheet that takes no entry (_takesEntry: in
+  # view mode, or in a document whose window shows the eye) refuses it, as it refuses every entry.
   _clearSelectedCellNoSettle: ->
-    return if @sitsInViewModeContent()
+    return unless @_takesEntry()
     address = @model.addressFor @selectedCol, @selectedRow
     cell = @model.cellAt address
     return unless cell? and (cell.source isnt "" or cell.widgetEntry?)
@@ -989,10 +1067,10 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
   # Start an edit of the selected cell, its text `seedText`, with the caret in the cell's editor —
   # or, `inBar`, in the formula bar's text. Both show the text either way: the cell's editor is
   # mounted in both cases and the bar takes the same text, and whichever does not hold the caret
-  # follows it as it is typed (reactToKeystroke). Content in view mode (sitsInViewModeContent) starts
+  # follows it as it is typed (reactToKeystroke). A sheet that takes no entry (_takesEntry) starts
   # no edit: the one door for typing, Enter and F2, a double-click and the formula bar alike.
   _startEditNoSettle: (seedText, inBar = false) ->
-    return if @_editing or @sitsInViewModeContent()
+    return if @_editing or !@_takesEntry()
     # F1: the selection can sit OFF-viewport (wheel-scrolled away); editing it needs its
     # CellWdgt on screen for the overlay editor — scroll-follow first (Excel: typing jumps
     # the view back to the active cell). A no-op when the selection is already visible.
@@ -1026,13 +1104,13 @@ class SimpleSpreadsheetWdgt extends ScrollIndicatorHostWdgt
   # editor is unreachable once its cell has left my viewport under an edit left open (a resize that
   # shrinks me past the cell recycles it; a scroll commits first). An error never blocks a
   # commit: a #SYNTAX, #ERR or #LOOP is the cell's VALUE (spec §9.6), shown in the cell and
-  # explained in the formula bar. An edit left open across the flip to view mode (its window's
-  # pencil pressed mid-edit) ends WITHOUT writing when it is committed while my content is in view
-  # mode: content in view mode takes no entry, on any commit path. Flipped back to edit mode first,
-  # a key resumes it instead (processKeyDown).
+  # explained in the formula bar. An edit left open across a flip to view mode I do not hear (the
+  # pencil of a document I stand in, pressed mid-edit; my own flip commits first) ends WITHOUT
+  # writing when it is committed while I take no entry: content in view mode takes none, on any
+  # commit path. Flipped back to edit mode first, a key resumes it instead (processKeyDown).
   _commitEditNoSettle: ->
     return unless @_editing
-    if @sitsInViewModeContent()
+    unless @_takesEntry()
       @_teardownEditorNoSettle()
       return
     source = @_liveEditorWdgt()?.text

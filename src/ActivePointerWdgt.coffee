@@ -507,13 +507,15 @@ class ActivePointerWdgt extends Widget
   _declareDragEmbedEphemerals: (payload) ->
     isFrame = payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: window affordances for a tilted window too
 
-    # 0. the DOCK BAND, outlined WHOLE: over a band the offer is the strip, not the host, so the
-    # host's own outline stands down and the band's rectangle takes its place (declared in the
-    # host's plane; the reconciler maps it).
+    # 0. the DOCK BAND, outlined as the dock would MAKE it: over a band the offer is a slot of the
+    # host, not the host, so the host's own outline stands down and the box of the band this
+    # payload would be there takes its place -- its place and its size once docked, the host's
+    # answer (FrameWdgt.bandBoxIfDocked, asked of the payload's real frame as the offer was), never
+    # the strip the offer is made from. Declared in the host's plane; the reconciler maps it.
     if @dragEmbedDockBand?
       world.dragEmbedDockBandDeclared =
         host: @dragEmbedDockBand.host
-        box: @dragEmbedDockBand.host.dockBandBoxAt @dragEmbedDockBand.side
+        box: @dragEmbedDockBand.host.bandBoxIfDocked payload._dropPolicyProxy(), @dragEmbedDockBand.side
     else
       world.dragEmbedDockBandDeclared = undefined
 

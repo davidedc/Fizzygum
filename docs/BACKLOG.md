@@ -278,6 +278,11 @@ AUTHORED 2026-11-15, the fourth SURVEY of ten candidate cleanup arcs, ordered by
 
 ## Residual / parked items (owning doc archived)
 
+### View-mode and dock conformance 2026-11-23 — residue (no plan doc; the arc ran investigation → execution)
+The Sheets Maker gained the edit toggle, a viewing window stopped offering its dock slots, and a dock's outline became the band it makes; seen on the way: → "View-mode and dock conformance 2026-11-23 — the backlog's note"
+- [ ] **The view-only badge reads "view-o…"** — a declining drop target's lock badge is cropped, and a window dragged over a view-mode window's edge now shows it too — reachable, low.
+- [ ] **A band whose payload keeps its own height stands short in a side column** — a text window docked left or right leaves its column empty below it; whether a band always spans its slot awaits the owner — reachable, low.
+
 ### Pointer hit-test rework 2026-08-21 — residue (no plan doc; the arc ran assessment → execution)
 `isTransparentAt` + `noticesTransparentClick` retired for three single-meaning members (`widget-authoring-guidelines.md` §5); what it did not take on: → "Pointer hit-test rework 2026-08-21 — the backlog's note"
 - [ ] **`BubblyAppearance.shapeContainsPoint` OVER-CLAIMS its tail strip** — a click beside the spike stops on the bubble; harmless today; a fix needs an analytic body+spike test (a behaviour change with hover churn).

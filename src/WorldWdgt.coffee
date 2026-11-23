@@ -1818,9 +1818,10 @@ class WorldWdgt extends IconGridPanelWdgt
       @dragEmbedLockBadgeWdgt.fullDestroy()
       @dragEmbedLockBadgeWdgt = undefined
 
-    # dock band — the WHOLE strip a frame would take if released here, outlined in the candidate
-    # accent. A band is a region of its host's body, not a widget, so it is declared as a BOX and
-    # gets a HighlighterWdgt of its own rather than riding the per-widget highlight channel.
+    # dock band — the band a frame would BE if released here (its place and size once docked, the
+    # host's answer: FrameWdgt.bandBoxIfDocked), outlined in the candidate accent. A band not yet
+    # made is a region of its host's body, not a widget, so it is declared as a BOX and gets a
+    # HighlighterWdgt of its own rather than riding the per-widget highlight channel.
     if @dragEmbedDockBandDeclared?
       unless @dragEmbedDockBandWdgt?
         @dragEmbedDockBandWdgt = new HighlighterWdgt
@@ -2014,9 +2015,10 @@ class WorldWdgt extends IconGridPanelWdgt
     focus = @_widgetTheFocusSelects()
     return undefined unless focus?
     return undefined if focus.isDesktopIcon?()
-    # a focus that EXPLICITLY opts out of editing amenities shows its own selection (a spreadsheet,
-    # focused as a whole, rings its selected cell) — no outline round it, whatever its containers say
-    return undefined if focus.providesAmenitiesForEditing is false
+    # a focus that shows its own selection wears no outline round it, whatever its containers say:
+    # one FOCUSED AS A WHOLE, whose selection is a part of it (a spreadsheet rings its selected
+    # cell), and one that EXPLICITLY opts out of editing amenities (a list's rows panel)
+    return undefined if focus.focusesAsAWhole?() or focus.providesAmenitiesForEditing is false
     # content in VIEW mode is selected for no editing: the one question every editing door asks
     # (Widget.sitsInViewModeContent), so the outline never frames what the tools refuse -- however
     # near a holder that keeps its own flag on (a drawing's canvas, a bare slide panel) stands
@@ -2030,7 +2032,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # (a desktop selection is not "in an editor"):
     #   amenities === true  → frame focus.
     #   amenities === false → STOP, no frame: a container that EXPLICITLY opts out manages its own
-    #                         selection UI (a spreadsheet's cell grid draws its own cell highlight), so a
+    #                         selection UI (a list's rows panel plates its selected row, a sheet's
+    #                         cells panel stands in a sheet that rings its selected cell), so a
     #                         second outline would just be clutter.
     #   undefined (no opinion, the Widget default) → keep walking up.
     container = focus.parent

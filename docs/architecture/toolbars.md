@@ -65,6 +65,16 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   too: one whose payload leaves it keeps its thickness, the one its payload was granted.
 - **A band the host's view mode disengages is still docked.** It is hidden, and still listed among the
   host's payloads (`FrameWdgt.dockedPayloads`).
+- **A window in view mode offers no slot.** `FrameWdgt.dockSideAt`, the dock offer the hand asks, answers
+  nothing while the window's mode disengages its docks (`_myModeEngagesMyDocks`: it holds an edit mode and is
+  viewing) or while it stands in view-mode content, so no band can land hidden there and none replaces a
+  disengaged one. A frame dragged over it meets the reluctant cue of any view-mode content and lands on the
+  desktop. A toolbar is born locked, so its own frame offers no slot either, docked or floating: a frame
+  released over a docked band is offered the HOST's slot.
+- **The outline of a dock is the band it would make.** While a frame hovers over an offer the hand outlines
+  `FrameWdgt.bandBoxIfDocked(frame, side)`: where the band would stand and how big, derived from the terms
+  the dock itself would produce (the spec, the frame's thickness under it, the host's arrange), with nothing
+  docked. `dockBandBoxAt(side)` is the strip the offer is made from, a place to aim at.
 - **The seam.** `ToolbarWdgt.hostWindow` asks the toolbar's frame for its `dockHost` at every asking; nothing
   stores it. `ToolbarWdgt.hostWindowOf(aWidget)` (a static) is the one home every tool asks: it asks the one climb,
   `ToolbarWdgt.toolbarOf(aWidget)`, from the tool, nearest first, to the first ancestor answering `hostWindow`. The climb tests a capability
@@ -128,9 +138,17 @@ windows.
 - Any other mode holder in view mode makes everything in it view-only, whatever a holder nearer the widget says.
   So a bare drawing in a view-mode document refuses paint, although its own canvas, a holder by class, keeps its
   flag on: its surface carries no tool and its canvas stamps no drop.
-- A sheet in a view-mode document takes no entry. Every door to a cell asks: an edit start, a commit (an edit
-  open across the flip ends without writing at its next key there; back in edit mode a key resumes it), a clear, a drop into a cell, a drag out of one. The arrows still
-  move its selection.
+- A sheet holds an edit mode of its own (`SimpleSpreadsheetWdgt.providesAmenitiesForEditing`), which its
+  window's pencil switches, as every Maker's document does (`MakerDocumentWdgt` declares the toggle once for
+  them all). In view mode, its own or that of a document it stands in, it takes no entry. Every door to a
+  cell asks: an edit start, a commit, a clear (`_takesEntry`: its own mode, and the content around it), a drop
+  into a cell, a drag out of one (the walk, which a viewing sheet answers for its cells). Its own flip commits
+  an open edit first; an edit open across a flip of the document around it ends without writing at its next
+  key there, and back in edit mode a key resumes it. The arrows still move its selection, the wheel and the
+  zoom still act, and a widget living in a cell (a slider) still works: view mode is a use mode. Its own view
+  mode is also a look (its headers put away, fainter gridlines, a plain formula field:
+  [`visual-design-system.md`](visual-design-system.md), "Spreadsheet grid"), which follows its own mode
+  alone.
 - A text in view-mode content takes no typing, at any depth, unless its app declared it an INPUT (owner ruling
   2026-11-19). Every edit start asks the text's ONE door, `StringWdgt.isTextEntryField` (editable, and in no
   view-mode content unless `takesTypingInViewMode`): a click, a press, a double or triple click, a click on the
@@ -373,6 +391,10 @@ SystemTests:
 
 - view-mode refusal and click placement: `SystemTest_macroViewModeTextRefusesFloatingBold`,
   `SystemTest_macroDrawingTakesNoClickPlacedWidget`;
+- a sheet's view mode, its own (`SystemTest_macroSheetsMakerViewMode`) and that of a document a grid stands
+  bare in (`SystemTest_macroViewModeSheetRefusesEditing`);
+- the dock offer in view mode and the outline of a dock: `SystemTest_macroViewModeWindowOffersNoDockSlot`,
+  `SystemTest_macroDockOutlineIsTheBandItMakes`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;

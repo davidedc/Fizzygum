@@ -13,8 +13,6 @@
 
 class GenericPanelWdgt extends MakerDocumentWdgt
 
-  providesAmenitiesForEditing: true
-
   # the family's payload hook (the DocumentWdgt shape): the ctor AND the reset
   # build through it (MakerDocumentWdgt), so a subclass with a richer apparatus
   # (ImageWdgt's canvas + glass) overrides ONE method.

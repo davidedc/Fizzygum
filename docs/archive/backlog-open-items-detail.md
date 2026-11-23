@@ -134,3 +134,34 @@ and `architecture/occlusion-culling.md` §2a. What it deliberately did not take 
 ### A StretchableWidgetContainerWdgt keeps a stale @contents
 
 - [ ] (no plan; found 2026-11-12 by the mixin-removal loop's U7 review, `Fizzygum-tests/.scratch/mixin-removal-loop/u7-relay/` LEDGER) A `StretchableWidgetContainerWdgt` keeps a stale `@contents` once its page leaves it — "Pick up", "Delete" or "Attach" on the page of a slide, a dashboard, a generic panel or a patch-programming window — and nothing clears it: each re-lay of the container moves the departed page back to its box (`_reLayout` through `_reLayoutWithOwnContents`, no parent check), drops in its margin go to that page, `add` and "Attach" forward to it, and the window's edit toggle writes its flag (the state U7 found Phase 6's early bar call still needed for). Medium, by reading (the edit-toggle half measured: `u7-relay/probe-a1.js`). Fix shape: the container hears its child leave and lets it go; what the emptied window then shows is a product decision.
+
+### View-mode and dock conformance 2026-11-23 — the backlog's note
+
+- Three owner reports, answered in one arc with no plan file: the Sheets Maker was the one Maker with no
+  view/edit toggle; a window dragged onto the dock slot of a window in view mode was docked hidden, and took
+  the place of the hidden toolbar in a held slot; the outline of a dock was the fixed strip the offer is made
+  from. Living truth: `architecture/toolbars.md` §2 and §3, `architecture/visual-design-system.md`
+  ("Spreadsheet grid", "Drag feedback"), `specs/drag-embed-interaction-spec.md` §4.1,
+  `architecture/widget-authoring-guidelines.md` (a Maker's content holds an edit mode).
+- Noted, not queued: a grid standing BARE in a view-mode document takes no entry (the walk) but keeps its edit
+  look, its headers, gridlines and formula field following its own mode, which nothing flips there, as a bare
+  drawing or slide panel keeps its own flag in a view-mode document (`SimpleSpreadsheetWdgt.showsHeaders`).
+  Reached only through the dev menu (a grid picked out of its window).
+
+### The view-only badge reads "view-o…"
+
+- [ ] (no plan; found 2026-11-23) The lock badge laid at a declining drop target is a `StringWdgt "view-only"`
+      built without a width, so its text is cropped to "view-o…" (`WorldWdgt.addDragAffordanceWidgets`; the
+      armed label beside it sets a width for this very reason). It is the cue of every view-mode target, and
+      since 2026-11-23 also what a window dragged over the edge of a window in view mode shows, where a dock
+      slot was outlined before. A fix changes every reference that shows the badge.
+
+### A band whose payload keeps its own height stands short in a side column
+
+- [ ] (no plan; found 2026-11-23) A frame docked in a LEFT or RIGHT slot wears its strip across its top, so its
+      arrange makes it its payload's height plus its chrome when the payload does not set its height freely (a
+      text): a text window docked at a side is a short card at the top of its column, the column below it
+      empty, where every other band (a toolbar, a document, a panel, any band across the top or bottom) is
+      exactly the box its host reserved. `FrameWdgt._bandBoxTakenOf` states the case, so the outline of the
+      dock shows it truthfully. Open question for the owner: should a band always span its slot?
+

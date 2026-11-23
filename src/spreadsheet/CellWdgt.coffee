@@ -228,7 +228,7 @@ class CellWdgt extends Widget
   # payloads are refused — a 68x20 cell is no place for a window, and the cells panel + sheet
   # above refuse too, so a window drop falls through to the desktop. The base door answers the rest
   # (Widget.wantsDropOfChild: I take drops by class, _acceptsDrops, and a cell in view-mode content
-  # -- its sheet in a document in view mode -- takes none: a dropped widget is an entry); my own
+  # -- its sheet in view mode, or in a document in view mode -- takes none: a dropped widget is an entry); my own
   # conjunct adds only what the boolean flag cannot say, the payload's class.
   wantsDropOfChild: (aWdgt) ->
     super(aWdgt) and not aWdgt.requiresDeliberateEmbedding()

@@ -110,8 +110,18 @@ const METHOD_CEILINGS = {
   // it by answering the one per-child clip question every clipping container answers (_clipThroughForChild, declared
   // on ClippingWdgt, whose paint now paints a rounded frame's children inside its outline), so the window's two
   // child-paint overrides went (_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow and its JustShadow
-  // twin)
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 167 },
+  // twin). Raised 167 -> 176 on 2026-11-23 under the owner's standing ruling of 2026-11-16 (the right shape over the
+  // count), for the dock a frame hovers over: the hand outlines the band the release would MAKE, which the host
+  // answers from the terms the dock itself would produce, each with one home the arrange and the measure share --
+  // bandBoxIfDocked (the public answer), _edgeDockSpecFor (the spec a dock hands over, built for the dock and for its
+  // picture), _bandBoundsAt (where a band stands, lifted out of the arrange), _slotThicknessFor (what a band takes of
+  // the body), _chromeBesidesStripsAcross (the chrome a band measures across itself, the term _chromeHeight and
+  // _chromeWidth now add their strips to), _steadyContentHeight (the measure's steady rule, its chrome as
+  // parameters) and _bandBoxTakenOf (what the frame takes of the box it is granted: a text's band in a side column
+  // keeps the text's height); _bandThicknessUnder took _dockedBandThickness's place, the spec passed in. And for the offer, which a
+  // frame in view mode no longer makes: _myModeEngagesMyDocks (asked by the offer and by a fresh dock's spec) and
+  // _holdsAnEditMode (the one definition offersEditToggle and it both read)
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 176 },
 };
 
 const COMPLEXITY_CEILING = 15;
@@ -146,8 +156,8 @@ const RECORDED = {
   'FrameBarWdgt#_positionAndResizeChildren': 33,
   'FrameBarWdgt#_reDeriveRosterNoSettle': 23,
   'FrameWdgt#_frameLook': 24,
-  'FrameWdgt#_positionAndResizeChildren': 48,
-  'FrameWdgt#preferredExtentForWidth': 20,
+  'FrameWdgt#_positionAndResizeChildren': 46,
+  'FrameWdgt#preferredExtentForWidth': 17,
   'GlassBoxBottomWdgt#_reLayoutSelf': 17,
   // recorded 2026-11-22 at 20, born of the split that takes InspectorWdgt#selectionFromList (21) off the record: the
   // table of what an inspector's code pane shows for each kind of member, one branch per kind, moved whole out of the

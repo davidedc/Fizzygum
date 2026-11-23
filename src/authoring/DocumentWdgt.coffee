@@ -13,8 +13,6 @@
 
 class DocumentWdgt extends MakerDocumentWdgt
 
-  providesAmenitiesForEditing: true
-
   startingText: "Your text here."
 
   # The naked document payload. The viewport class stays generic/UNSEEDED

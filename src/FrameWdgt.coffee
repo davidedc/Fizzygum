@@ -253,7 +253,14 @@ class FrameWdgt extends ClippingWdgt
   # whatever stands around it (Widget.sitsInViewModeContent). PUBLIC query.
   offersEditToggle: ->
     return false if @alwaysInEditMode
-    !@_myEdgeDockSpec()? and !!(@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
+    !@_myEdgeDockSpec()? and @_holdsAnEditMode()
+
+  # Do I hold an edit mode at all: do I, or does my payload, provide the amenities for editing
+  # (providesAmenitiesForEditing)? A framed citizen declares them itself (a Maker's document), a
+  # plain frame gets them from the content it wraps. The mode's flag is my payload's either way
+  # (isInEditMode).
+  _holdsAnEditMode: ->
+    !!(@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
 
   # The height my window title takes in my strip: the title piece's own line height (a fitted
   # string paints its text at the TOP of the box it is granted, so the box is exactly its text and
@@ -513,9 +520,22 @@ class FrameWdgt extends ClippingWdgt
   # strip is in the bottom one), my body margin past each, and the bands docked at my top and bottom
   # with their insets. ONE home for the measure (preferredExtentForWidth) and the arrange
   # (_positionAndResizeChildren): they MUST agree, or the window's measure diverges from what its
-  # arrange then applies (assessment §6.1 rule 1).
+  # arrange then applies (assessment §6.1 rule 1). In two terms: what my STRIPS take of my height
+  # past my border inset (each body edge is my border inset plus the strip on it: my title strip
+  # across my top, my grip strip along my bottom), and the rest, which is all a band measures
+  # across itself.
   _chromeHeight: ->
-    @_bodyEdgeTop() + @_bodyEdgeBottom() + 2 * @_bodyMargin() + @_topDockThickness() + @_bottomDockThickness()
+    @_bodyEdgeTop() + @_bodyEdgeBottom() - 2 * @_borderInset() + @_chromeBesidesStripsAcross "vertical"
+
+  # My chrome across `crossAxis` ("vertical": of my height; "horizontal": of my width) that is NO
+  # strip's: my border inset and my body margin on both sides, and the bands docked on those two
+  # sides with their insets. No term of it turns on where I stand, so it is what I measure across
+  # myself as a BAND, in a slot or about to take one (_bandThicknessUnder), besides what the band
+  # grants my payload: a band's strip runs across its run and a band keeps no grip strip, so no
+  # strip of mine lies across it.
+  _chromeBesidesStripsAcross: (crossAxis) ->
+    docks = if crossAxis is "vertical" then @_topDockThickness() + @_bottomDockThickness() else @_leftDockThickness() + @_rightDockThickness()
+    2 * (@_borderInset() + @_bodyMargin()) + docks
 
   # ===== the four edge slots' layout terms =====
   # The frame docked at one of my edges, WHEN IT COUNTS: the slot's occupant, still my child, its
@@ -537,7 +557,13 @@ class FrameWdgt extends ClippingWdgt
   _dockThicknessAt: (side) ->
     dockedFrame = @_dockedFrameAt side
     return 0 unless dockedFrame?
-    @_dockedBandInset() + dockedFrame._dockedBandThickness() + @_bodyMargin()
+    @_slotThicknessFor dockedFrame._bandThicknessUnder dockedFrame.layoutSpec
+
+  # What a band `bandThickness` thick takes out of my body, at whichever side: the band's inset, the
+  # band, and my body margin between it and my content. One term for the slot a band occupies
+  # (_dockThicknessAt) and for the slot a frame about to dock would take (bandBoxIfDocked).
+  _slotThicknessFor: (bandThickness) ->
+    @_dockedBandInset() + bandThickness + @_bodyMargin()
 
   # How much further a band docked in one of my slots stands in, on its three outer sides, past my
   # body margin: what the theme's dockedBandInset asks beyond that margin, and nothing once my margin
@@ -549,21 +575,21 @@ class FrameWdgt extends ClippingWdgt
   _dockedBandInset: ->
     Math.max 0, WorldWdgt.theme.dockedBandInset - @_bodyMargin()
 
-  # MY OWN cross extent as a band in somebody's slot (program ruling C13): expanded, what the
-  # band grants my payload (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness,
-  # asked now, or the extent my payload arrived with) plus my own chrome across it (my border and
-  # body margin on both sides), so the payload gets exactly the extent it asked for and my grip,
-  # running ACROSS the band, adds nothing; collapsed, I AM my bar, so the band is the strip's
-  # thickness (never 0 -- there has to be something left to tap). 0 when I am not docked at all.
-  _dockedBandThickness: ->
-    dockSpec = @_myEdgeDockSpec()
-    return 0 unless dockSpec?
+  # MY OWN cross extent as a band (program ruling C13) under `dockSpec`: the spec I carry in a
+  # host's slot (a host asks it of each band that counts, _dockedFrameAt, with the band's own
+  # layoutSpec), or the one a host would hand me, asked before I dock so the hand can outline the
+  # band a release would make (bandBoxIfDocked). Expanded, what the band grants my payload
+  # (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness, asked now, or the extent
+  # my payload arrived with) plus my chrome across the band that is no strip's (my border and body
+  # margin on both sides, and my own bands there: _chromeBesidesStripsAcross), so the payload gets
+  # exactly the extent it asked for and my grip, running ACROSS the band, adds nothing; collapsed, I
+  # AM my bar, so the band is the strip's thickness (never 0 -- there has to be something left to
+  # tap). A pure measure: no term reads where I stand, so the answer is the same before the dock and
+  # after it.
+  _bandThicknessUnder: (dockSpec) ->
     return @_barSpec().thickness if @contents?.collapsed
-    payloadThickness = dockSpec.thicknessGrantedTo @contents
-    if dockSpec.side is "top" or dockSpec.side is "bottom"
-      payloadThickness + @_chromeHeight()
-    else
-      payloadThickness + @_chromeWidth()
+    crossAxis = if dockSpec.runAxis() is "horizontal" then "vertical" else "horizontal"
+    (dockSpec.thicknessGrantedTo @contents) + @_chromeBesidesStripsAcross crossAxis
 
   # The four named terms my chrome accounting reads (one home each side, so _chromeHeight and
   # _chromeWidth stay readable).
@@ -585,7 +611,7 @@ class FrameWdgt extends ClippingWdgt
   # measures and the arrange both read (§6.1 rule 1): availableWidthForContents, the width
   # negotiation and the first-placement hug all route through it.
   _chromeWidth: ->
-    @_bodyEdgeLeft() + @_bodyEdgeRight() + 2 * @_bodyMargin() + @_leftDockThickness() + @_rightDockThickness()
+    @_bodyEdgeLeft() + @_bodyEdgeRight() - 2 * @_borderInset() + @_chromeBesidesStripsAcross "horizontal"
 
   # (U2) The first-placement WIDTH negotiation, as a PURE function of the spec's
   # preferredStartingWidth sentinels -- ONE home for the measure's pre-capture branch (below)
@@ -674,15 +700,20 @@ class FrameWdgt extends ClippingWdgt
           # exactly as the arrange will apply (lockstep via _firstPlacementContentWidth).
           desiredHeight = @contents.preferredExtentForWidth(@_firstPlacementContentWidth(availW ? @width())).y
         return new Point (availW ? @width()), desiredHeight + chrome
-      if @contentsRecursivelyCanSetHeightFreely()
-        desiredHeight = Math.round @height() - chrome
-      else
-        recommendedElementWidth = spec.getWidthInStack(availW - @_chromeWidth())
-        desiredHeight = @contents.preferredExtentForWidth(recommendedElementWidth).y
-      return new Point availW, desiredHeight + chrome
+      return new Point availW, (@_steadyContentHeight availW, @_chromeWidth(), chrome) + chrome
     else if @contents?.collapsed
       return new Point availW, @_titlebarHeight()
     return new Point availW, @height()
+
+  # The height my content takes once its first placement is behind it, `availW` wide and my chrome
+  # taking `chromeWidth` and `chromeHeight` of me: the room my height leaves, when the content sets
+  # its height freely; else its own height at the width my chrome leaves it. The steady-state rule
+  # of the measure above, with my chrome as PARAMETERS, so the same rule answers for the chrome I
+  # have and for the chrome a dock about to be made would give me (bandBoxIfDocked).
+  _steadyContentHeight: (availW, chromeWidth, chromeHeight) ->
+    return Math.round @height() - chromeHeight if @contentsRecursivelyCanSetHeightFreely()
+    recommendedElementWidth = @contents.contentStackSpec().getWidthInStack availW - chromeWidth
+    @contents.preferredExtentForWidth(recommendedElementWidth).y
 
   # `contents` (the widget this window wraps) is the one meaningful argument; every call site
   # passes only it. closeButton is optional, supplied via the opts object (FolderWindowWdgt
@@ -1390,9 +1421,16 @@ class FrameWdgt extends ClippingWdgt
   # from the pointer, handing each the point IN THAT FRAME'S OWN PLANE. Mid-gesture UI offers no
   # bands (a menu is not furniture to dock into), and neither does a collapsed frame — it has no
   # body to give away.
+  #   Nor does a frame in VIEW mode, or one standing in view-mode content: view mode disengages
+  # every dock (_myModeEngagesMyDocks), so a band landing there would land hidden, and content in
+  # view mode takes nothing (the drop door's rule, Widget.wantsDropOfChild, for the one arrival that
+  # does not pass that door). The hand's climb then goes on as over any point of my body, and finds
+  # my content reluctant: the neutral outline and the view-only badge, and a release that leaves the
+  # frame on the desktop. So a toolbar, born locked, offers no band either, in a slot or floating.
   dockSideAt: (aPointInMyPlane) ->
     return undefined if @isTransientPopUp()
     return undefined if @contents?.collapsed
+    return undefined if !@_myModeEngagesMyDocks() or @sitsInViewModeContent()
     body = @_dockBandsBox()
     return undefined unless body.containsPoint aPointInMyPlane
     depth = WorldWdgt.preferencesAndSettings.dockBandDepth
@@ -1416,8 +1454,10 @@ class FrameWdgt extends ClippingWdgt
     new Rectangle (new Point @left() + @_titlebarWidth(), @top() + @_titlebarHeight()),
       new Point @right() - (@_gripStripThicknessAt "right"), @bottom() - (@_gripStripThicknessAt "bottom")
 
-  # The band rectangle at `side`, in my own plane — what the hand outlines while a frame hovers
-  # over the offer. Same box, same depth, as the answer above.
+  # The strip of the offer at `side`, in my own plane: the points a release docks at that side
+  # from, the corners aside (those go to the nearer edge, as dockSideAt answers). Same box, same
+  # depth, as the answer above. It is where to AIM, never the picture of the dock: the hand
+  # outlines the band the release would make (bandBoxIfDocked).
   dockBandBoxAt: (side) ->
     body = @_dockBandsBox()
     depth = WorldWdgt.preferencesAndSettings.dockBandDepth
@@ -1426,6 +1466,77 @@ class FrameWdgt extends ClippingWdgt
       when 'bottom' then new Rectangle (new Point body.left(), Math.max(body.bottom() - depth, body.top())), body.corner
       when 'right' then new Rectangle (new Point Math.max(body.right() - depth, body.left()), body.top()), body.corner
       else new Rectangle body.origin, new Point Math.min(body.left() + depth, body.right()), body.bottom()
+
+  # WHERE A BAND STANDS in my body, in my own plane: a band `bandThickness` thick at `side`, my
+  # top slot taking `topDockThickness` of my body and my content `stackHeight` tall. Past my body's
+  # inner edges (my border or my bar) and my body margin, the band stands my band inset
+  # (_dockedBandInset: what the theme's band inset adds past that margin) further in on its three
+  # OUTER sides, its fourth side facing the content across my body margin -- TOP/BOTTOM: a band
+  # across my whole body less the inset at each end, the content starting a body margin below it
+  # (top) or ending a body margin above it (bottom: the band's top lands a body margin below the
+  # content, and its bottom stands the band inset above where the content region's bottom sits, my
+  # bottom edge and body margin, and the grip strip above them when I keep one -- _chromeHeight
+  # carries the matching reservation); LEFT/RIGHT: a column on that flank spanning the content's
+  # vertical span less the inset at each end, so a column and a top or bottom band stand as far
+  # apart where they meet as a band stands in from my body's edges.
+  #   PURE, and the one home of the placement: my arrange places the bands I hold by it, with the
+  # content height its pass derived, and the picture of a dock not yet made asks it the terms that
+  # dock would give (bandBoxIfDocked), so the two cannot disagree.
+  _bandBoundsAt: (side, bandThickness, topDockThickness, stackHeight) ->
+    bodyMargin = @_bodyMargin()
+    bandInset = @_dockedBandInset()
+    bodyLeft = @left() + @_bodyEdgeLeft() + bodyMargin
+    bodyTop = @top() + @_bodyEdgeTop() + bodyMargin
+    bodyWidth = @width() - @_bodyEdgeLeft() - @_bodyEdgeRight() - 2 * bodyMargin
+    bandRun = Math.max 0, bodyWidth - 2 * bandInset
+    columnTop = bodyTop + topDockThickness + bandInset
+    columnRun = Math.max 0, stackHeight - 2 * bandInset
+    switch side
+      when 'top'
+        (new Rectangle new Point bodyLeft + bandInset, bodyTop + bandInset).setBoundsWidthAndHeight bandRun, bandThickness
+      when 'bottom'
+        (new Rectangle new Point bodyLeft + bandInset, bodyTop + topDockThickness + stackHeight + bodyMargin).setBoundsWidthAndHeight bandRun, bandThickness
+      when 'right'
+        (new Rectangle new Point @right() - @_bodyEdgeRight() - bodyMargin - bandInset - bandThickness, columnTop).setBoundsWidthAndHeight bandThickness, columnRun
+      else # 'left'
+        (new Rectangle new Point bodyLeft + bandInset, columnTop).setBoundsWidthAndHeight bandThickness, columnRun
+
+  # THE BAND `aFrame` WOULD BE, docked at `side`: its box in my own plane, as my arrange would
+  # place it once the dock is made -- what the hand outlines while a frame hovers over the offer,
+  # so the outline is the place and the size of what the release makes. Derived, with nothing
+  # docked and nothing written, from the terms the dock itself would produce: the spec it would
+  # hand the frame (_edgeDockSpecFor), the thickness the frame measures under it
+  # (_bandThicknessUnder), the slot that band takes in place of whatever holds `side` now (an
+  # occupied slot's holder goes: one frame per side), my content's height with my chrome so changed
+  # (_steadyContentHeight, the measure's own rule), and the placement my arrange uses
+  # (_bandBoundsAt); then the frame says what it takes of the box I would grant it
+  # (_bandBoxTakenOf). PUBLIC: the hand asks it of the host an offer names.
+  bandBoxIfDocked: (aFrame, side) ->
+    dockSpec = @_edgeDockSpecFor aFrame, side
+    bandThickness = aFrame._bandThicknessUnder dockSpec
+    slotThickness = @_slotThicknessFor bandThickness
+    topDockThickness = if side is "top" then slotThickness else @_topDockThickness()
+    chromeHeight = @_chromeHeight()
+    chromeWidth = @_chromeWidth()
+    if side is "top" or side is "bottom"
+      chromeHeight += slotThickness - @_dockThicknessAt side
+    else
+      chromeWidth += slotThickness - @_dockThicknessAt side
+    aFrame._bandBoxTakenOf (@_bandBoundsAt side, bandThickness, topDockThickness, @_steadyContentHeight @width(), chromeWidth, chromeHeight), dockSpec
+
+  # WHAT I TAKE OF THE BOX A HOST GRANTS ME as a band under `dockSpec`: all of it, but for my height
+  # in a side column when my payload keeps a height of its own (a text, which does not set its
+  # height freely). There my strip runs across my top, so my arrange makes me my payload's height
+  # plus my chrome, from the granted top (newHeight, in _positionAndResizeChildren), and the column
+  # below me stays the host's. My chrome there is my strip past my border inset, and my chrome that
+  # is no strip's. Everywhere else a band is exactly the box its host reserved: a strip down my
+  # side takes my height as given, a payload that sets its height freely fills what it is given,
+  # and collapsed I am my bar, which runs along the slot. Pure, like the thickness above, and for
+  # the same asker: the picture of a dock before it is made.
+  _bandBoxTakenOf: (grantedBox, dockSpec) ->
+    return grantedBox if dockSpec.runAxis() is "horizontal" or @contents.collapsed or @contentsRecursivelyCanSetHeightFreely()
+    myHeight = @contents.height() + @_barSpec().thickness - @_borderInset() + @_chromeBesidesStripsAcross "vertical"
+    grantedBox.setBoundsWidthAndHeight grantedBox.width(), myHeight
 
   # Am I holding this widget in one of my slots? (asked by the content hooks, which must let a band
   # through: a band is a payload I HOLD, never the payload I WRAP)
@@ -1460,13 +1571,8 @@ class FrameWdgt extends ClippingWdgt
   # already filled, so what it reads of me counts it.
   _dockFrameNoSettle: (aFrame, side) ->
     payload = aFrame.contents
-    unless payload.dockThickness?
-      arrivalThickness = if side is "top" or side is "bottom" then payload.height() else payload.width()
-    dockSpec = new EdgeDockLayoutSpec side, arrivalThickness
-    # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in. A
-    # dock is engaged on arrival; only a host whose payload HAS an edit mode and is currently
-    # viewing lands it disengaged, because that host's view mode is what disengages every dock.
-    dockSpec.engaged = !@contents?.providesAmenitiesForEditing or @contents.dragsDropsAndEditingEnabled == true
+    # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in
+    dockSpec = @_edgeDockSpecFor aFrame, side
     @dockedFrames[side]?._fullDestroyNoSettle()
     @_addNoSettle aFrame, notContent: true, layoutSpec: dockSpec
     # after the add: a re-dock's own departure notification would otherwise free the slot I just filled
@@ -1474,6 +1580,27 @@ class FrameWdgt extends ClippingWdgt
     @_reflectDockVisibilityNoSettle()
     @_invalidateLayout()
     payload.noteDockedOn? @
+
+  # The edge spec `aFrame` carries once docked at `side`: WHERE, HOW MUCH (the cross extent its
+  # payload arrives with, recorded only for a payload that declares no dockThickness of its own),
+  # and whether the dock stands engaged, which is my mode's answer now. Built here for the dock
+  # (_dockFrameNoSettle) and for the picture of it before the release (bandBoxIfDocked), so the
+  # band the hand outlines is measured under the very spec the dock would hand over.
+  _edgeDockSpecFor: (aFrame, side) ->
+    payload = aFrame.contents
+    unless payload.dockThickness?
+      arrivalThickness = if side is "top" or side is "bottom" then payload.height() else payload.width()
+    dockSpec = new EdgeDockLayoutSpec side, arrivalThickness
+    dockSpec.engaged = @_myModeEngagesMyDocks()
+    dockSpec
+
+  # DOES MY MODE ENGAGE MY DOCKS? Editing engages every dock and viewing disengages it
+  # (_engageDocksNoSettle, driven by the flip), so: yes, unless I hold an edit mode and am viewing.
+  # A frame holding no mode (a clock's window, an empty one) keeps its docks engaged always. Asked
+  # where a dock is about to be made: by the spec a fresh dock lands with (_edgeDockSpecFor), and by
+  # the offer (dockSideAt), which a frame that would hide the band it is offered does not make.
+  _myModeEngagesMyDocks: ->
+    !@_holdsAnEditMode() or @isInEditMode()
 
   # Whether a band is DRAWN follows its dock's engagement -- never the other way round, because
   # visibility is never a layout input (the layout reads the spec, in _dockedFrameAt). One place,
@@ -2688,18 +2815,9 @@ class FrameWdgt extends ClippingWdgt
         barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
       @bar._reLayout barBounds
 
-    # the four slots: place each docked band in my body, past its inner edges
-    # (my border or my bar) and my body margin, standing my band inset
-    # (_dockedBandInset: what the theme's band inset adds past that margin)
-    # further in on its three OUTER sides, its fourth side facing the content
-    # across my body margin -- TOP/BOTTOM: a band across my whole body less the
-    # inset at each end, the content starting a body margin below it (top) or
-    # ending a body margin above it (bottom); LEFT/RIGHT: a column on that flank
-    # spanning the content's vertical span less the inset at each end, so a
-    # column and a top or bottom band stand as far apart where they meet as a
-    # band stands in from my body's edges (stackHeight is the content height
-    # this pass just derived, so every placement is pass-local -- no
-    # applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
+    # the four slots: place each docked band in my body (_bandBoundsAt, with
+    # the content height this pass just derived, so every placement is
+    # pass-local -- no applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
     # the same drive as @bar above -- a band's _reLayout applies its own
     # bounds THEN re-fits its chrome and payload, and the payload viewport in
     # turn re-fits its contents+scrollbars, so a width change that
@@ -2708,37 +2826,11 @@ class FrameWdgt extends ClippingWdgt
     # nothing, leaving the inner panel at a stale wrap height -- fg census
     # caught exactly that: ToolPanel 75 tall inside the 40 strip after a
     # narrow->wide window resize.)
-    bodyMargin = @_bodyMargin()
-    bandInset = @_dockedBandInset()
-    bodyLeft = @left() + @_bodyEdgeLeft() + bodyMargin
-    bodyTop = @top() + @_bodyEdgeTop() + bodyMargin
-    bodyWidth = @width() - @_bodyEdgeLeft() - @_bodyEdgeRight() - 2 * bodyMargin
-    bandRun = Math.max 0, bodyWidth - 2 * bandInset
-    columnTop = bodyTop + @_topDockThickness() + bandInset
-    columnRun = Math.max 0, stackHeight - 2 * bandInset
+    topDockThickness = @_topDockThickness()
     for side in FrameWdgt.DOCK_SIDES
       dockedFrame = @_dockedFrameAt side
       continue unless dockedFrame?
-      bandThickness = dockedFrame._dockedBandThickness()
-      switch side
-        when 'top'
-          bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + bandInset
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
-        when 'bottom'
-          # just below the content: the band's top lands a body margin below
-          # the content, and its bottom stands the band inset above where the
-          # content region's bottom sits (my bottom edge and body margin, and
-          # the grip strip above them when I keep one -- _chromeHeight carries
-          # the matching reservation)
-          bandBounds = new Rectangle new Point bodyLeft + bandInset, bodyTop + @_topDockThickness() + stackHeight + bodyMargin
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandRun, bandThickness
-        when 'right'
-          bandBounds = new Rectangle new Point @right() - @_bodyEdgeRight() - bodyMargin - bandInset - bandThickness, columnTop
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
-        else # 'left'
-          bandBounds = new Rectangle new Point bodyLeft + bandInset, columnTop
-          bandBounds = bandBounds.setBoundsWidthAndHeight bandThickness, columnRun
-      dockedFrame._reLayout bandBounds
+      dockedFrame._reLayout @_bandBoundsAt side, (dockedFrame._bandThicknessUnder dockedFrame.layoutSpec), topDockThickness, stackHeight
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
     # bottom-right at the grip's own inset past my border (FrameGripWdgt._cornerInsetFrom), which puts

@@ -3,10 +3,11 @@
 # which owns the title, the save-or-destroy close and the payload rebuild every
 # such document shares), and a thin one over the naked grid
 # (SimpleSpreadsheetWdgt -- the model owner / formula scope / keyboard
-# receiver): the grid manages its own editing (no providesAmenitiesForEditing,
-# so the frame shows no edit toggle), its toolbar is the sheet toolbar, docked
-# on top at construction (buildToolbar), and the frame's representativeIcon
-# dispatch reaches the grid unchanged.
+# receiver): the grid holds the edit mode my strip's toggle switches, as every
+# Maker's payload does (MakerDocumentWdgt), and does what a flip means for a
+# sheet itself; its toolbar is the sheet toolbar, docked on top at construction
+# (buildToolbar), and the frame's representativeIcon dispatch reaches the grid
+# unchanged.
 
 class SpreadsheetWdgt extends MakerDocumentWdgt
 

@@ -581,6 +581,18 @@ mark after `add` + `setExtent` adds nothing.
   (`FolderWindowWdgt`, `BinWdgt`, `FolderShortcutWdgt`, `BinOpenerWdgt`), never a toggle hidden or an override of
   each mode reader:
   `FrameWdgt.offersEditToggle`, `Widget.sitsInViewModeContent` and the disable cores read it (`toolbars.md` §3).
+- **A Maker's content HOLDS AN EDIT MODE, and every Maker's document offers the toggle.** The toggle is declared
+  once, on the documents' base (`MakerDocumentWdgt.providesAmenitiesForEditing`), so a new Maker cannot be left
+  without it. The payload answers `providesAmenitiesForEditing: true` too, keeps the flag
+  (`dragsDropsAndEditingEnabled`) and writes the two mode cores when the base's do not fit it
+  (`_enableDragsDropsAndEditingNoSettle` / `_disable…`: the flag, `@root().noteEditModeChanged?()`,
+  `@parent?.showEditModeInBar?()` / `showViewModeInBar?()` after the flag, and what a flip means for its kind;
+  `ViewportWdgt`'s and `SimpleSpreadsheetWdgt`'s are the models). Its own doors ask BOTH halves, its own mode and
+  the content around it (`Widget.sitsInViewModeContent` starts at the parent, so it never asks a holder about
+  itself: `SimpleSpreadsheetWdgt._takesEntry`); what stands in it is held by the walk. A LOOK that changes with
+  the mode follows the widget's OWN mode, heard at its own flip, never the content around it, whose flips it does
+  not hear (a sheet's headers and gridlines: `showsHeaders`). A widget focused as a whole (`focusesAsAWhole`)
+  shows its own selection, so the editor-focus outline never frames it, whatever it declares.
 - **A text that must take typing in view mode is DECLARED an input** (`takesTypingInViewMode = true`, written by
   its app, as the °C↔°F converter writes it on its two number fields). Every other text in view-mode content
   refuses typing through its one door, `StringWdgt.isTextEntryField`: never write `isEditable` back on after a
