@@ -130,6 +130,14 @@ decided and executed on its own. Kept verbatim, in their BACKLOG order.
 
 ### SliderTrackClickMovesButton side-problems arc 2026-10-15 — residue (no plan doc; case law in `../../Fizzygum-tests/DETERMINISM.md` §3j)
 
+- [x] (optional, owner to decide) the gauntlet's `refs` leg hits fg's own leg alarm in-wave on a loaded machine
+      (twice on 2026-10-15; the second time wave B's legs ran ~280 s each) — a budget question, not a reference
+      problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budget is the alarm
+      `buildSystem/legs.js` gives `check-refs.js --pixels`, not 14 s.
+      — CLOSED 2026-11-23 (owner: the alarm rises): `lib/png.js` does half the work per reference (the check
+      alone 112 s → 59 s; under one load, side by side, 298 s → 172 s), and `buildSystem/legs.js` gives the leg 600 s,
+      its comment's own rule (headroom for the LOADED case); it ran 300–416 s in-wave over 2026-11-19..22.
+
 - [x] **A finger stroke can leave a scrollbar thumb's HOVER HIGHLIGHT stuck.** A finger has no hover and the
       stroke's end dissolves it, yet in `macroMultilineTextInputScrollsWell` (finger) one thin indicator's
       thumb (the 5×5 one at 272,227) is in `SliderButtonWdgt` state 1 (highlighted, colour 110,110,110) at

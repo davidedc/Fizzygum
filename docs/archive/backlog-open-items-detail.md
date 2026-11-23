@@ -26,19 +26,6 @@ and `architecture/occlusion-culling.md` §2a. What it deliberately did not take 
       reaches BELOW the fill for any bubble taller than ~5×(cornerRadius+1), and a `ToolTipWdgt` is a
       direct child of the world, so the culler asks it and would have dropped real pixels.
 
-### SliderTrackClickMovesButton side-problems arc 2026-10-15 — the backlog's note
-
-- The three measured residue items (the list verb's thin-geometry drag, the pixel-short move, the ~1 px bars
-  in short viewports) are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16".
-  Its follow-ups are filed under "Residue arc 2026-10-16 — follow-ups" below.
-
-### The gauntlet's refs leg hits its leg alarm in-wave on a loaded machine
-
-- [ ] (optional, owner to decide) the gauntlet's `refs` leg hits fg's own leg alarm in-wave on a loaded machine
-      (twice on 2026-10-15; the second time wave B's legs ran ~280 s each) — a budget question, not a reference
-      problem. ⚠ The log line `Alarm clock: 14` names SIGALRM by its signal NUMBER: the budget is the alarm
-      `buildSystem/legs.js` gives `check-refs.js --pixels`, not 14 s.
-
 ### Residue arc 2026-10-16 — the backlog's note
 
 - Six of its follow-ups are CLOSED: `archive/backlog-closed-items-ledger.md` § "Residue arc 2026-10-16 — its six

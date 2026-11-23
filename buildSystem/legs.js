@@ -133,10 +133,14 @@ const LEGS = [
   // count, so keep the headroom generous rather than tracking the measurement.
   // And the DOCS ratchet (check-doc-narration.js, a hard zero): docs prose must not block a
   // BUILD, so it is checked at the commit point, here, rather than only when someone runs it.
-  // The pixel check decodes every reference (~4.1k PNGs): 244-286s inside a gauntlet wave by
-  // 2026-11-09, so its alarm sits well above that (it timed out once at 300s under wave load).
+  // The pixel check decodes every reference (~4.2k PNGs, ~2 Mpx each) and hashes its pixels on ONE
+  // core, so inside wave B its time is its share of a saturated machine more than its own work: 300-416s
+  // across the gauntlets of 2026-11-19..22, killed at a 420s alarm three times, while the same check
+  // took 112s alone. lib/png.js's 2026-11-23 rework halved the work (59s alone; under one load, side by
+  // side, 298s -> 172s), and the alarm sits at 600s: off wave B's critical path (settle, 900s), a hang
+  // is still caught.
   { name: 'refs', waves: ['B'],
-    steps: [{ cwd: 'tests', alarm: 420, script: 'scripts/check-refs.js', args: ['--pixels', '--quiet'] },
+    steps: [{ cwd: 'tests', alarm: 600, script: 'scripts/check-refs.js', args: ['--pixels', '--quiet'] },
       { cwd: 'fizzygum', alarm: 60, script: 'buildSystem/check-doc-narration.js', args: [] }],
     headline: 'FAIL|verified consistent|consistency FAILED', verb: 'doc-narration' },
   // settle-re-visit standing gate (up-edge endgame close, 2026-07-17): one dpr1 suite pass under
