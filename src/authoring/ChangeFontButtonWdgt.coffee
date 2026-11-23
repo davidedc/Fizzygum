@@ -42,7 +42,7 @@ class ChangeFontButtonWdgt extends EditorContentPropertyChangerButtonWdgt
   # when the row is chosen (setFontNameFromMenu), so the subject a press found is not kept. A press
   # brings up my open Fonts menu, pinned or not, at me, rather than stacking a second one; with none
   # open it opens a fresh one.
-  actOn: (ignoredSubject) ->
+  _actOn: (ignoredSubject) ->
     (@_myOpenFontsMenu() ? @_newFontsMenu()).popUp @_menuPopUpPoint(), world
 
   # MY OPEN FONTS MENU, asked at every press of the set of open pop-ups (world.openPopUps: transient

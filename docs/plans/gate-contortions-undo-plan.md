@@ -32,7 +32,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U16b | `fg vmtruth` measures something under load (owner-added 2026-11-22, filed by U9) | CLOSED 2026-11-22 (§U16b) |
 | U17 | A menu row is found, not fetched | CLOSED 2026-11-22 (§U17) |
 | U18 | A capture that does not verify is UNSTABLE | CLOSED 2026-11-22 (§U18) |
-| U18b | [A] gets a counted per-method marker; U14's three parked members take their tier (owner-ruled 2026-11-22) | not started |
+| U18b | [A] gets a counted per-line marker; U14's three parked members take their tier (owner-ruled 2026-11-22) | CLOSED 2026-11-23 (§U18b) |
 | U18c | [G]'s marker and [A]'s are one regime: one name, line-scoped, reason-required, stale-checked, counted (owner-added 2026-11-22) | not started |
 | U19 | Close | not started |
 
@@ -1078,7 +1078,7 @@ reference; a REAL runner transcript with one byte flipped before hashing reads U
 none. Pixels: none. Filed for U19: `recapture.js` lists a test it recaptured this run that then mismatches as "NEEDS
 RECAPTURE" (U18's own case at batch level).
 
-### U18b — [A] gets a counted per-method marker; U14's three parked members take their tier (owner-ruled 2026-11-22)
+### U18b — [A] gets a counted per-line marker; U14's three parked members take their tier (owner-ruled 2026-11-22)
 
 **Stands today.** Layering rule [A] (`buildSystem/check-layering.js`, `A_PUBLIC_SETTER` / `A_TEXT_SETTER`) forbids a
 low-level `_` method from calling a public self-settling setter directly; it judges `_` methods only. It is the one
@@ -1137,6 +1137,25 @@ unmarked call fires A; a marked one passes; a fourth marker fails the budget; a 
 `fg build`; the suite (no behaviour change: same calls, same order). **Predicted pixel set.** EMPTY (the overflow row's
 picture: size, then shoot, unchanged). **Park when.** A guard cannot be stated as a rule the self-test can plant.
 **Audit.** static C1, C5 (U14's parked half).
+**Landed 2026-11-23.** Rules [A] and [G] have one exemption, `# settling-call-sanctioned: <why>`, on the call's line or
+alone on the comment lines directly above it: it excuses that ONE line's [A] and [G] findings (never
+`recalculateLayouts`), and a marker with no reason excuses nothing. Two guards hold it: `AG_STALE_MARKER` (a marker
+that excuses nothing — wrong line, a public method, overtaken — fails) and `AG_MARKER_COUNT_ABOVE_CEILING` (the excused
+calls against `SETTLING_CALL_MARKER_CEILING = 7`, dated, naming each member: a tripwire, every new use a raise seen in
+its own change). Seven calls carry it, each "at event time, outside any pass; the other object's own public setter
+settles it": `CaretWdgt._bringTextAndCaretToState`'s `@target.setText` (the caret's own move through
+`@_settleLayoutsAfter => @_gotoSlotNoSettle`), `CaretWdgt._deleteSelectionOrCharacter`'s `@target.setText` (the delete
+verbs no longer pass it as a thunk; the helper takes the character's span, since Backspace's caret step must fall
+between the text change and the second undo push), the content-property tools' `_actOn` (increase / decrease font
+size — each ladder picks the size, one `setFontSize` follows — and format-as-code's `setFontName`; SliderInCell's
+`enterSource`, the [G] finding), and `InertIconHolderWdgt._takePictureOf`'s `setExtent` (size, then shoot; the
+constructor one line). `actOn` is `_actOn` family-wide; two allowlist lines go (17 → 15). The old [G] token is left to
+U18c. Proof: the gate's self-test (80 cases, every rule planted: a stale marker, a reasonless one and one over the ceiling
+each fail by their own line, the line scope and the never-excused `recalculateLayouts` are planted, every marked kind
+passes; the count is per excused CALL, so a call appended to a marked line is a visible raise); the presuite and the finger suite green with no reference moved.
+Docs: `lint-and-static-checks.md` §3–§5 (and the correction: [G]'s old marker needs no reason and acts from its line
+downward), `layering-naming-convention.md` §4, `toolbars.md`.
+
 
 ### U18c — [G]'s marker and [A]'s are one regime (owner-added 2026-11-22)
 
@@ -1262,6 +1281,7 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] The `vmtruth` leg's pin cap is within reach of a green suite: a shard's spreadsheet tests leave 139 to 200+ uncollected (all UNRETAINED) cells at a sweep; past 200 a page it reads INVALID — medium: fg's serial retry absorbs it. → "The vmtruth leg's pin cap is within reach of a green suite" — CLOSED 2026-11-22 (gate-contortions loop, U16b): the same defect: the cap is gone (gate-contortions U16b).
 - [x] U17: the macro toolkit's menu-row locators scroll an over-tall pop-up by a setter, outside the input queue, so a press past the fold is never tested — medium, measure first. — CLOSED 2026-11-22 (gate-contortions loop, U17): pure locators, a named fault, one centring wheel; 28 tests bring their row in.
 - [x] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium. — CLOSED 2026-11-22 (gate-contortions loop, U18): UNSTABLE is its own outcome; only a run that died before its verdict is retried.
+- [x] U18b: layering rule [A] gets a counted, line-scoped, reason-required marker (owner-ruled (a) with guards, confirmed after an independent review) so U14's three parked members and `CaretWdgt._deleteSelectionOrCharacter` take the `_` tier (plan §U18b) — small. — CLOSED 2026-11-23 (gate-contortions loop, U18b): `settling-call-sanctioned`, two guards, seven marked calls.
 
 Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 

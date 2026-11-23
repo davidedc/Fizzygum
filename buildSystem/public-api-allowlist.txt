@@ -22,8 +22,6 @@ setProgram          # LCLProgramRunner programming API
 # Kept public for structural reasons (T5 execution findings, 2026-07-12):
 processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
 processTripleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)
-bringTextAndCaretToState  # CaretWdgt undo/redo restore verb; drives the public text setter + gotoSlot — [A] forbids the _-form
-actOn                     # content-property tools' act protocol (EditorContentPropertyChangerButtonWdgt family, 2026-11-17 toolbar plan P4); drives the subject's public self-settling setters (toggleWeight / setFontName / setFontSize) — [A] forbids the _-form
 subWidgetsMergedPreferredBounds  # Widget §4.1 pure-measure API, sibling of the cross-called subWidgetsMergedFullBounds; the P5 scrolled-content contract implementations (scrolledContentMeasure) call it on THEMSELVES, which is what left it with only self-calls
 closeFromFrameBar         # FrameWdgt's close-from-the-bar ACTION — it runs the closeFromFrameBarPolicy (save-or-ask / close / destroy) that plain close() does not, so it is the verb a user or a script means by "close this window as its button would"; the bar-press handler is its only in-tree caller (a deliberate verb whose one in-tree caller is its own user-facing adapter)
 tree                      # PenWdgt's turtle demo op, sibling of sierpinski: a pen-scripting verb a user calls from a script or the inspector; its only in-tree caller is its own recursion

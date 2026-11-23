@@ -90,8 +90,8 @@ class OverflowChevronButtonWdgt extends IconButtonWdgt
   _miniatureOf: (tool) ->
     # nosettle-sanctioned: fullCopy has no NoSettle core -- it self-settles only to file copied
     # referent figures to the shelf, which a toolbar tool contributes none of, and to tell a refused
-    # copy (an inform). The picture's constructor settles too, sizing a copy that has children
-    # (InertIconHolderWdgt). I am reached ONLY
+    # copy (an inform). The picture settles too, sizing a copy that has children
+    # (InertIconHolderWdgt._takePictureOf). I am reached ONLY
     # from actOnClick, an event-stream handler, so a settle here is legal and never mid-pass.
     toolCopy = tool.fullCopy?()
     return undefined unless toolCopy?

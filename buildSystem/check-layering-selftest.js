@@ -5,7 +5,11 @@
 // editing the real holders it excuses in the copy (anchored, so a holder that moved fails loudly); a third plants an [A]
 // violation in a harness file, named harness/<path>; a fourth points [D]'s whole-file half at a planted tests dir. The
 // control is the unplanted copy plus every sanctioned form, which must pass. Each run prints the advice of the rules it
-// fires that carry a row, each row once (lib/gate-advice.js), and the stale tables none. Run by
+// fires that carry a row, each row once (lib/gate-advice.js), and the stale tables none. [A] and [G]'s settling-call
+// marker excuses its one line, on it or on the comment lines right above it, and only with a reason; every call it
+// excuses is counted against the ceiling -- the last two runs, sized from the control's count, are where a marked call
+// is seen passing and a second call on a marked line is seen counting, since a tree at its ceiling cannot carry one
+// more in the control -- and a marker marking no settling call (a blank line below it included) is stale. Run by
 // buildSystem/run-selftests.js on every build.
 
 const fs = require('fs');
@@ -59,7 +63,7 @@ proveGate({
     edits: [['macros/MacroToolkit.coffee', /\s*$/, `\n\n  biteProofSanctionedMacros: ->\n    Macro.fromString ${Q3}\n      w._biteProofOracleA()   # macro-private-call-sanctioned: the bite-proof fixture, on the line\n      # macro-private-call-sanctioned: the bite-proof fixture, the line above\n      w._biteProofOracleB()\n    ${Q3}\n`],
             ['basic-widgets/menu-system/MenusHelper.coffee', /\s*$/, '\n\n  biteProofUserlandSanctioned: (w) ->\n    w._biteProofSanctionedCore()   # private-use-sanctioned: the bite-proof fixture\n    @_biteProofOwnCore()\n    this._biteProofOwnCore()\n']],
   },
-  runs: [{
+  runs: (control) => [{
     label: 'one class per rule',
     plants: {
       'BiteProofAWdgt.coffee': cls('BiteProofAWdgt',
@@ -67,6 +71,18 @@ proveGate({
         '  _biteProofLowLevelText: (s) ->', '    s.setText "bite"',
         '  _biteProofLowLevelRecalc: ->', '    world.recalculateLayouts()',
         '  _biteProofOneLiner: (p) -> @setExtent p'),
+      // [A][G]'s marker: excusing nothing on a line with no settling call, in a method neither half judges, and overtaken
+      // by a second marker before any code; and a marker with no reason, which excuses nothing in either half
+      'BiteProofAGMarkerWdgt.coffee': cls('BiteProofAGMarkerWdgt',
+        '  _biteProofStaleMarker: ->', '    # settling-call-sanctioned: the bite-proof fixture, above a line with no settling call', '    @bpValue = 1',
+        '  biteProofPublicMarked: ->', '    @setExtent new Point 1, 1   # settling-call-sanctioned: the bite-proof fixture, in a method neither half judges',
+        '  _biteProofOvertaken: ->', '    # settling-call-sanctioned: the bite-proof fixture, overtaken', '    # settling-call-sanctioned: the bite-proof fixture, overtaking', '    @bpValue = 2',
+        '  _biteProofBareMarkerA: (w) ->', '    w.setText "b"   # settling-call-sanctioned:',
+        '  _biteProofBareMarkerG: (w) ->', '    # settling-call-sanctioned', '    @add w',
+        // the line scope: a marker above a block marks the block's head, not the call inside it; and a blank line
+        // between a marker and its call leaves it marking nothing
+        '  _biteProofMarkerOverBlock: (w) ->', '    # settling-call-sanctioned: the bite-proof fixture, above a block', '    if w?', '      w.setText "d"',
+        '  _biteProofMarkerOverBlank: (w) ->', '    # settling-call-sanctioned: the bite-proof fixture, a blank line below', '', '    w.setText "e"'),
       'BiteProofBWdgt.coffee': cls('BiteProofBWdgt', '  biteProofRecalc: ->', '    world.recalculateLayouts()'),
       // [D] a verb anywhere in src, in a '''-heredoc: every Macro.fromString literal is a macro source
       'BiteProofVerbHost.coffee': ['class BiteProofVerbHost', '  biteProofVerbs: ->', "    Macro.fromString '''",
@@ -138,6 +154,7 @@ proveGate({
       Q_CONNECTOR_CALLER: line('[Q] biteProofConnectorCaller() calls _biteProofQConnector() outside the connector-caller allowlist', 'BiteProofQWdgt', 3),
       R_USERLAND_PRIVATE: /^  \[R\] userland biteProofUserland\(\) reaches into a private: w\._biteProofPrivateCore\(\) — .*  — src\/basic-widgets\/menu-system\/MenusHelper\.coffee:\d+$/m,
       T_DOUBLE_SETTLE: /^  \[T\] biteProofDoubleSettle\(\) self-settles \(src\/BiteProofTWdgt\.coffee:7\) AND @-calls settling public setter @setExtent\(\) — .*  — src\/BiteProofTWdgt\.coffee:8$/m,
+      AG_STALE_MARKER: /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:3 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:4\) makes no settling call \[A\] or \[G\] judges/m,
     },
     // every rule this run fires carries a row; the rules sharing one print it once, its header naming them all
     advised: ['A_PUBLIC_SETTER', 'A_TEXT_SETTER', 'A_RECALC', 'B_RECALC_CALLER', 'C_SETTER_CALLS_SETTER', 'D_MACRO_PRIVATE_CALL',
@@ -160,6 +177,15 @@ proveGate({
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling wrapper @biteProofTWrapper\(\)/m,
       /^  \[T\] biteProofDoubleSettle\(\) self-settles .* AND @-calls settling @add \(self == Widget\.add\)/m,
       /^  \[H\] biteProofThinWrapper\(\) has a guard return at src\/BiteProofHWdgt\.coffee:3 BEFORE its _settleLayoutsAfter/m,
+      /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:6 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:6\)/m,
+      /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:8 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:9, another marker\)/m,
+      /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:9 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:10\)/m,
+      /^  \[A\] low-level _biteProofBareMarkerA\(\) calls self-settling text setter \.setText\(\) — .* NB the # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:12 gives no reason, so it excuses nothing.*  — src\/BiteProofAGMarkerWdgt\.coffee:12$/m,
+      /^  \[G\] low-level _biteProofBareMarkerG\(\) calls @add \(self == Widget\.add\) — .* NB the # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:14 gives no reason, so it excuses nothing.*  — src\/BiteProofAGMarkerWdgt\.coffee:15$/m,
+      /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:17 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:18\)/m,
+      line('[A] low-level _biteProofMarkerOverBlock() calls self-settling text setter .setText()', 'BiteProofAGMarkerWdgt', 19),
+      /^  \[A\]\[G\] STALE_ALLOWLIST_ENTRY # settling-call-sanctioned at src\/BiteProofAGMarkerWdgt\.coffee:21 — the line it marks \(src\/BiteProofAGMarkerWdgt\.coffee:22, a blank line\)/m,
+      line('[A] low-level _biteProofMarkerOverBlank() calls self-settling text setter .setText()', 'BiteProofAGMarkerWdgt', 23),
     ],
     absent: [/_biteProofLowLevelPlainSelf/, /_applyExtentBase/],
   }, {
@@ -200,5 +226,49 @@ proveGate({
     args: ['--tests-dir=' + malformedTestsDir],
     exit: 2,
     lines: [/TESTS_DIRECTORY_MALFORMED: \S*\/scratch — /],
-  }],
+  }, (() => {
+    // marked calls past the ceiling, sized from the count the control prints (a ceiling above the count, a gain not yet
+    // banked, needs more), at least one of each kind: [A] a geometry and a text setter, [G] a wrapper and @add, marked on
+    // the line and above it (its reason running on), each excused itself; beside them the line scope (the call after a
+    // marked line fires) and recalculateLayouts on a marked line, which the marker never excuses
+    const m = /; (\d+)\/(\d+) settling call\(s\) sanctioned\)/.exec(control.out) || [0, 0, 0];
+    const k = Math.max(4, Number(m[2]) - Number(m[1]) + 1);
+    const kinds = [
+      (i) => [`  _biteProofMarked${i}: (w) ->`, '    w.setExtent new Point 1, 1   # settling-call-sanctioned: the bite-proof fixture, on the line'],
+      (i) => [`  _biteProofMarked${i}: (w) ->`, '    # settling-call-sanctioned: the bite-proof fixture, above the line,', '    #   its reason running on', '    w.setText "c"'],
+      (i) => [`  _biteProofMarked${i}: (w) ->`, '    # settling-call-sanctioned: the bite-proof fixture, above the line', '    w.biteProofMarkedWrapper()'],
+      (i) => [`  _biteProofMarked${i}: (w) ->`, '    @add w   # settling-call-sanctioned: the bite-proof fixture, on the line'],
+    ];
+    return {
+      label: 'one settling-call marker more than its ceiling',
+      plants: { 'BiteProofAGMarkedWdgt.coffee': cls('BiteProofAGMarkedWdgt',
+        '  biteProofMarkedWrapper: ->', '    @_settleLayoutsAfter => @_biteProofMarkedCoreNoSettle()',
+        '  _biteProofMarkedCoreNoSettle: ->', '    @bpValue = 1',
+        '  _biteProofLineScope: (w) ->', '    w.setText "h"   # settling-call-sanctioned: the bite-proof fixture, its one line', '    w.setExtent new Point 2, 2',
+        '  _biteProofRecalcOnMarkedLine: (w) ->', '    w.setText "i"; world.recalculateLayouts()   # settling-call-sanctioned: the bite-proof fixture, beside a recalc',
+        ...Array.from({ length: k }, (_, i) => kinds[i % kinds.length](i)).flat()) },
+      expect: {
+        AG_MARKER_COUNT_ABOVE_CEILING: /^  \[A\]\[G\] \d+ settling calls excused by # settling-call-sanctioned \(ceiling \d+\) — a low-level method newly makes a self-settling call on its reason's word: .*src\/BiteProofAGMarkedWdgt\.coffee:\d+/m,
+        A_PUBLIC_SETTER: line('[A] low-level _biteProofLineScope() calls public setter .setExtent()', 'BiteProofAGMarkedWdgt', 8),
+        A_RECALC: line('[A] low-level _biteProofRecalcOnMarkedLine() calls recalculateLayouts()', 'BiteProofAGMarkedWdgt', 10),
+        B_RECALC_CALLER: line('[B] recalculateLayouts() called from _biteProofRecalcOnMarkedLine()', 'BiteProofAGMarkedWdgt', 10),
+      },
+      advised: ['AG_MARKER_COUNT_ABOVE_CEILING', 'A_PUBLIC_SETTER', 'A_RECALC', 'B_RECALC_CALLER'],
+      absent: [/\[[AG]\] low-level _biteProofMarked/, /calls self-settling text setter .*  — src\/BiteProofAGMarkedWdgt\.coffee:(7|10)$/m],
+    };
+  })(), (() => {
+    // a second settling call appended to a marked line, the tree topped up to exactly its ceiling first (sized from
+    // the control's count): counted per line it would pass; counted per call it is one over, the line named twice
+    const m = /; (\d+)\/(\d+) settling call\(s\) sanctioned\)/.exec(control.out) || [0, 0, 0];
+    const topUp = Math.max(0, Number(m[2]) - Number(m[1]));
+    return {
+      label: 'a second call on a marked line',
+      plants: topUp ? { 'BiteProofAGTopUpWdgt.coffee': cls('BiteProofAGTopUpWdgt', ...Array.from({ length: topUp }, (_, i) =>
+        [`  _biteProofTopUp${i}: (w) ->`, '    w.setText "j"   # settling-call-sanctioned: the bite-proof fixture, a top-up']).flat()) } : {},
+      edits: [['authoring/FormatAsCodeButtonWdgt.coffee', /(\n    subject\.setFontName fontName)(?=\n)/, '$1; subject.setFontSize 12']],
+      expect: { AG_MARKER_COUNT_ABOVE_CEILING: /^  \[A\]\[G\] \d+ settling calls excused by # settling-call-sanctioned \(ceiling \d+\) — .*src\/authoring\/FormatAsCodeButtonWdgt\.coffee:(\d+), src\/authoring\/FormatAsCodeButtonWdgt\.coffee:\1\b/m },
+      advised: ['AG_MARKER_COUNT_ABOVE_CEILING'],
+      absent: [/\[A\] low-level _actOn\(\) calls self-settling text setter/],
+    };
+  })()],
 });

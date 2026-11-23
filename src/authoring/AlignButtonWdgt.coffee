@@ -41,7 +41,7 @@ class AlignButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   # each subject by its own verb: a style aligns itself (my verb), a stack element's layout spec takes
   # my alignment (layoutAlignSetterMethod)
-  actOn: (subject) ->
+  _actOn: (subject) ->
     if @_offersMyVerb subject
       subject[@verb]()
     else

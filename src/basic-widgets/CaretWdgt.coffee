@@ -653,7 +653,7 @@ class CaretWdgt extends BlinkerWdgt
     if @target.undoHistory.length > 1
       @target.popUndoState()
       undoState = @target.undoHistory[@target.undoHistory.length - 1]
-      @bringTextAndCaretToState undoState
+      @_bringTextAndCaretToState undoState
 
   # User presses Shift with the undo chord, or Ctrl+Y on a PC (chordVerbs): the last undone state comes back
   # (Shift changes nothing)
@@ -663,15 +663,17 @@ class CaretWdgt extends BlinkerWdgt
 
     redoState = @target.popRedoState()
     if redoState?
-      @bringTextAndCaretToState redoState
+      @_bringTextAndCaretToState redoState
 
-  bringTextAndCaretToState: (state) ->
-    # gotoSlot is the designed public one-settle caret-move entry; an undo/redo restore is a
-    # discrete event outside any pass, so the self-settling form is exactly right here. (This
-    # method stays PUBLIC: its setText drive makes the _-form an [A] violation — see the
-    # public-api-allowlist entry.)
+  # AN UNDO OR REDO RESTORE (undo, redo), at event time and outside any pass: two settles in turn. My target's own
+  # text door first -- a subclass extends it (FizzytilesCodeWdgt recompiles its pane after it) -- then my move, one
+  # settle round my own core, on the settled text: the order insert keeps. setText drops the selection, so the
+  # selection is restored last.
+  _bringTextAndCaretToState: (state) ->
+    # settling-call-sanctioned: an undo or redo key at event time, outside any pass (undo and redo are my only
+    #   callers): my target's own public text door settles the text, as insert's does, before my caret moves on it
     @target.setText state.textContent
-    @gotoSlot state.cursorPos   # discrete (undo/redo restore) -> public self-settling gotoSlot
+    @_settleLayoutsAfter => @_gotoSlotNoSettle state.cursorPos
     if state.selectionStart? and state.selectionEnd?
       @target.selectBetween state.selectionStart, state.selectionEnd
     else
@@ -713,20 +715,13 @@ class CaretWdgt extends BlinkerWdgt
       @_updateDimension()
       @target.pushUndoState? @slot
   
+  # Delete deletes the character after me whole (TextSlots), and I stay where I am
   deleteRight: ->
-    @_deleteSelectionOrCharacter @slot < @target.text.length, =>
-      text = @target.text
-      @target.setText text.slice(0, @slot) + text.slice TextSlots.slotAfter text, @slot
+    @_deleteSelectionOrCharacter @slot, TextSlots.slotAfter @target.text, @slot
 
-  # Backspace deletes the character before me whole (TextSlots), and I step back over it: to where it began, or
-  # to the start of the character its two neighbours joined into once it went (two flag halves)
+  # Backspace deletes the character before me whole (TextSlots), and I step back over it (_deleteSelectionOrCharacter)
   deleteLeft: ->
-    @_deleteSelectionOrCharacter @slot > 0, =>
-      text = @target.text
-      before = TextSlots.slotBefore text, @slot
-      @target.setText text.slice(0, before) + text.slice @slot
-      # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
-      @_gotoSlotNoSettle TextSlots.slotAtOrBefore @target.text, before
+    @_deleteSelectionOrCharacter (TextSlots.slotBefore @target.text, @slot), @slot
 
     @updateSelection false
     @_gotoSlotNoSettle @slot
@@ -734,9 +729,12 @@ class CaretWdgt extends BlinkerWdgt
     @clearSelectionIfStartAndEndMeet false
 
   # THE DELETE of Backspace and Delete, and so of the delete chords and of a cut of a selection (processCut, which
-  # does not reach me with nothing selected): it deletes the selection, else the character beside me, through the
-  # caller's deleteTheCharacter (aCharacterIsBesideMe says whether there is one: before me for Backspace, after me
-  # for Delete). Like insert, it pushes an undo state
+  # does not reach me with nothing selected): it deletes the selection, else the character beside me, the one
+  # between the slots characterStart and characterEnd (before me for Backspace, after me for Delete; none when the
+  # two meet, at the text's start or end). A character before me I step back over: to where it began, or to the
+  # start of the character its two neighbours joined into once it went (two flag halves); one after me leaves me
+  # where I am. Every path here is a key or a cut, an event, so I run outside any pass, and the text changes
+  # through my target's own public text door, as insert's typing does. Like insert, it pushes an undo state
   # before the change and one after it, so undo brings back what it deleted, the caret where it stood (one
   # character off after a move of just one since the last state, which the dedupe merges, as in typing) and what
   # was selected selected again, and redo deletes it again. The state after is what the delete leaves: setText
@@ -744,16 +742,21 @@ class CaretWdgt extends BlinkerWdgt
   # deletes nothing pushes nothing: it would push a state that only moves the caret, and a push that is kept
   # clears the redo history. An empty selection (its two marks met: a delete chord whose move goes nowhere) is
   # cleared first, so no state records it as a selection.
-  _deleteSelectionOrCharacter: (aCharacterIsBesideMe, deleteTheCharacter) ->
+  _deleteSelectionOrCharacter: (characterStart, characterEnd) ->
     @target.clearSelectionIfCollapsed()
     hasSelection = @target.selection() isnt ""
-    return unless hasSelection or aCharacterIsBesideMe
+    return unless hasSelection or characterStart < characterEnd
     @target.pushUndoState? @slot
     if hasSelection
       @_gotoSlotNoSettle @target.firstSelectedSlot()
       @target.deleteSelection()
     else
-      deleteTheCharacter()
+      text = @target.text
+      # settling-call-sanctioned: a Backspace, Delete or delete-chord key at event time, outside any pass (deleteLeft
+      #   and deleteRight are my only callers): my target's own public text door settles the text, as insert's does
+      @target.setText text.slice(0, characterStart) + text.slice characterEnd
+      # internal: settles at the handler's tail, NOT early (see goLeft/goRight)
+      @_gotoSlotNoSettle TextSlots.slotAtOrBefore @target.text, characterStart  if characterStart < @slot
     @target.pushUndoState? @slot
 
   # THE DELETE CHORDS (chordVerbs): each deletes from me to where its family's move of the same reach lands (the

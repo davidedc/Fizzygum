@@ -263,8 +263,12 @@ to decide which is ticked.
 - **One refusal** (`activated`): act on the subject, or do nothing when there is none. A tap on the cell and a
   toolbar overflow row (`OverflowChevronButtonWdgt.triggerToolFromMenu`) both arrive here. The refusal holds
   wherever the tool stands, in a cell or not: the font tool with nothing selected opens no menu.
-- **The act** (`actOn`): by default the verb called on the subject. It is PUBLIC, because it calls the subject's
-  self-settling setters, which the `_`-tier may not (`check-layering` [A]); `public-api-allowlist.txt` lists it.
+- **The act** (`_actOn`): by default the verb called on the subject; an override does more (the size tools step a
+  ladder, the font tool opens its Fonts menu instead). It is the family's private act hook, reached only by
+  `activated`, so at event time and outside any pass: an act that sets a property of the subject calls the subject's
+  own public setter, whose settle is the point (a text's settles the text, a `SheetCellStyle`'s its cell through its
+  sheet), and an override that names such a call marks it `# settling-call-sanctioned:` (`check-layering` [A] [G];
+  lint §5).
 - **Whether it is the active tool** (`isActiveTool`), for a tool that toggles a state of the text (bold, italic,
   the mono font, an alignment): true while its subject has that state, so its cell MIRRORS the edited text.
 - `TemplatesButtonWdgt` is the family's subject-less member: it keeps its own `activated` and always has
@@ -350,8 +354,8 @@ event stream, with no timer.
 
 - **A property tool.** Subclass `EditorContentPropertyChangerButtonWdgt`. Name the `verb`; give
   `createAppearance` no colour of its own (the ink comes from `_fillForMyState`); set `toolTipMessage`. Override
-  `actOn` only when the act is more than calling the verb, and answer `isActiveTool` only when the tool toggles a
-  state. Never read `world.editorFocusWdgt` directly: a reader that bypasses the door acts across windows and in
+  `_actOn` only when the act is more than calling the verb (marking any subject setter call it names), and answer
+  `isActiveTool` only when the tool toggles a state. Never read `world.editorFocusWdgt` directly: a reader that bypasses the door acts across windows and in
   view mode. The subject's setters must announce while it is the focus (`noteStyleChanged`), or no toolbar refreshes.
 - **A paint tool.** Add a stock source to `PaintToolbarWdgt` (`applyToolAt` and its helpers, never either entry),
   map its key in `stockSourceForToolKey`, and build a `CodeInjectingSimpleRectangularButtonWdgt` with that key and an

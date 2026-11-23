@@ -13,6 +13,14 @@
  *      public, self-flushing layer. (The text setters self-settle via the single _settleLayoutsAfter,
  *      so reaching one from a layout pass throws the flow-violation — AxisWdgt._reLayout once called
  *      setText for its tick labels; it now uses the non-settling _setTextNoSettle core.)
+ *      [A] and [G] below are one rule in two halves, and both take ONE sanctioned form, per LINE and COUNTED: a call
+ *      on a line carrying `# settling-call-sanctioned: <why>` (or under it, alone on the comment line(s) directly
+ *      above, no blank line between) is excused — a self-settling call a low-level method makes where no settle or pass is open (at event
+ *      time, from a press's hook), or on a receiver of a plain class. Everything else in the method is still judged,
+ *      recalculateLayouts always. Two guards hold it: the calls it excuses, each one counted, are a BUDGET held at
+ *      SETTLING_CALL_MARKER_CEILING (AG_MARKER_COUNT_ABOVE_CEILING), and a marker whose line makes no settling call
+ *      [A] or [G] judges fails as stale (AG_STALE_MARKER). A marker with no reason excuses nothing. ([G] also reads
+ *      its per-method sign-off, `# nosettle-sanctioned`, from its line to the method's end.)
  *   B) recalculateLayouts() may be called ONLY from doOneCycle (the frame), the settle tier
  *      _settleLayoutsAfter (the public-setter flush), and the reactive-connection settle lane
  *      _settleLayoutsAfterOrJoinEnclosingPass (which OPENS a settle just like _settleLayoutsAfter on a
@@ -252,6 +260,8 @@ const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemp
 // so it flags the very "cores call cores" pattern it exists to bless. Name-based reachability cannot model
 // the orphan guard (a receiver's attached-ness is dynamic), so this DIRECT rule is the maximal SOUND static
 // check; the runtime throw stays the backstop for the transitive/dynamic cases (and for `add`).
+// A deliberate, sound call — reached where no settle or pass is open — carries the settling-call marker [A] and [G]
+// share, on its line (the header's [A] paragraph).
 const SETTLE_CALL = new RegExp('[@.]\\s*' + TIERS.single + '\\b');   // the SINGLE-mutation tier only (_settleLayoutsAfter, read from Widget by lib/settle-tiers.js; `\b` keeps the join lane out)
 const CALLBACK_HOOK = /^_(reactTo|before)[A-Z]/;            // [J] a notification hook -- settle-neutral by convention (layering/naming convention §3)
 // The REPAINT verbs (_changed / _fullChanged / _fullChangedIncludingShadowOwner today) are READ from Widget's own
@@ -294,6 +304,29 @@ const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add:
                                           // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.
 const NOSETTLE_MARKER = 'nosettle-sanctioned';              // the [G] per-method conscious sign-off (mirrors [F])
 const EARLY_RETURN_MARKER = 'early-return-sanctioned';      // the [H] per-method conscious sign-off (mirrors [F]/[G])
+// [A] and [G]'s one per-LINE sanctioned form (the header's [A] paragraph): on the call's line, or alone on the comment
+// line(s) directly above it, consumed by the next line holding code; a blank line between leaves it marking nothing,
+// so it is stale. Only the marker WITH a reason excuses, and it excuses that line's [A] setter and [G] wrapper/@add
+// calls, every one of them, never A_RECALC.
+// every match of a one-match call regex on a line, in order (its global twin, made once per regex)
+const GLOBAL_FORMS = new Map();
+const everyMatch = (code, re) => {
+  if (!re) return [];
+  if (!GLOBAL_FORMS.has(re)) GLOBAL_FORMS.set(re, new RegExp(re.source, re.flags + 'g'));
+  return [...code.matchAll(GLOBAL_FORMS.get(re))];
+};
+const SETTLING_CALL_MARKER = 'settling-call-sanctioned';
+const SETTLING_CALL_SANCTION = /#\s*settling-call-sanctioned:\s*\S/;
+// the calls the marker excuses, each one counted, a BUDGET and a tripwire (docs/architecture/lint-and-static-checks.md §3b): a new marked
+// call raises this number in the same change, its dated reason beside it naming the member and the door that reaches
+// it. Seeded 7 on 2026-11-22 under the owner's ruling of that day: CaretWdgt._bringTextAndCaretToState (the undo/redo
+// restore) and _deleteSelectionOrCharacter (Backspace and Delete), each driving its target's own text door; the font
+// tools' _actOn (IncreaseFontSize, DecreaseFontSize, FormatAsCode: the subject's own style setter, a text's or a
+// SheetCellStyle's, settles it); InertIconHolderWdgt._takePictureOf (sizing the free-floating widget it is handed, so
+// its children are re-laid before the shot); SliderInCellButtonWdgt._actOn ([G]: a SheetCellStyle's plain enterSource,
+// which its sheet settles). Each is reached outside any settle or pass: from a press or a key (the icon holder also
+// from a script).
+const SETTLING_CALL_MARKER_CEILING = 7;
 // [H] a GUARD return: a bare `return`, or a postfix `return if … / return unless …`. NOT `return <value>`
 // (that is a legit return-the-result, e.g. `return @_settleLayoutsAfter => …` — what follows `return` is an
 // expression, not if/unless/end-of-line). This is the early-return guard that should live INSIDE the
@@ -511,9 +544,22 @@ function checkFile(file, violations, gCtx, warnings) {
   let methodGuardReturnLine = -1;     // [H]: line of a GUARD return seen before any _settleLayoutsAfter in this method
   let methodHWarned = false;          // [H]: already emitted the early-return-before-settle warning for this method
   let methodEarlyReturnMarked = false;// [H]: has a `# early-return-sanctioned` sign-off appeared in the current method?
+  let pendingMark = null;             // [A][G]: a settling-call marker alone on a comment line, awaiting the next line of code
   for (let n = 0; n < lines.length; n++) {
     const raw = lines[n];
     let code = masked[n].bare;
+    // [A][G]'s marker (SETTLING_CALL_MARKER): read before the method grouping, so whatever line holds code next consumes it
+    const markHere = marks(masked[n], SETTLING_CALL_MARKER)
+      ? { at: `${rel}:${n + 1}`, reasoned: SETTLING_CALL_SANCTION.test(masked[n].comment) } : null;
+    let mark = null;                  // the marker this line's code answers to
+    // a marker a second one overtakes before any code answered to it excuses nothing
+    const overtaken = () => { if (pendingMark) gCtx.markStale.push({ marker: pendingMark.at, line: `${rel}:${n + 1}, another marker` }); };
+    if (isCommentOnly(masked[n])) { if (markHere) { overtaken(); pendingMark = markHere; } }
+    else if (masked[n].code.trim() !== '') { if (markHere) overtaken(); mark = markHere || pendingMark; pendingMark = null; }
+    // a blank line between a marker and the code below leaves it marking nothing
+    else if (pendingMark) { gCtx.markStale.push({ marker: pendingMark.at, line: `${rel}:${n + 1}, a blank line` }); pendingMark = null; }
+    let judged = false;               // does this line make a settling call [A] or [G] judges?
+    try {
     if (!masked[n].continuesLiteral) {             // header detection only outside a heredoc
       const b = methodBoundary(raw);
       if (b) {
@@ -557,16 +603,25 @@ function checkFile(file, violations, gCtx, warnings) {
       }
     }
     const at = `${rel}:${n + 1}`;
+    // [C]'s public setter call (the line's first; [A] reads every one, below)
     let pub = code.match(PUB_CALL);
     // R2: ignore the HTML5-canvas moveTo (context.moveTo / @moveTo in the canvas extensions), not Widget.moveTo.
     if (pub && pub[1] === 'moveTo' && (CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code))) pub = null;
-    const txt = code.match(TEXT_SETTER_CALL);
     const recalc = RECALC_CALL.test(code);
     if (recalc && RECALC_ORACLES.has(tier)) gCtx.excused.recalcOracles.add(tier);
     const invalidate = INVALIDATE_CALL.test(code);
     if (isLowLevel(tier)) {
-      if (pub) violations.push(rules.fired('A_PUBLIC_SETTER', `[A] low-level ${method}() calls public setter .${pub[1]}()  — ${at}`));
-      if (txt) violations.push(rules.fired('A_TEXT_SETTER', `[A] low-level ${method}() calls self-settling text setter .${txt[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter  — ${at}`));
+      // the line's settling calls, [A]'s setters and [G]'s wrappers and @add, one finding per CALL, collected so its
+      // marker (when it carries a reason) excuses them together and counts each; A_RECALC is never excused
+      const found = [];
+      // the NB a marker with no reason adds to each finding it fails to excuse
+      const nb = mark && !mark.reasoned ? ` NB the # ${SETTLING_CALL_MARKER} at ${mark.at} gives no reason, so it excuses nothing: write why after its colon.` : '';
+      // R2: on a canvas line (a canvas receiver, or a canvas-extension file) a moveTo is the HTML5 context's, not Widget.moveTo
+      const canvasLine = CANVAS_EXT_FILE.test(rel) || CANVAS_MOVETO.test(code);
+      for (const p of everyMatch(code, PUB_CALL)) {
+        if (!(p[1] === 'moveTo' && canvasLine)) found.push(() => rules.fired('A_PUBLIC_SETTER', `[A] low-level ${method}() calls public setter .${p[1]}()${nb}  — ${at}`));
+      }
+      for (const t of everyMatch(code, TEXT_SETTER_CALL)) found.push(() => rules.fired('A_TEXT_SETTER', `[A] low-level ${method}() calls self-settling text setter .${t[1]}() — set text from a layout pass via the non-settling _setTextNoSettle core (or a raw setter), never the single-settling public setter${nb}  — ${at}`));
       // recalc is OK from a whitelisted flush driver (the settle tiers are now _-prefixed, hence
       // low-level by name, but they ARE the flush — rule [B] below governs who may call recalc).
       if (recalc && !RECALC_WHITELIST.has(tier)) violations.push(rules.fired('A_RECALC', `[A] low-level ${method}() calls recalculateLayouts()  — ${at}`));
@@ -574,8 +629,7 @@ function checkFile(file, violations, gCtx, warnings) {
       // must reach the _<name>NoSettle core, never the public wrapper (it re-enters the single-mutation
       // flush). The settle tiers themselves (RECALC_WHITELIST) ARE the flush, so they are not [G] subjects.
       if (!RECALC_WHITELIST.has(tier) && !methodNoSettleMarked) {
-        const wrap = gCtx.WRAPPER_CALL && code.match(gCtx.WRAPPER_CALL);
-        if (wrap) {
+        for (const wrap of everyMatch(code, gCtx.WRAPPER_CALL)) {
           const sigil = wrap[1], wname = wrap[2];
           // NAME-QUALIFIED [G] (plan P4.3; regression pair: TransformSpec.setScale — a plain
           // data-holder setter — vs TransformFrameWdgt.setScale — a self-settling wrapper).
@@ -590,15 +644,19 @@ function checkFile(file, violations, gCtx, warnings) {
           } else {
             const plains = gCtx.plainClassesByName.get(wname);
             const alsoPlain = plains && plains.size
-              ? ` NB ${wname} is ALSO a plain (non-settling) method on ${[...plains].join(', ')} — if the receiver is one of those, mark # ${NOSETTLE_MARKER}: receiver is <that class>.`
+              ? ` NB ${wname} is ALSO a plain (non-settling) method on ${[...plains].join(', ')} — if the receiver is one of those, mark the line # ${SETTLING_CALL_MARKER}: the receiver is <that class>, and why.`
               : '';
-            violations.push(rules.fired('G_SETTLING_WRAPPER', `[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper.${alsoPlain}  — ${at}`));
+            found.push(() => rules.fired('G_SETTLING_WRAPPER', `[G] low-level ${method}() calls self-settling wrapper ${sigil === '@' ? '@' : '.'}${wname}() — reach the non-settling core (e.g. _${wname}NoSettle), not the public self-settling wrapper.${alsoPlain}${nb}  — ${at}`));
           }
         }
         // the unambiguous self-add @add (Widget.add) — the one add shape a name scanner can attribute (`.add` member
         // stays excluded as Point#add-ambiguous). Low-level code must use @_addNoSettle, not the self-settling add().
-        if (SELF_ADD_CALL.test(code)) violations.push(rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add()  — ${at}`));
+        for (const _add of everyMatch(code, SELF_ADD_CALL)) found.push(() => rules.fired('G_SELF_ADD', `[G] low-level ${method}() calls @add (self == Widget.add) — reach @_addNoSettle, not the self-settling add()${nb}  — ${at}`));
       }
+      judged = found.length > 0;
+      // excused, and counted: every call the marker excuses is one against the ceiling
+      if (judged && mark && mark.reasoned) for (const _call of found) gCtx.markSanctioned.push(at);
+      else for (const fire of found) violations.push(fire());
     }
     if (isImmediateMutator(tier) && invalidate) {
       violations.push(rules.fired('E_MUTATOR_INVALIDATES', `[E] immediate mutator ${method}() calls _invalidateLayout() — a polymorphic apply corner or convenience mover must only MUTATE geometry, never SCHEDULE layout (task #17)  — ${at}`));
@@ -694,7 +752,12 @@ function checkFile(file, violations, gCtx, warnings) {
         violations.push(rules.fired('F_OFF_SETTLE_APPLY', `[F] off-settle synchronous layout apply .${apply[1]}() in ${method}() — DEFER it (_invalidateLayout), or if it is at a settle point / a documented determinism-exempt family mark the method  # ${SANCTION_MARKER}: <why>  — ${at}`));
       }
     }
+    } finally {
+      // a marker this line answered to, on a line that makes no settling call [A] or [G] judges, excuses nothing
+      if (mark && !judged) gCtx.markStale.push({ marker: mark.at, line: `${rel}:${n + 1}` });
+    }
   }
+  if (pendingMark) gCtx.markStale.push({ marker: pendingMark.at, line: 'the end of the file' });
 }
 
 // [T] the DOUBLE-SETTLE rule (public/private call-separation plan §4.1 — the generalization of [C]):
@@ -800,6 +863,8 @@ function main() {
     ? new RegExp('([@.])\\s*(' + wrapperNames.join('|') + ')\\b') : null;
   // the [O]/[Q] caller names that excused a call this run, and the [B] oracles that drove a flush
   gCtx.excused = { deferredSettle: new Set(), connector: new Set(), valve: false, recalcOracles: new Set() };
+  gCtx.markSanctioned = [];   // the settling calls a reasoned # settling-call-sanctioned excused, file:line
+  gCtx.markStale = [];        // the markers that excused nothing: { marker, line }
   const violations = [];
   const warnings = [];
   for (const f of files) {
@@ -823,6 +888,14 @@ function main() {
       if (verbs.length) macroCount++;
       for (const v of verbs) checkMacroText(f, v.text, (n) => v.line + n, violations);
     } catch (e) { console.error(`check-layering: operational error in ${f}:`, e.message); process.exit(2); }
+  }
+  // [A][G]'s marker, held both ways: the calls it excuses are a budget, and a marker excusing nothing is stale
+  const markCount = gCtx.markSanctioned.length;
+  if (markCount > SETTLING_CALL_MARKER_CEILING) {
+    violations.push(rules.fired('AG_MARKER_COUNT_ABOVE_CEILING', `[A][G] ${markCount} settling calls excused by # ${SETTLING_CALL_MARKER} (ceiling ${SETTLING_CALL_MARKER_CEILING}) — a low-level method newly makes a self-settling call on its reason's word: ${gCtx.markSanctioned.join(', ')}`));
+  }
+  for (const s of gCtx.markStale) {
+    violations.push(rules.fired('AG_STALE_MARKER', `[A][G] STALE_ALLOWLIST_ENTRY # ${SETTLING_CALL_MARKER} at ${s.marker} — the line it marks (${s.line}) makes no settling call [A] or [G] judges (a public setter, a self-settling wrapper or @add, from a low-level method), so it excuses nothing today and would excuse whatever call later lands there: delete it (a reason worth keeping stays a plain comment)`));
   }
   // the exemption tables, each held to what it exempts this run (a stale entry is a violation, never a note)
   for (const n of gCtx.staleWrapperExclusions) {
@@ -866,7 +939,8 @@ function main() {
     if (advised.length) { console.error(''); for (const l of adviceLines(rules.gate, advised)) console.error(l); }
     process.exit(1);
   }
-  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R/T; ${wrapperNames.length} settling wrappers guarded, name-qualified)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
+  if (markCount < SETTLING_CALL_MARKER_CEILING) console.log(`layering gate: NOTE — ${markCount} settling call(s) excused by # ${SETTLING_CALL_MARKER} < ceiling ${SETTLING_CALL_MARKER_CEILING}: lower SETTLING_CALL_MARKER_CEILING to lock the gain in`);
+  console.log(`layering gate: ${files.length} source(s) + ${macroCount} macro(s) — 0 violations (A/B/C/D/E/F/G/I/J/K/L/M/N/O/P/Q/R/T; ${wrapperNames.length} settling wrappers guarded, name-qualified; ${markCount}/${SETTLING_CALL_MARKER_CEILING} settling call(s) sanctioned)${warnings.length ? `; ${warnings.length} [H] warning(s)` : ''}`);
   process.exit(0);
 }
 

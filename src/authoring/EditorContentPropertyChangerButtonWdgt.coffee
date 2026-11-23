@@ -17,7 +17,7 @@
 #   - My SUBJECT is what I would act on now (_subjectOfferingMyVerb): the style
 #     the focus hands over, when it offers my verb. A tool with a second kind of
 #     subject resolves it there too (AlignButtonWdgt).
-#   - A PRESS on me (activated) acts on that subject (actOn: by default my verb,
+#   - A PRESS on me (activated) acts on that subject (_actOn: by default my verb,
 #     called on it), and with no subject it is REFUSED, here and nowhere else: a
 #     tap on the cell I stand in and a toolbar overflow row standing for me
 #     (OverflowChevronButtonWdgt.triggerToolFromMenu) both reach this activated.
@@ -58,7 +58,7 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   actionableAsThumbnail: true
 
   # MY VERB: the name of the one method -- or field -- a subject must offer for me to act on it: the
-  # method my press calls on it (the default act, actOn), or what my own act reads. Named once, here,
+  # method my press calls on it (the default act, _actOn), or what my own act reads. Named once, here,
   # by each subclass. (subclass responsibility)
   verb: undefined
 
@@ -131,14 +131,17 @@ class EditorContentPropertyChangerButtonWdgt extends IconWdgt
   # subject, and with none I do nothing, whatever delivered the press.
   activated: ->
     subject = @_subjectOfferingMyVerb()
-    @actOn subject if subject?
+    @_actOn subject if subject?
     return
 
   # MY ACT on `subject`, which offers my verb (activated found it): by default, my verb called on it; a
-  # subclass whose act is more than that names its own. Reached only through activated, and public
-  # all the same: an act calls the subject's self-settling setters (toggleWeight, setFontSize, ...),
-  # which the _-prefixed low-level tier may not (check-layering [A]).
-  actOn: (subject) ->
+  # subclass whose act is more than that names its own (a size stepped along a ladder, an alignment
+  # chosen by the subject's kind, a menu opened instead: ChangeFontButtonWdgt). Reached only through
+  # activated, so at event time and outside any pass: an act that sets a property of the subject calls
+  # the subject's own public setter (toggleWeight, setFontSize, ...), whose settle is the point -- a
+  # text's settles the text, a SheetCellStyle's re-styles its cell through its sheet's settle -- and an
+  # override that names such a call marks it there.
+  _actOn: (subject) ->
     subject[@verb]()
     return
 

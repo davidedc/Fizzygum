@@ -15,6 +15,9 @@ class SliderInCellButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new SliderNodeIconAppearance @
 
-  actOn: (subject) ->
+  _actOn: (subject) ->
+    # settling-call-sanctioned: a press at event time, outside any pass (activated, my one caller), and the
+    #   receiver is a SheetCellStyle (only a sheet hands over a subject offering my verb), whose plain
+    #   enterSource hands the source to its sheet, which settles it
     subject.enterSource @sliderSource
     return

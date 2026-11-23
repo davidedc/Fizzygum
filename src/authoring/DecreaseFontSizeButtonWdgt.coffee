@@ -10,20 +10,25 @@ class DecreaseFontSizeButtonWdgt extends EditorContentPropertyChangerButtonWdgt
 
   createAppearance: -> new DecreaseFontSizeIconAppearance @
 
-  actOn: (subject) ->
-    if subject.originallySetFontSize > 90
-      subject.setFontSize subject.originallySetFontSize - 10
-    else if subject.originallySetFontSize > 80
-      subject.setFontSize 80
-    else if subject.originallySetFontSize > 72
-      subject.setFontSize 72
-    else if subject.originallySetFontSize > 48
-      subject.setFontSize 48
-    else if subject.originallySetFontSize > 36
-      subject.setFontSize 36
-    else if subject.originallySetFontSize > 28
-      subject.setFontSize 28
-    else if subject.originallySetFontSize > 12
-      subject.setFontSize subject.originallySetFontSize - 2
+  # the next size down the ladder from the stated one, then that size set
+  _actOn: (subject) ->
+    size = subject.originallySetFontSize
+    if size > 90
+      nextSize = size - 10
+    else if size > 80
+      nextSize = 80
+    else if size > 72
+      nextSize = 72
+    else if size > 48
+      nextSize = 48
+    else if size > 36
+      nextSize = 36
+    else if size > 28
+      nextSize = 28
+    else if size > 12
+      nextSize = size - 2
     else
-      subject.setFontSize subject.originallySetFontSize - 1
+      nextSize = size - 1
+    # settling-call-sanctioned: a press at event time, outside any pass (activated, my one caller): my
+    #   subject's own public size setter settles it, a text's the text, a SheetCellStyle's its cell through its sheet
+    subject.setFontSize nextSize
