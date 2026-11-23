@@ -253,6 +253,10 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 A toolbar band is 46 px deep, a strip's thickness (one row of 44 px cells and two lines), and a tool's picture stands in a 32 px mark box inside its cell; the items below were left open.
 - [ ] **The toolbars' picture faces scale a fixed drawing** — the creator, paint and Template faces are rough at the 32 px mark box on the software backend; redraw them size-aware, one at a time (owner-deferred 2026-11-23) — every Maker's toolbar, low.
 
+### `archive/toolbar-template-one-size-plan.md` — one way out of a tool cell, at one size (✅ CLOSED 2026-11-23: Phases 0–6 landed, see its ledger; living truth `architecture/toolbars.md` §1, §6, §8)
+A click on a toolbar Template's cell and a drag out of it give one copy, at the size the tool came into the cell at (its class's `toolExtent`, the owner's Candidate B); the item below was left open.
+- [ ] **A sample's map pin is smaller than one taken from a toolbar** — the Sample Dashboard's five pins and the Sample Slide's one are built at the 50 × 40 birth box (picture 28 × 40), a toolbar's pin comes out 35 × 50 — reachable, low.
+
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)

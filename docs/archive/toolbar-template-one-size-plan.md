@@ -855,6 +855,21 @@ the size off the widget's old field, so it is of no use once Phase 2 has landed)
 
 ---
 
+## BACKLOG detail
+
+### A sample's map pin is smaller than one taken from a toolbar
+
+`SampleDashboardApp` (five pins) and `SampleSlideApp` (one) build their pins with `new MapPinIconWdgt` and place
+them by hand. A pin is born at `Widget`'s 50 × 40, and its picture is fitted by ratio inside that box
+(`IconAppearance.calculateRectangleOfIcon`): 28 × 40. A map pin taken out of the Slides or Dashboards toolbar, by a
+click or a drag, comes out at its `toolExtent`, 35 × 50 (the owner's Candidate B, 2026-11-23), and its picture
+fills it. So in either sample a pin a person adds is a quarter larger than the sample's own. Reached by opening a
+sample and taking a pin from its docked toolbar; cosmetic.
+
+The answer is the samples': build their pins at the tool's size (each hand-placed position was chosen for the
+50-wide box, so each wants a look, and the samples' SystemTests move), or keep a sample's pins smaller on purpose.
+Not the answer (§8): making 35 × 50 the class's birth size, which changes every `new MapPinIconWdgt`.
+
 ## BACKLOG ledger
 
 - **Re-homed at authoring (2026-11-23)** from the section of `archive/toolbar-band-depth-plan.md`, where it
@@ -866,14 +881,24 @@ the size off the widget's old field, so it is of no use once Phase 2 has landed)
 - Noted, not queued: a lidless tool in a cell (a text or sheet property button, a paint tool) is marked
   `isTemplate`, yet no drag ever grabs it (§1.5); after this plan the mark on a LIDDED tool is read by the
   hand only if its cell has lost its lid.
-- Noted, not queued: `SampleDashboardApp` and `SampleSlideApp` build their map pins directly, at the 50 × 40
-  birth box, so a sample's pin and a toolbar's pin may differ in box (never in picture) once Phase 3 lands.
+- Noted at authoring, **FILED at close (2026-11-23)**: `SampleDashboardApp` and `SampleSlideApp` build their map
+  pins directly, at the 50 × 40 birth box. The note expected them to differ from a toolbar's pin in box only;
+  with the owner's Candidate B (35 × 50) the picture differs too (28 × 40 against 35 × 50), so a person adding a
+  pin to a sample sees it. Open in `BACKLOG.md`: "A sample's map pin is smaller than one taken from a toolbar".
 - **CLOSED 2026-11-23** by this plan (Phases 1-5, see the execution ledger below). Its index line as it stood:
   "**A Template comes out of its tool cell at two sizes** — a click places 32 × 32, a drag 50 × 40 (the birth
   default; a speech bubble 105 × 80), and a copy put back into a toolbar forgets its new size — Slides and
   Dashboards toolbars, low." A click and a drag now take the cell's one copy, at the size the tool came into
   the cell at (the class's `toolExtent` for a toolbar's own roster, the owner's Candidate B), and a copy put back
   into a toolbar comes out at the size it went in at.
+- Noted, not queued: the finger fix books the NEWEST pop-up a hold's menu request opened
+  (`ActivePointerWdgt._pressHoldMenu`), so a request that opened two would leave one standing after the lift; no
+  widget's `contextMenuRequested` is known to. And a hold that opened no menu runs no sweep at its lift any more:
+  pop-ups marked for closure close at the release's sweep instead. Gauntlet green with both.
+- Noted, not queued: `SystemTest_macroTemplateDraggedOutOfToolbarInflates` keeps its toolbar at x 40, where the
+  130-wide speech bubble lifts about 5 px clear of the desktop's left edge. A larger bubble would be fitted
+  inside the desktop at the lift, where the mouse and the finger disagree; the test asserts the copy's place, so
+  it would fail loudly, never pass on a wrong picture.
 
 ## Execution ledger (2026-11-23, one session) — deviations from this plan, and what each answered
 
