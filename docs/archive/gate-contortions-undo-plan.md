@@ -1,5 +1,16 @@
 # Gate contortions — the gates say what a finding means, and the shapes bent round them are undone
 
+**COMPLETE 2026-11-23.** Executed by its unattended loop, 2026-11-21 to 23, in orchestration mode: U1 to U19 and the
+owner-added U16b, U18b and U18c all CLOSED, each code unit by a green `fg gauntlet`; U14's three parked members took
+their tier in U18b on the owner's ruling, so nothing is left parked. The last code unit's heads were Fizzygum
+`86e5fa81` and Fizzygum-tests `9ab8187b9` (U18c); each unit's Landed paragraph is its record. What it built is
+described in the present tense in `docs/architecture/lint-and-static-checks.md` §3b (what a finding means, the class
+of every gate) and §5 (the markers, `settling-call-sanctioned` among them), `layering-naming-convention.md` §2.5 and
+§4, and `buildSystem/lib/gate-advice.js`. The items its units filed stay open in `docs/BACKLOG.md` under this plan's
+heading, detail in `## BACKLOG detail` below. The five audit reports this plan cites under
+`Fizzygum-tests/.scratch/gate-contortions-audit/` are copied, unchanged, into
+`archive/gate-contortions-audit-2026-11-21/`. The text below is the plan as executed.
+
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 AUTHORED 2026-11-21 against Fizzygum master `b6b2f60f` and Fizzygum-tests master `e06b7c26a` (454 SystemTests, build
 FRESH, last gauntlet 20/20). Line numbers drift: the member name and the quoted code are authoritative, so grep them
@@ -34,7 +45,7 @@ live with and left standing. What this plan deliberately leaves is named in §7,
 | U18 | A capture that does not verify is UNSTABLE | CLOSED 2026-11-22 (§U18) |
 | U18b | [A] gets a counted per-line marker; U14's three parked members take their tier (owner-ruled 2026-11-22) | CLOSED 2026-11-23 (§U18b) |
 | U18c | [G]'s marker and [A]'s are one regime: one name, line-scoped, reason-required, stale-checked, counted (owner-added 2026-11-22) | CLOSED 2026-11-23 (§U18c) |
-| U19 | Close | not started |
+| U19 | Close | CLOSED 2026-11-23 (§U19) |
 
 ## 0. Orientation
 
@@ -1219,6 +1230,22 @@ Docs: `lint-and-static-checks.md` §3–§5, §7, §8 (the how-to now teaches th
 4. Memory: `gate-contortions-audit-2026-11-21.md` and its `MEMORY.md` line, in place.
 5. The final digest in the LEDGER.
 
+**Landed 2026-11-23 (items 1 to 3; items 4 and 5 live outside the repo).** Each item was re-read against the tree
+first. Filed in `docs/BACKLOG.md`, one line each, detail in `## BACKLOG detail` below: the three forks on "a test is
+playing", one line each (each its own redesign, with its own audit section); the type-named predicates with many
+callers; the gauntlet's serial retry with `lib/shards.js`' probe retry; `recapture.js`'s completeness gate (U18's
+filed item: its single-process re-sample, and a test it recaptured that run listed as NEEDS RECAPTURE); the declared
+`_stopEditingNoSettle`; the doubled waits; the move `NON_INTEGER_GEOMETRY` cannot see; the four dead soaked sends;
+the dropped `disabledInkForMyParts`; the static audit's four "unsure" shapes — twelve lines. Corrected at research:
+`recapture.js`' CAPTURE retry, which item 1 listed among the runners' retries on any failure, was narrowed by U18 to a
+run that died before its verdict, so it is not filed; the doubled waits are ten today, not 13 (the audit's own table
+counts eleven, and one of them, `SystemTest_macroDocumentKeepsItsMargin` at its first wheel, is a wait, a `park()`
+and a wait); `isFrame` is asked on 16 lines. Nothing a unit parked is left: U14's three took their tier in U18b. The
+BACKLOG item "No audit has looked for shapes chosen only to quiet a non-ratchet gate" is closed by the three audits of
+2026-11-21 and this plan (its line and its detail are in `## BACKLOG ledger`), and the BACKLOG section that held it
+("Gate audit 2026-11-16"), left with no open item, leaves the index. The plan is archived, its BACKLOG heading points
+here, and the five audit reports are in `archive/gate-contortions-audit-2026-11-21/`.
+
 ## 5. Central risks
 
 - **A fix shaped by a count, again.** The reflex this plan exists to end can run inside it. A research or
@@ -1261,9 +1288,10 @@ Docs: `lint-and-static-checks.md` §3–§5, §7, §8 (the how-to now teaches th
 
 ## 8. References
 
-- The owner's rule and the first audit: this plan's `## BACKLOG ledger` ("A firing gate…", moved there from
-  `docs/archive/backlog-open-items-detail.md`) and that archive file ("No audit has looked…"); memory `ratchets-must-not-dictate-design.md`.
-- The audits of 2026-11-21: `Fizzygum-tests/.scratch/gate-contortions-audit/` (five files; `INDEX.md` first); memory
+- The owner's rule and the first audit: this plan's `## BACKLOG ledger` ("A firing gate…" and "No audit has
+  looked…", both moved there from `docs/archive/backlog-open-items-detail.md`); memory `ratchets-must-not-dictate-design.md`.
+- The audits of 2026-11-21: `archive/gate-contortions-audit-2026-11-21/` (five files; `INDEX.md` first; copied from
+  `Fizzygum-tests/.scratch/gate-contortions-audit/`); memory
   `gate-contortions-audit-2026-11-21.md`.
 - Policy and markers: `docs/architecture/lint-and-static-checks.md` §3b, §5; `docs/architecture/layering-naming-convention.md`;
   `docs/architecture/widget-authoring-guidelines.md` §14, §16.
@@ -1299,8 +1327,9 @@ See `Fizzygum-tests/.scratch/gate-contortions-loop/BRIEF.md`, "The loop prompt".
 - [x] U18: `capture-macro-test-references.js` recaptures a reference that does not verify, up to twice, then reports it verified — medium. — CLOSED 2026-11-22 (gate-contortions loop, U18): UNSTABLE is its own outcome; only a run that died before its verdict is retried.
 - [x] U18b: layering rule [A] gets a counted, line-scoped, reason-required marker (owner-ruled (a) with guards, confirmed after an independent review) so U14's three parked members and `CaretWdgt._deleteSelectionOrCharacter` take the `_` tier (plan §U18b) — small. — CLOSED 2026-11-23 (gate-contortions loop, U18b): `settling-call-sanctioned`, two guards, seven marked calls.
 - [x] U18c: [G]'s `nosettle-sanctioned` (bare token, excuses its line downward, ~15 sites) and [A]'s new marker become ONE regime — one name, line-scoped, reason-required, stale-checked, one counted ceiling (owner-added; plan §U18c) — small. — CLOSED 2026-11-23 (gate-contortions loop, U18c): one regime; the self-calls take their own core.
+- [x] **No audit has looked for shapes chosen only to quiet a non-ratchet gate** — search the session transcripts and git for each gate's quiet-fix spelling (an `if X?` guard, a stub, a deletion, a tier rename, a new exemption) and re-judge each find on its merits — medium. — CLOSED 2026-11-23 (gate-contortions loop, U19): the three audits of 2026-11-21 and this plan are it.
 
-Its detail, moved verbatim from `docs/archive/backlog-open-items-detail.md`:
+The detail of the first and the last of these, each moved verbatim from `docs/archive/backlog-open-items-detail.md`:
 
 ### A firing gate says how to go quiet, never when the quiet fix is wrong
 
@@ -1390,6 +1419,244 @@ them); what none of their messages says is WHEN a sanction or a design change is
 The same shared advice text carries one row per gate. Its self-test asserts that each gate's failure line prints
 that gate's row.
 
+### No audit has looked for shapes chosen only to quiet a non-ratchet gate
+
+**The owner's request (2026-11-16):** search the sessions and logs for places where a suboptimal shape was used just to
+quiet a gate, complying with it blindly.
+
+**What exists.** The ratchet half of the item above was audited the same day, over 433 session transcripts (about
+2026-10-16 to 11-16; July to mid-October is visible only in git), git history and memory. The non-ratchet gates in that
+item's table were not audited.
+
+**To do.**
+- Per gate in that table, search for its quiet-fix spelling, in three places:
+  - the session transcripts, `~/.claude/projects/-Users-davidedellacasa-code-Fizzygum-all/*.jsonl` and the subagent
+    transcripts beside them (grep windows, never a whole file);
+  - the git history of both repos (`git log -p -S` / `-G` on the spellings);
+  - the memory notes.
+- Spellings to search for:
+  - an `if <Class>?` guard added next to a part-edge failure;
+  - a new method whose body is `undefined`, `false` or empty, added next to an unresolved-send failure;
+  - a method deleted next to a dead-method failure;
+  - a `_` rename next to a [S]/[U] failure;
+  - a new sanction marker or exemption entry;
+  - a `pointerKinds: ["mouse"]` declaration;
+  - a `pressMustLandOn` added next to an `AIM MISSED`;
+  - a new `_worldStateAuditExemptions` entry.
+- For each find, read enough of the session to judge what was done: the right shape, a defensible sanction, or a
+  contortion. Report a table (date, session or commit, gate, what was done, verdict, evidence excerpt).
+- File each contortion that still stands in the tree as its own BACKLOG item, re-judged on its merits.
+- Reach: medium, since a contortion that stands is a design defect nobody chose.
+
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
-(empty until a unit files an item)
+Each item below was filed by U19 (§U19 item 1) from the audits of 2026-11-21, now in
+`archive/gate-contortions-audit-2026-11-21/` (`runtime-gates-audit.md` S1–S13 and §§1–11, `static-gates-audit.md`
+C1–C11 and §§2–4, `ratchet-audit.md` §2), and re-read against the tree on 2026-11-23 (Fizzygum `86e5fa81`,
+Fizzygum-tests `9ab8187b9`). Line numbers are that day's; the member names are authoritative.
+
+### While a test plays, a drag-scroll release does not glide
+
+Left out of this plan by the owner (R7). Audit: runtime S7.
+- **Where**: `src/basic-widgets/ViewportWdgt.coffee` (the stroke step of `takeStrokeScrollFrom`, about 1298–1311):
+  "Both that delta and the glide length are FRAME-CADENCE driven (how many queued events played back in the final
+  frame), so while a test plays the glide is SUPPRESSED outright" / `glideSuppressed = aTestIsPlaying()`.
+- **Gate**: screenshot determinism; commit `7b7bf24b` (2026-06-11), "Make scroll-by-drag deterministic: suppress
+  momentum + edge auto-scroll under pacing control".
+- **Why it is wrong**: the project's contract (`Fizzygum/CLAUDE.md`, Determinism) is that render, layout and input are
+  a function of the event stream, never of frame counts. Here the product is a function of frame cadence, and the
+  suppression hides that from the suite and leaves the glide with no test: `isScrollGliding` answering false passes
+  every gate, and the macro pump's glide gate never closes.
+- **Right fix**: drive the glide from event time (velocity from the stroke's own timestamps, decay by elapsed event
+  time), delete the flag, and let the pump's `isScrollGliding` gate hold a macro until the glide ends.
+- **Blast**: medium. **Pixels**: every shot taken after a drag-scroll release shows the content where the glide
+  leaves it — a recapture, the finger axis most of all (a finger delivers every wheel as swipes).
+
+### While a test plays, pressed moves are delivered only at drained events
+
+Left out of this plan by the owner (R7). Audit: runtime S8.
+- **Where**: `src/ActivePointerWdgt.coffee` (about 1963–1974): "a cycle landing between the event that ARMS a touch
+  stroke and the next queued move turns one withheld move into a delivered one, and a paint tool lays a dab that
+  another run does not (measured: one 4x4 dab, 1 run in 5). So while a test plays, pressed moves are delivered only at
+  drained events" / `pressedMovesAreEventOnly = (not atDrainedEvent) and aTestIsPlaying()`.
+- **Gate**: screenshot determinism (`83305178`, 2026-08-27).
+- **Why it is wrong**: the comment states a product nondeterminism (a touch paint stroke lays an extra dab or not, by
+  cycle timing) and removes it for tests only. The same comment says "every consumer is idempotent at a standing
+  position", which, if true, means the per-cycle re-dispatch buys the product nothing.
+- **Right fix**: deliver pressed moves at drained events only, always, and delete the flag — after checking what a
+  motionless real press still needs from the per-cycle re-entry (the hold recognizer has its own clock).
+  *Measurement:* make it unconditional under a prelude, run the suite on both pointers; then hand-check a still
+  finger on a paint surface and on a slider.
+- **Blast**: small to medium. **Pixels**: none expected (the suite already runs this way).
+
+### The edge auto-scroll runs on the wall clock, and its test polls up to 20 s
+
+Left out of this plan by the owner (R7). Audit: runtime S6 and §6c.
+- **Where**: `src/basic-widgets/ViewportWdgt.coffee`, `_startAutoScrolling` (about 1347–1376): `startedAt =
+  Date.now()`, then `@_autoScroll pos  unless Date.now() - startedAt < 500`, one `_autoScroll` step per frame; the
+  comment above it: "the screenshotted endpoint is frame-cadence-independent even though the path there isn't". The
+  test: `SystemTest_macroListWdgtAutoScrollsNearDraggedEdge`'s commands (about 40–75), four times
+  `until (list.getScrollX() is scrollLimitX()) or heldOn >= 20000` / `yield 100` — the suite's only poll loop.
+- **Gate**: a parallel-only suite failure, 2026-10-28/29, first logged as "pre-existing load-sensitive flakes", then
+  answered "test bug… wait on the actual condition".
+- **Why it is wrong**: input code is never a function "of wall-clock timers (`setTimeout`/`Date.now`), frame/cycle
+  counts" (`Fizzygum/CLAUDE.md`, Determinism). Here the product is both, and the test waits it out.
+- **Right fix**: start and advance the auto-scroll on the event/cycle clock (as `DragChargingRingWdgt._elapsedForCharge`
+  does), so a hold of a stated length scrolls a stated distance; the test then holds that long and asserts, with no
+  loop.
+- **Blast**: small to medium. **Pixels**: none expected (the shots are taken at the clamp).
+
+### Type-named predicates with many callers stand for type tests
+
+Left out of this plan by the owner (R7; §U13 took the six with one or two callers). Audit: static C7.
+`docs/architecture/widget-authoring-guidelines.md` §14: a type-named predicate (`isX: -> true` on class X) is "only
+cosmetically better" than the type test; in rank order the branch disappears, or a query is named for the
+CAPABILITY, or an honest `instanceof` stays with its reason (the stink raised, dated).
+
+| Predicate (definer) | Callers today | Born | The audit's verdict |
+|---|---|---|---|
+| `isFrame` (`src/FrameWdgt.coffee:1025`) | 16 lines (`FrameWdgt` 6, `Widget` 4, `WorldWdgt` 2, `PopUpRowsViewportWdgt` 2, `FrameContentLayoutSpec`, `CanvasGlassTopWdgt`, `CreatorWdgt`, `ActivePointerWdgt`) | 2026-06-17, as `isWindow` (`4b8ff5d8`) | its comment says "Polymorphic replacement for `instanceof FrameWdgt`", the listed quiet fix; but "is it a frame" is the frame model's own structural question at most sites. Large |
+| `isLayoutAdderOrDroplet` (`src/authoring/LayoutElementAdderOrDropletWdgt.coffee:15`) | 4 | 2026-06-22 (`b92345d9`) | also keeps core from naming a lazy part's class, a real gain; a capability name (a drop slot) would only rename it |
+| the layout specs: `isDivisionElement`, `isFrameContentSpec`, `isStretchElement`, `isCornerInternal`, `isEdgeDock` | about 25 | 2026-07-19 to 08-24 | each names one spec class; they replaced an enum compare, and "which arrangement holds this child" is what the callers ask: not clearly worse than a type test, nor better |
+
+**Blast**: small for each of the six mild ones, large for `isFrame` (honest type tests would raise
+`instanceof-type-test` by 16 or more). **Pixels**: none for a faithful conversion ("any red test after such a swap is
+a faithfulness bug").
+
+### A leg that fails in-wave and passes alone reads OK
+
+Left out of this plan by the owner (R7). Audit: runtime §8, "Retries".
+- **The gauntlet's serial retry** (`buildSystem/fg-commit-point.js`, about 516–537): a leg that fails in its wave is
+  retried once, alone; a pass reads `OK(warn)`, exit 0 — for ANY failure, a test's assertion or pixel mismatch
+  included. By `Fizzygum-tests/DETERMINISM.md` a test that fails under load and passes alone is a finding. What the
+  retry absorbed, each later shown or still suspected to be a real fault: the slider track click (five sightings;
+  fixed, `dff5589d`); `macroDragEmbedReleaseWhileCharging…` (four; a 250 ms real-time wait against a 450 ms event-time
+  dwell, `70a2f3ef`); the capstone leg failing on a screenshot in-wave (2026-11-17; a product bug, `420b4089`); the
+  menu sweep's in-wave `LAYOUT_ERROR` (2026-11-21, `a2015c07`); `macroInternalVsExternalWindowDrop` nesting under load
+  (open in BACKLOG); the vmtruth pin cap (closed since by §U16b); the menu sweep hanging silently in wave A (twice).
+- **`Fizzygum-tests/scripts/lib/shards.js` `probeTests`** (about 61–67): the probe page is retried once on any thrown
+  exception — a launch, a navigation or a lost page — added on 2026-11-07 after one unexplained crash ("passed on
+  three isolated runs, so… looks like a load flake"), never diagnosed. (A page that does not START is already a
+  finding, never retried.) Narrow it to a named launch timeout.
+- **A narrower rule**: keep a retry for the "measured nothing" family (did not start, DISCONNECTED, INVALID, an alarm)
+  and report a test-level failure that passes alone under its own verdict instead of `OK`.
+- Not filed, done: `recapture.js`' capture retry, which the plan's R7 listed with these, retries only a run that died
+  before its verdict since §U18. Its completeness gate's re-sample is the next item.
+
+### `recapture.js`'s completeness gate waves a failing verify through
+
+Filed by U18 (§U18, "Filed for U19"); its re-sample half is R7's retry-on-any-failure. In
+`Fizzygum-tests/scripts/recapture.js`, `completenessGate` and `verdict`:
+- each test that fails the gate's parallel suite run is re-verified single-process, and one that passes there is
+  logged `passes single-process -> infra flake, ignored` and dropped: the run can then end `✅ RECAPTURE COMPLETE`,
+  exit 0, over a test that failed under load — by `DETERMINISM.md`, a finding;
+- a test this run recaptured whose verify then pixel-mismatches is listed under "NEEDS RECAPTURE (screenshot mismatch
+  — a stale/missing ref)", with a re-run command naming it (`--auto` already declines to recapture it again: its
+  `freshPixel` excludes the recaptured set). A reference that does not match the next run of its own test is
+  U18's UNSTABLE at batch level, a nondeterminism finding, never a stale reference.
+- Right shape: the U18 split at batch level — a fail-under-load-pass-alone is reported as its own outcome, never
+  ignored; a recaptured test that mismatches reads UNSTABLE, with both hashes, exit non-zero.
+- Medium: an on-demand tool whose COMPLETE verdict a unit trusts before its commit.
+
+### The editing station ends an edit inside a settle declaration
+
+Audit: runtime §3, "The capstone's sanction is the declaration window — every site".
+`src/WorldWdgt.coffee`, `_keepEditingOnScreenNoSettle` (about 1984–1986, added 2026-11-18, `bbe570c5`):
+`@_deferredSettleDeclare => @_stopEditingNoSettle()` when the caret's target no longer shows on screen; its reason:
+"the ended edit's caret leaves a layout for this cycle's flush, a deferral DECLARED as such". A declaration marks the
+pushes it covers as intentional, so the end-of-cycle capstone does not count them: it is the capstone's quiet fix by
+construction, and each site owes a reason. The window was written by analogy with the focus station, not after a
+capstone firing. But `_stopEditingNoSettle` destroys the caret, a one-shot structural removal, and the rule written
+at `Widget._deferredSettleDeclare` since 2026-11-21 says "a core that takes a widget out of a holder that ANSWERS its
+removal (_reactToChildRemoved, a notification the holder may answer by building) runs inside a settle, never in a
+declaration window" (`71a656b1`: a pick-up's extraction inside a declaration had run 7 layout flushes inside a removal
+notification and shrunk a tilted Maker 600×400 → 52×129, the capstone seeing nothing). Whether the caret's holder
+answers its removal by building decides it. *Measurement:* the notification-settle gate and a flush counter round the station,
+on the tests that end an edit by hiding or collapsing its text. The owner's ruling wanted: may a per-cycle station
+declare a structural mutation? Small.
+
+### Ten doubled `waitNoInputsOngoing` waits in four tests
+
+Audit: runtime §6c ("thirteen sites" there; its own table lists eleven, and its `SystemTest_macroDocumentKeepsItsMargin`
+`:134–135` is a wait, a `park()` and a wait, not a double). Ten today, two identical consecutive `yield
+"waitNoInputsOngoing"` lines each, all but one written on 2026-11-21:
+
+| Test | Lines today | What the second wait is for |
+|---|---|---|
+| `SystemTest_macroSheetScrollIndicators` | 78–79, 84–85, 124–125, 172–173, 185–186, 190–191 | not stated |
+| `SystemTest_macroSheetScrollPins` | 179–180 | stated just above: "The sheet re-derives at its arrange, inside the layout pass, so the slider re-reads one cycle later: a second wait." |
+| `SystemTest_macroDocumentKeepsItsMargin` | 344–345, 363–364 | not stated (each precedes a read of the decline outline and the lock badge after a carried move) |
+| `SystemTest_macroSimpleDocumentCanAddIndentedParagraph` | 59–60 (a migrated test) | not stated (after a prompt's OK) |
+
+They are deterministic, so they dodge no flake. But the one stated reason records a product property: after a
+resize, the sheet's bars, and any slider wired to its origin, show the OLD scale for one painted frame, because the
+scale is derived in layout, after that cycle's dataflow station; the test waits it out. Either the one-frame lag is
+accepted and written into `docs/architecture/layout.md` (and each unstated double gets its one-line reason), or it is
+a defect. *Measurement:* in `SystemTest_macroSheetScrollPins`, drop the wait at 180 and read `scaleOf rowSlider`; then
+take a shot there and compare it with one a cycle later. Small.
+
+### `NON_INTEGER_GEOMETRY` cannot see a clipping widget's move
+
+Audit: runtime §4. `src/basic-widgets/ClippingWdgt.coffee`, `_applyMoveBy` (the "fast whole-subtree translate for
+MOVING a clipping panel"): it rewrites `@bounds` and each child's (`child.__commitMoveBy delta`) and never calls
+`_assertBoundsWellFormed`, where the base path, `Widget._applyMoveByBase`, asserts at the move's root. So the guard
+cannot see a fractional or non-finite MOVE of any clipping class — every window among them. The mixin-removal loop's
+review recorded it as a ledger line only ("the NON_INTEGER/NON_FINITE guard is blind to moves of the 62 clipping
+classes; pre-existing … integer-pixel doc :67–77 claims every leaf checks — worth the owner's look",
+`Fizzygum-tests/.scratch/mixin-removal-loop/LEDGER.md:100–102`), and `docs/architecture/integer-pixel-placement-and-sizing.md`
+still says the guard is "called from every bounds-commit leaf". Not a contortion: a gate that reports nothing where
+it cannot look. Medium (a gate whose reach is less than its doc claims).
+
+### Four soaked sends have no implementor
+
+Audit: static §4. A soaked send is invisible to `check-unresolved-sends` (its call pattern is `name(`, and `name?(`
+does not match), so a method can be deleted and its soaked caller stays, silently doing nothing. Four stand, with no
+callable definition in `src` or the harness:
+- `src/SwitchButtonWdgt.coffee:145` `@parent?.radioButtonWasSwitched? @` — the last implementor went in `97a7a647`
+  (2026-08-26), whose message says it "survives as the capability its other consumers use"; there are none. With it,
+  `src/ToggleButtonWdgt.coffee:14–15` tests two parent fields (`wantsButtonsToBehaveLikeRadioButtons`,
+  `allowsRadioButtonsToBeAllDisabled`) nothing sets.
+- `src/basic-widgets/RectangularAppearance.coffee:84` `@drawAdditionalPartsOnBaseShape? …` — the last implementor was
+  removed in `e7c18775` (2026-10-21).
+- `src/events-input/KeyupInputEvent.coffee:10` `processKeyUp?` — documented in place as a no-op loop.
+- `src/dataflow/DataflowEngine.coffee:640` `node.dataflowApply?(newVal)` — documented as a reserved hook.
+None was added to quiet the gate (each soak predates its implementor's removal): dead code a deletion left behind.
+Delete the dead calls (or name the reach of a reserved hook), and decide whether the gate should read a soak whose
+name nothing defines. Small.
+
+### A menu row's parts each ask its disabled state
+
+Audit: ratchet §2, row 9 (2026-11-18, `cb8997b3`). `src/basic-widgets/menu-system/InertIconHolderWdgt.coffee:66` and
+`MenuRowIndicatorWdgt.coffee:39` each read `WorldWdgt.theme.menuRowDisabledText  if @parent?.isDisabled?()`, and
+`MenuItemWdgt.coffee:249` names the same role a third time. The first cut had the row hand its parts their ink through
+one member, `MenuItemWdgt.disabledInkForMyParts`; it went because it made `isDisabled` self-only and the [U] query
+count read 105 against 104. The result is two one-liners and was called "research D's shape", which is true; but the
+gate's other answer was the honest one here: `isDisabled` is read by tests as public API
+(`src/macros/MACRO-PATTERNS.md`), so an allowlist line with that reason would have kept the helper (and since U1 a
+[U] query raise with a dated reason is a legitimate answer too). Re-judge on the merits. Small.
+
+### Four shapes the static audit could not judge
+
+Audit: static §1, "Unsure" (a gate motive verified from a session, the shape not clearly worse). Each with what would
+settle it; the audit's two others there (`Serializer._colorComponentsProblem`'s index coupling,
+`_clipThroughForChild`'s tier) it judged minor or honest, and are not filed.
+- **`FooterBandLayout._arrange`** (`src/FooterBandLayout.coffee:75`; called from `BinWdgt`, `CodeAreaWdgt`,
+  `InspectorWdgt`). [F] fired on `@arrange`; the agent recommended the marker, the session renamed it instead
+  (2026-10-25). Its sibling engine, `StackLayoutEngine.arrange`, is public with `# layout-apply-sanctioned: this IS the
+  arrange`. Two engines of one role, two tiers. Settles it: pick one spelling for both.
+- **The content-property tools' verb named as a string** (`src/authoring/EditorContentPropertyChangerButtonWdgt.coffee`
+  `subject?[@verb]?` and `subject[@verb]()`; the font-size pair's `verb: "originallySetFontSize"` is a FIELD name). A
+  session of 2026-11-17: "The brief's `_actOn` / per-subclass `_offersMyVerb` shape is illegal under check-layering rule
+  [A], so I used the nearest legal shape". The string dispatch is seen by neither [A] nor `check-unresolved-sends`, and
+  the font-size pair's "verb" is a field probe. Settles it: would the brief's shape be chosen now that [A] has its
+  marker (§U18b), and now that the family's act hook is `_actOn`?
+- **The delete chords select, then delete** (`src/basic-widgets/CaretWdgt.coffee`, `deleteToWordStart` and its three
+  siblings: `@target.selectBetween …` then `@deleteLeft()` / `@deleteRight()`). A session of 2026-11-19: "no shared
+  delete core — a new self-only public core would grow the [U] allowlist (not granted) and a private one breaks
+  [A]". Since §U18b the span-taking `_deleteSelectionOrCharacter` exists with its marked call. Settles it:
+  Alt+Backspace, then undo — is the restored word left selected?
+- **`NativeValueKinds.rebuildsItself` lost its widget exclusion** (`src/serialization/NativeValueKinds.coffee:37–38`;
+  `Fizzygum-tests/.scratch/backlog-loop-2026-11-10/LEDGER.md:468–470`: "it needed an `instanceof`, which the
+  instanceof stink failed a build on"). Settles it: should a widget that defines `rebuildDerivedValue` be dropped from
+  a save?
+Small each.

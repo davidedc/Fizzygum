@@ -6,35 +6,6 @@
 
 ## BACKLOG detail (open items, moved from docs/BACKLOG.md)
 
-### No audit has looked for shapes chosen only to quiet a non-ratchet gate
-
-**The owner's request (2026-11-16):** search the sessions and logs for places where a suboptimal shape was used just to
-quiet a gate, complying with it blindly.
-
-**What exists.** The ratchet half of the item above was audited the same day, over 433 session transcripts (about
-2026-10-16 to 11-16; July to mid-October is visible only in git), git history and memory. The non-ratchet gates in that
-item's table were not audited.
-
-**To do.**
-- Per gate in that table, search for its quiet-fix spelling, in three places:
-  - the session transcripts, `~/.claude/projects/-Users-davidedellacasa-code-Fizzygum-all/*.jsonl` and the subagent
-    transcripts beside them (grep windows, never a whole file);
-  - the git history of both repos (`git log -p -S` / `-G` on the spellings);
-  - the memory notes.
-- Spellings to search for:
-  - an `if <Class>?` guard added next to a part-edge failure;
-  - a new method whose body is `undefined`, `false` or empty, added next to an unresolved-send failure;
-  - a method deleted next to a dead-method failure;
-  - a `_` rename next to a [S]/[U] failure;
-  - a new sanction marker or exemption entry;
-  - a `pointerKinds: ["mouse"]` declaration;
-  - a `pressMustLandOn` added next to an `AIM MISSED`;
-  - a new `_worldStateAuditExemptions` entry.
-- For each find, read enough of the session to judge what was done: the right shape, a defensible sanction, or a
-  contortion. Report a table (date, session or commit, gate, what was done, verdict, evidence excerpt).
-- File each contortion that still stands in the tree as its own BACKLOG item, re-judged on its merits.
-- Reach: medium, since a contortion that stands is a design defect nobody chose.
-
 ### Pointer hit-test rework 2026-08-21 — the backlog's note
 
 `isTransparentAt` + the `noticesTransparentClick` flag retired for three single-meaning members —
