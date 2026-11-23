@@ -249,6 +249,11 @@ AUTHORED 2026-07-18, design-stage/exploratory, owner-gated; create = duplicate-a
 - [ ] §4.3: fold the creator zoo (CreatorButton/WidgetFactory/MenusHelper "new X") onto the two primitives — second wave
 - [ ] §4.4: (bank) templates as first-class editable objects
 
+### `plans/toolbar-band-depth-plan.md`
+AUTHORED 2026-11-23, NOT STARTED; a toolbar band becomes as deep as a strip (46 px: one row of 44 px cells and two lines) and a tool's picture stands in a 32 px mark box inside its cell; the shape is owner-approved.
+- [ ] Phases 1–6: thin bands, the mark box, the state plate's inset, tests and recapture, docs, close.
+- [ ] **The toolbars' picture faces scale a fixed drawing** — the creator, paint and Template faces are rough at the 32 px mark box on the software backend; redraw them size-aware, one at a time (owner-deferred 2026-11-23) — every Maker's toolbar, low.
+
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
