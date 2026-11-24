@@ -460,14 +460,15 @@ class Theme
     # its whole box, rounded at layoutChromePlateRadius: its PLATE's fill and 1 px border at rest,
     # its fill hovered (its border stays layoutChromePlateStroke), its fill and darker border pressed
     # (an adder under a press, an adjuster under a press or its drag; a spacer has no pressed look),
-    # and the ink of the mark on it -- an adder's plus, a spacer's double arrow, an adjuster's grab
-    # mark -- the same in every state.
+    # and the ink of the mark on it, the same in every state: an adder's plus and a spacer's double
+    # arrow in layoutChromeGlyph, an adjuster's grip dots in layoutAdjusterGripMark, quieter.
     @layoutChromePlateFill = @paper
     @layoutChromePlateStroke = @line
     @layoutChromePlateHoverFill = @desk
     @layoutChromePlatePressFill = @chrome
     @layoutChromePlatePressStroke = @frame
     @layoutChromeGlyph = @ink
+    @layoutAdjusterGripMark = @muted
     # an EMPTY ICON HOLDER's drop placeholder (SimpleDropletWdgt, painted by SimpleDropletAppearance):
     # the fill of its borderless well and the ink of the plus on it, the same in every pointer state
     # (a placeholder, not a button).
@@ -799,14 +800,18 @@ class Theme
     # the LAYOUT CHROME at the sizes its boxes keep (LayoutChromeAppearance): its plate's rounding (a
     # box narrower than twice it rounds at half its short side, Appearance._paintPlate), the side of
     # the glyph square centred on it -- an adder's plus in a division's strip and in a content
-    # stack's drop slot (PlusIconAppearance), a spacer's double arrow -- and an adjuster's grab mark,
-    # its length along the adjuster's long side and its width across it.
+    # stack's drop slot (PlusIconAppearance), a spacer's double arrow -- and a split adjuster's
+    # thickness across the split (StackElementsSizeAdjustingWdgt's box, both sides) and the most grip
+    # dots it shows along its long side (as many as fit across: two at this thickness). Grip dots on
+    # a plate keep layoutChromeGripDotsInset in from its edge across its short side: the plate's 1 px
+    # border and one clear pixel, so no dot touches the border however thin the plate is squeezed.
     @layoutChromePlateRadius = 6
+    @layoutChromeGripDotsInset = 2
     @layoutAdderGlyphSize = 9
     @layoutDropSlotGlyphSize = 14
     @layoutSpacerGlyphSize = 24
-    @layoutAdjusterGrabMarkLength = 12
-    @layoutAdjusterGrabMarkWidth = 2
+    @layoutAdjusterThickness = 12
+    @layoutAdjusterGripDotsAlong = 4
     # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
     # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
     # (inside its border) the square sits. The GRIP STRIP holds it, its inset on either side of it, and
@@ -864,12 +869,13 @@ class Theme
     # thick, so a band no thicker than this frees nothing by collapsing and its strip offers no
     # collapse piece (FrameWdgt._offersCollapse).
     @barStripThickness = @frameBorderWidth + @barIconSize + @barRuleWidth
-    # the GRIP MARK a band's strip shows where it shows no piece and no title (FrameStripAppearance):
-    # square dots barGripMarkDotSize a side, on a barGripMarkPitch, kept barGripMarkInset in from
-    # the strip's plate (its box less its rule) on both axes -- as many as fit, the field centred, and
-    # none on a plate too short for one.
-    @barGripMarkDotSize = 2
-    @barGripMarkPitch = 6
+    # the house's GRIP DOTS, the mark for "hold here and drag" (Appearance._paintGripDots): square
+    # dots gripDotSize a side on a gripDotPitch, as many as fit their field, the field centred, none
+    # on an axis too short for one. A band's strip shows them where it shows no piece and no title
+    # (FrameStripAppearance), kept barGripMarkInset (the strip's own) in from its plate (its box less
+    # its rule) on both axes; a split adjuster shows them along its length (LayoutChromeAppearance).
+    @gripDotSize = 2
+    @gripDotPitch = 6
     @barGripMarkInset = 12
     # the margin a frame's PANE payload keeps INSIDE its body's edges -- the border's inner edge, the
     # strip's rule, a docked band -- which is also the gap between a docked band and the payload. At

@@ -10,27 +10,21 @@
 # the mark shows is the strip's SHAPE, which its arrange decides (FrameBarWdgt.gripMarkShows, copied here
 # by FrameBarWdgt._shapeTitlebarBackground), and its INK is its frame's LOOK (barGripMark, set by
 # FrameBarWdgt._skinTitlebarBackgroundTo; a look naming none shows no mark). Where the dots stand is
-# mine: on my PLATE, my box less my edge rule, at the theme's dot size, pitch and inset
-# (barGripMarkDotSize, barGripMarkPitch, barGripMarkInset), in whole logical pixels.
+# mine: on my PLATE, my box less my edge rule, kept the theme's barGripMarkInset in on both axes. The
+# dots are the house's grip dots (Appearance._paintGripDots, at the theme's gripDotSize and
+# gripDotPitch), in whole logical pixels.
 class FrameStripAppearance extends BoxyAppearance
 
   showsGripMark: false
   gripMarkInk: undefined
 
   # The mark is ART, so it takes its geometry from my widget's box and paints the whole field; the
-  # open scope has already clipped it to the damage box, which places nothing.
+  # open scope has already clipped it to the damage box, which places nothing. The field is my plate
+  # kept barGripMarkInset in on both axes, so a plate too short for one dot inside that inset shows
+  # none (one shorter than twice the inset leaves a reversed field, which holds no dot either).
   _paintBandOverMyFill: (ctx, localDamageBox) ->
     return unless @showsGripMark and @gripMarkInk?
-    theme = WorldWdgt.theme
-    size = theme.barGripMarkDotSize
-    plate = @_plateRect()
-    columns = @_dotStartsAlong plate.left(), plate.width()
-    rows = @_dotStartsAlong plate.top(), plate.height()
-    ctx.fillStyle = @gripMarkInk.toString()
-    for x in columns
-      for y in rows
-        @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle x, y, x + size, y + size
-    return
+    @_paintGripDots ctx, @_plateRect().insetBy(WorldWdgt.theme.barGripMarkInset), @gripMarkInk
 
   # My PLATE, widget-local: my box less the rule along my edge, where I paint one (_edgeRuleRect).
   _plateRect: ->
@@ -43,15 +37,3 @@ class FrameStripAppearance extends BoxyAppearance
       when "right" then new Rectangle 0, 0, rule.left(), h
       when "bottom" then new Rectangle 0, 0, w, rule.top()
       when "left" then new Rectangle rule.right(), 0, w, h
-
-  # Where my dots start along one axis of my plate, which starts at `plateStart` and runs `length`: as
-  # many dots as fit the inset in from both ends, a pitch apart, the field they make centred on the
-  # plate; none where not even one fits. Integers throughout, so every dot is whole device pixels.
-  _dotStartsAlong: (plateStart, length) ->
-    theme = WorldWdgt.theme
-    size = theme.barGripMarkDotSize
-    pitch = theme.barGripMarkPitch
-    count = Math.max 0, Math.floor((length - 2 * theme.barGripMarkInset - size) / pitch) + 1
-    field = (count - 1) * pitch + size
-    start = plateStart + Math.floor (length - field) / 2
-    (start + i * pitch for i in [0...count])

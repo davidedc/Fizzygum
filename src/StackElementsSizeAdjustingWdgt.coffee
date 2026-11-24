@@ -7,15 +7,18 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   colloquialName: -> "splitter"
 
 
-  # I am a 5×5 grab strip between stacked elements, and LayoutChromeAppearance rounds my plate's
-  # corners and paints only a small mark inside it: every pixel of that strip has to drag, or the
-  # divider is unusable.
+  # I am a grab strip between stacked elements, layoutAdjusterThickness across the split, and
+  # LayoutChromeAppearance rounds my plate's ends and paints only my grip dots inside it: every pixel
+  # of that strip has to drag, between the dots as on them, or the divider is unusable.
   catchesPointerAt: (aPoint) ->
     @boundsContainPoint aPoint
 
+  # My division box is layoutAdjusterThickness on both sides: the stack stretches the side along
+  # the split (its cross axis), so which side is my thickness follows from the axis I am added on.
   constructor: ->
     super()
-    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
+    thickness = WorldWdgt.theme.layoutAdjusterThickness
+    @setMinAndMaxBoundsAndSpreadability (new Point thickness, thickness), (new Point thickness, thickness), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
   detachesWhenDragged: ->
@@ -165,7 +168,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     cursor = if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
     document.getElementById("world").style.cursor = cursor
 
-  # mid-drag the pointer routinely outruns this thin strip, so keep the resize
+  # mid-drag the pointer routinely outruns this strip, so keep the resize
   # cursor while THIS adjuster is the one being non-float dragged -- the
   # endOfNonFloatDrag hook below restores it at the true end of the drag
   hoverExited: ->
@@ -180,21 +183,13 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       document.getElementById("world").style.cursor = "auto"
 
 
-  # MY GRAB MARK, over my plate (LayoutChromeAppearance; the plate and its states are my base's): a
-  # bar layoutAdjusterGrabMarkWidth thick and layoutAdjusterGrabMarkLength long in layoutChromeGlyph,
-  # centred, along my long side -- down a strip standing between a row's cells, across one lying
-  # between a column's -- and cut to my box where my box is smaller. Widget-local logical pixels,
-  # whole ones, so it is crisp at every density (on an odd spare span it sits half a pixel before
-  # the centre).
-  drawLayoutChrome: (aContext) ->
+  # MY MARK (LayoutChromeWdgt._gripDotsOnMyPlate; the plate and its states are my base's): the
+  # house's grip dots, as a band's strip shows them, in layoutAdjusterGripMark -- at most
+  # layoutAdjusterGripDotsAlong along my long side, down a strip standing between a row's cells,
+  # across one lying between a column's, and as many as fit across (two at layoutAdjusterThickness,
+  # fewer on a strip squeezed thinner). My appearance places them (LayoutChromeAppearance). Paint,
+  # not a control: every pixel of my box drags, between the dots as on them.
+  _gripDotsOnMyPlate: ->
     theme = WorldWdgt.theme
-    width = @width()
-    height = @height()
-    across = theme.layoutAdjusterGrabMarkWidth
-    along = theme.layoutAdjusterGrabMarkLength
-    [markWidth, markHeight] = if height >= width then [across, along] else [along, across]
-    markWidth = Math.min markWidth, width
-    markHeight = Math.min markHeight, height
-    aContext.fillStyle = theme.layoutChromeGlyph.toString()
-    aContext.fillRect Math.floor((width - markWidth) / 2), Math.floor((height - markHeight) / 2), markWidth, markHeight
+    [theme.layoutAdjusterGripMark, theme.layoutAdjusterGripDotsAlong]
 

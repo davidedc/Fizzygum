@@ -3,7 +3,7 @@
 # and the stack-size adjuster (StackElementsSizeAdjustingWdgt). They all wear the
 # handles' look (LayoutChromeAppearance): the layoutChromePlate* plate over the
 # whole box, in the look of my pointer state (below), and each subclass's mark on
-# it (its glyph, _glyphOnMyPlate, or its drawLayoutChrome tail).
+# it (its glyph, _glyphOnMyPlate, or its grip dots, _gripDotsOnMyPlate).
 #
 # The stack-size adjuster is the one of the three that is NOT layout-editing-only:
 # the halo's resize/move affordance inserts it between division siblings on their
@@ -42,10 +42,10 @@ class LayoutChromeWdgt extends Widget
   # (Widget._addMyDivisionCellMenuEntries).
   _addMyDivisionCellMenuEntries: (widgetOpeningThePopUp, menu) ->
 
-  # The drawing tail: runs in logical pixels with the origin already translated to my position,
-  # over my plate, in the normal pass only. Default: nothing -- StackElementsSizeAdjustingWdgt draws
-  # its grab mark here.
-  drawLayoutChrome: (aContext) ->
+  # THE GRIP DOTS ON MY PLATE, which my appearance paints inside it in the normal pass: [their ink,
+  # the most of them along my long side], or [] for none. Read for each paint, as the glyph below is,
+  # so no ink is saved or copied with me. Default: none -- the split adjuster answers here.
+  _gripDotsOnMyPlate: -> []
 
   # THE GLYPH ON MY PLATE, which my appearance paints centred over it in the normal pass: [the
   # size-aware icon appearance that draws it, in layoutChromeGlyph, and the side of its square], or []

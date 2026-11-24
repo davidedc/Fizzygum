@@ -1,7 +1,7 @@
 # Paints the plot/chart family (GraphsPlotsChartsWdgt and its concrete plots — bar,
 # function, scatter — which inherit this via the base): background rect over the
 # damage area, then the widget's own drawPlot tail (the per-plot drawing body, PUBLIC
-# and subclass-polymorphic — the drawLayoutChrome precedent) — all in widget-local
+# and subclass-polymorphic) — all in widget-local
 # LOGICAL pixels through the ctx matrix. (Example3DPlotWdgt keeps its own separate
 # appearance copy — see Example3DPlotAppearance's header for why.)
 

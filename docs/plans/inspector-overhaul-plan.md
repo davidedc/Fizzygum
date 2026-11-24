@@ -95,8 +95,8 @@ Workspace routing: the umbrella `CLAUDE.md` at `/Users/davidedellacasa/code/Fizz
    world unsaveable (`ListWdgt`'s header says so of its own format predicates), and
    `serialization-duplication-reference.md` §2 says "an owner keeps no widget OFF its tree". Every
    connection in this plan is a method NAME on a target, and every inspector is a child of its row.
-7. **A split has two controls, both always there** (owner, 2026-11-24). The existing splitter is a
-   6 px strip with a small dark bar on it: no finger's target (the house rule is 44 × 44 for every
+7. **A split has two controls, both always there** (owner, 2026-11-24). Before U1b the splitter was a
+   5 px strip (laid out at 6 where its leading edge rounds up) with a small dark bar on it: no finger's target (the house rule is 44 × 44 for every
    chrome target, drawn as big as it is, `visual-design-system.md` §4.2), and its mark reads as a
    scroll bar's thumb beside a list's bar. So:
    - **the divider**, the mouse's control: slightly thicker, showing grip dots;
@@ -125,7 +125,7 @@ Ask the owner the OPEN ones at the start. On "go", use the defaults.
 | D11 | **A split's two controls, both always present** (owner, 2026-11-24, final): the divider slightly thicker with grip dots, for a mouse; and a 44 × 44 button in the header of the inspector on its right, a double arrow with a finger icon, for a finger. Both are there at all times, because some devices have both a mouse and a touch screen (§5.10) | **LOCKED**. Open details, each with a default: the divider's width (12 px) and dot field (2 × 4); the finger icon, which does not exist yet and is drawn with the owner (U3b) |
 | D12 | Second phase (U4): the first object-list views, **Children**, **Instances**, **Subclasses**, and the view chooser they need | OPEN. Default: build. Senders, implementors and protocols stay out (§11) |
 | D13 | Commits | Per house rule, **ask before every commit and push**. At the start, ask whether this plan gets a standing grant ("commit and continue while gates pass; ask before push") |
-| D14 | The dotted divider is the look of **every** division stack's splitter (the halo's layout adjusters, "Edit layout"), not a look of the inspector's own | OPEN. Default: yes: one splitter class, one look. It recaptures the tests that show a splitter (16 test sources name a division stack) |
+| D14 | The dotted divider is the look of **every** division stack's splitter (the halo's layout adjusters, "Edit layout"), not a look of the inspector's own | OPEN. Default: yes: one splitter class, one look. It recaptures the tests that show a splitter (five; the grep of U1b step 4 names 23 sources, ten of which build one) |
 | D15 | **Duplicate…** beside Add… Rename… Remove (owner, 2026-11-24): a copy of the selected member under a new name | **LOCKED** for members. Open detail, default: a duplicated field that holds an object holds the SAME object (a copy of the slot, not of the thing). Duplicating a class waits for class-level verbs (§11) |
 | D16 | Packages, categories, families of members, and comments (owner, 2026-11-24) | **Wanted; a plan of its own, authored AFTER this plan's switch (U2) has landed** (owner, 2026-11-24). §11 says how they sit on what this plan builds, and what is missing underneath |
 
@@ -823,15 +823,14 @@ inspectors and keeps the solve that moves a split (`nonFloatDragging`: a closed 
 division boxes, exact at any event cadence; read its long comment before touching anything near
 it). A split gets two controls, both always present, one look whatever the pointer:
 
-**The divider, for a mouse** (U1b). The splitter is `theme.layoutAdjusterThickness` wide (new
-metric, 12; today its box is 5) and its mark is a small field of the house's grip dots in place of
-today's bar (`drawLayoutChrome`, which reads `layoutAdjusterGrabMarkWidth`/`Length`: those two
-metrics go). The dots are the ones a toolbar band's strip shows (`FrameStripAppearance`: 2 px
-squares, `barGripMarkDotSize`, on a 6 px pitch, `barGripMarkPitch`, in the `muted` ink): lift that
-dot-field arithmetic (`_dotStartsAlong` and the fill loop) to where both can call it, so there is
-ONE dot field in the tree, and bound the splitter's field to a few rows along its length (4 in the
-storyboard) so it reads as a grip, not a texture. Per D14 this is the look of every splitter, so it
-is a change to the core class with no inspector in it, and lands as its own unit.
+**The divider, for a mouse** (U1b, landed). The splitter is `theme.layoutAdjusterThickness` across
+(12) and its mark is a small field of the house's grip dots: the ones a toolbar band's strip shows
+(2 px squares, `gripDotSize`, on a 6 px pitch, `gripDotPitch`), in `layoutAdjusterGripMark` (`muted`).
+There is ONE dot field in the tree, `Appearance._paintGripDots`: the strip's appearance calls it over
+its plate, and the layout chrome's appearance for a piece that DECLARES dots
+(`LayoutChromeWdgt._gripDotsOnMyPlate`: their ink and the most of them along the long side; the
+splitter answers `layoutAdjusterGripDotsAlong`, 4), so the field reads as a grip, not a texture. Per
+D14 this is the look of every splitter, a change to the core class with no inspector in it.
 
 **The split button, for a finger** (U2). A `SplitGripWdgt` in the header band of the inspector on
 the divider's right RELAYS its own drag to that splitter, so there is no second solve. An inspector
@@ -924,7 +923,7 @@ Notes for writing it:
 |---|---|---|---|
 | U0 | Orient, decisions, a green baseline | `fg presuite` | [ ] |
 | U1 | `MemberRef` / `ClassMemberRef` under the OLD inspectors: no pixel changes | `fg gauntlet` | [x] 2026-11-24 |
-| U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [ ] |
+| U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [x] 2026-11-24 |
 | U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [ ] |
 | U3 | Tests of what is new, each proven to bite | `fg presuite` | [ ] |
 | U3b | The finger icon on the split button: candidates, then the owner's choice (D11) | `fg presuite` after the choice | [ ] |
@@ -1038,7 +1037,7 @@ is judged alone.
    a thickness, but check.
 4. **Predicted pixel set:** every test whose pictures show a splitter. From `Fizzygum-tests/`,
    `grep -l "divisionBox\|StackElementsSizeAdjustingWdgt\|createBorderLayoutScaffold\|Adjuster" tests/*/*_automationCommands.js`
-   names the candidates (16 on 2026-11-24); a splitter 7 px thicker also moves the cells beside it,
+   names the candidates (23 files on 2026-11-24, ten of which build a splitter and five photograph one); a splitter 7 px thicker also moves the cells beside it,
    and a test that drags one presses where it now stands. Write the set down BEFORE the suite; the
    failing set must equal it.
 5. `fg presuite`; `fg diffpage` of the failing set and look: each changed shot is a dotted, thicker
@@ -1046,6 +1045,47 @@ is judged alone.
    `fg recapture --auto --pointer=finger --dprs=1,2`. `visual-design-system.md` (the layout chrome's
    look, §4.3 or wherever the adjuster is described: grep "adjuster") says what is true.
 6. **Gate:** `fg gauntlet`.
+
+**Landed 2026-11-24 (U1b of the inspector-overhaul loop).** Built as steps 1–6 say, with these corrections,
+measured:
+- **The splitter declares its mark and the appearance paints it.** Step 1's "`drawLayoutChrome` paints the
+  dot field" would have had the widget's drawing tail reach back into its appearance for the shared routine;
+  the layout chrome already has the declaration shape (`_glyphOnMyPlate`). So `LayoutChromeWdgt` answers
+  `_gripDotsOnMyPlate` (none by default; the splitter: its ink and the most dots along its long side),
+  `LayoutChromeAppearance` paints them inside its plate (kept `layoutChromeGripDotsInset`, the border and one
+  clear pixel, in from its edge across the short side, the plate's rounding off its rounded ends along the long
+  one, oriented by aspect as the bar was), and `drawLayoutChrome` is gone: the splitter was its one implementer. The two comments that cited it
+  as a precedent cite `drawPlot` alone.
+- **The one dot field is `Appearance._paintGripDots`** (with `_gripDotStartsAlong`), beside `_paintPlate`: the
+  nearest home common to `FrameStripAppearance` and `LayoutChromeAppearance`. The strip calls it with its plate
+  inset by `barGripMarkInset`; its dots stand where they stood (the inset is an integer: checked by arithmetic
+  for every plate length, and held by the band-strip tests, which stayed green).
+- **Theme:** `layoutAdjusterThickness` (12), `layoutAdjusterGripDotsAlong` (4) and `layoutChromeGripDotsInset` (2) in, the two
+  `layoutAdjusterGrabMark…` metrics out; `barGripMarkDotSize` / `barGripMarkPitch` renamed `gripDotSize` /
+  `gripDotPitch` (two readers); a role of its own for the dots' ink, `layoutAdjusterGripMark` (`muted`): the plan
+  named none, and a role names one surface.
+- **Facts corrected here:** the old strip's box was 5 × 5 and laid out at 5, or 6 where its leading edge's
+  fraction rounded up (the spike's row landed on 6); at 12 it lays out 12, rarely 13. Step 4's grep names 23
+  files, not 16; ten build a splitter; FIVE photograph one.
+- **The plate's ends** round at half its thickness now (the plate's own rule: `min(radius, half the short
+  side)`), as the storyboard shows them.
+- **Pixels:** the predicted set was written first, by reading and by a prototype suite run, and the failing set
+  equalled it under mouse and under finger: `macroLayoutSpacerEatsSpareSpace` (2 shots),
+  `macroLayoutsAndCollapsing` (5), `macroLayoutsAndVisibility` (5), `macroStackDividerReproportionsCells` (3),
+  `macroVerticalDivisionBorderSkeleton` (3), on pictures only. Every one of the 18 shots was looked at before
+  the recapture (a 12 px plate with a 2 × 4 field of muted dots, 4 × 2 on a lying splitter, the cells beside it narrower by
+  the difference, nothing else); 72 references recaptured (18 × 2 densities × 2 pointers). The unit's review
+  then found the dots of a SQUEEZED splitter touching its border (the inset was the border's width alone: a
+  4 px strip read border, dot, dot, border, and an 11 px one stood its first column on the border): the inset
+  became `layoutChromeGripDotsInset` (2), identical at 12 to 15 px, a single clear column on a strip squeezed
+  a little, none on one too thin, and the one test showing squeezed splitters
+  (`macroLayoutSpacerEatsSpareSpace`) was predicted, looked at and recaptured again. The prose of three tests that stated the old look says the new.
+- **Ratchets:** none moved.
+- **Not pictured anywhere** (the same class and paint path as the pictured ones): a splitter the halo inserts
+  around a division cell; a splitter shorter than its dot field (fewer rows, none below 14 px); the 13 px
+  rounding; the dev menu's free-floating "Adjuster widget" (a 50 × 40 box: a block of dots).
+- **The 44 rule** (`visual-design-system.md` §4.2) is untouched here: the divider is the mouse's control, and U2
+  states the two-controls rule when the finger's control exists.
 
 ### U2. The switch (2–3 days)
 
@@ -1591,3 +1631,4 @@ byte-identical-not-sacred-for-benign-inspector-recapture, fizzygum-macro-test-sy
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change — CLOSED 2026-11-24 (inspector-overhaul loop, U1): the two classes landed under the old inspectors, each inspector class choosing its ref (`_memberRefOf`); presuite's failing set empty as predicted, no reference changed.
+- [x] U1b: every division stack's splitter 12 px wide with grip dots — CLOSED 2026-11-24 (inspector-overhaul loop, U1b): `Theme.layoutAdjusterThickness` 12, the house's grip dots from one routine (`Appearance._paintGripDots`) shared with a band's strip; five tests' 18 shots recaptured, the predicted set.

@@ -204,7 +204,7 @@ class Example3DPlotWdgt extends Widget
     @autoRotate = true unless @_lastPressedPoint?
 
   # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
-  # (the drawLayoutChrome / drawPlot family precedent)
+  # (the plot family's drawPlot precedent)
   drawPlot: (context, appliedShadow) ->
 
     height = @height()

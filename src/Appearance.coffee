@@ -203,6 +203,36 @@ class Appearance
   _plateRadius: (radius) ->
     Math.min radius, Math.floor(@widget.width() / 2), Math.floor(@widget.height() / 2)
 
+  # THE GRIP DOTS, the house's mark for "hold here and drag": square dots gripDotSize a side on a
+  # gripDotPitch, in `ink`, standing in `field` -- a widget-local rect, already kept clear of
+  # whatever the dots must not touch: as many as fit on each axis, at most opts.mostColumns across
+  # and opts.mostRows down (each absent: no bound), the field they make centred in `field`, none on
+  # an axis too short for one (a `field` inset past its own size included). A band's strip shows them
+  # over its plate (FrameStripAppearance), a split adjuster along its length (LayoutChromeAppearance).
+  # Painted inside my _paintInLocalScope body: they are ART, so `field` comes from my widget's box,
+  # never from the damage box (the scope has clipped to that). Integers throughout, and each dot
+  # filled snapped to device pixels, so every dot is whole device pixels at every density.
+  _paintGripDots: (ctx, field, ink, opts = {}) ->
+    size = WorldWdgt.theme.gripDotSize
+    columns = @_gripDotStartsAlong field.left(), field.width(), opts.mostColumns ? Infinity
+    rows = @_gripDotStartsAlong field.top(), field.height(), opts.mostRows ? Infinity
+    ctx.fillStyle = ink.toString()
+    for x in columns
+      for y in rows
+        @_fillLocalRectSnappedToDevicePixels ctx, new Rectangle x, y, x + size, y + size
+    return
+
+  # Where the grip dots start along one axis of their field, which starts at `start` and runs
+  # `length` (negative for a field inset past its own size): as many as fit, a pitch apart, at most
+  # `mostDots`, the run they make centred; none where not even one fits.
+  _gripDotStartsAlong: (start, length, mostDots) ->
+    theme = WorldWdgt.theme
+    size = theme.gripDotSize
+    pitch = theme.gripDotPitch
+    count = Math.min mostDots, Math.max 0, Math.floor((length - size) / pitch) + 1
+    first = start + Math.floor (length - ((count - 1) * pitch + size)) / 2
+    (first + i * pitch for i in [0...count])
+
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,
   # the analog clock) — where the boxy pattern of swapping ONE fill to the shadow colour cannot
