@@ -1033,18 +1033,9 @@ content with `removeChild @contents` and tells nobody (no `_reactToChildRemoved`
 door reaches a BAND (the chooser offers any visible widget that overlaps, a Maker's text-bar band among them, by U1b's
 review): the band then holds the attached widget while its record `broughtByContent` still says it holds what its host's
 content brought (no `notePayloadLeft` runs), so the Maker never offers its "Toolbar" row again and its toolbar is left
-off the tree, a plain host's next content change destroys the attached widget with the band, and the band's spec has no
+off the tree, and the band's spec has no
 recorded `thickness` (its toolbar declared one), so the band measures NaN. The decision to take: whether an occupied
 window is an Attach target at all, or the attach goes through the content-change door.
-
-### A Maker dropped into an empty window gets a second text bar
-
-Measured 2026-11-24 during U1b (`u1b/probe-f1.log`): a Docs Maker dwell-dropped into an empty plain window (the
-Windows toolbar's "empty window" creator makes one) becomes that window's content, and the outer window's rebuild
-docks the toolbar its content declares (`_buildDockedToolbarNoSettle`'s `@contents?.buildToolbar?()` branch, reached
-only here, since only Makers declare one) beside the Maker's own: two identical text bars, one working for the Maker
-and one for the outer window, which reaches the same page. The outer window also takes the title "Docs Maker". The
-decision to take: whether a window whose content is itself a framed citizen docks anything.
 
 ### A toolbar window put into another window shows a clipped strip
 
@@ -1056,16 +1047,6 @@ construction extent, and no later pass corrects it. A wider form of U1b's rule (
 side also skips the negotiation) heals it and measured 110 of 111 candidate tests byte-identical with no re-visit,
 but it changes a free window's first placement: an owner question. A window first placed as a division cell (300×87
 where the cell grants more) has the same cause; no person's door to it was found.
-
-### A Maker's own toolbar moved by its strip stops being its own
-
-Read 2026-11-24 by U1b's review (not probed): a Maker's own toolbar band dragged by its strip and dropped on another
-side of the same Maker (past the dwell) is re-docked under a fresh spec, so it is recorded as a person's band
-(`broughtByContent` false), while the same move made by its "Dock ▸ side" row keeps the record. After the drag the Maker
-offers its "Toolbar" row with its bar docked, and its next page leave docks a second text bar beside the moved one. Two
-gestures for one intent end differently. The plan's Phase 1b reads a band floated away and docked again as a person's;
-whether a band that never left its host's slots (a drag from one side to another) keeps the record is the owner's
-question.
 
 ### A Maker docked in a viewing window keeps its own toolbar showing
 
@@ -1089,6 +1070,36 @@ shorter side holds, with no bound. A toolbar window a person enlarges (a 400 × 
 its body was not determined. The decision to take: a bound on the recorded depth (the toolbar's own depth, the cells
 its tools need, a share of the host's body), or none.
 
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] Phases 1–6, not started: a list of bands per side (no dock destroys a band), view mode hides only tool bands, a toolbar docks at the depth it floats at; four new tests, two rewritten; owner decisions D1–D6 ruled. — CLOSED 2026-11-24 (several-bands loop, U5): every unit landed, U1b added by the owner's O4; five new tests (not four: U1b's), eight existing tests rewritten.
+
+Closed 2026-11-24 by the owner's rulings on three of the questions the loop filed (no plan of their own; the test
+`SystemTest_macroAWindowWearsOneCopyOfItsToolbar`, bitten by six plants under both pointers):
+
+- [x] **A Maker's own toolbar moved by its strip stops being its own** — dragged to another side of the same Maker it is re-docked as a person's band, unlike a re-side by its row: the Maker then offers its Toolbar row and a page leave docks a second text bar — reachable (dev mode), low. — CLOSED 2026-11-24 (owner ruling: a drag from one side to another of the same window keeps the band the window's own): a band lifted out by a grab carries the host whose content brought it across the gesture (`FrameWdgt._liftedAsTheOwnBandOf`), and docked again on that same host by the drop that ends it, it is recorded as that host's own again (`FrameWdgt._reactToBeingDropped`); docked anywhere else, or later, it is a person's.
+- [x] **A Maker dropped into an empty window gets a second text bar** — the outer window docks the Maker's own toolbar again (and takes its title), so two identical bars reach one page — reachable, low. — CLOSED 2026-11-24 (owner ruling: a window whose content is a window docks nothing): a window docks only the toolbar its own kind declares (`FrameWdgt._buildDockedToolbarNoSettle` and `_offersAFreshToolbar` ask `_buildToolbar` of the frame alone), so the content branch went, and with it `_retireBandsMyContentBroughtNoSettle`, which had nothing left to retire; the hook, asked only by the frame itself, is `_buildToolbar` (the call-separation gate's [U] rule). The title was not ruled on and is unchanged.
+- [x] **A pinned "Toolbar" submenu docks one more bar per click** — the row has no guard of its own, so each click docks another copy of the content's toolbar — reachable, low. — CLOSED 2026-11-24 (owner: fix): `FrameWdgt.addToolbarAtSide` asks `_offersAFreshToolbar` again at the click, as a band's pinned Dock and Float rows ask whether the host lets the band go.
+
+### A Maker's own toolbar moved by its strip stops being its own
+
+Read 2026-11-24 by U1b's review (not probed): a Maker's own toolbar band dragged by its strip and dropped on another
+side of the same Maker (past the dwell) is re-docked under a fresh spec, so it is recorded as a person's band
+(`broughtByContent` false), while the same move made by its "Dock ▸ side" row keeps the record. After the drag the Maker
+offers its "Toolbar" row with its bar docked, and its next page leave docks a second text bar beside the moved one. Two
+gestures for one intent end differently. The plan's Phase 1b reads a band floated away and docked again as a person's;
+whether a band that never left its host's slots (a drag from one side to another) keeps the record is the owner's
+question.
+
+### A Maker dropped into an empty window gets a second text bar
+
+Measured 2026-11-24 during U1b (`u1b/probe-f1.log`): a Docs Maker dwell-dropped into an empty plain window (the
+Windows toolbar's "empty window" creator makes one) becomes that window's content, and the outer window's rebuild
+docks the toolbar its content declares (`_buildDockedToolbarNoSettle`'s `@contents?.buildToolbar?()` branch, reached
+only here, since only Makers declare one) beside the Maker's own: two identical text bars, one working for the Maker
+and one for the outer window, which reaches the same page. The outer window also takes the title "Docs Maker". The
+decision to take: whether a window whose content is itself a framed citizen docks anything.
+
 ### A pinned "Toolbar" submenu docks one more bar per click
 
 Measured 2026-11-24 during U1b (`u1b/probe-f3.log`): the host's "Toolbar" submenu offers "Pin"; pinned, each click of
@@ -1096,10 +1107,6 @@ a side row runs `addToolbarAtSide`, which docks the content's toolbar with no gu
 docks a second copy (each recorded as the content's). The row is offered only while no band the content brought is
 docked, but a pinned copy outlives that answer. Its rows could ask the same question at the click
 (`_offersAFreshToolbar`), the way a pinned text menu re-asks its enablement.
-
-## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
-
-- [x] Phases 1–6, not started: a list of bands per side (no dock destroys a band), view mode hides only tool bands, a toolbar docks at the depth it floats at; four new tests, two rewritten; owner decisions D1–D6 ruled. — CLOSED 2026-11-24 (several-bands loop, U5): every unit landed, U1b added by the owner's O4; five new tests (not four: U1b's), eight existing tests rewritten.
 
 Noted, not queued:
 

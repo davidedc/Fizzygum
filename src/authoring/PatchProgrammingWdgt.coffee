@@ -14,5 +14,5 @@ class PatchProgrammingWdgt extends GenericPanelWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C) -- the SAME list
   # the floating components toolbar summons (one-variant rule)
-  buildToolbar: ->
+  _buildToolbar: ->
     new PatchProgrammingToolbarWdgt

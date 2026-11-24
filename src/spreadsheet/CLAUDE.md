@@ -56,7 +56,7 @@ part: `src/dataflow/` is core. Reference: `docs/architecture/build-and-packaging
   Makers' documents (`MakerDocumentWdgt`, in `authoring`, which owns the window title, the
   save-or-destroy close and the teardown-guarded payload reset every such document shares), and a
   thin one over the naked grid: its payload, `colloquialName` ("Sheets Maker", its title), its
-  toolbar (`buildToolbar` → `SheetToolbarWdgt`, docked on top), and whether the user has put
+  toolbar (`_buildToolbar` → `SheetToolbarWdgt`, docked on top), and whether the user has put
   anything in it (`hasStartingContentBeenChangedByUser`: some cell holds an entry or a format,
   `SheetModel.isBlank`), nothing else. Closed with something in it, a sheet offers to be saved as a
   desktop icon; closed blank, it is destroyed. `SpreadsheetApp` and `SampleSheetApp` open this one

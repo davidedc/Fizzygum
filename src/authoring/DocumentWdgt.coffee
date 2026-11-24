@@ -31,7 +31,7 @@ class DocumentWdgt extends MakerDocumentWdgt
     new TypewriterIconWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C)
-  buildToolbar: ->
+  _buildToolbar: ->
     new TextToolbarWdgt
 
   # changed = anything but the one starting paragraph, still reading the starting text

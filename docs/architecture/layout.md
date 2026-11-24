@@ -288,7 +288,7 @@ spec records for a toolbar that arrived with a shape of its own, `depthInCells`;
 `thickness`), the host's mode switch (`engaged`: view mode
 disengages a band whose payload is there for editing, a toolbar, taking its layout contribution to zero, and every
 other band stands; `engagedUnder` is the one home of that rule), and a record of who made the attachment
-(`broughtByContent`: the host, docking its content's toolbar, whose band a content change retires; or a person). It owns its carrier's placement, so a
+(`broughtByContent`: the host, docking the toolbar its kind declares, which it docks and offers again only while no band so recorded is docked; or a person). It owns its carrier's placement, so a
 docked frame is not free-floating, and leaving the slot is exactly dropping the spec.
 
 **A pending geometry WISH is a free-floating-only value.** `@desiredExtent`/`@desiredPosition` are recorded only

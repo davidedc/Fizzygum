@@ -22,10 +22,10 @@
 # layout contribution to zero, and any other band (a docked document, a band whose payload left)
 # stands in both modes — visibility then FOLLOWS the spec, never the other way round (visibility is
 # never a layout input).
-# `broughtByContent` records who made this attachment: the host, docking its content's toolbar (at
-# its birth, its rebuild, or its "Toolbar" row: FrameWdgt._buildDockedToolbarNoSettle), or a
-# person's drop; a content change retires only the bands its content brought, and every band a
-# person docked stays.
+# `broughtByContent` records who made this attachment: the host, docking the toolbar its kind
+# declares for its content (at its birth, its rebuild, or its "Toolbar" row:
+# FrameWdgt._buildDockedToolbarNoSettle), or a person's drop. The host docks that toolbar, and
+# offers it, only while no band so recorded is docked on it, whatever else is.
 #
 # I OWN my carrier's placement (the family default): the host places the band, so a docked frame
 # is not free-floating, and everything that turns on that predicate follows for free — no close
@@ -58,12 +58,14 @@ class EdgeDockLayoutSpec extends LayoutSpec
   engaged: true
 
   # a RECORD of this attachment: my carrier holds the toolbar my host docked for its content
-  # (FrameWdgt._buildDockedToolbarNoSettle, the one door that writes it), which goes when that content
-  # goes; false for a frame a person docked, whatever it holds. A re-side, a collapse and a mode flip
-  # keep it (the first and the last edit this spec, a collapse leaves it as it is); a copy and a save
-  # carry it; a band floated and docked again arrives
-  # under a fresh spec, a person's. Cleared when my carrier's payload leaves it (notePayloadLeft):
-  # what the band holds next is not what the content brought.
+  # (FrameWdgt._buildDockedToolbarNoSettle, the one door that writes it); false for a frame a person
+  # docked, whatever it holds. A re-side, a collapse and a mode flip keep it (the first and the last
+  # edit this spec, a collapse leaves it as it is), and so does a re-side by my carrier's strip: lifted
+  # out and docked again on the same host in one gesture, my carrier carries the host it left and
+  # writes it on the spec that dock arms (FrameWdgt._reactToBeingDropped). A copy and a save carry
+  # it; a band floated, or dropped anywhere else, and docked again later arrives under a fresh spec,
+  # a person's. Cleared when my carrier's payload leaves it (notePayloadLeft): what the band holds
+  # next is not what the content brought.
   broughtByContent: false
 
   constructor: (@side, @thickness) ->

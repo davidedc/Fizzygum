@@ -10,5 +10,5 @@ class SlideWdgt extends GenericPanelWdgt
     new SimpleSlideIconWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C)
-  buildToolbar: ->
+  _buildToolbar: ->
     new SlidesToolbarWdgt

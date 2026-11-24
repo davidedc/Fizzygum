@@ -62,7 +62,7 @@ nothing: a docked toolbar never falls back to working for the person.
 - **Two homes, one object.** A toolbar is always a `FrameWdgt`'s payload. FLOATING, that frame is a desktop
   window (a toolbar creator button builds one, `ToolbarCreatorButtonWdgt._buildToolWindow`; the Super toolbar's app
   another, `world.openFrameHuggingPayload`). DOCKED, it is a
-  band in a host window's edge slot. A Maker declares its toolbar with `buildToolbar`, and
+  band in a host window's edge slot. A Maker declares its toolbar with `_buildToolbar`, and
   `FrameWdgt._buildDockedToolbarNoSettle` frames it and docks it at its `dockSide`
   (`FrameWdgt._dockFrameNoSettle`). The same object moves between the homes: a band's grip dragged onto the
   desktop makes it a window, and a toolbar window dropped on a window's edge, after the drag-embed dwell,
@@ -100,16 +100,21 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   joins the new side nearest the content. The corners are fixed: top and bottom bands span the body, left and right
   columns stand between them.
 - **Every edge-slot dock ties**, whatever the host holds: no content, or content that is itself a toolbar. A band
-  never asks its host's content whom it works for. A window whose content is REPLACED (a widget dropped into an empty
-  window, or its content leaving it by any door, `FrameWdgt._reactToChildRemoved`) retires only the band its content
-  BROUGHT, the toolbar the window docked for that content: `FrameWdgt._buildDockedToolbarNoSettle` records it on the
-  band's spec (`EdgeDockLayoutSpec.broughtByContent`), and `FrameWdgt._retireBandsMyContentBroughtNoSettle` destroys
-  only what is so recorded. Every band a person docked stays where it is, alive. The window docks the new content's
-  toolbar, and offers it on its "Toolbar" row, while no band its content brought is docked, whatever else is
-  (`FrameWdgt._bandsMyContentBrought`). A Maker whose payload is rebuilt keeps its own band, which its KIND declares:
-  it keeps its side, its place and its collapse. A band floated away and docked again is a person's. A band is a
-  window too: one whose payload leaves it keeps its thickness, the one its payload was granted, and holds no longer
-  what its host's content brought.
+  never asks its host's content whom it works for.
+- **A window docks only the toolbar its own KIND declares.** A Maker answers `_buildToolbar`, and
+  `FrameWdgt._buildDockedToolbarNoSettle` docks it, recording the band as the one its content BROUGHT on the band's
+  spec (`EdgeDockLayoutSpec.broughtByContent`). A plain window declares none, whatever it holds: a Maker dropped into
+  an empty window wears its own toolbar, and the outer window docks nothing for it. So a content change retires no
+  band: a widget dropped into an empty window, or a content leaving by any door (`FrameWdgt._reactToChildRemoved`),
+  leaves every band where it is, alive, and a Maker whose payload is rebuilt keeps its own band, with its side, its
+  place and its collapse. A Maker docks its toolbar, and offers it on its "Toolbar" row, while no band its content
+  brought is docked, whatever else is (`FrameWdgt._bandsMyContentBrought`); the row's verb asks again at the click
+  (`FrameWdgt.addToolbarAtSide`), so a pinned "Toolbar" submenu docks nothing once one is docked. A band re-sided
+  stays its host's own, by its "Dock" row or by its strip: lifted out and docked again on the same host in one
+  gesture, the band carries that host across it (`FrameWdgt._liftedAsTheOwnBandOf`, settled at
+  `FrameWdgt._reactToBeingDropped`). A band floated away, or dropped anywhere else, and docked again later is a
+  person's. A band is a window too: one whose payload leaves it keeps its thickness, the one its payload was granted,
+  and holds no longer what its host's content brought.
 - **View mode puts away only what is there for editing.** A host that holds an edit mode and is viewing disengages
   a band exactly when its payload answers `isAnAmenityForEditing` (a toolbar: `ToolbarWdgt`); any other band, a
   docked document, a band whose payload left, stands in both modes (`EdgeDockLayoutSpec.engagedUnder`,
@@ -227,7 +232,7 @@ idempotent: holding what is already held changes nothing and tells no one):
 - **A window**, `FrameWdgt.armedDrawingTool`: a plain string field, undefined by default, riding the window's
   ordinary save and copy. A window's tool counts only while the window WEARS drawing tools: one of its docked payloads
   holds a tool naming a `drawingToolKey` (`ToolbarWdgt.holdsDrawingTools`, `ToolbarWdgt.wearsDrawingTools(aFrame)`).
-  A palette destroyed in its slot (retired with its host's content, say) leaves the field set, and nothing
+  A palette destroyed in its slot (closed with its band, say) leaves the field set, and nothing
   reads it until a palette arrives again.
   After a real change, `FrameWdgt.armDrawingTool` tells each payload it wears `noteToolStatesChanged`. A
   window holds only the key; what a key means is the parts' business.
@@ -453,7 +458,7 @@ event stream, with no timer.
 - **A subject-less action.** Its own `activated`; answer no `hasSomethingToActOn` (or `true`, as Templates does).
 - **A toolbar.** Subclass `ToolbarWdgt`: `_toolbarItems` (literal `new X` forms), `dockSide` when not `'left'`, and
   `depthInCells` when its strip should be more than one cell deep.
-  A Maker docks it by answering `buildToolbar`. A toolbar may mix kinds freely.
+  A Maker docks it by answering `_buildToolbar`. A toolbar may mix kinds freely.
 
 ## 9. What guards it
 

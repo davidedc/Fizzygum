@@ -10,5 +10,5 @@ class DashboardWdgt extends GenericPanelWdgt
     new DashboardsIconWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C)
-  buildToolbar: ->
+  _buildToolbar: ->
     new DashboardsToolbarWdgt

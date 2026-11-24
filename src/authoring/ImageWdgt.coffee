@@ -20,7 +20,7 @@ class ImageWdgt extends GenericPanelWdgt
     new SprayCanIconWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C)
-  buildToolbar: ->
+  _buildToolbar: ->
     new PaintToolbarWdgt
 
   _makeStartingPayload: ->

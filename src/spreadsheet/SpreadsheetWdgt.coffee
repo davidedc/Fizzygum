@@ -6,7 +6,7 @@
 # receiver): the grid holds the edit mode my strip's toggle switches, as every
 # Maker's payload does (MakerDocumentWdgt), and does what a flip means for a
 # sheet itself; its toolbar is the sheet toolbar, docked on top at construction
-# (buildToolbar), and the frame's representativeIcon dispatch reaches the grid
+# (_buildToolbar), and the frame's representativeIcon dispatch reaches the grid
 # unchanged.
 
 class SpreadsheetWdgt extends MakerDocumentWdgt
@@ -24,7 +24,7 @@ class SpreadsheetWdgt extends MakerDocumentWdgt
 
   # the frame docks this variant in its toolbar-slot (§5.C): the text tools, which act on the
   # sheet's selected cell, and the sheet's own
-  buildToolbar: ->
+  _buildToolbar: ->
     new SheetToolbarWdgt
 
   # changed = some cell holds an entry or a format (SheetModel.isBlank)
