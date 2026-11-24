@@ -136,7 +136,7 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   its drag-scroll had not moved yet and came back over it at the next re-sync
   (`Fizzygum-tests/DETERMINISM.md` §3n). That holds while a finger CARRIES something too: what it
   carries a payload over shows no hover look. What a drag shows is the drop's own feedback — the
-  target's outline, a dock band, a window's charging ring and armed label
+  target's ring, a dock band's wash, a window's charging ring and armed label
   (`_updateDragEmbedStateMachine`) — and every pointer gets that. So after either ending a widget
   shows what the hand answers as it paints: hovered under a resting mouse over it, at rest otherwise. A list row's look of being its list's SELECTION is no state it keeps, so neither ending
   has a selection to restore: the row reads it from the list's model as it paints

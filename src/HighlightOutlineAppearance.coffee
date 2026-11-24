@@ -1,5 +1,5 @@
-# Paints a HighlighterWdgt in its OUTLINE form -- the drag-and-drop feedback around a receptive drop
-# candidate, a view-mode target that declines the drop, and a dock band
+# Paints a HighlighterWdgt in its OUTLINE form -- the ring around a THING: a receptive drop candidate, a
+# view-mode target that declines the drop, the window a grip resizes
 # (HighlighterWdgt.applyHighlightStyle): a RING dropOutlineWidth thick lying wholly INSIDE my widget's
 # box, in its strokeColor, its corners rounded at my widget's outlineRadii -- the corners of what it
 # outlines where its box meets them (Widget.cornerRadiiFollowingMyOutline), so the ring follows a

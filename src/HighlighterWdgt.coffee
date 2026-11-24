@@ -1,5 +1,15 @@
-# Temporarily highlights a widget: hovering a widget's entry in a menu washes that widget (the FILL
-# form), and a drag outlines the widget or the dock band a release would reach (the OUTLINE form).
+# Temporarily highlights a THING or a PLACE, and what I mark decides which of my two forms I take:
+#   - a RING (my outline form) marks a thing that is there to see and plays a part in the gesture: the
+#     receiver a release reaches, a receiver that declines it, the window a grip resizes. (The editor's
+#     selection ring is the same ring, painted by its own hosts: HighlightOutlineAppearance.paintRing.)
+#   - a WASH (my fill form) marks a PLACE where nothing stands yet: where a release would put what the
+#     hand carries -- the band a dock would make (FrameWdgt.bandBoxIfDocked). A ring there would read as a
+#     strip of what lies under it, selected.
+#   One thing is washed, and why: the widget a hovered menu row NAMES (a hierarchy menu's, a chooser's).
+# The widget a person right-clicks is usually the selected one, already wearing the selection ring, so a
+# ring there would double that ring, or stand beside it as a second ring nobody could tell from it.
+#   A producer names WHAT it marks, through one of my style factories below, and never a form or a
+# colour: the form is decided here, once.
 #
 # Doesn't cast a shadow (that would be too much, this is simple
 # highlighting, it's not anything material that the user is
@@ -50,22 +60,29 @@ class HighlighterWdgt extends RectangleWdgt
   outlineRadii: undefined
 
   # --- highlight style channel (drag-embed arc) ------------------------------------------------
-  # A style descriptor is a plain record. Producers declare a target -> descriptor into
-  # world.widgetsToBeHighlighted (a Map); the reconciler builds one HighlighterWdgt per target and
-  # calls applyHighlightStyle. Two forms:
-  #   {form:"fill",    color}               — a wash over the box (menu hover-highlight), in a colour
-  #                                           translucent by its own alpha, painted at full alpha
-  #   {form:"outline", color, alpha}        — a ring inside the box (drag candidate/reluctant affordance)
-  @fillStyle: (color) -> {form: "fill", color: color}
+  # A style descriptor is a plain record, built only by the factories below, each named by what it
+  # marks. Producers declare a target -> descriptor into world.widgetsToBeHighlighted (a Map), or hand
+  # one to a highlighter of their own (the dock preview's); the reconciler builds one HighlighterWdgt per
+  # target and calls applyHighlightStyle. The record's form is one of two:
+  #   {form:"fill",    color}               — a wash over the box, in a colour translucent by its own
+  #                                           alpha, painted at full alpha
+  #   {form:"outline", color, alpha}        — a ring inside the box
 
-  # Drag-embed candidate/reluctant outlines (spec §11), drawn at one width so a target that changes
-  # state does not jump: a receptive candidate (and a dock band) in the accent -- the target the
-  # release reaches --, a view-mode target that declines the drop in the neutral line colour. An
-  # outline, not a wash: the whole-target fill is far too loud for a drag affordance.
+  # THINGS, ringed, at one width so a target that changes state does not jump (drag-embed spec §11): a
+  # receptive drop candidate in the accent -- the receiver the release reaches --, a view-mode target that
+  # declines the drop in the neutral line colour. A ring, not a wash: a wash over a whole receiver is far
+  # too loud for a drag affordance.
   @candidateOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropCandidateOutline, alpha: 1}
   @reluctantOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.dropReluctantOutline, alpha: 1}
   # the window a frame's grip would resize (FrameGripWdgt), at that same width
   @resizeTargetOutlineStyle: -> {form: "outline", color: WorldWdgt.theme.resizeTargetOutline, alpha: 1}
+
+  # A PLACE where nothing stands yet, washed: where a release would put what the hand carries (the band a
+  # dock would make, WorldWdgt.addDragAffordanceWidgets).
+  @landingAreaStyle: -> {form: "fill", color: WorldWdgt.theme.dropLandingWash}
+
+  # The widget a hovered menu row names, washed: the one thing that is (see my header).
+  @namedByARowStyle: -> {form: "fill", color: WorldWdgt.theme.hoverHighlightWash}
 
   # The editor-focus indicator is not a HighlighterWdgt: it is a per-widget PAINT-TIME selection
   # overlay drawn on top of the selected widget's own content (Widget._drawSelectionOverlay).

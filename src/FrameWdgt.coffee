@@ -1528,7 +1528,7 @@ class FrameWdgt extends ClippingWdgt
   # The strip of the offer at `side`, in my own plane: the points a release docks at that side
   # from, the corners aside (those go to the nearer edge, as dockSideAt answers). Same box, same
   # depth, as the answer above. It is where to AIM, never the picture of the dock: the hand
-  # outlines the band the release would make (bandBoxIfDocked).
+  # washes the band the release would make (bandBoxIfDocked).
   dockBandBoxAt: (side) ->
     body = @_dockBandsBox()
     depth = WorldWdgt.preferencesAndSettings.dockBandDepth
@@ -1598,8 +1598,8 @@ class FrameWdgt extends ClippingWdgt
       box
 
   # THE BAND `aFrame` WOULD BE, docked at `side`: its box in my own plane, as my arrange would
-  # place it once the dock is made -- what the hand outlines while a frame hovers over the offer,
-  # so the outline is the place and the size of what the release makes. Derived, with nothing
+  # place it once the dock is made -- what the hand washes while a frame hovers over the offer,
+  # so the preview is the place and the size of what the release makes. Derived, with nothing
   # docked and nothing written, from the terms the dock itself would produce: the spec it would
   # hand the frame (_edgeDockSpecFor), the thickness the frame measures under it
   # (_bandThicknessUnder), the slot that band ADDS at `side` (_slotThicknessFor, the term each slot
@@ -1689,7 +1689,7 @@ class FrameWdgt extends ClippingWdgt
   # one that measures itself in cells, a toolbar, the depth in cells it stands at), and whether the
   # dock stands engaged, which the spec answers from my mode now and from what the payload is
   # (EdgeDockLayoutSpec.engagedUnder). Built here for the dock (_dockFrameNoSettle) and for the
-  # picture of it before the release (bandBoxIfDocked), so the band the hand outlines is measured
+  # picture of it before the release (bandBoxIfDocked), so the band the hand washes is measured
   # under the very spec the dock would hand over -- which is why it stays pure: it builds a spec
   # and writes nothing else, neither on `aFrame` nor on its payload, since the hand asks it at
   # every pointer move of a hold.

@@ -1,7 +1,8 @@
-# Paints a HighlighterWdgt in its FILL form -- the WASH a menu row that stands for a widget (a hierarchy
-# menu's, a chooser's) lays over that widget while hovered (Widget.turnOnHighlight,
-# HighlighterWdgt.applyHighlightStyle): my widget's box filled ONCE in its color, the hoverHighlightWash
-# role, translucent by its own alpha, its corners rounded at my widget's outlineRadii -- the corners of
+# Paints a HighlighterWdgt in its FILL form -- the WASH over a place a release would put what the hand
+# carries (the band a dock would make, HighlighterWdgt.landingAreaStyle, dropLandingWash), and over the
+# widget a hovered menu row names (a hierarchy menu's, a chooser's: Widget.turnOnHighlight,
+# HighlighterWdgt.namedByARowStyle, hoverHighlightWash): my widget's box filled ONCE in its color,
+# translucent by its own alpha, its corners rounded at my widget's outlineRadii -- the corners of
 # what it covers where its box meets them (Widget.cornerRadiiFollowingMyOutline), so the wash lies on a
 # rounded target's body and leaves the target's corner notches to whatever shows there. Nothing else:
 # no stroke, and no shadow (an ephemeral overlay casts none).

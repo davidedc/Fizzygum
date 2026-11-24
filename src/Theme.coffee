@@ -43,6 +43,8 @@ class Theme
     @accent = Color.create 0x2F, 0x5B, 0xEA
     # the accent at 12% (0x1F of 0xFF): the fill of an "on" or selected control
     @accentTint = Color.create 0x2F, 0x5B, 0xEA, 0x1F / 255
+    # the accent at 20% (0x33 of 0xFF): a place a release would put what the hand carries
+    @accentWash = Color.create 0x2F, 0x5B, 0xEA, 0x33 / 255
     @danger = Color.create 0xC4, 0x32, 0x1C
     @scrollbar = Color.create 30, 30, 28, 0.35
 
@@ -423,11 +425,15 @@ class Theme
     # over the empty segments' opaque track.
     @dragArmRingFilled = @accent
     @dragArmRingEmpty = @line
-    # the outline around a receptive drop candidate (and a dock band): the target the release
-    # reaches ...
+    # the outline around a receptive drop candidate: the receiver the release reaches ...
     @dropCandidateOutline = @accent
     # ... and around a view-mode target that declines the drop.
     @dropReluctantOutline = @line
+    # the WASH laid over a PLACE a release would put what the hand carries, where nothing stands yet (the
+    # band a dock would make; HighlighterWdgt.landingAreaStyle): a ring there would read as a strip of
+    # what lies under it, selected. Strong enough to read as a band over a page's white and over a
+    # paragraph's plate, where the hover wash's tint would be lost, with the text under it still reading.
+    @dropLandingWash = @accentWash
     # the outline around the window a frame's grip would resize, while the pointer is over the grip
     # or a press on it stands (FrameGripWdgt).
     @resizeTargetOutline = @accent

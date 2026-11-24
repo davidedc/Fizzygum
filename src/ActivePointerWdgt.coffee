@@ -511,11 +511,12 @@ class ActivePointerWdgt extends Widget
   _declareDragEmbedEphemerals: (payload) ->
     isFrame = payload._dropPolicyProxy().requiresDeliberateEmbedding()   # §6 4D-2b: window affordances for a tilted window too
 
-    # 0. the DOCK BAND, outlined as the dock would MAKE it: over a band the offer is a slot of the
-    # host, not the host, so the host's own outline stands down and the box of the band this
-    # payload would be there takes its place -- its place and its size once docked, the host's
-    # answer (FrameWdgt.bandBoxIfDocked, asked of the payload's real frame as the offer was), never
-    # the strip the offer is made from. Declared in the host's plane; the reconciler maps it.
+    # 0. the DOCK BAND, previewed as the dock would MAKE it: over a band the offer is a slot of the
+    # host, not the host, so the host's own ring stands down and the box of the band this payload
+    # would be there takes its place -- its place and its size once docked, the host's answer
+    # (FrameWdgt.bandBoxIfDocked, asked of the payload's real frame as the offer was), never the strip
+    # the offer is made from. Declared in the host's plane; the reconciler maps it and washes it, a
+    # place nothing stands in yet (HighlighterWdgt.landingAreaStyle).
     if @dragEmbedDockBand?
       world.dragEmbedDockBandDeclared =
         host: @dragEmbedDockBand.host
@@ -523,7 +524,7 @@ class ActivePointerWdgt extends Widget
     else
       world.dragEmbedDockBandDeclared = undefined
 
-    # 1. candidate (accent) or reluctant (neutral) outline via the highlight style channel
+    # 1. candidate (accent) or reluctant (neutral) ring via the highlight style channel: each a thing
     outlineTarget = if @dragEmbedDockBand? then undefined else (@dragEmbedCandidate ? @dragEmbedReluctant)
     if outlineTarget isnt @_dragEmbedOutlinedWdgt
       world.widgetsToBeHighlighted.delete @_dragEmbedOutlinedWdgt if @_dragEmbedOutlinedWdgt?

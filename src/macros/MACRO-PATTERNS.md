@@ -919,9 +919,9 @@ assertion a recapture after a regression silently stores two different hashes an
   `undefined` over the host's own content (`macroDockAnyFrame` asserts both at the same host), and
   `undefined` everywhere on a host in VIEW mode, which offers no slot (`macroViewModeWindowOffersNoDockSlot`).
   `host.dockBandBoxAt(side).center().round()` is the middle of the offer's strip at a side: a place to
-  aim, not the picture of the dock. The outline the hand shows during the hold (`world.dragEmbedDockBandWdgt`)
-  is the band the release makes; assert it against the docked frame's box read AFTER the release, never
-  against `bandBoxIfDocked` itself (`macroDockOutlineIsTheBandItMakes`). After the drop
+  aim, not the picture of the dock. The preview the hand shows during the hold (`world.dragEmbedDockBandWdgt`, a
+  wash: `HighlightWashAppearance`) is the band the release makes; assert it against the docked frame's box read
+  AFTER the release, never against `bandBoxIfDocked` itself (`macroDockPreviewIsTheBandItMakes`). After the drop
   the docked frame is an ordinary `EdgeDockLayoutSpec` occupant, assertable by MEANING, not pixels:
   `guest.layoutSpec.side`, `guest in host.dockedFrames[side]` (a side's list, outermost first: a frame that joins a side
   stands last, nearest the content), no close piece (`!guest.closeButton?`), resizer

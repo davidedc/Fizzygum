@@ -132,10 +132,12 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   band would land hidden. A frame dragged over it meets the reluctant cue of any view-mode content and lands on the
   desktop. A toolbar is born locked, so its own frame offers no slot either, docked or floating: a frame released over
   a docked band is offered the HOST's slot.
-- **The outline of a dock is the band it would make.** While a frame hovers over an offer the hand outlines
+- **The preview of a dock is the band it would make.** While a frame hovers over an offer the hand washes
   `FrameWdgt.bandBoxIfDocked(frame, side)`: where the band would stand and how big, derived from the terms
   the dock itself would produce (the spec, the frame's thickness under it, the host's arrange), with nothing
-  docked. `dockBandBoxAt(side)` is the strip the offer is made from, a place to aim at.
+  docked. A wash, never a ring: the band is a place nothing stands in yet, and a ring marks a thing
+  (`HighlighterWdgt.landingAreaStyle`). `dockBandBoxAt(side)` is the strip the offer is made from, a place to
+  aim at.
 - **The seam.** `ToolbarWdgt.hostWindow` asks the toolbar's frame for its `dockHost` at every asking; nothing
   stores it. `ToolbarWdgt.hostWindowOf(aWidget)` (a static) is the one home every tool asks: it asks the one climb,
   `ToolbarWdgt.toolbarOf(aWidget)`, from the tool, nearest first, to the first ancestor answering `hostWindow`. The climb tests a capability
@@ -468,8 +470,8 @@ SystemTests:
   `SystemTest_macroDrawingTakesNoClickPlacedWidget`;
 - a sheet's view mode, its own (`SystemTest_macroSheetsMakerViewMode`) and that of a document a grid stands
   bare in (`SystemTest_macroViewModeSheetRefusesEditing`);
-- the dock offer in view mode and the outline of a dock: `SystemTest_macroViewModeWindowOffersNoDockSlot`,
-  `SystemTest_macroDockOutlineIsTheBandItMakes`;
+- the dock offer in view mode and the preview of a dock: `SystemTest_macroViewModeWindowOffersNoDockSlot`,
+  `SystemTest_macroDockPreviewIsTheBandItMakes`;
 - a side's list of bands (a dock and a re-side join it, a lifted band lets the others close up, a copy holds its
   own): `SystemTest_macroSecondBandJoinsItsSide`;
 - a content change retiring only the band its content brought, and a band docked into a standing window filling its

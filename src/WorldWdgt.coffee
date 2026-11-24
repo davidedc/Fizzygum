@@ -1819,19 +1819,20 @@ class WorldWdgt extends IconGridPanelWdgt
       @dragEmbedLockBadgeWdgt = undefined
 
     # dock band — the band a frame would BE if released here (its place and size once docked, the
-    # host's answer: FrameWdgt.bandBoxIfDocked), outlined in the candidate accent. A band not yet
-    # made is a region of its host's body, not a widget, so it is declared as a BOX and gets a
-    # HighlighterWdgt of its own rather than riding the per-widget highlight channel.
+    # host's answer: FrameWdgt.bandBoxIfDocked), WASHED: it is a place where nothing stands yet, a
+    # landing area, never a thing to ring (HighlighterWdgt.landingAreaStyle). A band not yet made is a
+    # region of its host's body, not a widget, so it is declared as a BOX and gets a HighlighterWdgt of
+    # its own rather than riding the per-widget highlight channel.
     if @dragEmbedDockBandDeclared?
       unless @dragEmbedDockBandWdgt?
         @dragEmbedDockBandWdgt = new HighlighterWdgt
         @add @dragEmbedDockBandWdgt
-        @dragEmbedDockBandWdgt.applyHighlightStyle HighlighterWdgt.candidateOutlineStyle()
+        @dragEmbedDockBandWdgt.applyHighlightStyle HighlighterWdgt.landingAreaStyle()
       # the overlay is a world child, so anchor it to the band's SCREEN footprint — the host can
       # sit inside a rotated/scaled island, where its own plane-local box is the wrong plane
       # (off any island mapRectToScreen returns the box unchanged). The band's corners follow the
       # host's where they meet them (the host's rounded corners at the body's far edge), read in the
-      # host's plane; a host inside such an island is outlined square, its band on the screen being
+      # host's plane; a host inside such an island is washed square, its band on the screen being
       # the bounding box of a turned rectangle, with no corner of the host's to follow.
       bandHost = @dragEmbedDockBandDeclared.host
       bandBox = @dragEmbedDockBandDeclared.box

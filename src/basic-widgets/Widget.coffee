@@ -1864,8 +1864,8 @@ class Widget extends TreeNode
   # True iff a STRICT ancestor island turns or scales me (a non-identity spec on my parent chain):
   # my layout-box geometry does not coincide with my screen appearance. An island's own spec does not
   # count (it transforms the island's CONTENT; its slot box IS plane geometry), and neither does a
-  # scroll translation. The dock band's outline asks it of the band's host
-  # (WorldWdgt.addDragAffordanceWidgets): a band on a turned or scaled host is outlined square.
+  # scroll translation. The dock band's preview asks it of the band's host
+  # (WorldWdgt.addDragAffordanceWidgets): a band on a turned or scaled host is washed square.
   isVisuallyTransformed: ->
     @_enclosingNonIdentityIsland()?
 
@@ -2954,9 +2954,9 @@ class Widget extends TreeNode
   turnOnHighlight: ->
     if !@highlighted
       @highlighted = true
-      # declare into the highlight style channel (target -> style descriptor): the hover WASH, in its
-      # role's translucent colour (the drag's outlines are the channel's other form).
-      world.widgetsToBeHighlighted.set @, HighlighterWdgt.fillStyle WorldWdgt.theme.hoverHighlightWash
+      # declare into the highlight style channel (target -> style descriptor): I am the widget a hovered
+      # menu row names, which is washed (HighlighterWdgt's header says why a ring is not used here)
+      world.widgetsToBeHighlighted.set @, HighlighterWdgt.namedByARowStyle()
       @_changed()
 
   turnOffHighlight: ->
