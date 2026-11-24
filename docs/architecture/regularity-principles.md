@@ -81,7 +81,9 @@ vocabulary below is the convention for all new code:
     a free-floating persistent frame wears close + collapse + title + an edit toggle (iff its
     payload affords editing); one whose host owns its membership drops close, since you leave
     by dragging out, not by a button; a docked band goes further and keeps only collapse +
-    title, because editing what a band holds is not a band's gesture. Close button and resize
+    title, because editing what a band holds is not a band's gesture, and its collapse only where
+    collapsing gives room back (a one-row toolbar band, as deep as its strip, shows neither piece
+    nor title, and its strip shows a grip mark). Close button and resize
     handle need **`isFreeFloating()`**, and the handle also asks `FrameWdgt.offersAResizeHandle`
     (a window in view mode around it, or a collapsed bar with no room beside its pieces, takes it
     away); right-click → close stays the universal fallback

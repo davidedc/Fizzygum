@@ -960,13 +960,14 @@ assertion a recapture after a regression silently stores two different hashes an
   No new verb for either.
 - **A collapsed docked frame is an edge SLIVER, not a bar-shaped rectangle** (`macroCollapsedDockIsAnEdgeSliver`):
   the docked counterpart of the collapsed-window entries above. `@collapseOrUncollapseWindow_InputEvents band`
-  collapses a docked frame exactly like a free window, but a docked frame's collapsed shape follows its dock
-  AXIS: expanded, a TOP-docked band's own bar runs ACROSS it at the strip's leading end (C13: as tall as the
-  band, `band.bar.height() == band.height()`, at its left end and short of its right); collapsed, the band IS
-  its bar, so it flips to `band.bar.width() > band.bar.height()` and the whole band is exactly one bar thick
-  (`band.height() == band.bar.height()`), still spanning the full body width. A ONE-ROW toolbar band is as deep as
-  a strip, so collapsed it is exactly as thick as expanded: tell the two states apart by `band.contents.collapsed` and
-  the bar's extent, never by the band's height (a two-cell band, the paint toolbox, is thicker than its strip). C17 (tap-anywhere-to-expand)
+  collapses a docked frame exactly like a free window — a band that OFFERS its piece: one thicker than its strip (a
+  docked document, the two-cell paint toolbox) or collapsed; a one-row toolbar band offers none (next entries) — but a
+  docked frame's collapsed shape follows its dock AXIS: expanded, a band docked across the top or bottom has its own
+  bar running ACROSS it at the strip's leading end (C13: as tall as the band, `band.bar.height() == band.height()`, at
+  its left end and short of its right); collapsed, the band IS its bar, so it flips to `band.bar.width() >
+  band.bar.height()` and the whole band is exactly one bar thick (`band.height() == band.bar.height()`), still spanning
+  the full body width. A band that collapses gives room back: tell the two states apart by its height and by what the
+  page gains (exactly the band's thickness less its strip's). C17 (tap-anywhere-to-expand)
   applies here too: `@moveToAndClickAtFractionOf_InputEvents band.titlebarBackground, [0.7,0.5]` (a tap on the
   strip BACKGROUND, clear of the collapse button) re-expands it.
 - **The toolbar grid: packed while it fits, spread only while full, a grid in a box**
@@ -985,8 +986,16 @@ assertion a recapture after a regression silently stores two different hashes an
   `cell.thumbnailClickReceiver()` (its box must be the cell's), the tool is `cell.glassBoxItem()`, a lidded cell answers
   `cell.lid?`; a tool that is its own target and draws a picture carries the side it is drawn at as `glyphSize` (a paint
   tool's `faceWidget` box shows it), a glyph-faced tool carries none. Read the tools by class within a bar
-  (`bar.topWdgtSuchThat (w) -> w instanceof BoldButtonWdgt`). A collapse that keeps the band's depth is read by
-  `band.contents.collapsed` and by the page's `top()` staying put. No new verb.
+  (`bar.topWdgtSuchThat (w) -> w instanceof BoldButtonWdgt`). A one-row band carries no collapse piece (collapsing it
+  would free nothing): assert `!band.collapseUncollapseSwitchButton?` and its grip mark, `band.bar.gripMarkShows`. No
+  new verb.
+- **A band's strip offers its collapse piece only where it gives room back; a bare strip shows a field of dots**
+  (`macroBandStripOffersCollapseOnlyWhereItGivesRoom`): read the roster by meaning (`band.collapseUncollapseSwitchButton?`,
+  `band.bar.gripMarkShows`) and the dots by the canvas, counting the pixels in the strip that are not its fill (16 dots
+  of 2 × 2 at dpr 1), never by a literal position. A band that collapses is told apart by the room it gives back: the
+  page grows by exactly the band's thickness less its strip's. A one-row band collapsed by a door other than its piece
+  (the dev Test menu) shows its piece as the way back, the uncollapse glyph. A press on a marked strip is still the
+  strip's: a drag lifts the band. No new verb.
 - **View mode puts away the TOOL bands; the user's own collapse state survives the round trip**
   (`macroViewModeDisengagesDocks`, `macroViewModeHidesOnlyToolBands`): a host's mode flip
   (`@moveToAndClick_InputEvents win.editButton`) sets `dockedFrame.layoutSpec.engaged` for every band whose payload is
@@ -994,7 +1003,8 @@ assertion a recapture after a regression silently stores two different hashes an
   both modes. A tool band is disengaged in view mode (zero layout contribution,
   content starts higher, `band.isVisible == false`, but the frame STAYS in its slot: `band in host.dockedFrames[side]`
   throughout), re-engaged back in edit mode. `engaged` (the host's mode) and `collapsed` (the user's
-  own choice) are different questions that survive each other: collapse a band, flip to view then back to edit,
+  own choice) are different questions that survive each other: collapse a band that offers its piece (the Drawings
+  Maker's two-cell toolbox), flip to view then back to edit,
   and it comes back at its COLLAPSED thickness, not its expanded one — assert the round trip with
   `@assertScreenshotsIdentical` between the pre-view and post-edit shots (byte-identical, GHOST-conform:
   visibility never feeds back into state). No new verb (drives the same `editButton` click the edit-toggle

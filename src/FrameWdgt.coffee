@@ -45,7 +45,9 @@ class FrameWdgt extends ClippingWdgt
   # win.closeButton / win.editButton / win.collapseUncollapseSwitchButton /
   # win.titlebarBackground; FolderWindowWdgt supplies its own closeButton;
   # showEditModeInBar drives @editButton). Kept in sync at the three mutation
-  # points: build, edit-button destroy on collapse, recreate on uncollapse.
+  # points: build, edit-button destroy on collapse, recreate on uncollapse. Each is
+  # undefined while my strip carries no such piece (a host-owned frame's close, a
+  # docked band's edit toggle, the collapse piece of a band no thicker than its strip).
   label: undefined
   closeButton: undefined
   editButton: undefined
@@ -169,6 +171,8 @@ class FrameWdgt extends ClippingWdgt
   #                 the span between. A free-floating frame offers "close"; a HOST-OWNED one
   #                 does not -- a host that owns my placement owns my membership, and you leave
   #                 such a host by dragging out, with right-click ➜ close as the fallback (C6).
+  #                 "collapse" is offered where collapsing gives room back (_offersCollapse):
+  #                 by every frame but a docked band no thicker than its strip.
   #   resizer       which resize affordance the frame offers: "payloadSized" (the grip, iff the
   #                 payload sizes freely) or "none". The grip answers the same free-floating
   #                 predicate itself in HandleWdgt.wouldShow -- ONE home, so this field states the
@@ -216,13 +220,13 @@ class FrameWdgt extends ClippingWdgt
     theme = WorldWdgt.theme
     pieces = []
     pieces.push "close" if @isFreeFloating()
-    pieces.push "collapse"
+    pieces.push "collapse" if @_offersCollapse()
     pieces.push "title"
-    # A DOCKED band's strip is a GRIP: take hold of it, or collapse it, and nothing else (program
-    # ruling C12) -- editing what a band holds is not a band gesture, and a host that owns my
-    # placement owns what my strip offers, exactly as it owns my close piece. Set free on the
-    # desktop I am an ordinary window again and carry the edit toggle my payload's amenities call for
-    # (ruling C5).
+    # A DOCKED band's strip is a GRIP: take hold of it, or collapse it where collapsing gives room
+    # back (_offersCollapse), and nothing else (program ruling C12) -- editing what a band holds is
+    # not a band gesture, and a host that owns my placement owns what my strip offers, exactly as it
+    # owns my close piece. Set free on the desktop I am an ordinary window again and carry the edit
+    # toggle my payload's amenities call for (ruling C5).
     pieces.push "edit" if @offersEditToggle()
 
     axis = @_barAxis()
@@ -235,7 +239,7 @@ class FrameWdgt extends ClippingWdgt
     naturalWidth: "none"
     # the strip, measured from my OUTER edge: my border, one row of targets, then the strip's own
     # rule, which my payload lies past.
-    thickness: theme.frameBorderWidth + theme.barIconSize + theme.barRuleWidth
+    thickness: theme.barStripThickness
     slotSize: theme.barIconSize
     pieceLengths:
       edit: theme.barToggleBoxLength
@@ -248,6 +252,17 @@ class FrameWdgt extends ClippingWdgt
     textHeight: @_windowTitleTextHeight()
     fontRole: theme.fonts.windowTitle
     titleStyle: "windowBar"
+
+  # DO I OFFER MY COLLAPSE PIECE? A frame no host's slot holds always does. A docked band does where
+  # collapsing gives room back: collapsed, a band IS its strip (_bandThicknessUnder), so a band no
+  # thicker than its strip -- a one-row toolbar, as deep as a strip by construction -- would hide what
+  # it holds and free nothing; and while I am collapsed, the piece is the way back. Pure: theme dials
+  # and my band's own measure, never a laid-out extent. What my window strip's "collapse" piece reads
+  # (_barSpec).
+  _offersCollapse: ->
+    dockSpec = @_myEdgeDockSpec()
+    return true if !dockSpec? or @contents?.collapsed
+    (@_bandThicknessUnder dockSpec) > WorldWdgt.theme.barStripThickness
 
   # Do I offer my own edit toggle -- the pencil in my strip? When my payload, or I, hold an edit mode
   # (providesAmenitiesForEditing) that can be switched -- not one held FIXED (alwaysInEditMode: a
@@ -610,10 +625,12 @@ class FrameWdgt extends ClippingWdgt
   # that is no strip's (my border and body margin on both sides, and my own bands there:
   # _chromeBesidesStripsAcross), so the payload gets exactly the extent it asked for and my grip,
   # running ACROSS the band, adds nothing; collapsed, I AM my bar, so the band is the strip's
-  # thickness (never 0 -- there has to be something left to tap). A pure measure: no term reads
-  # where I stand, so the answer is the same before the dock and after it.
+  # thickness, the theme's one home of it (never 0 -- there has to be something left to tap). A pure
+  # measure: no term reads where I stand, so the answer is the same before the dock and after it,
+  # and none reads my strip's spec, which asks this measure whether I offer my collapse piece
+  # (_offersCollapse).
   _bandThicknessUnder: (dockSpec) ->
-    return @_barSpec().thickness if @contents?.collapsed
+    return WorldWdgt.theme.barStripThickness if @contents?.collapsed
     crossAxis = if dockSpec.runAxis() is "horizontal" then "vertical" else "horizontal"
     (dockSpec.thicknessGrantedTo @contents) + @_chromeBesidesStripsAcross crossAxis
 
@@ -2318,8 +2335,8 @@ class FrameWdgt extends ClippingWdgt
   #                         whether my children are clipped to my ROUNDED outline rather than to my
   #                         rectangle (BoxyAppearance.clipsChildrenToOutline -- the rounded child
   #                         clip, below), so they neither paint nor catch presses in my corner notches
-  #     barAppearance       the appearance class my strip's background wears: the rounded box, for
-  #                         every strip
+  #     barAppearance       the appearance class my strip's background wears: the rounded box that
+  #                         paints a strip's grip mark (FrameStripAppearance), for every strip
   #     barFill, barStroke  its colours. No look strokes a strip, and the stroke is applied as
   #                         given, so an undefined one clears a stroke an earlier look left
   #     barCornerRadius     a pop-up header band's rounding, given when the strip builds it: none,
@@ -2333,6 +2350,12 @@ class FrameWdgt extends ClippingWdgt
   #                         the ink of the glyphs my strip's button pieces draw (close, collapse /
   #                         uncollapse): at rest, and while one is hovered or pressed. Undefined
   #                         for a strip that carries no button piece (a pop-up header)
+  #     barGripMark         the ink of the grip mark, the field of dots my strip shows where it
+  #                         shows no piece and no title (FrameStripAppearance): a card's, which a
+  #                         docked band no thicker than its strip wears -- the mark is a band's
+  #                         handle, and a band is a card. Undefined, no mark, for a window (a window
+  #                         strip narrowed below its one piece shows nothing, and paints nothing) and
+  #                         for a pop-up header
   #     barToggleTrack, barToggleKnob, barToggleKnobGlyph, barToggleGlyph
   #                         the edit-mode toggle's inks: its track, its knob, the icon on the knob
   #                         and the icon off it at rest (hovered or pressed that one takes
@@ -2363,13 +2386,14 @@ class FrameWdgt extends ClippingWdgt
         # its scroll indicator stop at its outline, and its rows panel catches nothing in its notches
         bodyStrokesOverChildren: true
         bodyClipsChildrenToOutline: true
-        barAppearance: BoxyAppearance
+        barAppearance: FrameStripAppearance
         barFill: theme.menuHeaderFill
         barStroke: undefined
         barCornerRadius: 0
         barRule: theme.menuHeaderRule
         barGlyph: undefined
         barGlyphActive: undefined
+        barGripMark: undefined
         barToggleTrack: undefined
         barToggleKnob: undefined
         barToggleKnobGlyph: undefined
@@ -2394,13 +2418,14 @@ class FrameWdgt extends ClippingWdgt
     bodyCornerRadius: if internal then theme.cardCornerRadius else theme.windowCornerRadius
     bodyStrokesOverChildren: true
     bodyClipsChildrenToOutline: true
-    barAppearance: BoxyAppearance
+    barAppearance: FrameStripAppearance
     barFill: if internal then theme.cardBarFill else windowBarFill
     barStroke: undefined
     barCornerRadius: undefined
     barRule: if focused then theme.focusedWindowBarRule else theme.barRule
     barGlyph: if internal then theme.cardBarGlyph else windowBarGlyph
     barGlyphActive: if focused then theme.focusedWindowBarGlyphActive else theme.barGlyphActive
+    barGripMark: if internal then theme.cardBarGripMark else undefined
     barToggleTrack: if focused then theme.focusedWindowBarToggleTrack else theme.barToggleTrack
     barToggleKnob: if focused then theme.focusedWindowBarToggleKnob else theme.barToggleKnob
     barToggleKnobGlyph: theme.barToggleKnobGlyph
@@ -2670,7 +2695,10 @@ class FrameWdgt extends ClippingWdgt
   # title-only strip, furniture the window strip -- ruling C4), so it is re-derived wherever either
   # can change: at every (re)parenting, at every layout-spec change -- the very seam the resize
   # handle's own visibility rides (HandleWdgt.updateVisibility, driven from Widget::_setLayoutSpec)
-  # -- and at every lifetime change. Re-points the aliases at what the bar now holds (a strip that
+  # -- and at every lifetime change. It follows my COLLAPSE too, and, as a band, my thickness (a band
+  # offers its collapse piece only where collapsing gives room back, _offersCollapse), which is why it
+  # is also re-derived at the top of each of my arranges (_positionAndResizeChildren), the synchronous
+  # re-fit a collapse or an expand runs included. Re-points the aliases at what the bar now holds (a strip that
   # changes style carries a fresh title piece and background), and schedules my strip's re-lay only
   # when the roster really moved -- a spec-less chrome child rides the freefloating skip in
   # Widget._addNoSettle's container invalidate, so no layout is reached by the add alone.

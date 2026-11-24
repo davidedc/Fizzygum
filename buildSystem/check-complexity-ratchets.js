@@ -128,8 +128,10 @@ const METHOD_CEILINGS = {
   // (where each band of a side stands, the one home of the placement) -- one for my bands as a whole
   // (_framesInMySlots: whether a widget is one of them, what I wear, which bands a content change chooses among), and the floor
   // one band asks of my extent (_floorKeepingBandUsable), lifted out of smallestExtentKeepingMyControlsUsable now
-  // that it runs per band
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 181 },
+  // that it runs per band. Raised 181 -> 182 on 2026-11-24, the same ruling, for a band's strip: _offersCollapse
+  // (whether my strip offers its collapse piece: a band only where collapsing gives room back), the one question
+  // _barSpec's roster asks
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 182 },
 };
 
 const COMPLEXITY_CEILING = 15;
@@ -169,9 +171,15 @@ const RECORDED = {
   'DiffingPatchNodeWdgt#diff': 23,
   'Duplicator#_duplicate': 16,
   'Example3DPlotWdgt#drawPlot': 18,
-  'FrameBarWdgt#_positionAndResizeChildren': 33,
-  'FrameBarWdgt#_reDeriveRosterNoSettle': 23,
-  'FrameWdgt#_frameLook': 24,
+  // raised 33 -> 34 on 2026-11-24 under the owner's standing ruling of 2026-11-16 (the right shape over the count):
+  // the strip records whether it shows no piece and no title (gripMarkShows, a layout output its skin's grip mark
+  // reads) where its arrange learns it (several-bands plan, U4)
+  'FrameBarWdgt#_positionAndResizeChildren': 34,
+  // lowered 23 -> 20 on 2026-11-24: the collapse switch's build went to _addCollapseSwitchNoSettle
+  'FrameBarWdgt#_reDeriveRosterNoSettle': 20,
+  // raised 24 -> 25 on 2026-11-24, the same ruling: the look's grip-mark role (barGripMark: a card's strip, none on a
+  // window's)
+  'FrameWdgt#_frameLook': 25,
   // raised 46 -> 47 on 2026-11-24 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
   // band's first arrange takes the steady path, its host dictating its box -- a frame built inside the settle that
   // docks it took the first-placement negotiation's height (its payload's 50x40 construction extent: a 40 px viewport

@@ -5,7 +5,9 @@
 # carries, at what metrics, and along which axis is NOT mine to decide: the
 # frame derives all of it in one place (FrameWdgt._barSpec) and I build and lay
 # out whatever that spec names -- so a manifestation is a ROSTER, never a bar
-# subclass. The frame keeps ALIAS
+# subclass. A strip whose arrange shows no piece and no title (gripMarkShows)
+# has its background paint the GRIP MARK there wherever its frame's look gives the
+# mark an ink: a band's strip, a band being a card. The frame keeps ALIAS
 # fields pointing at the same piece instances -- `win.label` / `win.closeButton`
 # / `win.editButton` / `win.collapseUncollapseSwitchButton` /
 # `win.titlebarBackground` are load-bearing contracts (MacroToolkit, the macro
@@ -28,10 +30,12 @@
 
 class FrameBarWdgt extends Widget
 
-  # WHICH of the collapse switch's two glyphs is showing while the frame is EXPANDED: the switch
-  # is built as [collapse, uncollapse] (see _reDeriveRosterNoSettle) and its value is an index into
-  # that pair, so the offer-to-collapse glyph is the first.
+  # WHICH of the collapse switch's two glyphs is showing: the switch is built as [collapse,
+  # uncollapse] (_addCollapseSwitchNoSettle) and its value is an index into that pair, so the
+  # offer-to-collapse glyph, shown while the frame is EXPANDED, is the first, and the offer-to-expand
+  # glyph, shown while it is collapsed, the second.
   @COLLAPSE_GLYPH: 0
+  @UNCOLLAPSE_GLYPH: 1
 
   # THE ORDER THE STRIP GIVES ITS PIECES UP as it narrows (owner ruling, the graded roster): the
   # title goes first (the grade in _layOutTitleInStrip), then the edit toggle, then the collapse
@@ -65,6 +69,14 @@ class FrameBarWdgt extends Widget
   # piece to be inked then reads my frame's look.
   glyphInk: undefined
   activeGlyphInk: undefined
+  # WHETHER MY STRIP SHOWS ITS GRIP MARK: a layout OUTPUT, written by my arrange
+  # (_positionAndResizeChildren), true exactly while my strip shows no piece and no title -- a docked
+  # band no thicker than its strip, which offers no collapse piece, or any strip too short for its one
+  # piece. My background's shape copies it onto the appearance that paints the mark
+  # (_shapeTitlebarBackground), and the shape is re-applied by every derivation of my skin as well,
+  # whose fresh appearance has no arrange of its own to ask. The mark is painted where my frame's look
+  # gives it an ink (barGripMark): a card's does, so a band's strip shows it; a window's look names none.
+  gripMarkShows: false
 
   # THE EVENT ONE OF MY PIECES ACTED ON — the stamp my own strip gesture reads to know whose click
   # it is looking at (see activated). Purely about a gesture in flight, so it never belongs in
@@ -241,7 +253,11 @@ class FrameBarWdgt extends Widget
   # frame's placement owns its membership, so a host-owned frame carries no
   # close piece (program ruling C6, the same isFreeFloating() predicate the
   # resize handle answers) -- hence the frame re-runs this at every (re)parenting
-  # and every layout-spec change. Answers whether the roster actually CHANGED, so
+  # and every layout-spec change. It follows the frame's COLLAPSE too, and, for a
+  # band, its thickness: a band offers its collapse piece only where collapsing gives
+  # room back (FrameWdgt._offersCollapse) -- hence the frame also re-runs this at the
+  # top of each of its arranges, the synchronous re-fit a collapse or an expand runs
+  # included. Answers whether the roster actually CHANGED, so
   # the frame schedules my re-lay only when it did (a spec-less chrome child rides
   # the freefloating skip in Widget._addNoSettle's container invalidate, so these
   # adds and teardowns reach no layout on their own -- the frame's
@@ -300,11 +316,7 @@ class FrameBarWdgt extends Widget
 
     if "collapse" in pieces
       if !@collapseUncollapseSwitchButton? or @collapseUncollapseSwitchButton.parent isnt @
-        if !@collapseUncollapseSwitchButton?
-          collapseButton = new CollapseIconButtonWdgt
-          uncollapseButton = new UncollapseIconButtonWdgt
-          @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
-        @_addNoSettle @collapseUncollapseSwitchButton
+        @_addCollapseSwitchNoSettle()
         rosterChanged = true
     else if @collapseUncollapseSwitchButton?
       # the SUBTREE, as above: the switch owns the two glyph buttons it toggles between.
@@ -315,6 +327,20 @@ class FrameBarWdgt extends Widget
     # a piece built just now wears my strip's ink from its first paint
     @_inkGlyphButtons() if rosterChanged
     rosterChanged
+
+  # My collapse switch onto my strip -- built first if I hold none -- showing my frame's state.
+  # Being added resets a switch to its first glyph (SwitchButtonWdgt._reactToBeingAdded), and a switch
+  # can arrive on a frame that is already collapsed: a band no thicker than its strip offers its piece
+  # only as the way back (FrameWdgt._offersCollapse), so the frame collapses first and the piece is
+  # built after. Such a switch must offer to expand it, or its first press would collapse a collapsed
+  # frame and do nothing but flip its glyph.
+  _addCollapseSwitchNoSettle: ->
+    if !@collapseUncollapseSwitchButton?
+      collapseButton = new CollapseIconButtonWdgt
+      uncollapseButton = new UncollapseIconButtonWdgt
+      @collapseUncollapseSwitchButton = new SwitchButtonWdgt [collapseButton, uncollapseButton]
+    @_addNoSettle @collapseUncollapseSwitchButton
+    @collapseUncollapseSwitchButton._setToggleStateNoSettle FrameBarWdgt.UNCOLLAPSE_GLYPH if @frame.contents?.collapsed
 
   # Does my built strip disagree with the roster my frame's spec names? The pure question, asked
   # by a frame whose layout spec just changed: the answer decides whether that change is worth a
@@ -428,14 +454,16 @@ class FrameBarWdgt extends Widget
     buttons.push @editButton if @editButton?
     buttons
 
-  # My background's SKIN from `look`: the appearance it wears, the ink of its rule, its fill, and
-  # its stroke -- applied as given, so a look naming none (every look: a strip's one line is its
-  # rule) clears a stroke an earlier one left. Where the rule runs is my shape's, below: a fresh
-  # appearance runs none until the shape puts it back.
+  # My background's SKIN from `look`: the appearance it wears, the ink of its rule and of its grip
+  # mark, its fill, and its stroke -- applied as given, so a look naming none (every look: a strip's
+  # one line is its rule) clears a stroke an earlier one left. Where the rule runs, and whether the
+  # mark shows, are my shape's, below: a fresh appearance runs no rule and shows no mark until the
+  # shape puts them back.
   _skinTitlebarBackgroundTo: (look) ->
     background = @titlebarBackground
     background.appearance = new look.barAppearance background
     background.appearance.ruleColor = look.barRule if look.barRule?
+    background.appearance.gripMarkInk = look.barGripMark if look.barGripMark?
     background.setColor look.barFill
     background.strokeColor = look.barStroke
 
@@ -449,12 +477,14 @@ class FrameBarWdgt extends Widget
   # lifted with until it lands, and its strip keeps fitting it). The rule, the spec's rule width
   # thick, runs along the edge that faces the frame's content: the bottom of a top strip, the right
   # of a side strip; a collapsed strip faces no content and runs none. The rule's two corners are
-  # therefore always square.
+  # therefore always square. And the background shows the grip mark exactly while my arrange last
+  # found my strip showing no piece and no title (gripMarkShows).
   #   The axis and the collapsed state change with NO re-derivation of the look (collapsing,
-  # re-siding a dock, a dock engaging or disengaging), so the shape follows the LAYOUT: my arrange
-  # applies it every time, and so does my skin, whose fresh appearance runs no rule. A pop-up
-  # header band is shaped here too, more simply: it keeps the square corners of its build, and its
-  # rule runs along its bottom edge, the one facing the frame's rows.
+  # re-siding a dock, a dock engaging or disengaging), and so does what my strip shows, so the shape
+  # follows the LAYOUT: my arrange applies it every time, and so does my skin, whose fresh appearance
+  # runs no rule and shows no mark. A pop-up header band is shaped here too, more simply: it keeps the
+  # square corners of its build, its rule runs along its bottom edge, the one facing the frame's rows,
+  # and it shows no mark: its title is what it shows.
   _shapeTitlebarBackground: (spec) ->
     return unless @titlebarBackground? and @titleStyle is spec.titleStyle
     background = @titlebarBackground
@@ -462,7 +492,9 @@ class FrameBarWdgt extends Widget
     if spec.titleStyle is "menuHeader"
       radii = background.cornerRadius
       ruledEdge = "bottom"
+      gripMark = false
     else
+      gripMark = @gripMarkShows
       bodyRadius = @frame.cornerRadius ? 0
       bodyRadius = Math.max bodyRadius... if Array.isArray bodyRadius
       r = Math.max 0, Math.round(bodyRadius) - WorldWdgt.theme.frameBorderWidth
@@ -478,11 +510,12 @@ class FrameBarWdgt extends Widget
     current = background.cornerRadius
     sameRadii = current is radii or (Array.isArray(current) and Array.isArray(radii) and
       current.length is 4 and current.every((radius, i) -> radius is radii[i]))
-    return if sameRadii and appearance.ruledEdge is ruledEdge and appearance.ruleWidth is spec.ruleWidth
+    return if sameRadii and appearance.ruledEdge is ruledEdge and appearance.ruleWidth is spec.ruleWidth and appearance.showsGripMark is gripMark
     background.cornerRadius = radii
     appearance.ruledEdge = ruledEdge
     appearance.ruleWidth = spec.ruleWidth
-    # cross-invalidation-sanctioned: own sub-part — my background's outline and rule follow my layout
+    appearance.showsGripMark = gripMark
+    # cross-invalidation-sanctioned: own sub-part — my background's outline, rule and mark follow my layout
     background._changed()
 
   # The edit button's lifecycle is driven by the FRAME (it depends on the
@@ -576,10 +609,6 @@ class FrameBarWdgt extends Widget
       @titlebarBackground._applyBounds (@position().add new Point inset, inset), new Point (spec.thickness - inset), (@height() - 2 * inset)
     else
       @titlebarBackground._applyBounds (@position().add new Point inset, inset), new Point (@width() - 2 * inset), (spec.thickness - inset)
-    # ... rounded at the corners it shares with the frame's outline, and ruled along the edge that
-    # faces the frame's content -- both follow my axis and the frame's collapsed state, so every
-    # arrange re-applies them
-    @_shapeTitlebarBackground spec
     # TODO this looks better:
     #@titlebarBackground._applyExtent (new Point @width(), spec.thickness).subtract new Point 4,4
     #@titlebarBackground._applyMoveTo @position().add new Point 2,2
@@ -590,6 +619,17 @@ class FrameBarWdgt extends Widget
     # shown again the moment the strip runs across a frame's top instead of down a band's side. A
     # title cropped past legibility gives itself up too (see _layOutTitleInStrip).
     titleShows = @_layOutTitleInStrip spec, leadingPieces, trailingPieces
+    showing = @_showingPieceNames leadingPieces.concat trailingPieces
+
+    # A STRIP THAT SHOWS NOTHING ELSE SHOWS ITS GRIP MARK: no piece and no title leave a bare strip,
+    # which is the band's handle all the same (a docked band no thicker than its strip offers no
+    # collapse piece, FrameWdgt._offersCollapse), so it says so with a field of dots. Recorded as my
+    # layout output, then my background is shaped from it: rounded at the corners it shares with the
+    # frame's outline, ruled along the edge that faces the frame's content, and marked or not -- all
+    # three follow my axis, the frame's collapsed state and what this arrange shows, so every arrange
+    # re-applies them, after the pieces and the title have taken their places.
+    @gripMarkShows = showing.length is 0 and !titleShows
+    @_shapeTitlebarBackground spec
 
     # A LONE PIECE, ALONE ON THE STRIP, CENTRES (ruling C13 as amended 2026-11-03,
     # docs/archive/toolbar-grid-and-bar-run.md): with nothing else on the strip it has no end to
@@ -600,7 +640,6 @@ class FrameBarWdgt extends Widget
     # not: the roster reads from the strip's start, the leading pieces from there and the trailing
     # ones from its far end, so a window's close piece stays in its corner and its edit toggle at
     # the other end.
-    showing = @_showingPieceNames leadingPieces.concat trailingPieces
     if showing.length is 1 and !titleShows
       @_layOutPieceInSlot showing[0], stripStart + Math.round((stripLength - @_lengthOfPieces showing, spec) / 2), spec
     else

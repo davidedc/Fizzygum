@@ -174,7 +174,8 @@ class BoxyAppearance extends Appearance
 
   # A part of my widget's own body that a subclass paints differently from my fill, inside an open
   # scope, in the normal pass only: it is look, not silhouette. None here (FrameBodyAppearance paints a
-  # window's grip strip).
+  # window's grip strip, FrameStripAppearance the grip mark of a band's strip that shows no piece and
+  # no title).
   _paintBandOverMyFill: (ctx, localDamageBox) ->
 
   # My edge rule (ruledEdge), filled over the part of it being repainted, inside an open scope. A

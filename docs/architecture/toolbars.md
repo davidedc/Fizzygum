@@ -36,9 +36,14 @@ nothing: a docked toolbar never falls back to working for the person.
   [`visual-design-system.md`](visual-design-system.md), "The tool cell".
 - **A one-row band is as deep as a strip.** The grid has padding along its strip only (`ToolPanelWdgt`), so a
   one-row toolbar is one cell deep and its band, with its card's two border lines, 46: a frame strip's thickness.
-  One-row bands docked on different sides line up, and one collapsed, which is its strip, leaves its host's page where
-  it was. A band's grid runs along the band (its edge spec's run axis, asked of the toolbar), whatever its box's
+  One-row bands docked on different sides line up, and collapsing one would give no room back, so it offers no
+  collapse piece (below). A band's grid runs along the band (its edge spec's run axis, asked of the toolbar), whatever its box's
   shape.
+- **A band's strip is its handle.** A band offers its collapse piece only where collapsing gives room back (it is
+  thicker than its strip, or collapsed: the way back), so a one-row toolbar band, as deep as its strip, offers none;
+  its strip, showing no piece and no title, shows a grip mark, a field of dots (`FrameStripAppearance`; the look in
+  `visual-design-system.md`, "The bar's pieces"). A press anywhere on the strip is still the strip's: a drag lifts the
+  band. The two-cell paint toolbox and a docked document keep their piece.
 - **A toolbar's depth is counted in cells.** A toolbar has a depth of its own (`ToolbarWdgt.depthInCells`: the
   theme's `toolRows`, 1, unless its class states one; `PaintToolbarWdgt` states 2, a two-column toolbox): the depth it
   is born at floating (its window hugs that many columns) and the depth a Maker's own toolbar docks at. A toolbar that
@@ -468,6 +473,8 @@ SystemTests:
   bands (a strip drag moves the host; no "Dock" or "Float" row): `SystemTest_macroViewModeHidesOnlyToolBands`;
 - a toolbar docking at the depth it floats at, in cells, and the paint toolbox two cells deep:
   `SystemTest_macroToolbarDocksAtTheDepthItFloatsAt`;
+- a band's strip offering its collapse piece only where collapsing gives room back, and a bare strip's field of dots:
+  `SystemTest_macroBandStripOffersCollapseOnlyWhereItGivesRoom`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;

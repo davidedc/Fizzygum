@@ -1750,14 +1750,20 @@ class MacroToolkit
     @moveToAndClick_InputEvents windowWidget.closeButton
 
   # Collapse or uncollapse a FrameWdgt by clicking the collapse/uncollapse control in its window bar.
-  # Every FrameWdgt builds a `.collapseUncollapseSwitchButton` (a SwitchButtonWdgt that toggles between a
-  # CollapseIconButtonWdgt and an UncollapseIconButtonWdgt): clicking it when expanded collapses the
-  # window to just its bar (contents.collapse()), and clicking it again — the switch now shows the
-  # uncollapse icon — restores it. So this one verb both collapses and uncollapses, depending on the
-  # window's current state. The window-chrome sibling of closeWindow_InputEvents. Queues input events —
-  # follow with `yield "waitNoInputsOngoing"`.
+  # A frame whose strip offers collapsing builds a `.collapseUncollapseSwitchButton` (a SwitchButtonWdgt
+  # that toggles between a CollapseIconButtonWdgt and an UncollapseIconButtonWdgt): clicking it when
+  # expanded collapses the window to just its bar (contents.collapse()), and clicking it again — the
+  # switch shows the uncollapse icon while the window is collapsed — restores it. So this one verb both
+  # collapses and uncollapses, depending on the window's current state. Every frame offers it but a
+  # pop-up (a menu's strip carries its title alone) and an expanded docked band no thicker than its
+  # strip, which collapsing would free nothing of (FrameWdgt._offersCollapse): such a frame's
+  # `.collapseUncollapseSwitchButton` is undefined, and the verb refuses it by name, NO COLLAPSE PIECE,
+  # rather than aim a press at nothing. The window-chrome sibling of closeWindow_InputEvents. Queues
+  # input events — follow with `yield "waitNoInputsOngoing"`.
   collapseOrUncollapseWindow_InputEvents: (windowWidget) ->
-    @moveToAndClick_InputEvents windowWidget.collapseUncollapseSwitchButton
+    piece = windowWidget.collapseUncollapseSwitchButton
+    throw new Error "NO COLLAPSE PIECE: #{windowWidget}'s strip offers none to press — a pop-up offers none, nor does a docked band no thicker than its strip, which collapsing would free nothing of"  unless piece?
+    @moveToAndClick_InputEvents piece
 
   # RESIZE A FRAME BY ITS OWN GRIP so its EXTENT changes by exactly `extentDelta` (positive grows).
   # The grip's centre travels by the delta: a resize handle keeps the offset it was grabbed at
@@ -1823,9 +1829,9 @@ class MacroToolkit
   # Otherwise, in order: the title's centre, while the title SHOWS (_titleShowsOn) and a press there
   # meets it; the strip background's centre; the first of 32 points along the background's centre
   # line, down its LENGTH whichever way the strip runs, a press meets — a strip whose middle a
-  # centred button covers (a docked band's grip, a toolbar window's bar down its side) is still
-  # taken by its uncovered margin. A frame offering none of these has no strip to take hold of, which
-  # is a fault to raise, naming the frame, never a press to place on whatever covers it.
+  # centred button covers (the grip of a band deeper than its strip, a toolbar window's bar down its
+  # side) is still taken by its uncovered margin. A frame offering none of these has no strip to take
+  # hold of, which is a fault to raise, naming the frame, never a press to place on whatever covers it.
   #   Each candidate is the whole pixel a press lands on (rounded, as both pointer kinds round a press)
   # and "meets" is the aim check's own question for the run's pointer kind (_widgetAPressMeets), so the
   # answer holds for the press the run actually makes. A side-effect-free locator — it reads the live

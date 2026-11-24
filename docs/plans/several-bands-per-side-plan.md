@@ -39,7 +39,7 @@ execution, the owner present), §0.5 stands as written.
 | U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | LANDED 2026-11-24 |
 | U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | LANDED 2026-11-24 |
 | U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | LANDED 2026-11-24 |
-| U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | not started |
+| U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | LANDED 2026-11-24 |
 | U5 | Close | Phase 5 (what the units did not already write), Phase 6 | not started |
 
 ---
@@ -838,6 +838,30 @@ own, so a bare one reads as a grey square, on a touch screen above all.
      `TiltedClickSelectsCell`, `ToolbarActsOnSelection`). Attribute by sampling: `fg diffpage` on five of them,
      one per Maker kind, must show a difference confined to band strips; then the whole set goes into Phase 4's
      wave. A difference anywhere else is a finding.
+
+**Landed 2026-11-24 (U4 of the several-bands loop).** R10 is `FrameWdgt._offersCollapse`, read by `_barSpec`'s roster;
+the strip's thickness has one home, a derived Theme dial, `barStripThickness` (the `frameGripStripThickness`
+precedent), read by `_barSpec`, `_bandThicknessUnder`'s collapsed branch (so `_offersCollapse` cannot recurse) and
+`_offersCollapse`. R11 is paint: `FrameStripAppearance` (the twin of `FrameBodyAppearance`), worn by every strip,
+paints the dots in `_paintBandOverMyFill` from its own box's plate (the strip's background less its rule: 12 px in,
+which reproduces the approved render; the plan's formula on the strip's length broke its own inset at some lengths),
+whole device pixels on both backends; whether it shows is a layout OUTPUT of the bar's arrange
+(`FrameBarWdgt.gripMarkShows`: no piece and no title showing), handed to the appearance by `_shapeTitlebarBackground`;
+its ink a card's look role, `cardBarGripMark` (the palette's `muted`, 6 levels from the render's 112,112,106: reuse over
+a one-off colour, for the owner's look), none on a window's. Found on the way and fixed at its cause: a collapse piece
+built on an already-collapsed frame showed "−" (the add resets a switch to its first state):
+`FrameBarWdgt._addCollapseSwitchNoSettle` shows the frame's state. Four tests that asserted or pressed a one-row band's
+piece keep their subjects: `macroDockedFrameHasNoCloseNoResizer` asserts the absent piece; `macroToolbarBandIsAsDeepAsAStrip`
+asserts it and the info band's kept piece; `macroCollapsedDockIsAnEdgeSliver` runs C13 and C17 on a docked note (and
+asserts an identity pair); `macroViewModeDisengagesDocks` on the Drawings Maker's two-cell toolbox. Test 4,
+`SystemTest_macroBandStripOffersCollapseOnlyWhereItGivesRoom`, reads the dots off the canvas by meaning (16 dots, 12 px
+in), bitten by four plants (the piece always offered; the mark never painted; the switch built showing "−"; the mark
+catching presses). Presuite: the predicted 64 failed on pictures only, test for test (48 one-row-band strips, the 26
+spreadsheet tests among them; the four rewritten; eight re-changed; the loop's four); the diff page classified by
+script (every change a strip's, whole dots) and by eye (the tilted strips, the two moved tests); recaptured. Ratchets:
+`METHOD_CEILINGS.FrameWdgt` 181 → 182 (`_offersCollapse`), `FrameBarWdgt#_positionAndResizeChildren` 33 → 34
+(`gripMarkShows`), `FrameWdgt#_frameLook` 24 → 25 (the role); `FrameBarWdgt#_reDeriveRosterNoSettle` lowered 23 → 20.
+For the owner's look: a toolbar window narrowed below one piece shows a bare strip and no mark (D6 ruled the band's).
 
 ### Phase 4 — tests
 

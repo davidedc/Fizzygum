@@ -146,6 +146,11 @@ class Theme
     # at rest: in a window's strip, and in a card's (a docked band's included) ...
     @windowBarGlyph = @muted
     @cardBarGlyph = @text2
+    # the GRIP MARK a card's strip shows where it shows no piece and no title -- the handle of a
+    # docked band no thicker than its strip (FrameStripAppearance): quieter than the strip's glyphs.
+    # The mark is a band's, and a band is a card: a window's look names no mark ink, so a window strip
+    # showing nothing (narrowed below its one piece) paints no mark.
+    @cardBarGripMark = @muted
     # ... and the ink a strip glyph takes while it is hovered or pressed, in either strip (the
     # glyph recolours in place: no plate is drawn behind it).
     @barGlyphActive = @ink
@@ -848,6 +853,18 @@ class Theme
     # the width of the RULE a frame's strip draws along its content-facing edge, inside its own
     # thickness: a strip is the border it spans, its barIconSize targets, then this rule.
     @barRuleWidth = 1
+    # a frame STRIP's whole thickness, measured from the frame's outer edge: the border it spans, its
+    # row of barIconSize targets and its rule (FrameWdgt._barSpec). A collapsed band is exactly this
+    # thick, so a band no thicker than this frees nothing by collapsing and its strip offers no
+    # collapse piece (FrameWdgt._offersCollapse).
+    @barStripThickness = @frameBorderWidth + @barIconSize + @barRuleWidth
+    # the GRIP MARK a band's strip shows where it shows no piece and no title (FrameStripAppearance):
+    # square dots barGripMarkDotSize a side, on a barGripMarkPitch, kept barGripMarkInset in from
+    # the strip's plate (its box less its rule) on both axes -- as many as fit, the field centred, and
+    # none on a plate too short for one.
+    @barGripMarkDotSize = 2
+    @barGripMarkPitch = 6
+    @barGripMarkInset = 12
     # the margin a frame's PANE payload keeps INSIDE its body's edges -- the border's inner edge, the
     # strip's rule, a docked band -- which is also the gap between a docked band and the payload. At
     # zero the payload lies flush against every one of them. A PAGE payload keeps windowPageGutter
@@ -973,7 +990,7 @@ class Theme
     # the grid's padding, ALONG the strip only: the side padding before its first slot and after
     # its last, with whatever run is left between them shared evenly between the cells
     # (space-between). ACROSS it the grid has none: a one-row strip is one cell deep, 44, so its
-    # band is 46 with the card's two border lines -- a strip's thickness (FrameWdgt._barSpec), so a
+    # band is 46 with the card's two border lines -- a strip's thickness (barStripThickness), so a
     # one-row band of any kind lines up with the strips on every side, and a deeper band is whole
     # cells deeper (two cells, 94, a 96 band).
     @toolAlongPadding = 8
