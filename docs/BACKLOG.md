@@ -265,6 +265,17 @@ A click on a toolbar Template's cell and a drag out of it give one copy, at the 
 - [ ] **A Maker docked in a viewing window keeps its own toolbar showing** — its page refuses typing (the host's view mode reaches it), while its own text bar stays engaged and its bar's Dock and Float rows still act — reachable, low-medium; an owner question.
 - [ ] **An enlarged toolbar window docks as deep as its shorter side** — a person who makes a toolbar window 600 × 600 and docks it gets a band about ten cells deep, wider than a Docs Maker's body; R7 records the depth it stands at with no bound — reachable, medium; an owner question.
 
+### `plans/inspector-overhaul-plan.md`
+AUTHORED 2026-11-24, spiked the same day, no source written; one inspector tool: a row of inspectors, each a member list or a member editor, on the division stack. Supersedes the Smalltalk talk plan's U3 (an explorer beside the inspector). Its §0.4 holds the owner's rulings and the open decisions, each with a default.
+- [ ] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change
+- [ ] U1b: every division stack's splitter 12 px wide with grip dots
+- [ ] U2: the switch — the row, the rewritten inspector, the member list and editor, the split button; 32 tests and the rigs ported; recapture
+- [ ] U3: tests of what is new (a drill, the widening, the split by divider and by button, Duplicate, a copy and a snapshot)
+- [ ] U3b: the finger icon on the split button — candidates, then the owner's choice
+- [ ] U4: object-list views (Children, Instances, Subclasses) and the view chooser
+- [ ] U5: architecture docs, the churn set, close
+- [ ] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24)
+
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
