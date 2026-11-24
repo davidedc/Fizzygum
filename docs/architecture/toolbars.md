@@ -60,7 +60,8 @@ nothing: a docked toolbar never falls back to working for the person.
   (`FrameBarWdgt.shortestStripKeepingEveryPiece`): ONE floor, `FrameWdgt.smallestExtentKeepingMyControlsUsable`,
   asked by `FrameGripWdgt._extentMyDragAsksOfMyTarget`. A strip with no title (a toolbar window's, along its short
   side) is not floored. That is the person's gesture only, never a minimum: code can still force a window to any
-  extent; in view mode the bands are disengaged and ask no floor, while the strip still does.
+  extent; in view mode the tool bands are put away and ask no floor, a band that stands (a docked document) asks
+  none either (only a toolbar answers `shortestDockedRun`), and the strip still does.
 - **Chrome.** `ToolbarWdgt.excludedFromEditorFocusTracking` answers true: a press anywhere in a toolbar
   neither takes nor clears the editor focus, which is what its property tools act on. Every menu answers it
   too (`MenuWdgt`, pinned or not), a toolbar's overflow menu and the Fonts menu among them, so a menu's rows
@@ -93,13 +94,23 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   it keeps its side, its place and its collapse. A band floated away and docked again is a person's. A band is a
   window too: one whose payload leaves it keeps its thickness, the one its payload was granted, and holds no longer
   what its host's content brought.
-- **A band the host's view mode disengages is still docked.** It is hidden, and still listed among the
-  host's payloads (`FrameWdgt.dockedPayloads`).
+- **View mode puts away only what is there for editing.** A host that holds an edit mode and is viewing disengages
+  a band exactly when its payload answers `isAnAmenityForEditing` (a toolbar: `ToolbarWdgt`); any other band, a
+  docked document, a band whose payload left, stands in both modes (`EdgeDockLayoutSpec.engagedUnder`,
+  the one home of the rule, read when the mode flips, `FrameWdgt._engageDocksNoSettle`, and by a fresh dock's spec). A
+  disengaged band is still docked: hidden, taking no room, and still listed among the host's payloads
+  (`FrameWdgt.dockedPayloads`). While the host views, the gestures that compose it refuse: a drag on a band's strip
+  moves the host (`FrameWdgt.wantsDetachOfChild` answers only while the host's mode engages every dock), a band's
+  "Dock" and "Float" rows are not offered and their verbs refuse, and no band is offered a slot (below); the dev menu's
+  generic rows ("Pick up", "Attach", "Close") act on a band as on any widget. A Maker's view mode reaches the content of a document docked
+  on it (its text refuses typing: the Maker holds the mode, `providesAmenitiesForEditing`); a plain window whose mode
+  lives in its content does not reach a band, which is no content of it.
 - **A window in view mode offers no slot.** `FrameWdgt.dockSideAt`, the dock offer the hand asks, answers
-  nothing while the window's mode disengages its docks (`_myModeEngagesMyDocks`: it holds an edit mode and is
-  viewing) or while it stands in view-mode content, so no band can land hidden there. A frame dragged over it
-  meets the reluctant cue of any view-mode content and lands on the desktop. A toolbar is born locked, so its own frame offers no slot either, docked or floating: a frame
-  released over a docked band is offered the HOST's slot.
+  nothing while the window's mode disengages its tool docks (`_myModeEngagesMyDocks`: it holds an edit mode and is
+  viewing) or while it stands in view-mode content: the gestures that compose a viewing window refuse, and a tool
+  band would land hidden. A frame dragged over it meets the reluctant cue of any view-mode content and lands on the
+  desktop. A toolbar is born locked, so its own frame offers no slot either, docked or floating: a frame released over
+  a docked band is offered the HOST's slot.
 - **The outline of a dock is the band it would make.** While a frame hovers over an offer the hand outlines
   `FrameWdgt.bandBoxIfDocked(frame, side)`: where the band would stand and how big, derived from the terms
   the dock itself would produce (the spec, the frame's thickness under it, the host's arrange), with nothing
@@ -441,6 +452,8 @@ SystemTests:
   own): `SystemTest_macroSecondBandJoinsItsSide`;
 - a content change retiring only the band its content brought, and a band docked into a standing window filling its
   grant: `SystemTest_macroContentChangeKeepsThePersonsBands`;
+- view mode putting away only the tool bands, a docked document standing where it stood, and a viewing host keeping its
+  bands (a strip drag moves the host; no "Dock" or "Float" row): `SystemTest_macroViewModeHidesOnlyToolBands`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;

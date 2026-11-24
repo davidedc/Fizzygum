@@ -265,6 +265,7 @@ A click on a toolbar Template's cell and a drag out of it give one copy, at the 
 - [ ] **A Maker dropped into an empty window gets a second text bar** — the outer window docks the Maker's own toolbar again (and takes its title), so two identical bars reach one page — reachable, low.
 - [ ] **A toolbar window put into another window shows a clipped strip** — a free toolbar window whose strip runs down its side, first placed with its height given, keeps its payload's construction height (a 44 strip in a 118 room; a fresh one 50×40 with both scroll indicators) — reachable, low.
 - [ ] **A Maker's own toolbar moved by its strip stops being its own** — dragged to another side of the same Maker it is re-docked as a person's band, unlike a re-side by its row: the Maker then offers its Toolbar row and a page leave docks a second text bar — reachable (dev mode), low.
+- [ ] **A Maker docked in a viewing window keeps its own toolbar showing** — its page refuses typing (the host's view mode reaches it), while its own text bar stays engaged and its bar's Dock and Float rows still act — reachable, low-medium; an owner question.
 - [ ] **A pinned "Toolbar" submenu docks one more bar per click** — the row has no guard of its own, so each click docks another copy of the content's toolbar — reachable, low.
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)

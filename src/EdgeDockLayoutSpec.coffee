@@ -16,9 +16,11 @@
 # recorded), else `thickness`, the payload's cross extent as it arrived. Either way it is a PURE
 # number the host's chrome measures read (never a laid-out extent), which is why the arrival
 # extent is recorded here rather than measured off the band each pass.
-# `engaged` is the HOST's mode switch: a host showing its content in view mode disengages every
-# dock, which takes the band's layout contribution to zero — visibility then FOLLOWS the spec,
-# never the other way round (visibility is never a layout input).
+# `engaged` is the HOST's mode switch, per band (`engagedUnder`): a host showing its content in view
+# mode puts away a band whose payload is there for editing (a toolbar), which takes that band's
+# layout contribution to zero, and any other band (a docked document, a band whose payload left)
+# stands in both modes — visibility then FOLLOWS the spec, never the other way round (visibility is
+# never a layout input).
 # `broughtByContent` records who made this attachment: the host, docking its content's toolbar (at
 # its birth, its rebuild, or its "Toolbar" row: FrameWdgt._buildDockedToolbarNoSettle), or a
 # person's drop; a content change retires only the bands its content brought, and every band a
@@ -41,7 +43,7 @@ class EdgeDockLayoutSpec extends LayoutSpec
   # until that payload leaves the band (notePayloadLeft)
   thickness: undefined
 
-  # the host's mode switch: a disengaged dock takes no layout space
+  # the host's mode switch, as engagedUnder answers it: a disengaged dock takes no layout space
   engaged: true
 
   # a RECORD of this attachment: my carrier holds the toolbar my host docked for its content
@@ -60,6 +62,15 @@ class EdgeDockLayoutSpec extends LayoutSpec
   # now, or else the cross extent recorded when it arrived.
   thicknessGrantedTo: (payload) ->
     payload?.dockThickness?() ? @thickness
+
+  # Whether the band stands ENGAGED holding `payload`, under a host whose mode engages every dock
+  # or not (`hostEngagesEveryDock`: editing, or holding no mode at all). A viewing host puts away
+  # only a payload that is there for editing (isAnAmenityForEditing, a capability: a toolbar
+  # answers it), and every other band stands. Pure: the host writes the answer, at a fresh dock and
+  # at a mode flip (FrameWdgt._edgeDockSpecFor, _engageDocksNoSettle), so the rule has this one
+  # home.
+  engagedUnder: (hostEngagesEveryDock, payload) ->
+    hostEngagesEveryDock or not payload?.isAnAmenityForEditing?()
 
   # My carrier's payload has LEFT it (FrameWdgt._reactToChildRemoved, before the carrier shows its
   # placeholder): the band keeps its thickness, as every window whose content leaves keeps its size.

@@ -86,6 +86,16 @@ class ToolbarWdgt extends ViewportWdgt
   identifiesItself: ->
     true
 
+  # I AM THERE FOR EDITING: my tools change the content of the window I work for, so a window that
+  # holds an edit mode puts my band away while it views and gives it back when it edits (my band's
+  # edge spec asks, EdgeDockLayoutSpec.engagedUnder, as a capability: a payload with no answer -- a
+  # docked document -- stands in both modes). Not the question providesAmenitiesForEditing answers,
+  # which I answer too, inheriting ViewportWdgt's: that one says a container HOLDS an edit mode, the
+  # mode its content's view-only-ness is read against (Widget.sitsInViewModeContent); this one says
+  # I am one of the things such a mode is there to show only while it edits.
+  isAnAmenityForEditing: ->
+    true
+
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
   # editor focus pointer (world.editorFocusWdgt) from the widget being edited.
   excludedFromEditorFocusTracking: ->

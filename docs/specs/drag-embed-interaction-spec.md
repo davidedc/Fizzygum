@@ -160,8 +160,8 @@ that content is in. Three gates keep the offer narrow:
   lives inside.
 - **Never in view mode.** A host that holds an edit mode and is viewing offers no band, and neither does one
   standing in view-mode content (`FrameWdgt.dockSideAt` asks `_myModeEngagesMyDocks` and
-  `sitsInViewModeContent`): view mode disengages every dock, so a band landing there would land hidden, and
-  content in view mode takes nothing. The climb of §5 then runs as over any point of that host, finds its
+  `sitsInViewModeContent`): the gestures that compose a viewing window refuse (a drag on a band's strip moves the
+  window, and a tool band landing there would land hidden), and content in view mode takes nothing. The climb of §5 then runs as over any point of that host, finds its
   content the reluctant target (§7's `LOCKED_CUE`: the neutral outline and the view-only badge), and the
   release leaves the frame on the desktop. A toolbar is born locked, so a frame holding one, in a slot or
   floating, offers no band either: a frame released over a docked band docks at the HOST's side, when the

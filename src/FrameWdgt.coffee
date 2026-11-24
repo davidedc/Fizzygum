@@ -68,9 +68,11 @@ class FrameWdgt extends ClippingWdgt
   # content that declares a toolbar variant (@contents.buildToolbar?()) gets it docked here at
   # construction, recorded as the band my content BROUGHT (EdgeDockLayoutSpec.broughtByContent): a
   # content change retires that band alone, and every band a person docked stays. A band is STABLE
-  # across mode flips: view mode DISENGAGES the dock (zero layout contribution, hidden) instead of
-  # churning the tree. Built per instance in the constructor, one list per side of DOCK_SIDES -- a
-  # class-level object literal would be ONE map shared by every frame.
+  # across mode flips: view mode DISENGAGES the dock of a band whose payload is there for editing (a
+  # toolbar: zero layout contribution, hidden) instead of churning the tree, and every other band
+  # stands where it is (EdgeDockLayoutSpec.engagedUnder). Built per instance in the constructor, one
+  # list per side of DOCK_SIDES -- a class-level object literal would be ONE map shared by every
+  # frame.
   dockedFrames: undefined
 
   # THE DRAWING TOOL I HOLD while I wear one in an edge slot: a tool KEY, or undefined for none. I am
@@ -542,10 +544,10 @@ class FrameWdgt extends ClippingWdgt
 
   # ===== the four edge slots' layout terms =====
   # The frames docked at one of my edges THAT COUNT, outermost first: each still my child, its
-  # dock engaged (view mode disengages every dock), and my body actually there to hold them -- a
-  # collapsed frame is just its titlebar, so it has no body and no bands. Pure reads: the measures
-  # consume these, so they never touch a laid-out extent (a band's thickness is recorded on its
-  # spec).
+  # dock engaged (view mode disengages a tool band's, EdgeDockLayoutSpec.engagedUnder), and my body
+  # actually there to hold them -- a collapsed frame is just its titlebar, so it has no body and no
+  # bands. Pure reads: the measures consume these, so they never touch a laid-out extent (a band's
+  # thickness is recorded on its spec).
   _bandsAt: (side) ->
     return [] if @contents?.collapsed
     (band for band in (@dockedFrames?[side] ? []) when band.parent == @ and band._myEdgeDockSpec()?.engaged)
@@ -1462,12 +1464,14 @@ class FrameWdgt extends ClippingWdgt
   # from the pointer, handing each the point IN THAT FRAME'S OWN PLANE. Mid-gesture UI offers no
   # bands (a menu is not furniture to dock into), and neither does a collapsed frame — it has no
   # body to give away.
-  #   Nor does a frame in VIEW mode, or one standing in view-mode content: view mode disengages
-  # every dock (_myModeEngagesMyDocks), so a band landing there would land hidden, and content in
-  # view mode takes nothing (the drop door's rule, Widget.wantsDropOfChild, for the one arrival that
-  # does not pass that door). The hand's climb then goes on as over any point of my body, and finds
-  # my content reluctant: the neutral outline and the view-only badge, and a release that leaves the
-  # frame on the desktop. So a toolbar, born locked, offers no band either, in a slot or floating.
+  #   Nor does a frame in VIEW mode, or one standing in view-mode content: while a window views, the
+  # gestures that compose it refuse (_myModeEngagesMyDocks) -- this offer, a drag on a band's strip
+  # (it moves the window, wantsDetachOfChild), a band's "Dock" and "Float" rows and their verbs --
+  # and a tool band landing there would land hidden; and content in view mode takes nothing (the
+  # drop door's rule, Widget.wantsDropOfChild, for the one arrival that does not pass that door).
+  # The hand's climb then goes on as over any point of my body, and finds my content reluctant: the
+  # neutral outline and the view-only badge, and a release that leaves the frame on the desktop. So a
+  # toolbar, born locked, offers no band either, in a slot or floating.
   dockSideAt: (aPointInMyPlane) ->
     return undefined if @isTransientPopUp()
     return undefined if @contents?.collapsed
@@ -1616,11 +1620,15 @@ class FrameWdgt extends ClippingWdgt
   # in one of my slots is a payload I HOLD, not a part of me, so a drag on its grip lifts THE BAND
   # out instead of moving me -- the same parent-side opt-in the spreadsheet's widget-entry cell
   # uses (Widget.grabsToParentWhenDragged asks its parent this). Everything else about me stays
-  # solid under a drag: my bar, my pieces, my resizer. While I stand in content in view mode the
-  # band stays docked whatever I answer: the grab door asks first whether I sit in view-mode
-  # content, and a drag on the band takes that content as a whole.
+  # solid under a drag: my bar, my pieces, my resizer. Only while my mode engages every dock
+  # (_myModeEngagesMyDocks): while I view, a band's own gestures leave it where it is, a docked
+  # document's as much as a put-away toolbar's, so a drag on a band's strip is a drag on me, and the
+  # band's own "Dock" and "Float" rows, which ask me this, are not offered (the generic rows that
+  # move any widget, a dev menu's "Pick up", do not ask me). While I stand in content in view
+  # mode the band stays docked whatever I answer: the grab door asks first whether I sit in
+  # view-mode content, and a drag on the band takes that content as a whole.
   wantsDetachOfChild: (aWdgt) ->
-    @_isMyDockedFrame aWdgt
+    @_isMyDockedFrame(aWdgt) and @_myModeEngagesMyDocks()
 
   # The public, self-settling dock: the hand's drop lands here (through the add's dockSide option),
   # and so does the toolbar row on my own menu. A top-level gesture declares its own flush.
@@ -1651,22 +1659,26 @@ class FrameWdgt extends ClippingWdgt
 
   # The edge spec `aFrame` carries once docked at `side`: WHERE, HOW MUCH (the cross extent its
   # payload arrives with, recorded only for a payload that declares no dockThickness of its own),
-  # and whether the dock stands engaged, which is my mode's answer now. Built here for the dock
-  # (_dockFrameNoSettle) and for the picture of it before the release (bandBoxIfDocked), so the
-  # band the hand outlines is measured under the very spec the dock would hand over.
+  # and whether the dock stands engaged, which the spec answers from my mode now and from what the
+  # payload is (EdgeDockLayoutSpec.engagedUnder). Built here for the dock (_dockFrameNoSettle) and
+  # for the picture of it before the release (bandBoxIfDocked), so the band the hand outlines is
+  # measured under the very spec the dock would hand over -- which is why it stays pure: it builds
+  # a spec and writes nothing else.
   _edgeDockSpecFor: (aFrame, side) ->
     payload = aFrame.contents
     unless payload.dockThickness?
       arrivalThickness = if side is "top" or side is "bottom" then payload.height() else payload.width()
     dockSpec = new EdgeDockLayoutSpec side, arrivalThickness
-    dockSpec.engaged = @_myModeEngagesMyDocks()
+    dockSpec.engaged = dockSpec.engagedUnder @_myModeEngagesMyDocks(), payload
     dockSpec
 
-  # DOES MY MODE ENGAGE MY DOCKS? Editing engages every dock and viewing disengages it
-  # (_engageDocksNoSettle, driven by the flip), so: yes, unless I hold an edit mode and am viewing.
-  # A frame holding no mode (a clock's window, an empty one) keeps its docks engaged always. Asked
-  # where a dock is about to be made: by the spec a fresh dock lands with (_edgeDockSpecFor), and by
-  # the offer (dockSideAt), which a frame that would hide the band it is offered does not make.
+  # DOES MY MODE ENGAGE EVERY DOCK? Editing does, and so does holding no mode at all (a clock's
+  # window, an empty one); viewing engages only the bands whose payload is not there for editing
+  # (EdgeDockLayoutSpec.engagedUnder, re-asked at every flip by _engageDocksNoSettle). So: yes,
+  # unless I hold an edit mode and am viewing. Asked by the spec a fresh dock lands with
+  # (_edgeDockSpecFor) and by the gestures that compose me, which refuse while I view: the offer
+  # (dockSideAt), and a band's leaving by its strip or by its "Dock" and "Float" rows
+  # (wantsDetachOfChild).
   _myModeEngagesMyDocks: ->
     !@_holdsAnEditMode() or @isInEditMode()
 
@@ -1685,14 +1697,19 @@ class FrameWdgt extends ClippingWdgt
         if dockedFrame in counting then dockedFrame.show() else dockedFrame.hide()
     return
 
-  # My mode's half of the same question: editing ENGAGES every dock, viewing disengages it. The
-  # user's own collapse of a band is the band's business and survives the round trip.
+  # My mode's half of the same question, handed in by the flip (`engaged`: whether my mode now
+  # engages every dock, showEditModeInBar / showViewModeInBar): editing ENGAGES every dock, viewing
+  # puts away each band whose payload is there for editing and leaves every other band standing
+  # (EdgeDockLayoutSpec.engagedUnder, the one home of that rule, asked per band). The user's own
+  # collapse of a band is the band's business and survives the round trip.
   _engageDocksNoSettle: (engaged) ->
     changed = false
     for dockedFrame in @_framesInMySlots()
       dockSpec = dockedFrame._myEdgeDockSpec()
-      continue unless dockSpec? and dockSpec.engaged isnt engaged
-      dockSpec.engaged = engaged
+      continue unless dockSpec?
+      wanted = dockSpec.engagedUnder engaged, dockedFrame.contents
+      continue if dockSpec.engaged is wanted
+      dockSpec.engaged = wanted
       changed = true
     return unless changed
     @_reflectDockVisibilityNoSettle()
@@ -1765,14 +1782,15 @@ class FrameWdgt extends ClippingWdgt
 
   # The frame's own context-menu entries (on top of the generic Widget set), DELIBERATELY menu
   # entries, never bar buttons (owner ruling D9, Frame-model plan §5.C: don't spend bar space on
-  # them): a band's own "Dock" and "Float" rows, offered while I carry a host's edge spec, and a
-  # host's "Toolbar" row, offered while _offersAFreshToolbar answers yes.
+  # them): a band's own "Dock" and "Float" rows, offered while I carry a host's edge spec and the
+  # host lets me go, and a host's "Toolbar" row, offered while _offersAFreshToolbar answers yes.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     # A BAND's own rows: where it sits, and how to stop being a band at all. They are the band's
     # because a docked frame owns its own placement question -- the host owns only whether there is
-    # a slot to sit in (program ruling C12).
-    if @_myEdgeDockSpec()?
+    # a slot to sit in (program ruling C12) and whether its band may leave the one it sits in
+    # (wantsDetachOfChild: a viewing host keeps its bands where they are, so they are not offered).
+    if @_myEdgeDockSpec()? and @parent?.wantsDetachOfChild? @
       menu.addLine()
       menu.addMenuItem "Dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
       menu.addMenuItem "Float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
@@ -1818,8 +1836,10 @@ class FrameWdgt extends ClippingWdgt
   # Move me to another of my host's slots. A dock IS a placement, so re-siding is an edit to the
   # spec that places me -- the same frame, the same payload, a different edge. I leave my side's
   # list and join the new side's at its end, nearest the content, as a fresh dock does, and the
-  # bands there stay. (Menu-dispatched: the first two slots of the four-slot convention are the
-  # row and the menu's subject, and this verb wants neither.)
+  # bands there stay. Only while my host lets me leave my slot (wantsDetachOfChild): a viewing host
+  # keeps me where I am, and a row of mine pinned while it edited does nothing then.
+  # (Menu-dispatched: the first two slots of the four-slot convention are the row and the menu's
+  # subject, and this verb wants neither.)
   dockAtSide: (ignored, ignored2, side) ->
     @_settleLayoutsAfter => @_reSideMyDockNoSettle side
 
@@ -1828,7 +1848,7 @@ class FrameWdgt extends ClippingWdgt
     return unless dockSpec?
     return if dockSpec.side == side
     host = @parent
-    return unless host?._isMyDockedFrame? @
+    return unless host?.wantsDetachOfChild? @
     host._freeDockSlotOf @
     dockSpec.side = side
     host.dockedFrames[side].push @
@@ -1844,9 +1864,11 @@ class FrameWdgt extends ClippingWdgt
   # and everything that made me look docked was my edge spec, which the desktop does not give me:
   # I land wearing a window's skin, close piece, resize handle and top bar. I pop out IN PLACE (my
   # payload keeps its own top-left) and my payload, docked in nothing, works for the person, like
-  # every summoned toolbar (ToolbarWdgt.hostWindow).
+  # every summoned toolbar (ToolbarWdgt.hostWindow). Only while my host lets me go
+  # (wantsDetachOfChild): a viewing host keeps me where I am, and a "Float" row pinned while it
+  # edited does nothing then.
   floatOutOfDock: ->
-    return unless @_myEdgeDockSpec()?
+    return unless @_myEdgeDockSpec()? and @parent?.wantsDetachOfChild? @
     payload = @contents
     payloadPosition = payload.position()
     payloadExtent = payload.extent()

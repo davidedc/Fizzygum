@@ -284,7 +284,8 @@ a child is answered by duck-typed capability queries on its spec (`isDivisionEle
 `isEdgeDock?()`), never a type test. The sixth member, `EdgeDockLayoutSpec`, is the spec a DOCKED frame
 carries: the host's statement that the child is a band along one of its four edges (`side`), what the band
 grants its payload across that edge (`thicknessGrantedTo`), the host's mode switch (`engaged`: view mode
-disengages every dock, taking the band's layout contribution to zero), and a record of who made the attachment
+disengages a band whose payload is there for editing, a toolbar, taking its layout contribution to zero, and every
+other band stands; `engagedUnder` is the one home of that rule), and a record of who made the attachment
 (`broughtByContent`: the host, docking its content's toolbar, whose band a content change retires; or a person). It owns its carrier's placement, so a
 docked frame is not free-floating, and leaving the slot is exactly dropping the spec.
 

@@ -37,7 +37,7 @@ execution, the owner present), §0.5 stands as written.
 |---|---|---|---|
 | U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | LANDED 2026-11-23 |
 | U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | LANDED 2026-11-24 |
-| U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | not started |
+| U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | LANDED 2026-11-24 |
 | U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | not started |
 | U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | not started |
 | U5 | Close | Phase 5 (what the units did not already write), Phase 6 | not started |
@@ -621,6 +621,25 @@ free-window sibling of the defect, an owner question).
 5. `fg presuite`. No test is predicted to change (the suite docks only toolbars into windows it then flips,
    and a toolbar still hides). `SystemTest_macroViewModeDisengagesDocks` must pass untouched.
 
+**Landed 2026-11-24 (U2 of the several-bands loop).** Built as steps 1–4 say, with the rule given ONE home where the
+plan wrote it twice: `EdgeDockLayoutSpec.engagedUnder (hostEngagesEveryDock, payload)`, a pure query beside
+`thicknessGrantedTo` (the spec already asks its payload a capability), read by `_engageDocksNoSettle` per band and by
+`_edgeDockSpecFor`. The host send is guarded the same way everywhere (`@parent?.wantsDetachOfChild? @`: the band's
+rows, `floatOutOfDock`, `_reSideMyDockNoSettle`). `_myModeEngagesMyDocks` keeps its name; it answers whether my mode
+engages EVERY dock. `ToolbarWdgt.isAnAmenityForEditing`'s comment states its difference from
+`providesAmenitiesForEditing` (a container that HOLDS a mode). The research corrected §6: a docked document's content
+is view-only while a MAKER host views; a plain window whose mode lives in its content does not reach a band. Test 2,
+`SystemTest_macroViewModeHidesOnlyToolBands`, takes its identity pair before its refusals (a strip drag moves the host,
+which would break the pair), drags the strip by point under each pointer (`titleGrabPoint` refuses a band its viewing
+host keeps), and is bitten by three plants (every band disengaged; the host letting a band go in any mode; the rows
+offered on the edge spec alone, the Float verb ignoring the viewing host — a pinned menu's "Float" pressed while the host
+views), each failing its own assertion under both pointers. Presuite: no existing test changed, as predicted (468 and
+455 under the finger). No ratchet moved. The unit's review found the rule right on its door, and two claims too wide: a
+viewing window's composition is not fixed (the dev menu's generic rows still act on a band; reworded to "the gestures
+that compose it refuse"), and a docked MAKER stands in its host's view mode with its own toolbar shown (R6 asks the
+payload, D3 keeps the docked window's mode): filed as an owner question. Not worked (the plan's ledger already notes the pinned rows): a band whose
+payload is swapped while a PLAIN host views keeps its engagement until the next flip (reached only through dev menus).
+
 ### Phase 3 — a toolbar docks at the depth it floats at (R7)
 
 1. `src/EdgeDockLayoutSpec.coffee`: a field and the pass-through.
@@ -875,8 +894,9 @@ into its ledger.
   `_edgeDockSpecFor` builds a spec and writes nothing on the frame or its payload. The prototype cut this
   corner (it wrote a field on the toolbar); the source must not.
 - **A view-mode band still takes input it should not.** R6's refusals are the drag, the two rows and the two
-  verbs; a docked document's own content is already view-only while its host views (measured:
-  `sitsInViewModeContent` is true for a text in it), and it offers no slot (`dockSideAt`).
+  verbs; a docked document's own content is already view-only while a MAKER host views (measured:
+  `sitsInViewModeContent` is true for a text in it; a plain window whose mode lives in its content does not reach a
+  band, found by U2's research), and it offers no slot (`dockSideAt`).
 
 ## §7 Verification protocol (summary)
 
@@ -991,6 +1011,20 @@ offers its "Toolbar" row with its bar docked, and its next page leave docks a se
 gestures for one intent end differently. The plan's Phase 1b reads a band floated away and docked again as a person's;
 whether a band that never left its host's slots (a drag from one side to another) keeps the record is the owner's
 question.
+
+### A Maker docked in a viewing window keeps its own toolbar showing
+
+Read 2026-11-24 by U2's review (the trace; not run): R6 asks a band's PAYLOAD whether it is there for editing, one level
+down, so a docked MAKER (a band whose payload is its page) stands in its host's view mode, and the Maker keeps the mode
+it docked with (D3: a docked frame offers no pencil). Its own text bar therefore stays engaged and shown inside it while
+the host views; its page refuses typing (the host's view mode reaches it through the chrome walk), so the bar's tools
+have nothing to act on; and its bar's "Dock" and "Float" rows are offered and act (the Maker, editing, lets its band go),
+while a drag on the same strip climbs to the host and moves it (the Maker stands in view-mode content), and the dock
+offer refuses it. To see it: the end state of `SystemTest_macroViewModeWindowOffersNoDockSlot` (a Docs Maker docked on a
+Docs Maker), then the host's pencil. The decision to take: whether a viewing window's view mode reaches the bands of a
+window docked on it (its tools put away too), or the docked window keeps its own mode; one uniform piece either way:
+`wantsDetachOfChild` refusing while the host stands in view-mode content, the mirror of `dockSideAt`, so the rows agree
+with the drag.
 
 ### A pinned "Toolbar" submenu docks one more bar per click
 

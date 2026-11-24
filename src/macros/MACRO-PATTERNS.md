@@ -936,7 +936,8 @@ assertion a recapture after a regression silently stores two different hashes an
   bands are its own: `band.parent is copy` and `band not in host.dockedFrames[side]`. No new verb.
 - **Undock by dragging the grip — a PLAIN drag, NO dwell** (`macroDocsToolbarDockSidesAndFloat`): the inverse
   gesture is not a mirror of the drop above. Leaving a slot is the HOST's own opt-in
-  (`FrameWdgt.wantsDetachOfChild` grants it to every band in the lists of `@dockedFrames` — the spreadsheet-cell mechanism), so
+  (`FrameWdgt.wantsDetachOfChild` grants it to every band in the lists of `@dockedFrames` while the host's mode engages
+  every dock — the spreadsheet-cell mechanism; a VIEWING host keeps its bands, and a drag on a strip moves the host), so
   an ordinary `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf band.bar, [0.5,0.5]),
   destPoint` — no `yield`, no dwell verb — lifts the docked frame straight to the desktop, landing it as an
   ordinary free-floating window (close piece and resizer back the instant it lands — skin is
@@ -946,7 +947,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **The band's own context menu: re-side and float, on the BAND, never the host** (`macroDocsToolbarDockSidesAndFloat`):
   a docked frame owns its own placement question, so "Dock" → <the other three sides> (`dockSideMenu` →
   `dockAtSide`) and "Float" (`floatOutOfDock` — the one PROGRAMMATIC undock, for keyboard-free use) live in the
-  DOCKED FRAME's own context menu. Right-clicking its bar lands on a chrome child first, so step into the band's
+  DOCKED FRAME's own context menu, offered while the host lets the band go (`wantsDetachOfChild`: not while it
+  views). Right-clicking its bar lands on a chrome child first, so step into the band's
   own row of the ancestor HIERARCHY menu exactly as everywhere else, by the band:
   `@openMenuOf_InputEvents band.bar` → `@moveToRowOfMenuStandingForAndClick_InputEvents
   (@getMostRecentlyOpenedMenu()), band` → `…, "Dock"` → `@moveToItemOfMenuAndClick_InputEvents
@@ -985,9 +987,11 @@ assertion a recapture after a regression silently stores two different hashes an
   tool's `faceWidget` box shows it), a glyph-faced tool carries none. Read the tools by class within a bar
   (`bar.topWdgtSuchThat (w) -> w instanceof BoldButtonWdgt`). A collapse that keeps the band's depth is read by
   `band.contents.collapsed` and by the page's `top()` staying put. No new verb.
-- **View mode DISENGAGES every dock; the user's own collapse state survives the round trip**
-  (`macroViewModeDisengagesDocks`): a host's mode flip (`@moveToAndClick_InputEvents win.editButton`) sets
-  `dockedFrame.layoutSpec.engaged` for every docked frame — disengaged in view mode (zero layout contribution,
+- **View mode puts away the TOOL bands; the user's own collapse state survives the round trip**
+  (`macroViewModeDisengagesDocks`, `macroViewModeHidesOnlyToolBands`): a host's mode flip
+  (`@moveToAndClick_InputEvents win.editButton`) sets `dockedFrame.layoutSpec.engaged` for every band whose payload is
+  there for editing (a toolbar, `isAnAmenityForEditing`); a docked document stays engaged and shown, where it stood, in
+  both modes. A tool band is disengaged in view mode (zero layout contribution,
   content starts higher, `band.isVisible == false`, but the frame STAYS in its slot: `band in host.dockedFrames[side]`
   throughout), re-engaged back in edit mode. `engaged` (the host's mode) and `collapsed` (the user's
   own choice) are different questions that survive each other: collapse a band, flip to view then back to edit,
