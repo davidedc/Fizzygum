@@ -14,3 +14,7 @@ duplication-report/
 # tree it writes: it describes ../Fizzygum-builds/latest, and changes with every build.
 /.latest-build-inputs
 /.latest-build-inputs.reading
+# The notebook research page's HTML version and the images both versions show, kept local; the tracked version is
+# docs/plans/notebook/js-notebook-references.md. Rebuilt by Fizzygum-tests/.scratch/notebook-research/build.py.
+/docs/plans/notebook/js-notebook-references.html
+/docs/plans/notebook/js-notebook-references/
