@@ -1,7 +1,11 @@
 # Several bands per side — a slot holds a list, view mode hides only the tools, a toolbar docks at the depth it floats at
 
-**Status: PLAN ONLY, NOT STARTED.** Authored 2026-11-23, written to be executed COLD by an LLM/engineer with
-ZERO prior context (the design session ran on another model; the executing session shares none of it). Every
+**Status: COMPLETE 2026-11-24.** Executed by the several-bands loop overnight 2026-11-23/24 in six units (U1b
+added by the owner's O4 during U1), every one CLOSED, none parked; the commit pairs are in the unit table below. The
+living truth is `docs/architecture/toolbars.md` (§1, §2, §4.4, §8, §9), `docs/architecture/layout.md` (§4.2, §4.3) and
+`docs/architecture/visual-design-system.md` (the bar's pieces, the embedded toolbar row). Below, the plan as it was
+executed, each phase with its Landed paragraph. Authored 2026-11-23, written to be executed COLD by an LLM/engineer
+with ZERO prior context (the design session ran on another model; the executing session shares none of it). Every
 fact below was read from the source, or measured on an in-page prototype, on 2026-11-23 at Fizzygum `b8f0e275`
 and Fizzygum-tests `ee76daf2c`. Line numbers drift: a method's NAME and the quoted code are authoritative, so
 grep them fresh before trusting a number.
@@ -35,12 +39,12 @@ execution, the owner present), §0.5 stands as written.
 
 | Unit | What | Sections | State |
 |---|---|---|---|
-| U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | LANDED 2026-11-23 |
-| U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | LANDED 2026-11-24 |
-| U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | LANDED 2026-11-24 |
-| U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | LANDED 2026-11-24 |
-| U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | LANDED 2026-11-24 |
-| U5 | Close | Phase 5 (what the units did not already write), Phase 6 | not started |
+| U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | CLOSED 2026-11-24 (`b3f6ddf4` / `2827060f2`) |
+| U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | CLOSED 2026-11-24 (`94596606` / `e9d27e551`) |
+| U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | CLOSED 2026-11-24 (`85846e10` / `847337a4c`) |
+| U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | CLOSED 2026-11-24 (`fd223cd0` / `66ccddd54`) |
+| U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | CLOSED 2026-11-24 (`622c3064` / `1ec64a7ae`) |
+| U5 | Close | Phase 5 (what the units did not already write), Phase 6 | CLOSED 2026-11-24 (this archive) |
 
 ---
 
@@ -1094,6 +1098,8 @@ docked, but a pinned copy outlives that answer. Its rows could ask the same ques
 (`_offersAFreshToolbar`), the way a pinned text menu re-asks its enablement.
 
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] Phases 1–6, not started: a list of bands per side (no dock destroys a band), view mode hides only tool bands, a toolbar docks at the depth it floats at; four new tests, two rewritten; owner decisions D1–D6 ruled. — CLOSED 2026-11-24 (several-bands loop, U5): every unit landed, U1b added by the owner's O4; five new tests (not four: U1b's), eight existing tests rewritten.
 
 Noted, not queued:
 

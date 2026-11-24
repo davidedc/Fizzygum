@@ -257,8 +257,7 @@ A toolbar band is 46 px deep, a strip's thickness (one row of 44 px cells and tw
 A click on a toolbar Template's cell and a drag out of it give one copy, at the size the tool came into the cell at (its class's `toolExtent`, the owner's Candidate B); the item below was left open.
 - [ ] **A sample's map pin is smaller than one taken from a toolbar** — the Sample Dashboard's five pins and the Sample Slide's one are built at the 50 × 40 birth box (picture 28 × 40), a toolbar's pin comes out 35 × 50 — reachable, low.
 
-### `plans/several-bands-per-side-plan.md` — a slot holds a list of bands, view mode hides only the tool bands, a toolbar docks at the depth it floats at (AUTHORED 2026-11-23, not started)
-- [ ] Phases 1–6, not started: a list of bands per side (no dock destroys a band), view mode hides only tool bands, a toolbar docks at the depth it floats at; four new tests, two rewritten; owner decisions D1–D6 ruled.
+### `archive/several-bands-per-side-plan.md` — a side holds a list of bands, view mode hides only the tool bands, a toolbar docks at the depth it floats at (✅ CLOSED 2026-11-24: U1–U4 and U1b landed, see its ledger; living truth `architecture/toolbars.md`, `architecture/layout.md`, `architecture/visual-design-system.md`)
 - [ ] **A docked document has no pencil** — it keeps the mode it docked with, so one docked in view mode refuses typing while its host edits; lift it out, flip it, dock it back — reachable, low.
 - [ ] **The paint revamp's toolbar pieces** — a holder's tray (tool, ink, paper, size), a Maker declaring several bands, flyout cells: designed, each to land with its first consumer.
 - [ ] **Attach onto an occupied window orphans its content** — the Attach chooser offers a window that holds a content; attaching makes the new widget its content and leaves the old one off the tree, silently; onto a band it also leaves the band's record and thickness wrong — reachable in dev mode, medium.
