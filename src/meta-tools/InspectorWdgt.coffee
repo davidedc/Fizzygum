@@ -37,7 +37,8 @@ class InspectorWdgt extends ClippingWdgt
   # of that box right of me is its border, which it strokes over its children. Opaque, my
   # silhouette is my box, so my children add nothing to the shadow a naked inspector casts.
 
-  # I read the class MEMBER MAPS (a member's recorded source), which exist only once
+  # I show what the class MEMBER MAPS record (a member's recorded source, which my member reference
+  # reads: MemberRef.shownText), and they exist only once
   # the reflective layer has arrived, and on a `sources: "lazy"` build it has not until someone asks.
   # Opening me asks first (Widget.spawnInspector); restoring me from a file asks because of this
   # declaration (Deserializer._needsTheReflectiveLayer, which both file doors consult), so a restored
@@ -339,15 +340,12 @@ class InspectorWdgt extends ClippingWdgt
     @renamePropertyButton?.setEnabled offered
     @removePropertyButton?.setEnabled offered
 
-  # Rename and remove act only on a member my subject OWNS. One up its prototype chain belongs to a
-  # class, and is edited in that class's inspector: removed here it would delete nothing, and
-  # renamed here it would become a copy of the class's member on my subject with no source of its
-  # own, which no world snapshot can save. Nor `constructor`, which is my subject's class itself
-  # (Class.refuseTheConstructor). Nor anything, while my subject is no subject of my edits
-  # (_subjectIsEditable).
+  # Rename and remove act only on a member my member reference can rename or remove: one my subject
+  # OWNS, and never `constructor` (MemberRef.canBeRenamedOrRemoved says why). Nor on anything, while
+  # my subject is no subject of my edits (_subjectIsEditable).
   _selectedMemberCanBeRenamedOrRemoved: ->
     name = @list?.selected?.labelString
-    name? and name isnt "constructor" and @_subjectIsEditable() and Object::hasOwnProperty.call @inspectedObject, name
+    name? and @_subjectIsEditable() and @_memberRefOf(name).canBeRenamedOrRemoved()
 
   # My toggles show my filter: each is ON exactly while the showing* field it stands for is true.
   # The build and every re-filter end here, and nothing else sets a toggle of mine, so a toggle and
@@ -479,16 +477,6 @@ class InspectorWdgt extends ClippingWdgt
     inspector._moveWithin world
     world.add inspector
 
-  # The CoffeeScript kept with the function a Fizzygum class FUNCTION holds as its STATIC `name`
-  # (Class.memberRecordOf): its own class's record, or -- a static `extend` copied down, still that very
-  # function -- the declaring ancestor's. A function no class made under a record (a run's static, an
-  # override no record names) has none and reads as its compiled text, which is true, where a source
-  # recorded under the NAME would be code this class does not run. undefined for a holder that is no
-  # class function, or a function with no record.
-  @_recordedStaticSourceOf: (holder, name) ->
-    return undefined unless typeof holder is "function" and classNamed(holder.name) is holder
-    Class.memberRecordOf holder[name]
-
   # WHICH INSPECTOR a value calls for, asked by every door that hands an inspector an arbitrary value
   # (my row double-click, Widget.spawnInspector): a Fizzygum class's PROTOTYPE is its class, and gets
   # the class inspector, whose edits go through the class's meta-object and are recorded; any other
@@ -520,6 +508,12 @@ class InspectorWdgt extends ClippingWdgt
   # to a value meant to stay as it is, or change a class unrecorded.
   codeReceiver: ->
     @inspectedObject if @_subjectIsEditable()
+
+  # The reference my edits and my code pane go through for the member `memberName` of my subject: an
+  # OBJECT's member, edited through the instance edit protocol (MemberRef). A class inspector's is a
+  # class's member (ClassInspectorWdgt._memberRefOf). Made for the one gesture that asks, never kept.
+  _memberRefOf: (memberName) ->
+    new MemberRef @inspectedObject, memberName
 
   # The EDIT ROW -- my footer band's buttons -- as ONE unit: built, laid out and reached into
   # together, so it exists or it does not, and my footer band with it. An inspector on a subject
@@ -556,56 +550,11 @@ class InspectorWdgt extends ClippingWdgt
     classInspector = new ClassInspectorWdgt classLink
     world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
 
-  # the recorded SOURCE of a non-function member, or undefined to show its VALUE. The
-  # class inspector overrides this with the prototype-level truth (the source its class chain
-  # records); an OBJECT inspector keeps showing the instance's VALUE -- per-instance state is
-  # its own truth.
-  _sourceForFieldMember: (selected) ->
-    undefined
-
-  # What my code pane shows of a member, which selectionFromList loads into it: a function's source,
-  # read where my subject holds it, or a field's recorded source, else its value.
-  _paneTextOfMember: (memberName) ->
-    val = @inspectedObject[memberName]
-
-    # A function shows the source of the member my subject HAS, read where it is held: the first link
-    # of my subject's prototype chain that holds the member decides.
-    #   Held by anything but a Fizzygum class's prototype -- my subject itself, or an object it was
-    # made from -- it is a function of that holder's own: the source it keeps (Widget.keptSourceOf, an
-    # injected one's), or, held by a class FUNCTION, the source recorded for that very static
-    # (_recordedStaticSourceOf), else its compiled text; never the source of a class member it shadows.
-    #   Held by a class's prototype, it is a class member: the source kept WITH that very function
-    # (Class.memberRecordOf), never a source recorded under its NAME, which a run's replacement need not
-    # be. A function with none reads as its compiled text. A `constructor` row is the class function:
-    # its constructor's source where the class writes one, else its compiled text.
-    if Utils.isFunction(val)
-      holder = @inspectedObject
-      holder = Object.getPrototypeOf holder until !holder? or Object::hasOwnProperty.call holder, memberName
-      if holder? and !isAClassPrototype holder
-        ownSource = Widget.keptSourceOf(val) ? InspectorWdgt._recordedStaticSourceOf holder, memberName
-        val = ownSource if ownSource?
-      else if (source = Class.memberRecordOf val)?
-        val = source
-      txt = val.toString()
-    else
-      # a field shows its recorded source where there is one, else its own VALUE -- an undefined
-      # field reads "undefined", whatever its subject's constructor holds under the same name
-      if (fieldSource = @_sourceForFieldMember memberName)?
-        txt = fieldSource
-      else if !val?
-        txt = "undefined"
-      else if Utils.isString val
-        txt = '"'+val+'"'
-      else
-        # a value with no prototype has no toString of its own: it reads as Object's does
-        txt = if Utils.isFunction val.toString then val.toString() else Object::toString.call val
-    txt
-
   selectionFromList: (selected) ->
     if selected == undefined then return
 
     cnts = @detail.textWdgt
-    cnts.setText @_paneTextOfMember selected
+    cnts.setText @_memberRefOf(selected).shownText()
     # the pane's undo history is the member's it was built in: a load of ANOTHER member starts it afresh,
     # so no undo or redo brings back a text of the member selected before, which a save would write into
     # this one; a RELOAD of the member it last loaded (its row clicked again: the saved source put back
@@ -826,55 +775,30 @@ class InspectorWdgt extends ClippingWdgt
     return
 
   #InspectorWdgt editing ops:
-  # Each of my four edits -- add, save, rename, remove -- is one STEP (an overridable hook:
-  # _applyPropertyAddition, applyPropertyEdit, _applyPropertyRename, _applyPropertyRemoval) followed
-  # by my own re-filter where my member set changed. The step is the person's gesture, so it makes the
-  # edit AND tells: on a widget, the Widget edit protocol's verb (addOwnProperty, injectProperty,
-  # renameOwnProperty, removeOwnProperty -- edits alone), a Save of a function also recording the
-  # edit for a world snapshot; on a class, ClassInspectorWdgt's overrides. Each ends in my ONE
-  # notification of an edit (_notifyOfEdit). Nothing here notifies again.
-  # Shared save scaffolding: object inspectors inject the property, class
-  # inspectors edit the member through its meta-object — the only differing step is isolated in
-  # the overridable applyPropertyEdit hook (ClassInspectorWdgt overrides it).
-  # Every apply compiles before it changes anything, so an edit that is not code changes nothing:
-  # it is reported, and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers
-  # whether it saved.
+  # Each of my four edit gestures -- Save, Add…, Rename…, Remove -- is one STEP of my member
+  # reference (_memberRefOf: its save, add, rename and remove), followed by my own re-filter where my
+  # member set changed. The step makes the edit, records it where a world snapshot needs it, and tells
+  # ONCE: an object's member through the Widget edit protocol's verbs (MemberRef), a class's through
+  # its meta-object (ClassMemberRef). Nothing here notifies again.
+  # My Save is the shared save scaffolding: it reads the typed text and the selected member, and the
+  # step is the one part that differs between an object's member and a class's. Either save step
+  # compiles before it changes anything, so an edit that is not code changes nothing: it is reported,
+  # and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers whether it saved.
   save: ->
     return false unless @list.selected? and @_subjectIsEditable()
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
-    return false unless @_savingTypedCode => @applyPropertyEdit propertyName, txt
+    return false unless @_savingTypedCode => @_memberRefOf(propertyName).save txt
 
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
     true
 
-  # the one differing step between object- and class-inspector save: an object
-  # inspector injects the property onto the instance (ClassInspectorWdgt
-  # overrides this to edit the class's member through its meta-object). A function saved is logged
-  # as an instance-scope source edit, which a world snapshot carries (SourceEditsRegistry, §12):
-  # this Save is the one writer of that record, so the product's own injections (a paint tool's
-  # handlers, a load's re-injections) log nothing.
-  applyPropertyEdit: (propertyName, txt) ->
-    @inspectedObject.injectProperty propertyName, txt
-    if Utils.isFunction @inspectedObject[propertyName]
-      world?.sourceEditsRegistry?.recordInstanceEdit? @inspectedObject, propertyName, txt
-    @_notifyOfEdit()
-
-  # The one notification each of my edit gestures ends in, once its edit is made: my subject's
-  # (Widget.sourceChanged), since the edit was made under it. ClassInspectorWdgt's is the world's.
-  _notifyOfEdit: ->
-    # settling-call-sanctioned: the tail of my edit steps, which only my public gestures reach (Save, and
-    # the Add…, Rename… and Remove buttons), at event time and never inside a settle -- the
-    # notification is the edit's own settle
-    @inspectedObject.sourceChanged()
-
-
   # the add, past the prompt (addPropertyPopout). Adding a member changes my member set, so it
   # re-filters me (_refilterMembers).
   addProperty: (prop) ->
     if prop? and @_subjectIsEditable() and !@_refusesAsANewMemberName prop
-      @_applyPropertyAddition prop
+      @_memberRefOf(prop).add()
       @_refilterMembers()
 
   # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its
@@ -885,25 +809,9 @@ class InspectorWdgt extends ClippingWdgt
     @inform "constructor is the class\nitself: no member can\ntake its name"
     true
 
-  # the one differing step between object- and class-inspector add (mirroring applyPropertyEdit
-  # above): the object inspector delegates to the Widget-level addOwnProperty twin.
-  # ClassInspectorWdgt overrides this with its class edit step.
-  _applyPropertyAddition: (prop) ->
-    @inspectedObject.addOwnProperty prop
-    @_notifyOfEdit()
-  
   addPropertyPopout: ->
     # Chrome cannot handle empty strings (others do), hence the "property" default
     @prompt "new property name:", @, "addProperty", defaultContents: "property"
-
-  # the one differing step between object- and class-inspector rename
-  # (mirroring applyPropertyEdit above): the object inspector delegates to the
-  # Widget-level renameOwnProperty twin (an injected method's function carries its
-  # kept source to the new name). ClassInspectorWdgt overrides this with an edit under
-  # the new name and a removal of the old.
-  _applyPropertyRename: (oldName, newName) ->
-    @inspectedObject.renameOwnProperty oldName, newName
-    @_notifyOfEdit()
 
   # A rename, like a removal below, changes my member set, so it re-filters me (_refilterMembers).
   # A rename to the name the member already has changes nothing, so it does nothing (each step's
@@ -915,7 +823,7 @@ class InspectorWdgt extends ClippingWdgt
     propertyName = @list.selected.labelString
     return if prop is propertyName
     return if @_refusesAsANewMemberName prop
-    @_applyPropertyRename propertyName, prop
+    @_memberRefOf(propertyName).rename prop
 
     @_refilterMembers()
 
@@ -927,14 +835,6 @@ class InspectorWdgt extends ClippingWdgt
     return unless @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @list.selected.labelString
     @prompt "property name:", @, "renameProperty", defaultContents: propertyName
-  
-  # removal's differing step, same seam as _applyPropertyRename: the object
-  # inspector delegates to the Widget-level removeOwnProperty twin (the member's
-  # function goes, and its kept source with it). (ClassInspectorWdgt
-  # overrides this with its class removal step.)
-  _applyPropertyRemoval: (propertyName) ->
-    @inspectedObject.removeOwnProperty propertyName
-    @_notifyOfEdit()
 
   removeProperty: ->
     # nothing selected = nothing to remove (see renamePropertyPopout), and a member I do not offer
@@ -945,6 +845,6 @@ class InspectorWdgt extends ClippingWdgt
     return unless @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @list.selected.labelString
 
-    @_applyPropertyRemoval propertyName
+    @_memberRefOf(propertyName).remove()
 
     @_refilterMembers()

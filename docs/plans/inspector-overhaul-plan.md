@@ -1,7 +1,8 @@
 # Inspector overhaul: one tool, a row of inspectors, each one a small composed widget
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-**STATUS: AUTHORED 2026-11-24. No source written.** Every fact in §1 and §7 was read off the tree at
+**STATUS: IN EXECUTION since 2026-11-24** (authored and spiked that day; §6's table says which units have
+landed, and each landed unit's paragraph says what it corrected here). Every fact in §1 and §7 was read off the tree at
 Fizzygum `f7aed9e0` / Fizzygum-tests `e78dc3e50` (471 SystemTests) on 2026-11-24. Line numbers drift:
 the quoted method or symbol name is authoritative, so grep it fresh before trusting a number.
 **The design was spiked the same day against the unmodified dev build** (§4): six page probes, no
@@ -35,7 +36,8 @@ are **deleted**. Test churn, reference recapture and saved-world compatibility a
 Fizzygum is a CoffeeScript "web operating system" drawn on one HTML5 canvas, descended from
 Morphic.js. Every class's source text ships in the page and is compiled in the browser; there is no
 module system (every class is a global; load order is found by scanning source text for `extends X`
-and `new X`). The **inspector** is its live editing tool: it lists an object's members, shows a
+anywhere on a line, a comment's included, and for a class-body field line `name: new X`; a `new X`
+inside a method is not read and needs no edge). The **inspector** is its live editing tool: it lists an object's members, shows a
 member's CoffeeScript source, and saves an edit into the running object or class.
 
 Workspace routing: the umbrella `CLAUDE.md` at `/Users/davidedellacasa/code/Fizzygum-all/`, then
@@ -162,6 +164,10 @@ Ask the owner the OPEN ones at the start. On "go", use the defaults.
 ---
 
 ## 1. Current state (verified 2026-11-24)
+
+This section describes the tree as it stood when the plan was authored. U1 has since moved the edit
+steps and a member's text out of the two inspectors into `MemberRef` / `ClassMemberRef` (§6 U1,
+"Landed"); everything else here stands until U2.
 
 ### 1.1 The two inspectors
 
@@ -333,7 +339,7 @@ All in `src/meta-tools/` (the lazy `meta-tools` part), one class per file, file 
 | `InspectorWdgt extends Widget` | ONE subject (`inspectedObject`): a header band (name, class chip), a chooser band when the subject has more than one view, the view | `InspectorWdgt` (rewritten whole), `ClassInspectorWdgt` | ~120 |
 | `MemberListWdgt extends Widget` | the view of an object's members: filter toggles, the list, Add… Rename… Remove | the inspector's left half | ~230, moved |
 | `MemberEditorWdgt extends CodeAreaWdgt` | the view of one member: its source or value as text, Save | the inspector's right half | ~80 |
-| `MemberRef` | one member of one holder: its text and the four edit steps | the inspector's edit hooks and `_paneTextOfMember` | ~130, moved |
+| `MemberRef` | one member of one holder: its text (`shownText`) and the edit steps | the inspector's edit hooks and `_paneTextOfMember` | ~130, moved (U1) |
 | `ClassMemberRef extends MemberRef` | a member of a class's prototype | `ClassInspectorWdgt`'s overrides | ~80, moved |
 | `BandWdgt extends Widget` | a row of controls at their own sizes, gaps between them, one spring, a rule along one edge | `_layOutTogglesIn`, the header's and the footer's hand placement | ~50 |
 | `BandSpaceWdgt extends Widget` | a band's gap or spring: paints nothing, may be 0 wide, hidden from the hierarchy menu | (new) | ~20 |
@@ -416,7 +422,7 @@ where a snapshot needs it, and tells once:
 | `remove()` | `holder.removeOwnProperty name` | `class.removeMember name` + `recordClassMemberRemoval` |
 | the one notice | `holder.sourceChanged()` | `world.noteCodeChanged()` |
 
-These are today's bodies, moved (§12 gives the map), plus `duplicate` (D15), which is what a class rename already did before it removed the old name. The widgets keep the gesture logic: prompts,
+These are today's bodies, moved (§12 gives the map; U1 landed all but `duplicate`), plus `duplicate` (D15), which is what a class rename already did before it removed the old name. ⚠ A gesture tells ONCE (`macroInspectorEditTellsOnce` counts it): a class `rename` built on a PUBLIC, notifying `duplicate` would tell twice, so the copy the two share is a step of its own that does not notify, and each of `duplicate` and `rename` ends in the one notice. The widgets keep the gesture logic: prompts,
 refusals of `constructor`, enabling, re-filtering.
 
 **(c) Who refreshes.** Only the member list changes the member SET (add, rename, remove: D7), and it
@@ -640,7 +646,7 @@ true`. Model it on `ScriptWdgt`:
 
 ```coffee
   _buildAndConnectChildrenNoSettle: ->
-    @_buildEditableCodeAreaNoSettle @memberRef.text()
+    @_buildEditableCodeAreaNoSettle @memberRef.shownText()
     # `constructor`'s code is shown, never edited: it is the class itself (Class.refuseTheConstructor)
     @textWidget.isEditable = @memberRef.name isnt "constructor"
     if MemberRef.canEdit @memberRef.holder
@@ -670,7 +676,7 @@ true`. Model it on `ScriptWdgt`:
   # my member's text again, over whatever is typed: one step of my undo history, so the undo chord
   # brings the typing back (InspectorRowWdgt.showChoice, the subject chosen again)
   reload: ->
-    @textWidget.setText @memberRef.text()
+    @textWidget.setText @memberRef.shownText()
     @textWidget.pushUndoState @textWidget.text.length
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
@@ -705,12 +711,10 @@ class MemberRef
   holder: undefined
   name: undefined
 
-  # ⚠ The class is picked through a variable on purpose: the boot dependency scanner reads the
-  # literal form `new X` as "this file needs X first", and ClassMemberRef extends me -- written
-  # `new ClassMemberRef` here, the two files would each need the other first.
+  # the reference for the member `name` of `holder`: a class's member when holder is a Fizzygum
+  # class's prototype, an object's otherwise
   @of: (holder, name) ->
-    refClass = if isAClassPrototype holder then ClassMemberRef else MemberRef
-    new refClass holder, name
+    if isAClassPrototype holder then new ClassMemberRef holder, name else new MemberRef holder, name
 
   # Can `holder`'s members be edited at all? A class's prototype, through its class; an object that
   # answers the instance edit protocol (a capability, never `instanceof Widget`). A number, a Point,
@@ -731,15 +735,24 @@ class MemberRef
     (other?.editsAsAMember?() is true) and other.holder is @holder and other.name is @name
 ```
 
-Then, moved from `InspectorWdgt` with their comments (§12): `text()` (today's `_paneTextOfMember`),
-`_fieldSource()` (today's `_sourceForFieldMember`), `@_recordedStaticSourceOf`,
-`canBeRenamedOrRemoved()` (today's `_selectedMemberCanBeRenamedOrRemoved` without the selection
-read), `add()`, `save(text)`, `duplicate(newName)`, `rename(newName)`, `remove()`, `_notifyOfEdit()`. `ClassMemberRef`
-overrides `_fieldSource`, the four steps and `_notifyOfEdit`, with `_editClassMember` and
-`_removeClassMember` as its two helpers, exactly as `ClassInspectorWdgt` has them.
+**What U1 landed** (read the two files; they are the base U2 builds on): `holder`, `name`,
+`@_recordedStaticSourceOf`, `shownText()` (the old `_paneTextOfMember`; not `text()`, which is a FIELD
+of every text widget), `_fieldSource()` (the old `_sourceForFieldMember`), `canBeRenamedOrRemoved()`
+(the old `_selectedMemberCanBeRenamedOrRemoved` without the selection read), `add()`, `save(txt)`,
+`rename(newName)`, `remove()`, `_notifyOfEdit()`. `ClassMemberRef` overrides `_fieldSource`, the four
+steps and `_notifyOfEdit`, with `_editClassMember` and `_removeClassMember` as its two helpers,
+exactly as `ClassInspectorWdgt` had them. **What U2 adds**, each with its first reader: the three
+statics above (`of`, `canEdit`, `codeReceiverOf`), `editsAsAMember`, `colloquialName`, `sameMemberAs`,
+and `duplicate(newName)` on both classes (§5.3 b's warning: the copy is a step that does not notify).
 
-⚠ Do **not** name a step `_apply…`: the tier-naming audit reads that prefix as a geometry apply
-(§7.3, `tier-naming-prelude.js`).
+⚠ No comment line of `MemberRef.coffee` may read ` extends <ClassName>`: the boot dependency scanner
+(`src/boot/dependencies-finding.coffee`) reads that phrase anywhere on a line, a comment's included, as
+"this file needs that class first", and its walk has no cycle guard. A `new X` inside a method body it
+does not read, so `@of` above names both classes plainly.
+
+The steps are public doors a widget calls, named for what they do (`add`, `save`, `rename`,
+`remove`). (A consequence, not the reason: no member here is named `_apply…` or `_commit…`, a prefix
+the tier-naming audit reads as a geometry corner: §7.3, `tier-naming-prelude.js`.)
 
 ### 5.8 `BandWdgt` and `BandSpaceWdgt`
 
@@ -910,7 +923,7 @@ Notes for writing it:
 | Unit | What | Gate at its end | Done |
 |---|---|---|---|
 | U0 | Orient, decisions, a green baseline | `fg presuite` | [ ] |
-| U1 | `MemberRef` / `ClassMemberRef` under the OLD inspectors: no pixel changes | `fg gauntlet` | [ ] |
+| U1 | `MemberRef` / `ClassMemberRef` under the OLD inspectors: no pixel changes | `fg gauntlet` | [x] 2026-11-24 |
 | U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [ ] |
 | U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [ ] |
 | U3 | Tests of what is new, each proven to bite | `fg presuite` | [ ] |
@@ -956,6 +969,56 @@ Notes for writing it:
      history note's file names.
 5. **Gate:** `fg build` (every static gate), then `fg gauntlet`. Expected: green with **zero**
    reference changes. A changed reference here is a bug in the move, never churn.
+
+**Landed 2026-11-24 (U1 of the inspector-overhaul loop).** Built as steps 1, 4 and 5 say; steps 2 and 3
+were corrected by the unit's research, measured against the tree:
+- **The ref follows the INSPECTOR class, not the holder.** `InspectorWdgt._memberRefOf(name)` answers a
+  `MemberRef`, `ClassInspectorWdgt` overrides it to answer a `ClassMemberRef`, and both classes keep
+  `_subjectIsEditable` and `codeReceiver` as they were (step 3's shrink would have made every class
+  inspector read-only). Choosing by the holder (`MemberRef.of`) under the old inspectors would have
+  changed what two (inspector × subject) pairs show for a field: an object inspector holding a class's
+  prototype (the recorded source, for its value) and a class inspector holding an instance (its value,
+  for an ancestor's recorded source). So `of`, `canEdit`, `codeReceiverOf`, `editsAsAMember`,
+  `sameMemberAs`, `colloquialName` and `duplicate` are U2's, with their first readers, and step 3's
+  temporary prototype guard was never needed. `ClassInspectorWdgt` keeps five members: `_memberRefOf`,
+  `_subjectIsEditable`, `codeReceiver`, `colloquialName`, the empty own-props toggle builder.
+- **The member's text is `shownText()`**, not `text()`: `text` is a field of every text widget, read as
+  `x.text` all over both repos.
+- **No widget holds a ref**: each is made for one gesture and dropped, so no snapshot or copy meets one
+  before U2.
+- **The one behaviour that differs, ruled:** a refused class rename is said through `world.inform` from
+  inside `ClassMemberRef.rename` (a ref is no widget), where the class inspector's own `inform` said it:
+  the bubble's opener, its target, its rows' target and its OK row's subject are the world. No pixel and
+  no dismissal path differs.
+- **Facts of this plan corrected in place:** the boot dependency scanner reads no `new X` inside a method
+  body (§0.1, §5.7 and a row of §10 said it did), so `MemberRef.of` needs no indirection, while a comment
+  line reading ` extends <Class>` IS read; a class rename written as "its own public `duplicate`, then a
+  removal" would tell twice (§5.3 b); the complexity record sits at `check-complexity-ratchets.js` ~:195;
+  the serialization rig called `_applyPropertyRename` too.
+- **Outside `src`:** the tier-naming table's three rows removed; the serialization rig's five
+  `applyPropertyEdit` calls and its `_applyPropertyRename` call go through `new ClassMemberRef(proto,
+  name)` (the refusal caught on `world.inform`), three inspectors built only to make such a call dropped,
+  every expectation name unchanged.
+- **Evidence:** `fg build` clean; the ported serialization rig alone, every expectation met on both
+  backends; `fg presuite` with an EMPTY failing set, as predicted, and no reference changed. The unit's
+  review walked every gesture of both inspector classes over every kind of subject, the refused and the
+  read-only paths included, and compared the sixteen moved bodies token by token: the one differing token
+  is the `inform` above. It found no behaviour defect; it found sentences still naming the inspectors
+  as the readers of the class records (the `ClassMemberRef` header, the comment of
+  `InspectorWdgt.readsClassMemberMaps`, `parts.json`, `build-and-packaging.md`, two rig comments), all
+  corrected, and that `Fizzygum/CLAUDE.md` taught the scanner fact this plan was built on, corrected
+  there.
+- **Ratchets:** the complexity record `'InspectorWdgt#_paneTextOfMember': 20` re-keyed to
+  `'MemberRef#shownText': 20`, the body unchanged; the layering marker ceiling unchanged at 18 (the two
+  marked calls moved with `_notifyOfEdit`); `Fizzygum/CLAUDE.md`'s byte ceiling 35421 → 35555 for the
+  corrected scanner sentence, and `Fizzygum-tests/CLAUDE.md`'s banked down 67015 → 66434 (the gate's own
+  offer).
+- **Moved paths no test reaches**, read line by line in review instead: a Save of a non-function value
+  recording nothing; a class rename refused because the class does not define the member; the class
+  add's own record read on the editing page.
+- **For U2** (seen here, not worked here): the ref's steps are public and assume their gesture's guards
+  (a rename onto the member's own name would drop it; `constructor`); a refused class rename still
+  re-filters the list, which loses the selection while the bubble says nothing was renamed.
 
 ### U1b. The divider's look (0.5 day)
 
@@ -1310,7 +1373,7 @@ assertions; any other failure is a finding.
 | `…/tier-naming-audit/tier-naming-prelude.js` :59–62 | `NON_GEOMETRY` names three `_applyProperty*` | U1 step 4 |
 | Standard-test users of `macroAnalogClockInspectEdit`: `lib/gate-bite-proof.js` :37, `preludes-install-selftest-headless.js` :34, `check-refs-selftest.js` :16 (reads its real `image_0` files on every build), `run-macro-test-headless.js` :123, `notification-settle-audit/cache-oracle-selftest-headless.js` :22, and six plants (`audit-preludes/revisit-plant.js`, `unobserved-bucket-plant.js`, `end-of-cycle-audit/careless-push-plant.js`, `paint-time-plant.js`, `notification-settle-audit/callback-flush-plant.js`, `tier-naming-audit/leaf-react-plant.js`) | the test's name and its `image_0` | keep both; after the recapture run `npm run selftest` in the tests repo and the gauntlet's `selftests` leg |
 | `Fizzygum/buildSystem/fg-verbs.js` (:83–87, :282–319, :365–375) | `fg recapture-inspector` | unchanged |
-| `Fizzygum/buildSystem/check-complexity-ratchets.js` :191 | `'InspectorWdgt#_paneTextOfMember': 20` | U1 |
+| `Fizzygum/buildSystem/check-complexity-ratchets.js` | `'MemberRef#shownText': 20` (re-keyed by U1 from `'InspectorWdgt#_paneTextOfMember'`) | done in U1; nothing for U2 unless the body changes |
 | `…/check-layering.js` :327–348 | two `settling-call-sanctioned` markers of 18 | U1 |
 | `…/check-call-separation.js` :77 | `BASELINE_U_QUERY = 101` | U2.3 |
 | `…/census-widget-conformance.js` :42–52 | `BASELINE_PROLOGUE_COPIES = 8` | U2.3 |
@@ -1393,7 +1456,6 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 | The whole breadcrumb in the header | Its height depends on its width when it wraps, which a stack band cannot express (a band's box is read from fields, never from laid-out pixels: `layout.md` §8 rule 1) |
 | A view builder object handed to subject-defined view methods (`aView.list(items, label: fn, drill: fn)`, the talk plan) | It stores closures on widgets: an open explorer would make the world unsaveable |
 | `MemberRef` kept by reference on a deep copy | A copy of an inspector WITH its subject would keep pointing at the original subject (`macroDuplicatedInspectorDrivesCopiedTargetOnly` is exactly this) |
-| Writing `new ClassMemberRef` inside `MemberRef` | A load-order cycle with `extends MemberRef` (§5.7) |
 | Naming the row `InspectorWdgt` and the single-subject widget something else | "An inspector holds one subject under `inspectedObject`" is what the docs, the rig regexes and the refusal messages say; the single-subject widget keeps the name so they stay true |
 | Leaving the 6 px splitter strip as the only way to move a split | A split must work by touch (owner, 2026-11-24). Measured: a press 1 px off the strip drags the window |
 | A wider hit area than the splitter draws | The 44 rule: a target never extends beyond the widget that owns it, and a target that must be big is drawn big (`visual-design-system.md` §4.2) |
@@ -1479,7 +1541,7 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 | `I.@inspectorClassFor` (:496) | deleted; `MemberRef.of` |
 | `I._subjectIsEditable` (:513), `CI._subjectIsEditable` | `MemberRef.canEdit(holder)` |
 | `I.codeReceiver` (:521), `CI.codeReceiver` | `MemberEditorWdgt.codeReceiver` → `MemberRef.codeReceiverOf(holder)` |
-| `I._paneTextOfMember` (:568) | `MemberRef.text()` |
+| `I._paneTextOfMember` (:568) | `MemberRef.shownText()` (moved by U1) |
 | `I._sourceForFieldMember` (:563), `CI._sourceForFieldMember` | `MemberRef._fieldSource()`, `ClassMemberRef._fieldSource()` |
 | `I.@_recordedStaticSourceOf` (:488) | `MemberRef.@_recordedStaticSourceOf` |
 | `I.save` (:842) | `MemberEditorWdgt.save` |
@@ -1523,3 +1585,9 @@ ask-before-commit-push, clean-minimal-uniform-architecture, prefers-reuse-and-br
 plans-must-be-fully-self-contained, ratchets-must-not-dictate-design,
 no-chronological-notes-in-nonchronological-docs, local-html-for-visual-reviews,
 byte-identical-not-sacred-for-benign-inspector-recapture, fizzygum-macro-test-system.
+
+---
+
+## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
+
+- [x] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change — CLOSED 2026-11-24 (inspector-overhaul loop, U1): the two classes landed under the old inspectors, each inspector class choosing its ref (`_memberRefOf`); presuite's failing set empty as predicted, no reference changed.

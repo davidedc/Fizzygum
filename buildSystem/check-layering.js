@@ -345,6 +345,8 @@ const SETTLING_CALL_SANCTION = /#\s*settling-call-sanctioned:\s*\S/;
 // close and destroy cores inside one settle, and no marker.
 // Lowered 19 -> 18 on 2026-11-23 (toolbar-template-one-size Phase 2): GlassBoxTopWdgt._createWidgetToBeHandled asks its
 // cell for the copy it hands out (GlassBoxBottomWdgt.copyOfToolToHandOut, a public door), so its marked fullCopy goes.
+// Unchanged at 18 on 2026-11-24: the two inspectors' _notifyOfEdit, and their two marked calls with them, are
+// MemberRef's and ClassMemberRef's (an inspector's edit steps are its member reference's).
 const SETTLING_CALL_MARKER_CEILING = 18;
 // [H] a GUARD return: a bare `return`, or a postfix `return if … / return unless …`. NOT `return <value>`
 // (that is a legit return-the-result, e.g. `return @_settleLayoutsAfter => …` — what follows `return` is an

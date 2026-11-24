@@ -447,8 +447,8 @@ Facts worth knowing before touching any of this:
   Before this split existed, any lazy part on a production tree died with `findLoadOrder is not defined`; nothing
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs
   run compile-at-boot where the meta-system is present anyway. `fg homepage` now asserts it (§8).
-- Its entire runtime consumer surface is **the two inspectors** (`meta-tools`: each class's meta-object and
-  `Class`'s member records) and core's `SourceEditsRegistry` (`Class?`, `Class.membersAwayFrom`, and each
+- Its entire runtime consumer surface is **the two inspectors** (`meta-tools`: through the member references they
+  edit by, `MemberRef` and `ClassMemberRef`, each class's meta-object and `Class`'s member records) and core's `SourceEditsRegistry` (`Class?`, `Class.membersAwayFrom`, and each
   meta-object's `bootMemberSources` / `applyMemberEdit` / `removeMember`, a snapshot load's return to boot and its
   replay). There is no runtime `new Class` anywhere outside boot.
 - **`compileFGCode` is NOT part of it.** It is defined in the same file the layer fetches

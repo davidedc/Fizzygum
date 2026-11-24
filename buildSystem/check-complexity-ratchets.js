@@ -188,11 +188,6 @@ const RECORDED = {
   // raised 17 -> 18 on 2026-11-24, the same ruling, the measure's twin of the condition above: a band measures as its
   // arrange takes it, the steady way (several-bands plan, U1b)
   'FrameWdgt#preferredExtentForWidth': 18,
-  // recorded 2026-11-22 at 20, born of the split that takes InspectorWdgt#selectionFromList (21) off the record: the
-  // table of what an inspector's code pane shows for each kind of member, one branch per kind, moved whole out of the
-  // door that loads it, so the load's undo rule (a reload of the member it last loaded is a
-  // step of the pane's history, another member starts it afresh) reads plainly
-  'InspectorWdgt#_paneTextOfMember': 20,
   'LCLCodePreprocessor#_avoidLastArgumentInvocationOverflowing': 29,
   'LCLCodePreprocessor#_completeImplicitFunctionPasses': 17,
   'LCLCodePreprocessor#_preprocess': 33,
@@ -205,6 +200,13 @@ const RECORDED = {
   'ListWdgt#_buildAndConnectChildrenNoSettle': 17,
   'MacroToolkit#titleGrabPoint': 17,
   'MacroToolkit#verifyPressLanding': 22,
+  // recorded 2026-11-22 at 20, born of the split that takes InspectorWdgt#selectionFromList (21) off the record: the
+  // table of what an inspector's code pane shows for each kind of member, one branch per kind, moved whole out of the
+  // door that loads it, so the load's undo rule (a reload of the member it last loaded is a
+  // step of the pane's history, another member starts it afresh) reads plainly.
+  // Re-keyed from 'InspectorWdgt#_paneTextOfMember' on 2026-11-24, the body unchanged: what an inspector shows of a
+  // member is its member reference's to say (MemberRef), beside the steps that edit it
+  'MemberRef#shownText': 20,
   'PatchNodeWdgt#_heightsSplitByWeights': 25,
   'RectangularAppearance#paintIntoAreaOrBlitFromBackBuffer': 17,
   'ScriptIconAppearance#_scriptMetrics': 27,

@@ -4263,8 +4263,8 @@ class Widget extends TreeNode
   # Give me the member `propertyName`, the value txt evaluates to (a function's txt holds its
   # parameters, its arrow and its body). The edit alone: it tells no one and records nothing, as a
   # class's meta-object does not (Class.applyMemberEdit) -- the object inspector's Save, the
-  # person's gesture, records the edit and tells me (InspectorWdgt.applyPropertyEdit), while the
-  # product's own injections (a paint tool's handlers, a load's {"$src"}) are plumbing with nothing
+  # person's gesture, records the edit and tells me (its member reference's step, MemberRef.save),
+  # while the product's own injections (a paint tool's handlers, a load's {"$src"}) are plumbing with nothing
   # to tell. A function the injection MAKES -- txt spells a function literal -- is kept with its source
   # (Widget.keptSourceOf), so it stays editable as CoffeeScript and rides serialization as {"$src"}. A
   # txt that names a function (`@f`, a class member, `Math.max`) makes none: what it names keeps the
@@ -4443,7 +4443,8 @@ class Widget extends TreeNode
     return
 
   # The add, remove and rename twins of injectProperty, edits alone as it is: the gesture that drives
-  # one tells me (InspectorWdgt's add, rename and remove end in sourceChanged).
+  # one tells me (the object inspector's add, rename and remove go through MemberRef's steps, which
+  # end in sourceChanged).
   # the add twin: a new own member, undefined until a save gives it a value
   addOwnProperty: (propertyName) ->
     @[propertyName] = undefined

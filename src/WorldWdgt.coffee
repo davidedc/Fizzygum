@@ -213,9 +213,10 @@ class WorldWdgt extends IconGridPanelWdgt
     @_fullChanged()
 
   # PUBLIC notification: CODE changed under every widget -- a class inspector's gesture edited,
-  # added, renamed or removed a member of a class (ClassInspectorWdgt), or a snapshot's
-  # load returned the page's own such edits to boot and replayed the file's (loadWorldSnapshot). What
-  # layout and paint DERIVE from code then shows on the next frame, as a fresh build would show it:
+  # added, renamed or removed a member of a class (its member reference's step, ClassMemberRef), or
+  # a snapshot's load returned the page's own such edits to boot and replayed the file's
+  # (loadWorldSnapshot). What layout and paint DERIVE from code then shows on the next frame, as a
+  # fresh build would show it:
   #   - every cache filled by running code is dropped: the six text caches (measurements, paragraph
   #     and word splits, wrapping, line breaks) and the immutable back buffers
   #     (resetImmutableBackBuffersCache, which also repaints everything). Each is keyed by CONTENT,

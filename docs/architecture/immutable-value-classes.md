@@ -148,7 +148,9 @@ immutable — inert strings, but they are METHOD NAMES resolved late against a l
 `SliderRange` (a TRANSIENT: derived on demand by `sliderRangeForPin`, applied, and dropped —
 never stored, so nothing serializes or duplicates it, and it deliberately has no `equals`
 because the equality a value class usually needs is the dataflow cutoff's and this never rides
-an edge as a value), `SheetError`
+an edge as a value), `MemberRef` and its subclass `ClassMemberRef` (SHALLOWLY immutable — `holder`
+is a live object, `name` a member's name; an inspector makes one for the gesture that needs it and
+drops it, so nothing serializes or duplicates it), `SheetError`
 (spec §9.5 purity law), `Macro` (with one sanctioned lazy memo, `_linkedCode`, filled by
 `linkTo`), `Grid3D`/`PlaneGrid3D` (index arrays are built before
 construction), the `InputEvent` family (events are values; `WheelInputEvent.fromBrowserEvent`

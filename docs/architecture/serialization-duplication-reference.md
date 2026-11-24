@@ -21,8 +21,8 @@ how the machinery works; the plan is the *build order*.
 > `Serializer.serializeWorld`, `WellKnownObjects.resolveApp`, `FileLoading`'s `kind:"world"`
 > branch; pixel-identical desktop round-trip same-page + cross-session at dpr 1/2), and
 > source-edit capture (§12 — `SourceEditsRegistry` at `world.sourceEditsRegistry`, recorded by
-> the inspectors' gestures — `InspectorWdgt.applyPropertyEdit` and the class inspector's edit
-> steps — embedded in and replayed from the world snapshot). The phase ledger that tracked its construction is history — it
+> the inspectors' gestures, each through the member reference it edits by — `MemberRef.save` and
+> `ClassMemberRef`'s steps — embedded in and replayed from the world snapshot). The phase ledger that tracked its construction is history — it
 > lives in the companion plan above, with the decisions it resolved.
 >
 > NB: every shipping `src/` directory must be claimed by exactly one **part** in
@@ -973,16 +973,16 @@ gesture drives (a meta-object or a meta-verb edits, telling no one and recording
 once, by a world load: a member of the page it could not return to boot that the loaded world still runs is
 recorded as that member's edit would have been (`recordMembersStillRunning`, §11):
 
-- **instance** — the object inspector's Save (`InspectorWdgt.applyPropertyEdit`) records
+- **instance** — the object inspector's Save (its member reference's step, `MemberRef.save`) records
   `recordInstanceEdit(widget, name, txt)` when the value it saves is a function.
   `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
   (a paint surface taking up its tool, `CanvasGlassTopWdgt._takeUpToolInReach`) and a load re-injects each `{"$src"}` through
   it, none of them an edit a person made. Instance edits ALSO ride serialization on their own: the
   injected function keeps its source → `{"$src"}` → re-injected on restore (§5). The registry
   adds auditability.
-- **class** — the class inspector's class edit step (`ClassInspectorWdgt._editClassMember`)
+- **class** — the class inspector's class edit step (`ClassMemberRef._editClassMember`)
   edits through `Class.applyMemberEdit` and records `recordClassEdit(prototype, name, txt)` (its
-  `@inspectedObject` is the class prototype — the link of the inspected object's own prototype
+  `holder`, the class inspector's subject, is the class prototype — the link of the inspected object's own prototype
   chain whose constructor bears the chip's name, `InspectorWdgt._classChainLinks`), for EVERY
   member kind, methods and fields alike; its class removal step (`_removeClassMember`) removes
   through `Class.removeMember` and records `recordClassMemberRemoval(prototype, name)`, a
@@ -992,7 +992,7 @@ recorded as that member's edit would have been (`recordMembersStillRunning`, §1
 In the class scope an ADD is an edit whose source is `"undefined"`, and a RENAME is
 two records — an edit under the new name, then a removal of the old — so a renamed member is
 recompiled under its new name on replay as it was live. Each step makes the edit AND its record
-(`ClassInspectorWdgt`, one step per operation), so no gesture of the class inspector
+(`ClassMemberRef`, one step per operation), so no gesture of the class inspector
 changes a prototype unrecorded. And no other inspector changes one at all: every door that hands
 an inspector an arbitrary value opens a class's prototype in its class inspector
 (`InspectorWdgt.inspectorClassFor`: the member row's double-click, `Widget.spawnInspector`), and an

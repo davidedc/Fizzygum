@@ -7,12 +7,12 @@
 # LOAD: a member of the page it could not return to boot, which the loaded world still runs, is recorded
 # as that member's edit would have been (recordMembersStillRunning), so a save carries the code it runs:
 #   - "instance": a single widget's method rewritten by the object inspector's Save
-#     (InspectorWdgt.applyPropertyEdit). These ALSO ride the serializer for free — the injected function
+#     (MemberRef.save). These ALSO ride the serializer for free — the injected function
 #     keeps its source (Widget.keptSourceOf), serialized as {"$src"} and re-injected on restore (§5). The
 #     registry's marginal value here is auditability (a durable record of what was edited).
 #   - "class": a class PROTOTYPE's member edited (Class.applyMemberEdit) or removed
 #     (Class.removeMember, record flagged `deleted: true`) through the class inspector's edit
-#     steps (ClassInspectorWdgt). This is the ESSENTIAL case: nothing else records it — a class
+#     steps (ClassMemberRef). This is the ESSENTIAL case: nothing else records it — a class
 #     edit mutates the live prototype but leaves no serializable trace (§2.7). The snapshot
 #     embeds it and REPLAYS it against the destination prototypes BEFORE deserialization, so
 #     restored shells (Object.create(prototype)) already see the edited methods.
@@ -29,7 +29,7 @@ class SourceEditsRegistry
   constructor: ->
     @records = []
 
-  # record an instance-scope edit (from the object inspector's Save, InspectorWdgt.applyPropertyEdit).
+  # record an instance-scope edit (from the object inspector's Save, MemberRef.save).
   recordInstanceEdit: (widget, propertyName, source) ->
     return unless widget? and propertyName?
     @records.push
@@ -40,8 +40,9 @@ class SourceEditsRegistry
       source: source
     return
 
-  # record a class-scope edit (from ClassInspectorWdgt.applyPropertyEdit; `classPrototype` is
-  # the prototype the edit was evaluated against — its constructor is the class).
+  # record a class-scope edit (from ClassMemberRef's class edit step, _editClassMember: a class
+  # inspector's Save, Add… and Rename…; `classPrototype` is the prototype the edit was evaluated
+  # against — its constructor is the class).
   recordClassEdit: (classPrototype, propertyName, source) ->
     return unless classPrototype? and propertyName?
     @records.push
@@ -51,8 +52,8 @@ class SourceEditsRegistry
       source: source
     return
 
-  # record a class-scope member REMOVAL (from ClassInspectorWdgt's class removal step; the
-  # prototype names the class, as above).
+  # record a class-scope member REMOVAL (from ClassMemberRef's class removal step, _removeClassMember:
+  # a class inspector's Remove and Rename…; the prototype names the class, as above).
   recordClassMemberRemoval: (classPrototype, propertyName) ->
     return unless classPrototype? and propertyName?
     @records.push

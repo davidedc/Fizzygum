@@ -266,8 +266,7 @@ A click on a toolbar Template's cell and a drag out of it give one copy, at the 
 - [ ] **An enlarged toolbar window docks as deep as its shorter side** — a person who makes a toolbar window 600 × 600 and docks it gets a band about ten cells deep, wider than a Docs Maker's body; R7 records the depth it stands at with no bound — reachable, medium; an owner question.
 
 ### `plans/inspector-overhaul-plan.md`
-AUTHORED 2026-11-24, spiked the same day, no source written; one inspector tool: a row of inspectors, each a member list or a member editor, on the division stack. Supersedes the Smalltalk talk plan's U3 (an explorer beside the inspector). Its §0.4 holds the owner's rulings and the open decisions, each with a default.
-- [ ] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change
+AUTHORED 2026-11-24, spiked the same day, IN EXECUTION (the inspector-overhaul loop: U1 landed 2026-11-24); one inspector tool: a row of inspectors, each a member list or a member editor, on the division stack. Supersedes the Smalltalk talk plan's U3 (an explorer beside the inspector). Its §0.4 holds the owner's rulings and the open decisions, each with a default.
 - [ ] U1b: every division stack's splitter 12 px wide with grip dots
 - [ ] U2: the switch — the row, the rewritten inspector, the member list and editor, the split button; 32 tests and the rigs ported; recapture
 - [ ] U3: tests of what is new (a drill, the widening, the split by divider and by button, Duplicate, a copy and a snapshot)
