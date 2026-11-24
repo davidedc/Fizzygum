@@ -38,7 +38,7 @@ execution, the owner present), §0.5 stands as written.
 | U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | LANDED 2026-11-23 |
 | U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | LANDED 2026-11-24 |
 | U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | LANDED 2026-11-24 |
-| U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | not started |
+| U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | LANDED 2026-11-24 |
 | U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | not started |
 | U5 | Close | Phase 5 (what the units did not already write), Phase 6 | not started |
 
@@ -733,6 +733,33 @@ payload is swapped while a PLAIN host views keeps its engagement until the next 
      wave, not here. ⚠ A test that CLICKS a paint tool by a position it computed from a one-column strip would
      show as an assertion failure, not a picture: none did in the measured run.
 
+**Landed 2026-11-24 (U3 of the several-bands loop).** Built as steps 1–6 say, but for step 5's reader: the TOOLBAR hands
+its depth to its grid (`ToolbarWdgt._ownDepthInCells`, read by `dockThickness` and by the floating hug), the grid's
+measures take the depth as an argument (`naturalGridCrossExtent(depthInCells)`, `naturalGridExtentWithin(room,
+depthInCells)`), and `ToolPanelWdgt._stripDepthInCells` is deleted: the depth is the toolbar's (R9), the spec's record
+and the class's depth meet in one place (`dockThickness`), and the grid reads no toolbar field across its parent link.
+`_edgeDockSpecFor` writes the record guarded (a frame standing somewhere, a payload that answers a depth), so a
+non-toolbar spec carries no field of it, and stays pure. Test 3, `SystemTest_macroToolbarDocksAtTheDepthItFloatsAt`,
+reads "two cells" from the grid (distinct column lefts, row tops) and resizes a toolbar by its grip to one pitch and 20
+px: docked, its payload is two columns wide, 20 px less than floating (the count is recorded, not the pixels); bitten
+by three plants (the spec recording no depth; the paint toolbar's own depth deleted; the depth read off the longer
+side), each failing its own assertion under both pointers. `macroDockOutlineIsTheBandItMakes`'s palettes hug as the
+product's openers do, and `macroToolbarBandIsAsDeepAsAStrip` states the paint toolbox's two columns from its grid (its
+assertion bites under the second plant). Presuite: the predicted 14 failed on pictures only, test for test; the diff
+page shows the toolbox docked two by two, the floating paint window two columns wide (wide enough for its "−"), the
+drawings' canvases 50 px narrower beside it; recaptured. The unit's review found a class-A defect the two-cell
+toolbox makes reachable, fixed at its cause: the grid took its direction from its box's aspect, so a two-cell side band
+squashed shorter than its depth (a Drawings Maker at its grip floor) laid one column and showed only its chevron; a
+docked band's direction is a fact of its dock (`ToolbarWdgt.stripRunsVertically`, from the band's edge spec's run
+axis; a floating toolbar keeps the aspect rule), and a lone slot whose run cannot hold it with its padding stands
+centred (`ToolPanelWdgt._slotOffsets`; identical at runs of 60 and more), so a squeezed band shows its tool whole
+(DockOutline's image 2, recaptured again). Test 3 gained a leg that docks a toolbar wider than deep (the shorter side,
+not the width), a leg that squashes the Drawings Maker, and three more plants (the fresh-frame guard removed, the depth
+read off the width, the grid's direction from its aspect alone), six in all; DockOutline's column check counts the two
+columns. Seen, for the owner: a paint toolbox docked across a TOP or BOTTOM band is two rows deep with its four tools in
+one row (R7 and R9 as ruled); filed: an enlarged toolbar window docks as deep as its shorter side (no bound). No ratchet
+moved.
+
 ### Phase 3b — the strip of a band: a collapse piece only where it gives room back, a grip mark otherwise (R10, R11, D6)
 
 **Ruled by the owner (D6).** Measured why: every strip is 46 px across
@@ -1025,6 +1052,14 @@ Docs Maker), then the host's pencil. The decision to take: whether a viewing win
 window docked on it (its tools put away too), or the docked window keeps its own mode; one uniform piece either way:
 `wantsDetachOfChild` refusing while the host stands in view-mode content, the mirror of `dockSideAt`, so the rows agree
 with the drag.
+
+### An enlarged toolbar window docks as deep as its shorter side
+
+Read 2026-11-24 by U3's review (not run): R7 records the depth a toolbar STANDS at as it arrives, the whole cells its
+shorter side holds, with no bound. A toolbar window a person enlarges (a 400 × 400 Super toolbar holds about 6 cells; a
+600 × 600 one about 10) docks that deep: a band wider than a Docs Maker's body. What a host does with a band thicker than
+its body was not determined. The decision to take: a bound on the recorded depth (the toolbar's own depth, the cells
+its tools need, a share of the host's body), or none.
 
 ### A pinned "Toolbar" submenu docks one more bar per click
 

@@ -34,9 +34,20 @@ nothing: a docked toolbar never falls back to working for the person.
   at the mark box's side when its face is a picture filling its box (`drawsFaceInToolMarkBox`, written by the cell
   as `glyphSize`); a face drawn as a glyph for the whole cell keeps its size. The look and the faces:
   [`visual-design-system.md`](visual-design-system.md), "The tool cell".
-- **A band is as deep as a strip.** The grid has padding along its strip only (`ToolPanelWdgt`), so a one-row
-  toolbar is one cell deep and its band, with its card's two border lines, 46: a frame strip's thickness. Bands
-  docked on different sides line up, and a collapsed band, which is its strip, leaves its host's page where it was.
+- **A one-row band is as deep as a strip.** The grid has padding along its strip only (`ToolPanelWdgt`), so a
+  one-row toolbar is one cell deep and its band, with its card's two border lines, 46: a frame strip's thickness.
+  One-row bands docked on different sides line up, and one collapsed, which is its strip, leaves its host's page where
+  it was. A band's grid runs along the band (its edge spec's run axis, asked of the toolbar), whatever its box's
+  shape.
+- **A toolbar's depth is counted in cells.** A toolbar has a depth of its own (`ToolbarWdgt.depthInCells`: the
+  theme's `toolRows`, 1, unless its class states one; `PaintToolbarWdgt` states 2, a two-column toolbox): the depth it
+  is born at floating (its window hugs that many columns) and the depth a Maker's own toolbar docks at. A toolbar that
+  arrives from somewhere (a window on the desktop, a frame on the hand) docks at the depth it STANDS at: the band's
+  spec records how many whole cells its shorter side holds (`EdgeDockLayoutSpec.depthInCells`, written by
+  `FrameWdgt._edgeDockSpecFor`; `ToolbarWdgt.depthInCellsAsIStand`), a count, so the pixels follow the theme at every
+  measure; a frame fresh from its constructor has no shape of its own and docks at the toolbar's own depth. A person
+  who shapes a floating toolbar into a two-cell column by its grip keeps that shape docked, and lifted out again. The
+  toolbar hands its depth to its grid (`ToolbarWdgt.dockThickness`, the floating hug): the grid reads none.
 - **A subclass is an item list.** `_toolbarItems` returns the items, each a literal `new X` so the boot
   dependency finder sees the edge, and `dockSide` names the edge slot it takes by default (`'left'`; the text
   bar, and the sheet bar with it, say `'top'`). Everything else (docking, the refresh, the transfers of a paint tool) is the
@@ -435,7 +446,8 @@ event stream, with no timer.
   space, declares false (the property-tool base does, and its picture-faced tools say true). A tool under a lid
   declares nothing: the cell sizes it to the mark box.
 - **A subject-less action.** Its own `activated`; answer no `hasSomethingToActOn` (or `true`, as Templates does).
-- **A toolbar.** Subclass `ToolbarWdgt`: `_toolbarItems` (literal `new X` forms) and `dockSide` when not `'left'`.
+- **A toolbar.** Subclass `ToolbarWdgt`: `_toolbarItems` (literal `new X` forms), `dockSide` when not `'left'`, and
+  `depthInCells` when its strip should be more than one cell deep.
   A Maker docks it by answering `buildToolbar`. A toolbar may mix kinds freely.
 
 ## 9. What guards it
@@ -454,6 +466,8 @@ SystemTests:
   grant: `SystemTest_macroContentChangeKeepsThePersonsBands`;
 - view mode putting away only the tool bands, a docked document standing where it stood, and a viewing host keeping its
   bands (a strip drag moves the host; no "Dock" or "Float" row): `SystemTest_macroViewModeHidesOnlyToolBands`;
+- a toolbar docking at the depth it floats at, in cells, and the paint toolbox two cells deep:
+  `SystemTest_macroToolbarDocksAtTheDepthItFloatsAt`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;

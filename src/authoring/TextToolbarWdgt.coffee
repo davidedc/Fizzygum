@@ -19,7 +19,7 @@
 class TextToolbarWdgt extends ToolbarWdgt
 
   # text docks TOP (D9). The strip's thickness and its grid insets are the shared toolbar
-  # dials (ONE geometry, ruling G1): a text strip is a one-row strip like every other, so its
+  # dials (ONE geometry, ruling G1): a text strip is a one-row strip, the theme's toolRows, so its
   # depth derives from the standard grid metrics rather than from a private pair.
   dockSide: 'top'
 

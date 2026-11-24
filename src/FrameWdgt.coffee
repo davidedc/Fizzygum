@@ -301,7 +301,7 @@ class FrameWdgt extends ClippingWdgt
   # square takes no run. My own extent decides, never my payload's, which my bar's side would feed
   # back into: the extent is what a person set, and a frame wrapping a payload (extentWrappingPayloadAt)
   # already has the payload's proportions -- a band lifted out of its slot has its band's, and a new
-  # toolbar window sized to its natural column (sizeToPayloadNaturalExtent) starts square.
+  # toolbar window sized to its natural grid (sizeToPayloadNaturalExtent) starts square.
   #   Otherwise I have none: a payload with a title to show, or a collapsed one, shapes nothing.
   _runAxis: ->
     dockSpec = @_myEdgeDockSpec()
@@ -605,13 +605,13 @@ class FrameWdgt extends ClippingWdgt
   # host's slot (a host asks it of each band that counts, _bandThicknessesAt, with the band's own
   # layoutSpec), or the one a host would hand me, asked before I dock so the hand can outline the
   # band a release would make (bandBoxIfDocked). Expanded, what the band grants my payload
-  # (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness, asked now, or the extent
-  # my payload arrived with) plus my chrome across the band that is no strip's (my border and body
-  # margin on both sides, and my own bands there: _chromeBesidesStripsAcross), so the payload gets
-  # exactly the extent it asked for and my grip, running ACROSS the band, adds nothing; collapsed, I
-  # AM my bar, so the band is the strip's thickness (never 0 -- there has to be something left to
-  # tap). A pure measure: no term reads where I stand, so the answer is the same before the dock and
-  # after it.
+  # (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness, asked now at the depth in
+  # cells the spec records, or the extent my payload arrived with) plus my chrome across the band
+  # that is no strip's (my border and body margin on both sides, and my own bands there:
+  # _chromeBesidesStripsAcross), so the payload gets exactly the extent it asked for and my grip,
+  # running ACROSS the band, adds nothing; collapsed, I AM my bar, so the band is the strip's
+  # thickness (never 0 -- there has to be something left to tap). A pure measure: no term reads
+  # where I stand, so the answer is the same before the dock and after it.
   _bandThicknessUnder: (dockSpec) ->
     return @_barSpec().thickness if @contents?.collapsed
     crossAxis = if dockSpec.runAxis() is "horizontal" then "vertical" else "horizontal"
@@ -1639,12 +1639,13 @@ class FrameWdgt extends ClippingWdgt
   # body the band gets -- and everything else about the docked manifestation (card skin, a grip
   # across the band, no close, no resizer) derives from the frame's no-longer-free-floating
   # attachment. What the band grants the PAYLOAD is the thickness the payload declares for itself
-  # if it declares one (dockThickness, which the spec asks at every measure, so nothing about it
-  # is recorded), else the extent it arrives with, which the spec records. The frame joins the
-  # side's list at its END, nearest my content, and the bands the side already holds stay as they
-  # are, outward of it: a dock destroys nothing. Last, the payload is told it ARRIVED (noteDockedOn,
-  # a capability: a payload with nothing to do about it answers nothing), with its place in the list
-  # already taken, so what it reads of me counts it.
+  # if it declares one (dockThickness, which the spec asks at every measure, at the depth in cells
+  # the payload stood at as it arrived, a count the spec records, or else at its own depth), else
+  # the extent it arrives with, which the spec records. The frame joins the side's list at its END,
+  # nearest my content, and the bands the side already holds stay as they are, outward of it: a
+  # dock destroys nothing. Last, the payload is told it ARRIVED (noteDockedOn, a capability: a
+  # payload with nothing to do about it answers nothing), with its place in the list already taken,
+  # so what it reads of me counts it.
   _dockFrameNoSettle: (aFrame, side) ->
     payload = aFrame.contents
     # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in
@@ -1658,18 +1659,26 @@ class FrameWdgt extends ClippingWdgt
     payload.noteDockedOn? @
 
   # The edge spec `aFrame` carries once docked at `side`: WHERE, HOW MUCH (the cross extent its
-  # payload arrives with, recorded only for a payload that declares no dockThickness of its own),
-  # and whether the dock stands engaged, which the spec answers from my mode now and from what the
-  # payload is (EdgeDockLayoutSpec.engagedUnder). Built here for the dock (_dockFrameNoSettle) and
-  # for the picture of it before the release (bandBoxIfDocked), so the band the hand outlines is
-  # measured under the very spec the dock would hand over -- which is why it stays pure: it builds
-  # a spec and writes nothing else.
+  # payload arrives with, recorded only for a payload that declares no dockThickness of its own; for
+  # one that measures itself in cells, a toolbar, the depth in cells it stands at), and whether the
+  # dock stands engaged, which the spec answers from my mode now and from what the payload is
+  # (EdgeDockLayoutSpec.engagedUnder). Built here for the dock (_dockFrameNoSettle) and for the
+  # picture of it before the release (bandBoxIfDocked), so the band the hand outlines is measured
+  # under the very spec the dock would hand over -- which is why it stays pure: it builds a spec
+  # and writes nothing else, neither on `aFrame` nor on its payload, since the hand asks it at
+  # every pointer move of a hold.
   _edgeDockSpecFor: (aFrame, side) ->
     payload = aFrame.contents
     unless payload.dockThickness?
       arrivalThickness = if side is "top" or side is "bottom" then payload.height() else payload.width()
     dockSpec = new EdgeDockLayoutSpec side, arrivalThickness
     dockSpec.engaged = dockSpec.engagedUnder @_myModeEngagesMyDocks(), payload
+    # a payload that measures itself in cells keeps the depth it STANDS at where its frame stands
+    # somewhere (a window on the desktop, a frame on the hand); a frame fresh from its constructor
+    # has no shape of its own yet, and its payload docks at its own depth. Written only where there
+    # is a count, so any other payload's spec carries no depth at all.
+    depthInCells = payload.depthInCellsAsIStand?() if aFrame.parent?
+    dockSpec.depthInCells = depthInCells if depthInCells?
     dockSpec
 
   # DOES MY MODE ENGAGE EVERY DOCK? Editing does, and so does holding no mode at all (a clock's

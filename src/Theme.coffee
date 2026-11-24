@@ -961,16 +961,21 @@ class Theme
     @memberRowsPanelPadding = 4
 
     # a toolbar grid's thumbnail CELL: its side, and the least gap between two cells, which is
-    # what decides how many cells a strip shows; toolRows is how many rows of cells a strip lays
-    # out before the remainder goes behind the overflow chevron. A thumbnail is a target (G3), and
-    # a strip is ONE row, as a tablet toolbar is.
+    # what decides how many cells a strip shows; toolRows is a toolbar's OWN depth in cells -- the
+    # rows its strip lays out before the remainder goes behind the overflow chevron -- where its
+    # class states none (ToolbarWdgt.depthInCells: the paint toolbox states two): the depth it
+    # floats at when its window hugs it and docks at when its Maker frames it fresh. A toolbar
+    # that arrives at a band from somewhere docks at the depth it stood at instead, which the band
+    # records (EdgeDockLayoutSpec.depthInCells). A thumbnail is a target (G3), and a strip is ONE
+    # row by default, as a tablet toolbar is.
     @toolThumbnailSize = 44
     @toolInternalPadding = 6
     # the grid's padding, ALONG the strip only: the side padding before its first slot and after
     # its last, with whatever run is left between them shared evenly between the cells
     # (space-between). ACROSS it the grid has none: a one-row strip is one cell deep, 44, so its
-    # band is 46 with the card's two border lines -- a strip's thickness (FrameWdgt._barSpec), and
-    # docked bands of any kind line up on every side.
+    # band is 46 with the card's two border lines -- a strip's thickness (FrameWdgt._barSpec), so a
+    # one-row band of any kind lines up with the strips on every side, and a deeper band is whole
+    # cells deeper (two cells, 94, a 96 band).
     @toolAlongPadding = 8
     @toolRows = 1
     # the side of a tool's MARK BOX: the square a tool's PICTURE stands in, centred in its cell,
@@ -978,10 +983,10 @@ class Theme
     # around a picture is the margin a picture keeps from the band's border, the grid having no
     # padding across the strip.
     @toolMarkSize = 32
-    # (a docked strip's own cross-axis extent is no constant: it DERIVES from the dials above --
-    # ToolPanelWdgt.naturalGridCrossExtent, the same arithmetic that hugs a floating toolbar
-    # around its cells -- and is read at every measure, so a band is laid out in the theme of the
-    # world that lays it out.)
+    # (a docked strip's own cross-axis extent is no constant: it DERIVES from the dials above and
+    # the strip's depth in cells -- ToolPanelWdgt.naturalGridCrossExtent, the same arithmetic that
+    # hugs a floating toolbar around its cells -- and is read at every measure, so a band is laid
+    # out in the theme of the world that lays it out.)
     # the rounding of a TOOL CELL (GlassBoxBottomWdgt), of the plate its state paints and of the
     # outline its tool is cut to (the draft's control radius), which the overflow chevron's plate
     # takes too ...

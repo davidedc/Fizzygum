@@ -103,11 +103,12 @@ vocabulary below is the convention for all new code:
     rule, the drop climb's reluctant tier, the edit toggle of a window nested as another's content) asks
     `isInEditMode()`, never the field.
   - **Docking is a placement, not a rebuild**: a docked frame is a card under a host-owned
-    `EdgeDockLayoutSpec` (`side` / `thickness` / `engaged`) — the same widget that sits in the
+    `EdgeDockLayoutSpec` (`side` / `thickness` / `depthInCells` / `engaged` / `broughtByContent`) — the same widget that sits in the
     slot floats free the moment it is dragged out, because leaving the slot is exactly
     dropping the spec. The payload receives what the spec grants it, exactly
     (`EdgeDockLayoutSpec.thicknessGrantedTo`: its own `dockThickness`, asked at every measure, if it
-    declares one, else the cross extent it arrived with, which the spec records); the band contributes
+    declares one, at the depth in cells the spec records for a toolbar that arrived with a shape of its own;
+    else the cross extent it arrived with, which the spec records); the band contributes
     only its own chrome across it (its border and body margin), and the host keeps the band
     `dockedBandInset` in from its body on the band's three outer sides (its own body margin, when
     that is wider) and its body margin from the payload on the fourth. A

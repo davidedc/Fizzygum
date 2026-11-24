@@ -25,8 +25,13 @@
 
 class PaintToolbarWdgt extends ToolbarWdgt
 
-  # my four commands. Each is named by its key (drawingToolKey); my strip's depth is no constant of
-  # mine at all -- ToolbarWdgt derives it from the grid's own cell metrics, like every other strip.
+  # two cells deep: I am a toolbox -- floating, or docked down a side as a Maker docks me, my four
+  # tools stand in two columns, and docked across a top or bottom they fit one row of the band's
+  # two. My strip's PIXELS are no constant of mine -- ToolbarWdgt derives them from this count and
+  # the grid's own cell metrics, like every other strip's.
+  depthInCells: 2
+
+  # my four commands, each named by its key (drawingToolKey)
   pencilTool: undefined
   brushTool: undefined
   toothpasteTool: undefined

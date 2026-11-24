@@ -283,7 +283,9 @@ a child is answered by duck-typed capability queries on its spec (`isDivisionEle
 `isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`,
 `isEdgeDock?()`), never a type test. The sixth member, `EdgeDockLayoutSpec`, is the spec a DOCKED frame
 carries: the host's statement that the child is a band along one of its four edges (`side`), what the band
-grants its payload across that edge (`thicknessGrantedTo`), the host's mode switch (`engaged`: view mode
+grants its payload across that edge (`thicknessGrantedTo`: a payload's own `dockThickness`, at the depth in cells the
+spec records for a toolbar that arrived with a shape of its own, `depthInCells`; else the cross extent it arrived with,
+`thickness`), the host's mode switch (`engaged`: view mode
 disengages a band whose payload is there for editing, a toolbar, taking its layout contribution to zero, and every
 other band stands; `engagedUnder` is the one home of that rule), and a record of who made the attachment
 (`broughtByContent`: the host, docking its content's toolbar, whose band a content change retires; or a person). It owns its carrier's placement, so a

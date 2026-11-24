@@ -964,9 +964,9 @@ assertion a recapture after a regression silently stores two different hashes an
   AXIS: expanded, a TOP-docked band's own bar runs ACROSS it at the strip's leading end (C13: as tall as the
   band, `band.bar.height() == band.height()`, at its left end and short of its right); collapsed, the band IS
   its bar, so it flips to `band.bar.width() > band.bar.height()` and the whole band is exactly one bar thick
-  (`band.height() == band.bar.height()`), still spanning the full body width. A toolbar band is as deep as a
-  strip, so a collapsed toolbar band is exactly as thick as the expanded one: tell the two states apart by
-  `band.contents.collapsed` and the bar's extent, never by the band's height. C17 (tap-anywhere-to-expand)
+  (`band.height() == band.bar.height()`), still spanning the full body width. A ONE-ROW toolbar band is as deep as
+  a strip, so collapsed it is exactly as thick as expanded: tell the two states apart by `band.contents.collapsed` and
+  the bar's extent, never by the band's height (a two-cell band, the paint toolbox, is thicker than its strip). C17 (tap-anywhere-to-expand)
   applies here too: `@moveToAndClickAtFractionOf_InputEvents band.titlebarBackground, [0.7,0.5]` (a tap on the
   strip BACKGROUND, clear of the collapse button) re-expands it.
 - **The toolbar grid: packed while it fits, spread only while full, a grid in a box**
@@ -978,7 +978,7 @@ assertion a recapture after a regression silently stores two different hashes an
   and the full one by its chevron's distance from the far end (`toolAlongPadding`) and by the total spread being under one
   pitch. A box shape needs a floating toolbar shaped by its grip (see the bar-run entry), its rows told apart by `top()`.
   No new verb.
-- **A toolbar band is as deep as a strip; a cell is the target, its picture the mark** (`macroToolbarBandIsAsDeepAsAStrip`,
+- **A one-row toolbar band is as deep as a strip; a cell is the target, its picture the mark** (`macroToolbarBandIsAsDeepAsAStrip`,
   `docs/architecture/toolbars.md` §1): line docked bands up by EQUALITIES between independently laid-out widgets (the left
   band's `right()` against `band.bar.right()` of the bands above and below it; its width, a top band's height and the
   window's own `bar.height()`), never against a theme dial. A cell's two roles are read off the cell: what a tap reaches is

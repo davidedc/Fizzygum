@@ -23,8 +23,8 @@
 # holding it) and world.user -> me (the hand, the person's tool code). A host window tells me itself
 # when its own tool changes (FrameWdgt.armDrawingTool), and I tell myself when I dock or leave.
 #
-# A subclass is an ITEM LIST (_toolbarItems) and, where it differs, its docking side -- plus, for the
-# paint palette, the stock tool sources.
+# A subclass is an ITEM LIST (_toolbarItems) and, where they differ, its docking side and its depth
+# in cells -- plus, for the paint palette, the stock tool sources.
 #
 # Colloquial name rides the contents: ToolPanelWdgt.viewportColloquialName
 # names the whole strip "toolbar" in hierarchy menus.
@@ -38,6 +38,14 @@ class ToolbarWdgt extends ViewportWdgt
   # what docks and floats is the frame around me, and dragging its grip onto the desktop is
   # exactly what turns a band into a window.
   dockSide: 'left'
+
+  # MY OWN DEPTH, in cells: how many cells deep my strip is where nothing else says -- the depth a
+  # window hugging me gives me (naturalPayloadExtentWithin) and the depth a host docks me at when I
+  # arrive with no shape of my own (a Maker's own toolbar, framed fresh). A toolbar that arrives
+  # from somewhere docks at the depth it stands at, which its band's edge spec records
+  # (EdgeDockLayoutSpec.depthInCells). A per-TYPE class default, like dockSide; undefined: the
+  # theme's toolRows (_ownDepthInCells).
+  depthInCells: undefined
 
   # a toolbar strip's scrolling is part of its design — a docked strip that
   # cannot scroll strands its off-edge buttons (see
@@ -56,19 +64,50 @@ class ToolbarWdgt extends ViewportWdgt
   # on me: the base appearance's shape is my whole box.
   createAppearance: -> new SeamRulesAppearance @
 
-  # MY CROSS-AXIS SIZE when docked: width for left/right, height for top/bottom -- what I ask the
-  # band to grant me, which the band then wraps in its own chrome. DERIVED from my grid's own cell
-  # metrics (ToolPanelWdgt.naturalGridCrossExtent: one strip-depth of cells, with no padding across
-  # them, so a one-row band with its card's two lines is a frame strip's 46) -- the same capability
-  # the FLOATING manifestation hugs its payload with, so a band is exactly as deep as its cells
-  # need and no constant anywhere says otherwise (owner ruling: one criterion for every toolbar,
-  # docked or free). Answered at every measure and never recorded
-  # (the band's edge spec asks me, EdgeDockLayoutSpec.thicknessGrantedTo), so a host saved and
-  # loaded, or duplicated, lays its band out in the current theme. Never a laid-out size -- the
-  # host's PURE measures read it through the band's spec (§6.1 rule 1), so it must not depend on
-  # laid-out extents, and theme dials are not.
-  dockThickness: ->
-    @contents.naturalGridCrossExtent()
+  # MY CROSS-AXIS SIZE when docked `depthInCells` cells deep -- the count my band's edge spec
+  # recorded as I arrived (EdgeDockLayoutSpec.thicknessGrantedTo hands it to me), or my own depth
+  # where it recorded none: width for left/right, height for top/bottom -- what I ask the band to
+  # grant me, which the band then wraps in its own chrome. DERIVED from my grid's own cell metrics
+  # (ToolPanelWdgt.naturalGridCrossExtent: that many cells, with no padding across them, so a
+  # one-row band with its card's two lines is a frame strip's 46) -- the same capability the
+  # FLOATING manifestation hugs its payload with, so a band is exactly as deep as its cells need and
+  # no pixel constant anywhere says otherwise (owner ruling: one criterion for every toolbar, docked
+  # or free). The pixels are answered at every measure and never recorded -- a band records a
+  # COUNT -- so a host saved and loaded, or duplicated, lays its band out in the current theme.
+  # PURE -- a count, my class's depth and theme dials, never a laid-out size -- because the host's
+  # pure measures read it through the band's spec (§6.1 rule 1).
+  dockThickness: (depthInCells) ->
+    @contents.naturalGridCrossExtent (depthInCells ? @_ownDepthInCells())
+
+  # HOW MANY CELLS DEEP I AM where nothing else says: my class's depth, else the theme's toolRows,
+  # and never less than one. What I hand my grid for a depth (dockThickness, the floating hug), so
+  # the grid reads no field of mine.
+  _ownDepthInCells: ->
+    Math.max 1, (@depthInCells ? WorldWdgt.theme.toolRows)
+
+  # THE DEPTH I STAND AT NOW, in cells: the whole cells my shorter side holds, which is what my grid
+  # lays across it (ToolPanelWdgt.cellsAcross). A host asks it as I arrive from somewhere, and my
+  # band's edge spec records it, so I dock at the depth I floated at (FrameWdgt._edgeDockSpecFor).
+  # Asked only while I am docked in no band -- floating, or on the hand: a band lifted out stands at
+  # its band's extent and is measured afresh, and a re-side keeps its spec -- so my grid's run is my
+  # longer side, never my band's edge (stripRunsVertically). Collapsed I show no grid and answer
+  # nothing, and dock at my own depth. It writes nothing: the picture of a dock not yet made asks it
+  # at every pointer move of a hold.
+  depthInCellsAsIStand: ->
+    return undefined if @collapsed
+    @contents.cellsAcross Math.min @width(), @height()
+
+  # DOES MY STRIP RUN DOWN, while I am docked? A band's run is a fact of its dock -- the length of the
+  # edge it takes (EdgeDockLayoutSpec.runAxis, read off the spec my frame carries, as dockHost reads
+  # it) -- never of its box's aspect: a two-cell band down a side, squashed shorter than it is deep by
+  # its host's grip, still runs down, its depth across, as my band's thickness already counts it
+  # (dockThickness: my depth in cells, no padding across). My grid asks it to know which of its axes
+  # is the run (ToolPanelWdgt._layOutOwnContents). undefined while I am docked in no band (floating,
+  # or a window's content): the grid then runs along its box's longer side.
+  stripRunsVertically: ->
+    runAxis = @parent?.layoutSpec?.runAxis?()
+    return undefined unless runAxis?
+    runAxis is "vertical"
 
   # THE SHORTEST RUN I STAY USABLE AT, DOCKED: the twin of dockThickness along the band's run -- my
   # grid's one-slot run, where my overflow chevron stands whole (ToolPanelWdgt.shortestUsableRun).
@@ -226,15 +265,15 @@ class ToolbarWdgt extends ViewportWdgt
     @noteToolStatesChanged()
     return
 
-  # THE BOX A FRAME AROUND ME TAKES WHEN I FLOAT -- my grid's own natural box within the `room`
-  # the frame has left after its chrome (owner ruling: a free manifestation HUGS its payload, so
-  # there are no per-toolbar size constants anywhere). Answered as a capability rather than
-  # claimed by a type test, so the frame asks every payload the same question and only a payload
-  # with an answer sizes its window. My DOCKED manifestation asks the same grid the same way --
-  # it takes the cross axis alone (dockThickness, granted through the edge-dock spec) because
-  # its long axis is the host's to force.
+  # THE BOX A FRAME AROUND ME TAKES WHEN I FLOAT -- my grid's own natural box, my own depth in
+  # cells across (_ownDepthInCells), within the `room` the frame has left after its chrome (owner
+  # ruling: a free manifestation HUGS its payload, so there are no per-toolbar size constants
+  # anywhere). Answered as a capability rather than claimed by a type test, so the frame asks
+  # every payload the same question and only a payload with an answer sizes its window. My DOCKED
+  # manifestation asks the same grid the same way -- it takes the cross axis alone (dockThickness,
+  # granted through the edge-dock spec) because its long axis is the host's to force.
   naturalPayloadExtentWithin: (room) ->
-    @contents.naturalGridExtentWithin room
+    @contents.naturalGridExtentWithin room, @_ownDepthInCells()
 
   # Children are built in the core reached via the settling wrapper (the
   # check-constructors-build contract: a constructor must not @add its own

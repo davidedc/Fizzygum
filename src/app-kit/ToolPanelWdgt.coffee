@@ -1,10 +1,12 @@
 class ToolPanelWdgt extends PanelWdgt
 
-  # (My grid's dials -- the cell's side, the least gap between two cells, my padding along the
-  # strip, and how many cells deep a strip is -- are the theme's toolbar metrics,
-  # read through the small readers under "my grid's dials" at every arrange and measure, and never
-  # copied into me: a toolbar saved and loaded, or duplicated, lays itself out in the theme of the
-  # world that lays it out.)
+  # (My grid's dials -- the cell's side, the least gap between two cells and my padding along the
+  # strip -- are the theme's toolbar metrics, read through the small readers under "my grid's
+  # dials" at every arrange and measure, and never copied into me: a toolbar saved and loaded, or
+  # duplicated, lays itself out in the theme of the world that lays it out. A strip's depth in
+  # cells is no dial of mine: my arrange fills whatever box it is given, and a measure that turns
+  # on a depth is handed it by whoever asks, a toolbar its own (ToolbarWdgt.dockThickness,
+  # naturalPayloadExtentWithin).)
 
   # the trailing chevron my arrange shows when my cells outrun my strip (ruling T2, absorbed
   # into the single geometry): a strip shows the prefix that fits and this pops the remainder as
@@ -32,13 +34,9 @@ class ToolPanelWdgt extends PanelWdgt
     WorldWdgt.theme.toolInternalPadding
 
   # my padding ALONG the strip, before its first slot and after its last. Across it I have none:
-  # a strip is exactly its rows of cells deep, so a band is as deep as a frame's strip.
+  # a strip is exactly its rows of cells deep, so a one-row band is as deep as a frame's strip.
   _alongPadding: ->
     WorldWdgt.theme.toolAlongPadding
-
-  # how many cells deep a strip is, across its run
-  _stripDepthInCells: ->
-    Math.max 1, WorldWdgt.theme.toolRows
 
   # my enclosing viewport borrows my colloquial name (type-test-elimination ε; see
   # ViewportWdgt.colloquialName)
@@ -177,14 +175,23 @@ class ToolPanelWdgt extends PanelWdgt
   _naturalRunFor: (count, padding) ->
     count * @_cellPitch() - @_minimumGap() + 2 * padding
 
-  # MY DEPTH AS A STRIP: the cross-axis run one strip-depth of cells needs -- toolRows of them and
+  # MY DEPTH AS A STRIP `depthInCells` cells deep: the cross-axis run that many cells need and
   # nothing beside them, so a one-row band is one cell deep, 44, and its card's two border lines
   # make it 46, a frame strip's thickness. The same _naturalRunFor the hug and the arrange use,
-  # so a docked band's depth and a floating window's box are ONE arithmetic. PURE -- theme dials only, no laid-out extent -- which is
-  # exactly what a dock thickness must be (§6.1 rule 1), and read at every measure
-  # (ToolbarWdgt.dockThickness), so a band follows the theme it is laid out in.
-  naturalGridCrossExtent: ->
-    @_naturalRunFor @_stripDepthInCells(), 0
+  # so a docked band's depth and a floating window's box are ONE arithmetic. PURE -- a count and
+  # theme dials, no laid-out extent -- which is exactly what a dock thickness must be
+  # (§6.1 rule 1), and read at every measure (ToolbarWdgt.dockThickness, which names the depth),
+  # so a band follows the theme it is laid out in.
+  naturalGridCrossExtent: (depthInCells) ->
+    @_naturalRunFor depthInCells, 0
+
+  # HOW MANY WHOLE CELLS a run ACROSS a strip holds, `run` pixels: the count my arrange lays across
+  # my run (_layOutOwnContents: a strip has no padding across itself), rounded down to whole cells
+  # and never less than one. The inverse of naturalGridCrossExtent, and pure like it: a toolbar
+  # docked in no band asks it of its own shorter side, which is then what my run crosses, to say
+  # how many cells deep it stands (ToolbarWdgt.depthInCellsAsIStand).
+  cellsAcross: (run) ->
+    @_cellsFittingIn run, 0
 
   # MY SHORTEST USABLE RUN as a strip: the run that holds exactly one slot at my along padding --
   # the overflow chevron's slot, once a second cell would not fit -- so the chevron stands whole
@@ -196,13 +203,14 @@ class ToolPanelWdgt extends PanelWdgt
 
   # THE BOX THAT HUGS MY CELLS, within the `room` a free-floating home can offer (owner ruling:
   # a floating toolbar hugs its payload; C10's never-bigger-than-the-world is what `room` carries).
-  # Across: toolRows columns of cells and nothing beside them, so nothing overflows sideways.
+  # Across: `depthInCells` columns of cells (my toolbar's own depth, which it hands me), or as many
+  # as the room holds where that is fewer, and nothing beside them, so nothing overflows sideways.
   # Along: EVERY cell's run at the least gap, my along padding at either end of it, capped by the
   # room and, when capped, QUANTIZED DOWN to whole cells -- a sliver of a cell shows nothing anyone
   # can use, and the overflow chevron carries what is left out either way. Either way the run has
   # no leftover.
-  naturalGridExtentWithin: (room) ->
-    columns = Math.min @_stripDepthInCells(), (@_cellsFittingIn room.x, 0)
+  naturalGridExtentWithin: (room, depthInCells) ->
+    columns = Math.min depthInCells, (@_cellsFittingIn room.x, 0)
     rows = Math.min (Math.max 1, Math.ceil @_toolCells().length / columns), (@_cellsFittingIn room.y, @_alongPadding())
     new Point (@_naturalRunFor columns, 0), (@_naturalRunFor rows, @_alongPadding())
 
@@ -212,11 +220,13 @@ class ToolPanelWdgt extends PanelWdgt
   # box is FULL, which is the only time its leftover is less than one cell (owner ruling 2026-11-03,
   # docs/archive/toolbar-grid-and-bar-run.md) -- the last slot ends `padding` short of the far end
   # and the leftover is shared between the slots (space-between), which puts the chevron at the far
-  # end and moves each tool by a few pixels at most. One slot sits `padding` in either way. Each slot
-  # is rounded on its own, so a fractional share never commits a fractional bound and the last
-  # spread slot still ends exactly at the padding.
+  # end and moves each tool by a few pixels at most. One slot sits `padding` in either way -- or, on a
+  # run too short to hold it with its padding (a band squeezed below its shortest usable run by the
+  # bands around it), centred in the run: padding keeps a tool off my box's ends, and never pushes a
+  # tool out of my box. Each slot is rounded on its own, so a fractional share never commits a
+  # fractional bound and the last spread slot still ends exactly at the padding.
   _slotOffsets: (count, run, padding, spread) ->
-    return [padding] if count is 1
+    return [Math.min(padding, Math.max(0, Math.floor((run - @_cellSide()) / 2)))] if count is 1
     unless spread
       return (padding + i * @_cellPitch() for i in [0...count])
     leftover = run - 2 * padding - @_cellSide()
@@ -243,11 +253,14 @@ class ToolPanelWdgt extends PanelWdgt
     runH = @parent?.heightContentsMustFitWithin?() ? @height()
 
     # I am a GRID that fills my box: as many columns as fit across it and as many rows as fit down
-    # it, at the least gap. A strip is not a separate case -- it is a box one cell deep, so a docked
-    # band (whose depth is my dockThickness) is one row or one column because that is all its box
-    # holds. The one thing that still knows a direction is the padding: my along padding at the ends
-    # of my box's longer side, none along the other.
-    vertical = runH > runW
+    # it, at the least gap. A strip is not a separate case -- it is a box a whole number of cells
+    # deep, so a docked band (as deep as its toolbar's dockThickness) shows that many rows or
+    # columns because that is all its box holds. The one thing that still knows a direction is the
+    # padding: my along padding at the ends of my RUN, none across it. Docked, my run is my band's
+    # edge, which my toolbar says (stripRunsVertically, a capability: only a toolbar answers) --
+    # never my box's aspect, since a two-cell band down a side squashed shorter than it is deep
+    # still runs down; otherwise it is my box's longer side.
+    vertical = @parent?.stripRunsVertically?() ? (runH > runW)
     paddingX = if vertical then 0 else @_alongPadding()
     paddingY = if vertical then @_alongPadding() else 0
     columns = @_cellsFittingIn runW, paddingX

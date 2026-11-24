@@ -189,8 +189,8 @@ candidate-accent style §11's highlight row already specifies (`HighlighterWdgt.
 the accent `dropCandidateOutline`, 2 px `dropOutlineWidth` inside the box, its corners following the host's where
 they meet them), just applied to a region of the host's body rather than to a widget, and mapped through the
 host's screen bounds so it renders correctly inside a rotated/scaled island too (§11). The box is the band's
-place and size once docked: a toolbar's is its own `dockThickness` thick, a window's as thick as its payload
-arrives, a side column starts below a top band, and a side a band already holds outlines the band that would join
+place and size once docked: a toolbar's is its `dockThickness` thick at the depth in cells it stands at as it
+arrives (`EdgeDockLayoutSpec.depthInCells`), a window's as thick as its payload arrives, a side column starts below a top band, and a side a band already holds outlines the band that would join
 it, nearest the content. `bandBoxIfDocked` docks nothing and writes nothing. It derives the box from the terms the dock
 itself would produce, each with one home the host's arrange and measure share: the spec the dock would hand
 over (`_edgeDockSpecFor`), the thickness the frame measures under it (`_bandThicknessUnder`), the host's
@@ -200,7 +200,8 @@ content height with its chrome so changed (`_steadyContentHeight`), the placemen
 **Release outcome (§7): docks, not embeds.** An ARMED release resolved to a band skips the ordinary
 `_beforeChildDropped` content hand-off (a dock takes a slot BESIDE the host's content, never instead of it)
 and instead calls `target.add wdgtToDrop, dockSide: <the band's side>`, which arms a fresh
-`EdgeDockLayoutSpec` at that side (`FrameWdgt._dockFrameNoSettle`; it records the payload's arrival thickness unless the payload declares its own `dockThickness`) — the side is always the
+`EdgeDockLayoutSpec` at that side (`FrameWdgt._dockFrameNoSettle`; it records the payload's arrival thickness unless the payload declares its own `dockThickness`, and, for a toolbar
+standing somewhere as it arrives, its depth in cells as it stood) — the side is always the
 DROP's, never any default the payload might otherwise declare for itself.
 
 ## §5 — Candidate resolution (owner decisions 1 + 3)
