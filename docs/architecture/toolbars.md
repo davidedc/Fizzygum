@@ -84,9 +84,15 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   columns stand between them.
 - **Every edge-slot dock ties**, whatever the host holds: no content, or content that is itself a toolbar. A band
   never asks its host's content whom it works for. A window whose content is REPLACED (a widget dropped into an empty
-  window, or its content leaving it by any door, `FrameWdgt._reactToChildRemoved`) retires every band it wears
-  (`FrameWdgt._retireDockedFramesNoSettle`) and docks the new content's toolbar, if it declares one. A band is a window
-  too: one whose payload leaves it keeps its thickness, the one its payload was granted.
+  window, or its content leaving it by any door, `FrameWdgt._reactToChildRemoved`) retires only the band its content
+  BROUGHT, the toolbar the window docked for that content: `FrameWdgt._buildDockedToolbarNoSettle` records it on the
+  band's spec (`EdgeDockLayoutSpec.broughtByContent`), and `FrameWdgt._retireBandsMyContentBroughtNoSettle` destroys
+  only what is so recorded. Every band a person docked stays where it is, alive. The window docks the new content's
+  toolbar, and offers it on its "Toolbar" row, while no band its content brought is docked, whatever else is
+  (`FrameWdgt._bandsMyContentBrought`). A Maker whose payload is rebuilt keeps its own band, which its KIND declares:
+  it keeps its side, its place and its collapse. A band floated away and docked again is a person's. A band is a
+  window too: one whose payload leaves it keeps its thickness, the one its payload was granted, and holds no longer
+  what its host's content brought.
 - **A band the host's view mode disengages is still docked.** It is hidden, and still listed among the
   host's payloads (`FrameWdgt.dockedPayloads`).
 - **A window in view mode offers no slot.** `FrameWdgt.dockSideAt`, the dock offer the hand asks, answers
@@ -260,13 +266,15 @@ paint-agnostic; the logic lives on `ToolbarWdgt`, so a mixed bar transfers too.
 - **Departure by re-homing** (`FrameWdgt._reactToChildRemoved` tells `noteUndockedFrom` to the payload of a band
   that was docked and is not destroyed): when the host is left wearing no drawing tools, the person takes the host's tool
   and the host gives it up. Every other drawing that follows the hand changes tool with it.
-- **Not a departure:** a re-side, a view-mode disengage, a collapse, a destroy. Closing a window never writes
+- **Not a departure:** a re-side, a view-mode disengage, a collapse, a destroy, a content change (a palette a
+  person docked stays where it is, and the window keeps its tool; a drawing that arrives takes it up at its first use). Closing a window never writes
   the hand.
 - **Both** end in `noteToolStatesChanged`, for every toolbar: one that docks or leaves changes whom it works for.
 - **A new drawing** (`ImageWdgt._buildDockedToolbarNoSettle`, after `super`): a window that wears drawing tools
   and holds none takes `'pencil'`. Its palette's arrival has already adopted the hand's tool, so this is the
   empty hand's fallback, and it is the drawing's own choice: it puts nothing in the person's hand. It runs at
-  birth, after a payload reset rebuilds the band, and from the "Toolbar" row of the drawing's menu.
+  birth, at a payload reset that finds the drawing's own palette gone (one it finds docked stays, and the
+  drawing's tool with it), and from the "Toolbar" row of the drawing's menu.
 - **A load re-docks nothing** (the deserializer restores structure directly), so no transfer runs and the
   saved tools stand. The person's table comes back from the file's `users` section, each edit vetted as a string
   and not compiled ([`serialization-duplication-reference.md`](serialization-duplication-reference.md), the `world`
@@ -431,6 +439,8 @@ SystemTests:
   `SystemTest_macroDockOutlineIsTheBandItMakes`;
 - a side's list of bands (a dock and a re-side join it, a lifted band lets the others close up, a copy holds its
   own): `SystemTest_macroSecondBandJoinsItsSide`;
+- a content change retiring only the band its content brought, and a band docked into a standing window filling its
+  grant: `SystemTest_macroContentChangeKeepsThePersonsBands`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;

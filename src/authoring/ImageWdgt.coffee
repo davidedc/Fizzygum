@@ -44,8 +44,9 @@ class ImageWdgt extends GenericPanelWdgt
   # EMPTY hand falls back to the pencil, because a new drawing must always be immediately paintable
   # -- and that fallback is THIS drawing's birth choice, armed on me alone: it puts nothing in the
   # person's hand, so a hand deliberately emptied stays empty everywhere else. Asked wherever my
-  # toolbar is docked: at my birth, after a payload reset rebuilds my band, and from the "Toolbar"
-  # row of my menu.
+  # toolbar is docked: at my birth, at a payload reset that finds my own palette gone (floated away,
+  # or emptied of its toolbar; a reset that finds it docked keeps it, and my tool with it), and from
+  # the "Toolbar" row of my menu.
   _buildDockedToolbarNoSettle: (side) ->
     super
     # public-call-sanctioned: armDrawingTool is the holder's one write (FrameWdgt), settle-free and

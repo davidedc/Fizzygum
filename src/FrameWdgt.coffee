@@ -66,10 +66,11 @@ class FrameWdgt extends ClippingWdgt
   # carrying an EdgeDockLayoutSpec of mine — no type test, no docked SKIN: the spec owns its
   # placement, and its card skin, its grip and its missing close/resizer all derive from that. A
   # content that declares a toolbar variant (@contents.buildToolbar?()) gets it docked here at
-  # construction, and a band is STABLE across mode flips: view mode DISENGAGES the dock (zero
-  # layout contribution, hidden) instead of churning the tree. Built per instance in the
-  # constructor, one list per side of DOCK_SIDES -- a class-level object literal would be ONE map
-  # shared by every frame.
+  # construction, recorded as the band my content BROUGHT (EdgeDockLayoutSpec.broughtByContent): a
+  # content change retires that band alone, and every band a person docked stays. A band is STABLE
+  # across mode flips: view mode DISENGAGES the dock (zero layout contribution, hidden) instead of
+  # churning the tree. Built per instance in the constructor, one list per side of DOCK_SIDES -- a
+  # class-level object literal would be ONE map shared by every frame.
   dockedFrames: undefined
 
   # THE DRAWING TOOL I HOLD while I wear one in an edge slot: a tool KEY, or undefined for none. I am
@@ -557,7 +558,7 @@ class FrameWdgt extends ClippingWdgt
 
   # Every frame in my slots, counting or not, in my slots' order: DOCK_SIDES, then each side's
   # outermost first. What asks after my bands as a whole reads it: whether a widget is one of them,
-  # what I wear, what a content change retires.
+  # what I wear, which of them my content brought (_bandsMyContentBrought).
   _framesInMySlots: ->
     frames = []
     for side in FrameWdgt.DOCK_SIDES
@@ -703,13 +704,14 @@ class FrameWdgt extends ClippingWdgt
       # keep the measure total and report the current extent.
       if !spec? then return new Point (availW ? @width()), @height()
       chrome = @_chromeHeight()
-      if !spec.desiredWidth?
+      if !spec.desiredWidth? and !@_myEdgeDockSpec()?
         # FIRST placement hasn't run yet -- the spec capture is the one-shot latch (U2; this
         # branch replaced the deleted contentNeverSetInPlaceYet guard). Mirror the arrange's
         # first-placement negotiation PURELY, so an outer container measuring this window
         # DURING construction already sees the extent the window's own arrange will take --
         # not the garbage pre-negotiation extent the old guard reported. The recursion into
-        # the content's measure is safe pre-capture: getWidthInStack is total (U2).
+        # the content's measure is safe pre-capture: getWidthInStack is total (U2). A band
+        # negotiates nothing, so it measures as its arrange takes it, the steady way.
         if spec.preferredStartingHeight == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
           desiredHeight = @contents.preferredExtent().y
@@ -1234,8 +1236,9 @@ class FrameWdgt extends ClippingWdgt
   # do about it answers nothing), once its slot is free, so what it reads of me no longer counts it.
   # Only a departure by re-homing is one: this hook is also a destroy's notification (the dying child
   # is already marked destroyed), and a destroy is no departure. A band whose slot is freed BEFORE it
-  # goes is none either: a content change's retirement (_retireDockedFramesNoSettle) frees every slot
-  # itself, then destroys the bands. (A re-side never reaches this hook: the band stays my child.)
+  # goes is none either: a content change's retirement (_retireBandsMyContentBroughtNoSettle) frees
+  # the slot of each band it retires, then destroys it. (A re-side never reaches this hook: the band
+  # stays my child.)
   #   MY CONTENT LEAVING ME is heard here too, and here alone: this is the one seat for every door.
   # Whatever takes it away -- the hand (a "Pick up", a drag of a tilted content), another parent
   # ("Attach"), the bin (a nested window's "Close") or its own destroy -- re-homes it through
@@ -1249,9 +1252,10 @@ class FrameWdgt extends ClippingWdgt
   #   Only a content that LEFT me: one re-added to me, or moved into a widget of mine (a band of my
   # own), is still mine, and is not replaced.
   #   Docked in a host's slot, I am a band, and a band keeps its thickness when its payload leaves,
-  # as every window keeps its size: my edge spec keeps what the departing payload was granted
-  # (EdgeDockLayoutSpec.notePayloadLeft), which my placeholder, declaring no thickness of its own, is
-  # then granted.
+  # as every window keeps its size: my edge spec keeps what the departing payload was granted, which
+  # my placeholder, declaring no thickness of its own, is then granted; and it stops recording me as
+  # a band my host's content brought, since what I hold next is not what it brought
+  # (EdgeDockLayoutSpec.notePayloadLeft).
   #   Not once I am destroyed, nor while I am torn down myself (the flag): the rebuild would re-title
   # a bar the destroy-until-empty iteration has already destroyed and detached, and mount content
   # that iteration can never reach -- alive, unowned, and pinned forever by the instances registry.
@@ -1694,15 +1698,15 @@ class FrameWdgt extends ClippingWdgt
     @_reflectDockVisibilityNoSettle()
     @_invalidateLayout()
 
-  # The first frame in my slots (DOCK_SIDES, each side's outermost first) that is still my child,
-  # whatever its payload, or undefined. What its askers ask by it is whether any band is docked on
-  # me at all: my rebuild docks my content's toolbar variant only where none is
-  # (_buildAndConnectChildrenNoSettle), and my "Toolbar" row is offered only then
-  # (_offersAFreshToolbar).
-  _dockedToolbarFrame: ->
-    for dockedFrame in @_framesInMySlots()
-      return dockedFrame if dockedFrame.parent == @
-    undefined
+  # The bands in my slots that my content BROUGHT, in my slots' order: each still my child, its edge
+  # spec carrying the record my toolbar build writes (EdgeDockLayoutSpec.broughtByContent). Counting
+  # or not: a band my view mode disengaged, or one I hold while collapsed, is still my content's. A
+  # band a person docked is none of them, whatever it holds -- a second copy of my content's own
+  # toolbar included. My rebuild docks my content's toolbar variant only while the list is empty
+  # (_buildAndConnectChildrenNoSettle), my "Toolbar" row is offered only then (_offersAFreshToolbar),
+  # and a content change retires exactly these (_retireBandsMyContentBroughtNoSettle).
+  _bandsMyContentBrought: ->
+    (band for band in @_framesInMySlots() when band.parent is @ and band._myEdgeDockSpec()?.broughtByContent)
 
   # WHAT I WEAR: the payloads of the frames in my edge slots, in my slots' order (DOCK_SIDES, each
   # side's outermost first), each one still mine (a band on its way out is not). A band my view mode
@@ -1728,28 +1732,35 @@ class FrameWdgt extends ClippingWdgt
       eachPayload.noteToolStatesChanged?()
     return
 
-  # Build my content's toolbar variant and dock it, framed, at the side the variant asks for. A
-  # framed CITIZEN declares its kind's variant itself (§5.B); a plain frame asks the content it
-  # wraps; a content that declares none leaves every slot empty.
+  # Build my content's toolbar variant and dock it, framed, at the side the variant asks for, joining
+  # the bands that side holds. A framed CITIZEN declares its kind's variant itself (§5.B); a plain
+  # frame asks the content it wraps; a content that declares none docks nothing.
   # `side` overrides the variant's own default (the "Toolbar" submenu's rows name one).
+  #   The ONE door that docks what my content brings, so it is the one that RECORDS the band as my
+  # content's (EdgeDockLayoutSpec.broughtByContent): what tells that band from one a person docked,
+  # whatever each holds, and what a content change retires (_retireBandsMyContentBroughtNoSettle).
   _buildDockedToolbarNoSettle: (side) ->
     toolbar = @buildToolbar?() ? @contents?.buildToolbar?()
     return unless toolbar?
-    @_dockFrameNoSettle (new FrameWdgt toolbar), (side ? toolbar.dockSide)
+    band = new FrameWdgt toolbar
+    @_dockFrameNoSettle band, (side ? toolbar.dockSide)
+    # the record, written once the dock has armed the spec: the dock builds the spec
+    # (_edgeDockSpecFor), which stays pure because the picture of a dock not yet made
+    # (bandBoxIfDocked) builds one too
+    band.layoutSpec.broughtByContent = true
+    return
 
-  # A content CHANGE retires every band in my slots, whatever it holds (docs/architecture/toolbars.md
-  # §2), and the rebuild then docks the NEW content's variant (or none). The lists are emptied before
-  # any band is destroyed, so no destroy's notification (_reactToChildRemoved) finds a band of mine to
-  # free.
-  _retireDockedFramesNoSettle: ->
-    return unless @dockedFrames?
-    retiring = @_framesInMySlots()
-    for side in FrameWdgt.DOCK_SIDES
-      @dockedFrames[side] = []
-    for dockedFrame in retiring
+  # A content CHANGE retires the bands my content BROUGHT and only those (_bandsMyContentBrought,
+  # docs/architecture/toolbars.md §2): every band a person docked stays where it is, in its list,
+  # alive, whatever it holds, and the rebuild then docks the NEW content's variant (or none) beside
+  # them. Each band leaves its list before it is destroyed, so its destroy's notification
+  # (_reactToChildRemoved) finds no band of mine to free.
+  _retireBandsMyContentBroughtNoSettle: ->
+    for band in @_bandsMyContentBrought()
+      @_freeDockSlotOf band
       # the SUBTREE: a frame owns a bar, its pieces and a payload, and destroying it alone would
       # leave all of those alive and off-tree -- escaped widgets the instances registry pins forever
-      dockedFrame._fullDestroyNoSettle()
+      band._fullDestroyNoSettle()
     return
 
   # The frame's own context-menu entries (on top of the generic Widget set), DELIBERATELY menu
@@ -1766,9 +1777,9 @@ class FrameWdgt extends ClippingWdgt
       menu.addMenuItem "Dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
       menu.addMenuItem "Float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
     # A HOST's row: dock the toolbar my content declares at a side. Offered while my content
-    # declares a variant and no band is docked on me at all (a drop can still dock a second copy of
-    # a variant beside the first), and DELIBERATELY a menu entry, never a bar button (owner ruling
-    # D9: don't spend bar space on it).
+    # declares a variant and no band my content brought is docked on me, whatever else is (a drop
+    # can still dock a second copy of a variant beside the first), and DELIBERATELY a menu entry,
+    # never a bar button (owner ruling D9: don't spend bar space on it).
     if @_offersAFreshToolbar()
       menu.addLine()
       menu.addMenuItem "Toolbar", @, "toolbarSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
@@ -1777,11 +1788,12 @@ class FrameWdgt extends ClippingWdgt
       menu.addLine()
       menu.addMenuItem "Pin", @, "pinPopUp", closesUnpinnedPopUps: false
 
-  # Is there a toolbar to dock that is not docked already? The content must declare a variant (a
-  # framed citizen declares its own -- §5.B) and no slot may hold a band at all (_dockedToolbarFrame
-  # answers the first of any payload).
+  # Is there a toolbar to offer? The content must declare a variant (a framed citizen declares its
+  # own -- §5.B) and no band my content brought may be docked
+  # (_bandsMyContentBrought), whatever else is: a band a person docked does not stand for it, a
+  # copy of the same toolbar included, and neither does my own toolbar once floated away.
   _offersAFreshToolbar: ->
-    return false if @_dockedToolbarFrame()?
+    return false if @_bandsMyContentBrought().length > 0
     (@buildToolbar? or @contents?.buildToolbar?) == true
 
   # The BAND's side chooser (the "Dock" submenu): the three sides I am not on (the VSLS-alignment /
@@ -1794,8 +1806,9 @@ class FrameWdgt extends ClippingWdgt
       menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue side), @, "dockAtSide", arg1: side  if side isnt currentSide
     menu.popUpAtHand()
 
-  # The HOST's side chooser (the "Toolbar" submenu): all four, since the slot the row fills is
-  # empty; its rows are labelled like the "Dock" submenu's.
+  # The HOST's side chooser (the "Toolbar" submenu): all four, since every side takes one more band
+  # (it joins the side's list nearest my content, and the bands there stay); its rows are labelled
+  # like the "Dock" submenu's.
   toolbarSideMenu: (widgetOpeningThePopUp, targetWidget) ->
     menu = new MenuWdgt widgetOpeningThePopUp, target: targetWidget
     for side in FrameWdgt.DOCK_SIDES
@@ -1821,8 +1834,9 @@ class FrameWdgt extends ClippingWdgt
     host.dockedFrames[side].push @
     host._invalidateLayout()
 
-  # Fill one of my empty slots with my content's toolbar variant, framed. (Menu-dispatched -- see
-  # dockAtSide for the two named-as-unread slots.)
+  # Dock my content's toolbar variant, framed, at `side`, joining the bands that side holds, recorded
+  # as the band my content brought (_buildDockedToolbarNoSettle). (Menu-dispatched -- see dockAtSide
+  # for the two named-as-unread slots.)
   addToolbarAtSide: (ignored, ignored2, side) ->
     @_settleLayoutsAfter => @_buildDockedToolbarNoSettle side
 
@@ -1882,15 +1896,16 @@ class FrameWdgt extends ClippingWdgt
     super
 
   # SHOW MY DEFAULT CONTENT AGAIN, my contents having left me: the placeholder, titled as an empty
-  # window, drops accepted again. I keep my size: the placeholder takes whatever room I have
-  # (its frame-content spec does not mind its size), so an emptied window stays where the person
-  # had it, the size they had it at. (A window born empty takes its starting extent in its
-  # constructor, _initialExtent, which reaches nothing here.)
+  # window, drops accepted again. The bands my content brought go with it; every band a person
+  # docked stays, in its list, alive, and the placeholder brings none. I keep my size: the
+  # placeholder takes whatever room I have (its frame-content spec does not mind its size), so an
+  # emptied window stays where the person had it, the size they had it at. (A window born empty
+  # takes its starting extent in its constructor, _initialExtent, which reaches nothing here.)
   _resetToDefaultContents: ->
     # public-call-sanctioned: enableDrops is the trivial public drop-acceptance setter (macros and
     # cross-object code drive it) — settle-free, consciously reused here.
     @enableDrops()
-    @_retireDockedFramesNoSettle()
+    @_retireBandsMyContentBroughtNoSettle()
     # reached once my contents has left me -- a placeholder that leaves stops being mine too -- so
     # the placeholder I show next is a fresh one
     @defaultContents = new FrameContentsPlaceholderText
@@ -2218,10 +2233,14 @@ class FrameWdgt extends ClippingWdgt
     @_reCastRestingShadow() if @_enclosingIslandFigure() isnt @
 
   _reactToChildDropped: (theWidget) ->
-    # a band that just landed in one of my slots is a payload I HOLD: it does not become my content,
-    # and it retires nothing of what I already hold (the slot registration is the add's own work)
+    # a band that just landed in one of my slots is a payload I HOLD: it does not become my content
+    # (the slot registration is the add's own work)
     return if @_isMyDockedFrame theWidget
-    @_retireDockedFramesNoSettle()
+    # Anything else dropped on me becomes my content, and every band I hold stays: only an EMPTY
+    # window takes such a drop (an occupied one accepts none, below), and an empty window wears no
+    # band its content brought -- that band goes with the content as it leaves
+    # (_resetToDefaultContents), and a window born empty docks none. The rebuild docks the new
+    # content's toolbar beside them.
     @contents = theWidget
     # (A2a, was the stack super) membership-change re-fit: if my container absorbs the
     # change (a viewport re-fits me + its scrollbars), skip my own re-fit; else it
@@ -2594,10 +2613,12 @@ class FrameWdgt extends ClippingWdgt
 
     @_addNoSettle @contents
 
-    # my content's toolbar variant, docked only while no band is docked on me at all (keep-if-exist
-    # like the bar pieces; the content-CHANGE points retire every band first, so a new content gets
-    # its own variant). Born disengaged when viewing.
-    @_buildDockedToolbarNoSettle() unless @_dockedToolbarFrame()?
+    # my content's toolbar variant, docked only while no band my content brought is docked on me
+    # (_bandsMyContentBrought; keep-if-exist like the bar pieces): a content that leaves takes its
+    # band with it (_retireBandsMyContentBroughtNoSettle), so a new content gets its own variant, and
+    # a Maker's fresh payload of its kind finds the Maker's own band still docked. A band a person
+    # docked is no stand-in for it, and stays beside it. Born disengaged when viewing.
+    @_buildDockedToolbarNoSettle() if @_bandsMyContentBrought().length is 0
 
     # the resize affordance the spec names: a frame that sizes to what it holds (a pop-up hugs
     # its rows) offers none. A frame is an ORPHAN while it builds -- hence free-floating, hence
@@ -2804,7 +2825,10 @@ class FrameWdgt extends ClippingWdgt
       partOfHeightUsedUp = @_chromeHeight()
 
       # this re-layouts each widget to fit the width.
-      if firstPlacement
+      # Docked, I am a band: my host dictates my box (my EdgeDockLayoutSpec owns my placement), so
+      # my payload's first placement negotiates nothing -- it gets, from my first arrange, what
+      # every later arrange gives it, the grant _bandBoxTakenOf pictures.
+      if firstPlacement and !@_myEdgeDockSpec()?
         if @contents.contentStackSpec().preferredStartingHeight == FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW
           # (U3-C) through preferredExtent, not raw height() -- see _negotiatedContentWidth
           desiredHeight = @contents.preferredExtent().y

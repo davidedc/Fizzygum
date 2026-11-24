@@ -952,8 +952,8 @@ assertion a recapture after a regression silently stores two different hashes an
   (@getMostRecentlyOpenedMenu()), band` → `…, "Dock"` → `@moveToItemOfMenuAndClick_InputEvents
   (@getMostRecentlyOpenedMenu()), "Right"` (a side row is its value capitalised at the row: "Top", "Bottom", "Left",
   "Right"). The HOST's complementary row — "Toolbar" → <side>
-  (`toolbarSideMenu` → `addToolbarAtSide`), offered only while its content declares `buildToolbar` and no band
-  is docked at all — lives on the HOST's own menu instead (right-click the host directly; no
+  (`toolbarSideMenu` → `addToolbarAtSide`), offered only while its content declares `buildToolbar` and no band its
+  content brought is docked (`band.layoutSpec.broughtByContent` tells that band from one a person docked) — lives on the HOST's own menu instead (right-click the host directly; no
   hierarchy descent needed for its own top-level menu). Both rows are `check-menu-actions`/`fg menusweep`-gated.
   No new verb for either.
 - **A collapsed docked frame is an edge SLIVER, not a bar-shaped rectangle** (`macroCollapsedDockIsAnEdgeSliver`):

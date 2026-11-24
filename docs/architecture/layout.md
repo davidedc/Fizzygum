@@ -283,8 +283,9 @@ a child is answered by duck-typed capability queries on its spec (`isDivisionEle
 `isCornerInternal?()`, `isStackElementActive?()`, `isFrameContentActive?()`, `isStretchElement?()`,
 `isEdgeDock?()`), never a type test. The sixth member, `EdgeDockLayoutSpec`, is the spec a DOCKED frame
 carries: the host's statement that the child is a band along one of its four edges (`side`), what the band
-grants its payload across that edge (`thicknessGrantedTo`), and the host's mode switch (`engaged`: view mode
-disengages every dock, taking the band's layout contribution to zero). It owns its carrier's placement, so a
+grants its payload across that edge (`thicknessGrantedTo`), the host's mode switch (`engaged`: view mode
+disengages every dock, taking the band's layout contribution to zero), and a record of who made the attachment
+(`broughtByContent`: the host, docking its content's toolbar, whose band a content change retires; or a person). It owns its carrier's placement, so a
 docked frame is not free-floating, and leaving the slot is exactly dropping the spec.
 
 **A pending geometry WISH is a free-floating-only value.** `@desiredExtent`/`@desiredPosition` are recorded only
@@ -434,6 +435,14 @@ claimsSpace mode (§5). Space *negotiation* is moddable; participation in *dicta
 width→height sizing of its content borrows the stack's verb (`_setWidthSizeHeightAccordingly`), so a transformed
 content answers that verb by its attachment: as a window's content it forwards to its content in every mode and
 claims nothing (`TrackingTransformFrameWdgt._claimsSpaceFromMyContainer`).
+
+A window's FIRST placement of its content is a negotiation (the content's starting-size sentinels,
+`FrameContentLayoutSpec.preferredStartingHeight`), but for a docked band, which is dictated: its host lays it out by
+`_bandBoxesAt` and its edge spec owns its placement, so its payload's first placement negotiates nothing, in the arrange
+and in the measure alike
+(`FrameWdgt._positionAndResizeChildren`, `preferredExtentForWidth`): it gets from its first arrange what every later
+arrange gives it. A band built inside the settle that docks it is laid out once, by its host, and that one arrange is
+its final one.
 
 ---
 

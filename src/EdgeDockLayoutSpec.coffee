@@ -19,6 +19,10 @@
 # `engaged` is the HOST's mode switch: a host showing its content in view mode disengages every
 # dock, which takes the band's layout contribution to zero — visibility then FOLLOWS the spec,
 # never the other way round (visibility is never a layout input).
+# `broughtByContent` records who made this attachment: the host, docking its content's toolbar (at
+# its birth, its rebuild, or its "Toolbar" row: FrameWdgt._buildDockedToolbarNoSettle), or a
+# person's drop; a content change retires only the bands its content brought, and every band a
+# person docked stays.
 #
 # I OWN my carrier's placement (the family default): the host places the band, so a docked frame
 # is not free-floating, and everything that turns on that predicate follows for free — no close
@@ -40,6 +44,15 @@ class EdgeDockLayoutSpec extends LayoutSpec
   # the host's mode switch: a disengaged dock takes no layout space
   engaged: true
 
+  # a RECORD of this attachment: my carrier holds the toolbar my host docked for its content
+  # (FrameWdgt._buildDockedToolbarNoSettle, the one door that writes it), which goes when that content
+  # goes; false for a frame a person docked, whatever it holds. A re-side, a collapse and a mode flip
+  # keep it (the first and the last edit this spec, a collapse leaves it as it is); a copy and a save
+  # carry it; a band floated and docked again arrives
+  # under a fresh spec, a person's. Cleared when my carrier's payload leaves it (notePayloadLeft):
+  # what the band holds next is not what the content brought.
+  broughtByContent: false
+
   constructor: (@side, @thickness) ->
     super()
 
@@ -52,9 +65,15 @@ class EdgeDockLayoutSpec extends LayoutSpec
   # placeholder): the band keeps its thickness, as every window whose content leaves keeps its size.
   # So I keep what the departing payload was granted -- the cross extent I recorded at its arrival, or,
   # for a payload that declared its own dockThickness and left me nothing recorded, that thickness --
-  # and grant it to whatever the band holds next that declares none (the placeholder).
+  # and grant it to whatever the band holds next that declares none (the placeholder). And I stop
+  # recording the band as what its host's content brought, since what it holds next is not that: an
+  # emptied band is a person's, kept across the host's content changes, and the host, wearing no band
+  # its content brought, offers that toolbar again on its "Toolbar" row and docks it afresh at its
+  # next rebuild.
   notePayloadLeft: (payload) ->
     @thickness ?= @thicknessGrantedTo payload
+    @broughtByContent = false
+    return
 
   # The axis the band I give runs along: the length of my edge. A top or bottom band runs across its
   # host, a left or right one down it. My carrier's RUN (FrameWdgt._runAxis), whether it is expanded

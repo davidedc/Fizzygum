@@ -9,7 +9,8 @@
 #     is destroyed when they have not, and simply closes when a reference or a wire reaches into it
 #     (_closeFromFrameBarWhenSaveOrAsk below);
 #   - losing its payload, by any door, builds a fresh one of its kind, in its mode and at its extent,
-#     rather than falling back to the empty-window placeholder;
+#     rather than falling back to the empty-window placeholder, and keeps its bands, its own
+#     toolbar's among them;
 #   - it holds an EDIT MODE, which its strip's toggle switches between the pencil and the eye
 #     (providesAmenitiesForEditing, below).
 #   A subclass states: _makeStartingPayload, colloquialName, buildToolbar,
@@ -62,12 +63,17 @@ class MakerDocumentWdgt extends FrameWdgt
   #   MY EXTENT: I am no newborn window taking its first content's size (the first placement a
   # free-floating frame hugs) -- I have my size, so the fresh payload's placement is captured here, at
   # its mount, and my arrange fits IT to ME, as at every later re-fit.
+  #   MY BANDS stay, my own toolbar's among them: my KIND declares that toolbar (buildToolbar), not the
+  # payload that left, and the fresh payload is of my kind. So that band keeps its side, its place in
+  # its side's list and its collapse, and I keep my tool (no palette arrives to make me adopt what the
+  # hand holds). The rebuild docks a fresh one only where no band my content brought is docked: my own
+  # band floated away, or emptied of its toolbar, which clears its record
+  # (FrameWdgt._buildAndConnectChildrenNoSettle asks for the bands my content brought).
   #   NOT during my own teardown (the flag): constructing a fresh child inside the destroy-until-empty
   # iteration never terminates (§5.B B3 case law).
   _resetToDefaultContents: ->
     return if @_beingFullDestroyed
     wasInEditMode = @isInEditMode()
-    @_retireDockedFramesNoSettle()
     @contents = @_makeStartingPayload()
     @_buildAndConnectChildrenNoSettle()
     @_disableDragsDropsAndEditingNoSettle() unless wasInEditMode

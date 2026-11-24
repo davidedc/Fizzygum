@@ -126,7 +126,7 @@ const METHOD_CEILINGS = {
   // share -- _bandsAt (a side's bands that count), _bandThicknessesAt (what each measures), _sideThicknessFor (what
   // bands of those thicknesses take of my body, summed once for the measure and the placement) and _bandBoxesAt
   // (where each band of a side stands, the one home of the placement) -- one for my bands as a whole
-  // (_framesInMySlots: whether a widget is one of them, what I wear, what a content change retires), and the floor
+  // (_framesInMySlots: whether a widget is one of them, what I wear, which bands a content change chooses among), and the floor
   // one band asks of my extent (_floorKeepingBandUsable), lifted out of smallestExtentKeepingMyControlsUsable now
   // that it runs per band
   FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 181 },
@@ -172,8 +172,14 @@ const RECORDED = {
   'FrameBarWdgt#_positionAndResizeChildren': 33,
   'FrameBarWdgt#_reDeriveRosterNoSettle': 23,
   'FrameWdgt#_frameLook': 24,
-  'FrameWdgt#_positionAndResizeChildren': 46,
-  'FrameWdgt#preferredExtentForWidth': 17,
+  // raised 46 -> 47 on 2026-11-24 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
+  // band's first arrange takes the steady path, its host dictating its box -- a frame built inside the settle that
+  // docks it took the first-placement negotiation's height (its payload's 50x40 construction extent: a 40 px viewport
+  // in a 44 grant, a 46x87 stub in a side column) and no later pass corrected it (several-bands plan, U1b)
+  'FrameWdgt#_positionAndResizeChildren': 47,
+  // raised 17 -> 18 on 2026-11-24, the same ruling, the measure's twin of the condition above: a band measures as its
+  // arrange takes it, the steady way (several-bands plan, U1b)
+  'FrameWdgt#preferredExtentForWidth': 18,
   // recorded 2026-11-22 at 20, born of the split that takes InspectorWdgt#selectionFromList (21) off the record: the
   // table of what an inspector's code pane shows for each kind of member, one branch per kind, moved whole out of the
   // door that loads it, so the load's undo rule (a reload of the member it last loaded is a

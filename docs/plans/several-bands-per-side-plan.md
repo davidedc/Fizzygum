@@ -36,7 +36,7 @@ execution, the owner present), §0.5 stands as written.
 | Unit | What | Sections | State |
 |---|---|---|---|
 | U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | LANDED 2026-11-23 |
-| U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | not started |
+| U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | LANDED 2026-11-24 |
 | U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | not started |
 | U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | not started |
 | U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | not started |
@@ -299,7 +299,10 @@ as §5 says.
 - **R12 (O4).** A window whose content changes (its content leaves it by any door, a widget dropped into it
   becomes its content, a Maker rebuilds its payload) retires only the band its content BROUGHT: the toolbar the
   window docked for that content (`FrameWdgt._buildDockedToolbarNoSettle`, reached by the window's construction and
-  rebuild and by its "Toolbar" row). Every other band stays where it is, in its list, alive. The window offers its
+  rebuild and by its "Toolbar" row). Every other band stays where it is, in its list, alive. A Maker whose payload is
+  rebuilt keeps its own band: the Maker's KIND declares that toolbar, not the payload that left (ruled in U1b from
+  O4; a retire-and-rebuild would move the bar under a person's band, lose its re-side and collapse, and reset a
+  Drawings Maker's tool). The window offers its
   content's toolbar (the rebuild, the "Toolbar" row) while no band its content brought is docked, whatever else is.
 - **R11 (D6).** A band's strip that shows no piece shows a GRIP MARK, a field of dots centred in it: the strip is the band's handle,
   and a bare grey square does not say so. It is paint, not a control: a press anywhere on the strip is still
@@ -557,6 +560,33 @@ the person's bands stay alive in their lists, the text keeps its typing; a new c
 emptied window, or the Maker's rebuild) and its own toolbar docks beside them. Both pointers, dpr 1 and 2, the
 follower proof, and plants: the retirement destroying every band (the old rule); the rebuild's guard asking for any
 band.
+
+**Landed 2026-11-24 (U1b of the several-bands loop).** The record is `EdgeDockLayoutSpec.broughtByContent`
+(class-level false), written only by `_buildDockedToolbarNoSettle` right after its dock (the spec builder stays pure:
+the hover's outline shares it) and cleared by `notePayloadLeft`. `_dockedToolbarFrame` (which answered any band) is
+`_bandsMyContentBrought`, a list over every band still a child, counting or not (a disengaged or collapsed content
+band still counts); the retirement, `_retireBandsMyContentBroughtNoSettle`, frees and destroys only those; the
+rebuild's guard and `_offersAFreshToolbar` ask whether that list is empty. No derivation could stand in for the record:
+a person's second copy of the content's toolbar class fools a class match (U1's test docks one). Ruled in the unit:
+a Maker keeps its own band when its payload is rebuilt (R12's last sentence), and `_reactToChildDropped`'s retirement
+is deleted (an empty window wears no band its content brought). A defect found on the way and fixed at its cause
+(`Fizzygum-tests/.scratch/several-bands-loop/u1b/investigate/REPORT.md`): a band built inside the settle that docks it
+took the first-placement negotiation's height (its payload's 50×40 construction extent: a 40 px viewport in a 44 grant,
+a 46×87 stub in a side column), reached by the rebuild and the "Toolbar" row; a band's first placement now negotiates
+nothing, in the arrange and the measure (`layout.md` §4.3). Test 1b, `SystemTest_macroContentChangeKeepsThePersonsBands`
+(a person's note and Slides bands survive two page leaves with the note's typing; the "Toolbar" row offered exactly
+while the content's band is gone; a fresh bar fills its grant, as deep as the bar born with the Maker; an emptied band
+loses the record; on a plain window a person's band survives a drop and a leave), bitten by seven plants (the old rule
+at the Maker's door, at the drop door and at the leave door, the guard asking for any band, the record never written, an
+emptied band keeping it, the band negotiating its first placement), each failing its own assertion under both pointers;
+its follower clean on both. The unit's review found the rule correct at every door and the two plain-window doors
+untested (now the test's last leg), and one rewritten assertion short of its witness (WindowWhoseContentLeaves L3 reads
+the toggle, the band and the fresh document together). Three value assertions of existing tests rewritten (WindowWhoseContentLeaves L1 and L3, TiltedMaker… L1: the
+Maker keeps its band) and PanePickedUp…'s prose. Ratchets: `FrameWdgt#_positionAndResizeChildren` 46 → 47 and
+`FrameWdgt#preferredExtentForWidth` 17 → 18 (the band's condition); FrameWdgt stays at 181. Filed: Attach onto an
+occupied window orphans its content (medium); a Maker dropped into an empty window gets a second text bar; a pinned
+"Toolbar" submenu docks one more bar per click; a toolbar window put into another window shows a clipped strip (the
+free-window sibling of the defect, an owner question).
 
 ### Phase 2 — view mode hides only the tool bands (R6)
 
@@ -834,7 +864,8 @@ into its ledger.
   (`fg revisits`, a gauntlet leg, baseline EMPTY) and `fg census` fail on a disagreement. Do not compute a
   band's place anywhere but `_bandBoxesAt`.
 - **A list keeps a dead frame.** Every exit of a band goes through `_reactToChildRemoved` (which frees its
-  place) or `_retireDockedFramesNoSettle`. The object-lifetime legs (`WORLD_INVENTORY_*`, `fg vmtruth`) catch
+  place) or `_retireBandsMyContentBroughtNoSettle` (a content change's retirement, which frees the place first). The
+  object-lifetime legs (`WORLD_INVENTORY_*`, `fg vmtruth`) catch
   a leftover reference; a new test must leave the world as it found it.
 - **Copy and save.** `dockedFrames` is an ordinary field holding arrays of widgets that are also children; the
   duplicator and the serializer walk it by identity. The gauntlet's `serialization` leg and the duplicate
@@ -916,14 +947,68 @@ Three pieces were designed with this plan and left for their first consumer, the
 - **Flyout cells** (a brush or shape gallery): a cell opens a TRANSIENT frame holding a toolbar; pinning it
   makes a floating toolbar, which docks. Reuses frame lifetime as it stands. Estimated +20 to +30 lines.
 
+### Attach onto an occupied window orphans its content
+
+Measured 2026-11-24 during U1b (`Fizzygum-tests/.scratch/several-bands-loop/u1b/probe-f2.log`): in dev mode the
+Widget menu's "Attach" chooser offers a window that already holds a content. On a plain window holding a panel, the
+attached rectangle becomes the content and the panel is left with no parent, not destroyed and off the world tree; on
+a Docs Maker the page is lost the same way, the Maker shrinks to about 80 px wide around the rectangle, its text bar
+squeezed, its title still "Docs Maker". The cause is `FrameWdgt._addNoSettle`'s content branch, which replaces the
+content with `removeChild @contents` and tells nobody (no `_reactToChildRemoved`, no reset, no rebuild). The same
+door reaches a BAND (the chooser offers any visible widget that overlaps, a Maker's text-bar band among them, by U1b's
+review): the band then holds the attached widget while its record `broughtByContent` still says it holds what its host's
+content brought (no `notePayloadLeft` runs), so the Maker never offers its "Toolbar" row again and its toolbar is left
+off the tree, a plain host's next content change destroys the attached widget with the band, and the band's spec has no
+recorded `thickness` (its toolbar declared one), so the band measures NaN. The decision to take: whether an occupied
+window is an Attach target at all, or the attach goes through the content-change door.
+
+### A Maker dropped into an empty window gets a second text bar
+
+Measured 2026-11-24 during U1b (`u1b/probe-f1.log`): a Docs Maker dwell-dropped into an empty plain window (the
+Windows toolbar's "empty window" creator makes one) becomes that window's content, and the outer window's rebuild
+docks the toolbar its content declares (`_buildDockedToolbarNoSettle`'s `@contents?.buildToolbar?()` branch, reached
+only here, since only Makers declare one) beside the Maker's own: two identical text bars, one working for the Maker
+and one for the outer window, which reaches the same page. The outer window also takes the title "Docs Maker". The
+decision to take: whether a window whose content is itself a framed citizen docks anything.
+
+### A toolbar window put into another window shows a clipped strip
+
+Measured 2026-11-24 during U1b (`Fizzygum-tests/.scratch/several-bands-loop/u1b/investigate/REPORT.md`,
+`probe-extra.*.log`): the sibling of the defect U1b fixed for bands. A FREE toolbar window whose strip runs down its
+side, first placed with its height given (a picked-up toolbar added into an empty window: 555×44 in a 118 room; a
+fresh one 50×40 with both scroll indicators), takes the first-placement negotiation's height, its payload's
+construction extent, and no later pass corrects it. A wider form of U1b's rule (a frame whose strip runs down its
+side also skips the negotiation) heals it and measured 110 of 111 candidate tests byte-identical with no re-visit,
+but it changes a free window's first placement: an owner question. A window first placed as a division cell (300×87
+where the cell grants more) has the same cause; no person's door to it was found.
+
+### A Maker's own toolbar moved by its strip stops being its own
+
+Read 2026-11-24 by U1b's review (not probed): a Maker's own toolbar band dragged by its strip and dropped on another
+side of the same Maker (past the dwell) is re-docked under a fresh spec, so it is recorded as a person's band
+(`broughtByContent` false), while the same move made by its "Dock ▸ side" row keeps the record. After the drag the Maker
+offers its "Toolbar" row with its bar docked, and its next page leave docks a second text bar beside the moved one. Two
+gestures for one intent end differently. The plan's Phase 1b reads a band floated away and docked again as a person's;
+whether a band that never left its host's slots (a drag from one side to another) keeps the record is the owner's
+question.
+
+### A pinned "Toolbar" submenu docks one more bar per click
+
+Measured 2026-11-24 during U1b (`u1b/probe-f3.log`): the host's "Toolbar" submenu offers "Pin"; pinned, each click of
+a side row runs `addToolbarAtSide`, which docks the content's toolbar with no guard of its own, so a second click
+docks a second copy (each recorded as the content's). The row is offered only while no band the content brought is
+docked, but a pinned copy outlives that answer. Its rows could ask the same question at the click
+(`_offersAFreshToolbar`), the way a pinned text menu re-asks its enablement.
+
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 Noted, not queued:
 
-- (closes with Phase 1b, R12) `FrameWdgt._offersAFreshToolbar` offers a host's "Toolbar" row only while NO band is docked at all
+- [x] `FrameWdgt._offersAFreshToolbar` offers a host's "Toolbar" row only while NO band is docked at all
   (`_dockedToolbarFrame()` answers any band). With several bands a side, a window whose own toolbar was floated
   away and which holds some other band is not offered its toolbar back by that row. Unreached in the shipped
-  windows; left as it is.
+  windows; left as it is. — CLOSED 2026-11-24 (several-bands loop, U1b): the row asks whether a band the
+  content brought is docked (`_bandsMyContentBrought`).
 - A band menu pinned in edit mode keeps its "Dock" and "Float" rows across a flip to view mode; the verbs
   refuse (Phase 2, step 4), the rows do not grey.
 - A band COLLAPSED in its slot and carried to another slot docks at its payload's own depth, not the depth it
