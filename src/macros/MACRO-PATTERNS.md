@@ -923,13 +923,20 @@ assertion a recapture after a regression silently stores two different hashes an
   is the band the release makes; assert it against the docked frame's box read AFTER the release, never
   against `bandBoxIfDocked` itself (`macroDockOutlineIsTheBandItMakes`). After the drop
   the docked frame is an ordinary `EdgeDockLayoutSpec` occupant, assertable by MEANING, not pixels:
-  `guest.layoutSpec.side`, `host.dockedFrames[side] == guest`, no close piece (`!guest.closeButton?`), resizer
+  `guest.layoutSpec.side`, `guest in host.dockedFrames[side]` (a side's list, outermost first: a frame that joins a side
+  stands last, nearest the content), no close piece (`!guest.closeButton?`), resizer
   hidden (`guest.resizer.isVisible == false`) — C12's roster-follows-the-spec rule, provable on ANY frame
   regardless of what it started life as (`macroDockAnyFrame` docks a plain `DocumentWdgt` window into a bare
   `PanelWdgt` host — no toolbar involved, proving the mechanism has no toolbar-only special case).
+- **A second band joins its side** (`macroSecondBandJoinsItsSide`): a side's bands are a list, outermost first, so
+  assert a dock by the list's ORDER (`host.dockedFrames.top` is `[textBar, guest]`, the first still alive) and the
+  gap between two bands of a side by an EQUALITY with the gap where sides meet (`b.top() - textBar.bottom()` against
+  `leftColumn.top() - b.bottom()`), never a theme dial and never a private term (rule [D]). Guests that should stay
+  one cell deep are toolbar windows HUGGED as the product opens them (`world.openFrameHuggingPayload`). A copy's
+  bands are its own: `band.parent is copy` and `band not in host.dockedFrames[side]`. No new verb.
 - **Undock by dragging the grip — a PLAIN drag, NO dwell** (`macroDocsToolbarDockSidesAndFloat`): the inverse
   gesture is not a mirror of the drop above. Leaving a slot is the HOST's own opt-in
-  (`FrameWdgt.wantsDetachOfChild` grants it to members of `@dockedFrames` — the spreadsheet-cell mechanism), so
+  (`FrameWdgt.wantsDetachOfChild` grants it to every band in the lists of `@dockedFrames` — the spreadsheet-cell mechanism), so
   an ordinary `@syntheticEventsMouseMovePressDragRelease_InputEvents (@pointAtFractionOf band.bar, [0.5,0.5]),
   destPoint` — no `yield`, no dwell verb — lifts the docked frame straight to the desktop, landing it as an
   ordinary free-floating window (close piece and resizer back the instant it lands — skin is
@@ -945,8 +952,8 @@ assertion a recapture after a regression silently stores two different hashes an
   (@getMostRecentlyOpenedMenu()), band` → `…, "Dock"` → `@moveToItemOfMenuAndClick_InputEvents
   (@getMostRecentlyOpenedMenu()), "Right"` (a side row is its value capitalised at the row: "Top", "Bottom", "Left",
   "Right"). The HOST's complementary row — "Toolbar" → <side>
-  (`toolbarSideMenu` → `addToolbarAtSide`), offered only while its content declares `buildToolbar` and no slot
-  already holds that variant — lives on the HOST's own menu instead (right-click the host directly; no
+  (`toolbarSideMenu` → `addToolbarAtSide`), offered only while its content declares `buildToolbar` and no band
+  is docked at all — lives on the HOST's own menu instead (right-click the host directly; no
   hierarchy descent needed for its own top-level menu). Both rows are `check-menu-actions`/`fg menusweep`-gated.
   No new verb for either.
 - **A collapsed docked frame is an edge SLIVER, not a bar-shaped rectangle** (`macroCollapsedDockIsAnEdgeSliver`):
@@ -981,8 +988,8 @@ assertion a recapture after a regression silently stores two different hashes an
 - **View mode DISENGAGES every dock; the user's own collapse state survives the round trip**
   (`macroViewModeDisengagesDocks`): a host's mode flip (`@moveToAndClick_InputEvents win.editButton`) sets
   `dockedFrame.layoutSpec.engaged` for every docked frame — disengaged in view mode (zero layout contribution,
-  content starts higher, `band.isVisible == false`, but the frame STAYS in its slot: `host.dockedFrames[side]
-  == band` throughout), re-engaged back in edit mode. `engaged` (the host's mode) and `collapsed` (the user's
+  content starts higher, `band.isVisible == false`, but the frame STAYS in its slot: `band in host.dockedFrames[side]`
+  throughout), re-engaged back in edit mode. `engaged` (the host's mode) and `collapsed` (the user's
   own choice) are different questions that survive each other: collapse a band, flip to view then back to edit,
   and it comes back at its COLLAPSED thickness, not its expanded one — assert the round trip with
   `@assertScreenshotsIdentical` between the pre-view and post-edit shots (byte-identical, GHOST-conform:

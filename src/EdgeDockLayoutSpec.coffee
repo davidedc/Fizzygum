@@ -6,14 +6,16 @@
 # that sits in a slot floats on the desktop the moment it is dragged out, because leaving the
 # slot is exactly dropping this spec.
 #
-# `side` is which edge I take — 'top' | 'left' | 'right' | 'bottom', at most one docked frame per
-# edge. What the band grants my PAYLOAD across the edge (the band adds its own chrome on top of it,
-# so the payload gets the extent it asked for) is `thicknessGrantedTo`: the payload's own
-# `dockThickness` when it declares one (a toolbar's, derived from the theme's grid dials and asked
-# at every measure, so nothing about it is recorded), else `thickness`, the payload's cross extent
-# as it arrived. Either way it is a PURE number the host's chrome measures read (never a laid-out
-# extent), which is why the arrival extent is recorded here rather than measured off the band each
-# pass.
+# `side` is which edge I take — 'top' | 'left' | 'right' | 'bottom'. An edge holds every frame
+# docked at it, side by side from the host's edge inward, the latest nearest the content (the host
+# keeps each side's list, FrameWdgt.dockedFrames, and places the bands by it); a dock never
+# displaces a band already there. What the band grants my PAYLOAD across the edge (the band adds
+# its own chrome on top of it, so the payload gets the extent it asked for) is
+# `thicknessGrantedTo`: the payload's own `dockThickness` when it declares one (a toolbar's,
+# derived from the theme's grid dials and asked at every measure, so nothing about it is
+# recorded), else `thickness`, the payload's cross extent as it arrived. Either way it is a PURE
+# number the host's chrome measures read (never a laid-out extent), which is why the arrival
+# extent is recorded here rather than measured off the band each pass.
 # `engaged` is the HOST's mode switch: a host showing its content in view mode disengages every
 # dock, which takes the band's layout contribution to zero — visibility then FOLLOWS the spec,
 # never the other way round (visibility is never a layout input).

@@ -22,8 +22,8 @@ class FrameWdgt extends ClippingWdgt
   # carries the _applyMoveBy whole-subtree move override -- the repaint path a parent stack
   # takes when it moves this frame as a tracking-container child.
 
-  # my four edge slots, in the order my arrange places them: the two full-width bands first, so
-  # the flank columns share the vertical span left between them
+  # my four edge slots, in the order my arrange places them: the two full-width sides first, so
+  # the flank columns share the vertical span left between their bands
   # hand-list-sanctioned: SystemTest_macroDocsToolbarDockSidesAndFloat (the top band offer, and the "Right"
   # and "Bottom" rows of the Dock submenu, built from this list) and SystemTest_macroDockAnyFrame (the left
   # band offer) fail on a side missing here or spelled apart from my slots' keys
@@ -60,14 +60,16 @@ class FrameWdgt extends ClippingWdgt
   # world inventory meet it as an ordinary child or not at all. A placeholder that LEAVES me,
   # by any door, stops being mine: the next one is built fresh.
   defaultContents: undefined
-  # MY FOUR EDGE SLOTS: a `side -> FrameWdgt` map, at most one docked frame per side (program
-  # ruling C12). The occupant is an ordinary frame carrying an EdgeDockLayoutSpec of mine — no
-  # type test, no docked SKIN: the spec owns its placement, and its card skin, its grip and its
-  # missing close/resizer all derive from that. A content that declares a toolbar variant
-  # (@contents.buildToolbar?()) gets it docked here at construction, and the occupant is STABLE
-  # across mode flips: view mode DISENGAGES the dock (zero layout contribution, hidden) instead
-  # of churning the tree. Built per instance in the constructor -- a class-level object literal
-  # would be ONE map shared by every frame.
+  # MY FOUR EDGE SLOTS (program ruling C12): a `side -> [FrameWdgt, …]` map, each side's docked
+  # frames in a list OUTERMOST FIRST. A frame docked at a side joins its list at the END, nearest my
+  # content, and the bands already there stay: no dock destroys a band. Each is an ordinary frame
+  # carrying an EdgeDockLayoutSpec of mine — no type test, no docked SKIN: the spec owns its
+  # placement, and its card skin, its grip and its missing close/resizer all derive from that. A
+  # content that declares a toolbar variant (@contents.buildToolbar?()) gets it docked here at
+  # construction, and a band is STABLE across mode flips: view mode DISENGAGES the dock (zero
+  # layout contribution, hidden) instead of churning the tree. Built per instance in the
+  # constructor, one list per side of DOCK_SIDES -- a class-level object literal would be ONE map
+  # shared by every frame.
   dockedFrames: undefined
 
   # THE DRAWING TOOL I HOLD while I wear one in an edge slot: a tool KEY, or undefined for none. I am
@@ -509,8 +511,8 @@ class FrameWdgt extends ClippingWdgt
       new Rectangle border, @height() - border - thickness, @width() - border, @height() - border
 
   # Where my payload's top-left sits from mine when it fills its region: past my body's leading
-  # edges, a band docked at my left or my top (with its inset), and my body margin. The arrange
-  # seats it there, and a frame re-wrapping a payload in place reads the same offset
+  # edges, the bands docked at my left and my top (each with its inset), and my body margin. The
+  # arrange seats it there, and a frame re-wrapping a payload in place reads the same offset
   # (floatOutOfDock).
   _payloadOffset: ->
     new Point (@_bodyEdgeLeft() + @_leftDockThickness() + @_bodyMargin()),
@@ -538,30 +540,51 @@ class FrameWdgt extends ClippingWdgt
     2 * (@_borderInset() + @_bodyMargin()) + docks
 
   # ===== the four edge slots' layout terms =====
-  # The frame docked at one of my edges, WHEN IT COUNTS: the slot's occupant, still my child, its
-  # dock engaged (view mode disengages every dock), and my body actually there to hold it -- a
+  # The frames docked at one of my edges THAT COUNT, outermost first: each still my child, its
+  # dock engaged (view mode disengages every dock), and my body actually there to hold them -- a
   # collapsed frame is just its titlebar, so it has no body and no bands. Pure reads: the measures
-  # consume these, so they never touch a laid-out extent (the band's thickness is recorded on the
+  # consume these, so they never touch a laid-out extent (a band's thickness is recorded on its
   # spec).
-  _dockedFrameAt: (side) ->
-    return undefined if @contents?.collapsed
-    dockedFrame = @dockedFrames?[side]
-    return undefined unless dockedFrame? and dockedFrame.parent == @
-    return undefined unless dockedFrame._myEdgeDockSpec()?.engaged
-    dockedFrame
+  _bandsAt: (side) ->
+    return [] if @contents?.collapsed
+    (band for band in (@dockedFrames?[side] ? []) when band.parent == @ and band._myEdgeDockSpec()?.engaged)
 
-  # What a docked frame takes out of my body at `side`, past the body margin my payload offset and
-  # my chrome already count at that edge: what the band's inset adds past that margin
-  # (_dockedBandInset), the band it occupies, and the gap between the band and my content (my body
-  # margin again). 0 for an empty, disengaged or collapsed-away slot.
+  # The thickness each band that counts at `side` measures under the spec it carries
+  # (_bandThicknessUnder), outermost first: what the measure sums (_dockThicknessAt) and the
+  # placement cuts its box by (_bandBoxesAt).
+  _bandThicknessesAt: (side) ->
+    (band._bandThicknessUnder band.layoutSpec for band in @_bandsAt side)
+
+  # Every frame in my slots, counting or not, in my slots' order: DOCK_SIDES, then each side's
+  # outermost first. What asks after my bands as a whole reads it: whether a widget is one of them,
+  # what I wear, what a content change retires.
+  _framesInMySlots: ->
+    frames = []
+    for side in FrameWdgt.DOCK_SIDES
+      frames = frames.concat (@dockedFrames?[side] ? [])
+    frames
+
+  # What the bands docked at `side` take out of my body, past the body margin my payload offset and
+  # my chrome already count at that edge: the slots of the bands that count there (_sideThicknessFor
+  # of their thicknesses, _bandThicknessesAt). 0 for a side with no band that counts: none docked,
+  # disengaged, or collapsed away.
   _dockThicknessAt: (side) ->
-    dockedFrame = @_dockedFrameAt side
-    return 0 unless dockedFrame?
-    @_slotThicknessFor dockedFrame._bandThicknessUnder dockedFrame.layoutSpec
+    @_sideThicknessFor @_bandThicknessesAt side
+
+  # What bands of these `thicknesses` take out of my body at one side: each one's slot
+  # (_slotThicknessFor), summed; 0 for none. The one home of a side's total: the measure reads it
+  # (_dockThicknessAt) and the placement cuts the box of a side's bands out of it (_bandBoxesAt).
+  _sideThicknessFor: (thicknesses) ->
+    thickness = 0
+    for bandThickness in thicknesses
+      thickness += @_slotThicknessFor bandThickness
+    thickness
 
   # What a band `bandThickness` thick takes out of my body, at whichever side: the band's inset, the
-  # band, and my body margin between it and my content. One term for the slot a band occupies
-  # (_dockThicknessAt) and for the slot a frame about to dock would take (bandBoxIfDocked).
+  # band, and my body margin between it and what stands inward of it (my content, or the side's next
+  # band, whose own inset follows). One term for each slot of a side's total (_sideThicknessFor), for
+  # where each band of a side stands past the one before (_bandBoxesAt), and for the slot a frame
+  # about to dock would add (bandBoxIfDocked).
   _slotThicknessFor: (bandThickness) ->
     @_dockedBandInset() + bandThickness + @_bodyMargin()
 
@@ -576,7 +599,7 @@ class FrameWdgt extends ClippingWdgt
     Math.max 0, WorldWdgt.theme.dockedBandInset - @_bodyMargin()
 
   # MY OWN cross extent as a band (program ruling C13) under `dockSpec`: the spec I carry in a
-  # host's slot (a host asks it of each band that counts, _dockedFrameAt, with the band's own
+  # host's slot (a host asks it of each band that counts, _bandThicknessesAt, with the band's own
   # layoutSpec), or the one a host would hand me, asked before I dock so the hand can outline the
   # band a release would make (bandBoxIfDocked). Expanded, what the band grants my payload
   # (EdgeDockLayoutSpec.thicknessGrantedTo: a toolbar's own dockThickness, asked now, or the extent
@@ -741,6 +764,8 @@ class FrameWdgt extends ClippingWdgt
       @contents._contentStackSpec.desiredWidth = undefined
 
     @dockedFrames = {}
+    for side in FrameWdgt.DOCK_SIDES
+      @dockedFrames[side] = []
     @padding = @_chromePadding()
     # TODO this looks better:
     #@padding = 10
@@ -1201,15 +1226,16 @@ class FrameWdgt extends ClippingWdgt
 
   # (A2a, was inherited from the stack) membership-change re-fit -- same
   # absorb-or-refit contract as the inline in _reactToChildDropped below.
-  #   A departing SLOT OCCUPANT frees its slot here: the grab that lifts a docked frame out
-  # re-homes it and notifies me, and a slot still pointing at a child that lives somewhere else
-  # would reserve a band for it forever.
+  #   A departing BAND frees its slot here, leaving its side's list (the bands inward of it close
+  # up): the grab that lifts a docked frame out re-homes it and notifies me, and a list still
+  # holding a child that lives somewhere else would reserve a band for it forever. Any other child
+  # leaving has no slot to free.
   #   And its payload is told it LEFT me (noteUndockedFrom, a capability: a payload with nothing to
   # do about it answers nothing), once its slot is free, so what it reads of me no longer counts it.
   # Only a departure by re-homing is one: this hook is also a destroy's notification (the dying child
-  # is already marked destroyed), and a destroy is no departure. A slot freed BEFORE its occupant goes
-  # is none either -- a re-side (_reSideMyDockNoSettle) and a content change's retirement
-  # (_retireDockedFramesNoSettle) free it themselves.
+  # is already marked destroyed), and a destroy is no departure. A band whose slot is freed BEFORE it
+  # goes is none either: a content change's retirement (_retireDockedFramesNoSettle) frees every slot
+  # itself, then destroys the bands. (A re-side never reaches this hook: the band stays my child.)
   #   MY CONTENT LEAVING ME is heard here too, and here alone: this is the one seat for every door.
   # Whatever takes it away -- the hand (a "Pick up", a drag of a tilted content), another parent
   # ("Attach"), the bin (a nested window's "Close") or its own destroy -- re-homes it through
@@ -1231,7 +1257,7 @@ class FrameWdgt extends ClippingWdgt
   # that iteration can never reach -- alive, unowned, and pinned forever by the instances registry.
   _reactToChildRemoved: (child) ->
     wasDocked = @_isMyDockedFrame child
-    @_freeDockSlotOf child
+    @_freeDockSlotOf child if wasDocked
     child.contents?.noteUndockedFrom? @ if wasDocked and !child.destroyed
     if child is @contents and !@isAncestorOf(child) and !(@destroyed or @_beingFullDestroyed)
       @_myEdgeDockSpec()?.notePayloadLeft child
@@ -1239,10 +1265,12 @@ class FrameWdgt extends ClippingWdgt
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
-  # Forget a slot's occupant, wherever it went (dragged out, destroyed, re-docked elsewhere).
+  # Forget a band, wherever it went (dragged out, destroyed, re-docked elsewhere): it leaves the list
+  # of the side that held it, and the others keep their order.
   _freeDockSlotOf: (child) ->
+    return unless @dockedFrames?
     for side in FrameWdgt.DOCK_SIDES
-      delete @dockedFrames[side] if @dockedFrames?[side] == child
+      @dockedFrames[side] = (each for each in @dockedFrames[side] when each isnt child)
     return
 
   _beforeChildCollapsed: (child) ->
@@ -1305,38 +1333,47 @@ class FrameWdgt extends ClippingWdgt
   #     side -- is not floored): along it, every piece of its roster
   #     (FrameBarWdgt.shortestStripKeepingEveryPiece); across it, my chrome, so the strip and my grip
   #     never overlap;
-  #   - for my BANDS: every band that counts (_dockedFrameAt: engaged, my body there) and is itself
-  #     expanded, and whose payload answers shortestDockedRun, on BOTH axes:
-  #       - along its run, so the band's chevron stands whole: the band's inset at both ends, the band's
-  #         own chrome along the run, and that run, plus what else my body spends along it -- for a top
-  #         or bottom band my body's edges and margins, for a left or right one my whole chrome height (a
-  #         column runs between my top and bottom slots);
-  #       - across it: my chrome there, the extent at which my content is empty and the band still inside
-  #         me (on a window whose strip carries a title, the strip's own cross term asks as much).
+  #   - for my BANDS: every band that counts, on every side (_bandsAt: engaged, my body there), by the
+  #     floor it asks (_floorKeepingBandUsable), along its run and across it.
   # My content is EMPTY at my chrome plus what it keeps as a margin of its own (a document's,
   # ViewportWdgt.planeMargin), at both ends: a pane with a margin shows nothing in it, so that room
   # is no content a drag may take away.
-  # Undefined when neither asks for anything (an untitled strip, no band), so such a window is not
-  # floored at all. Pure: theme dials, my roster and my bands' own measures, the terms my arrange lays
-  # the strip and the bands out by.
+  # Undefined when neither asks for anything (an untitled strip, no band that asks), so such a window
+  # is not floored at all. Pure: theme dials, my roster and my bands' own measures, the terms my
+  # arrange lays the strip and the bands out by.
   smallestExtentKeepingMyControlsUsable: ->
     kept = 2 * (@contents?.planeMargin ? 0)
     emptyHeight = @_chromeHeight() + kept
     emptyWidth = @_chromeWidth() + kept
     floor = (new Point @bar.shortestStripKeepingEveryPiece(), emptyHeight) if @_barSpec().showsText
     for side in FrameWdgt.DOCK_SIDES
-      band = @_dockedFrameAt side
-      continue if !band? or band.contents?.collapsed
-      run = band.contents?.shortestDockedRun?()
-      continue unless run?
-      if side is "top" or side is "bottom"
-        along = @_bodyEdgeLeft() + @_bodyEdgeRight() + 2 * (@_bodyMargin() + @_dockedBandInset()) + band._chromeWidth() + run
-        bandFloor = new Point along, emptyHeight
-      else
-        along = @_chromeHeight() + 2 * @_dockedBandInset() + band._chromeHeight() + run
-        bandFloor = new Point emptyWidth, along
-      floor = if floor? then floor.max bandFloor else bandFloor
+      for band in @_bandsAt side
+        bandFloor = @_floorKeepingBandUsable band, side, emptyWidth, emptyHeight
+        continue unless bandFloor?
+        floor = if floor? then floor.max bandFloor else bandFloor
     floor
+
+  # THE FLOOR ONE BAND OF MINE ASKS of my extent, docked at `side`, with my content empty at
+  # `emptyWidth` by `emptyHeight`: undefined when it asks none (it is collapsed, or its payload
+  # answers no shortestDockedRun), else a Point that floors me on BOTH axes:
+  #   - along its run, so the band's chevron stands whole: the band's inset at both ends, the band's
+  #     own chrome along the run, and that run, plus what else my body spends along it -- for a top
+  #     or bottom band my body's edges and margins, for a left or right one my whole chrome height (a
+  #     column runs between my top and bottom slots);
+  #   - across it: my chrome there, the extent at which my content is empty and every band of mine
+  #     still inside me (on a window whose strip carries a title, the strip's own cross term asks as
+  #     much).
+  # Pure, like the floor it is maxed into (smallestExtentKeepingMyControlsUsable).
+  _floorKeepingBandUsable: (band, side, emptyWidth, emptyHeight) ->
+    return undefined if band.contents?.collapsed
+    run = band.contents?.shortestDockedRun?()
+    return undefined unless run?
+    if side is "top" or side is "bottom"
+      along = @_bodyEdgeLeft() + @_bodyEdgeRight() + 2 * (@_bodyMargin() + @_dockedBandInset()) + band._chromeWidth() + run
+      new Point along, emptyHeight
+    else
+      along = @_chromeHeight() + 2 * @_dockedBandInset() + band._chromeHeight() + run
+      new Point emptyWidth, along
 
   # Is the nearest window around me in view mode? The climb ends at the first frame it meets
   # (enclosingFrame), and a window nested in a nested window answers to the one holding it, not to
@@ -1380,7 +1417,7 @@ class FrameWdgt extends ClippingWdgt
   _reactToChildCollapsed: (child) ->
     if child == @contents
       # a collapsed window is JUST its titlebar, so its bands are gone with its body
-      # (_dockedFrameAt already reads them out of the layout; the pixels follow here)
+      # (_bandsAt already reads them out of the layout; the pixels follow here)
       @_reflectDockVisibilityNoSettle()
       # (my grip re-asks in the arrange below: _positionAndResizeChildren). A host that owns my placement
       # owns my bar's width too.
@@ -1467,21 +1504,21 @@ class FrameWdgt extends ClippingWdgt
       when 'right' then new Rectangle (new Point Math.max(body.right() - depth, body.left()), body.top()), body.corner
       else new Rectangle body.origin, new Point Math.min(body.left() + depth, body.right()), body.bottom()
 
-  # WHERE A BAND STANDS in my body, in my own plane: a band `bandThickness` thick at `side`, my
-  # top slot taking `topDockThickness` of my body and my content `stackHeight` tall. Past my body's
-  # inner edges (my border or my bar) and my body margin, the band stands my band inset
-  # (_dockedBandInset: what the theme's band inset adds past that margin) further in on its three
-  # OUTER sides, its fourth side facing the content across my body margin -- TOP/BOTTOM: a band
-  # across my whole body less the inset at each end, the content starting a body margin below it
-  # (top) or ending a body margin above it (bottom: the band's top lands a body margin below the
-  # content, and its bottom stands the band inset above where the content region's bottom sits, my
-  # bottom edge and body margin, and the grip strip above them when I keep one -- _chromeHeight
-  # carries the matching reservation); LEFT/RIGHT: a column on that flank spanning the content's
-  # vertical span less the inset at each end, so a column and a top or bottom band stand as far
-  # apart where they meet as a band stands in from my body's edges.
-  #   PURE, and the one home of the placement: my arrange places the bands I hold by it, with the
-  # content height its pass derived, and the picture of a dock not yet made asks it the terms that
-  # dock would give (bandBoxIfDocked), so the two cannot disagree.
+  # WHERE A SIDE'S BANDS STAND, TOGETHER, in my body, in my own plane: the box `bandThickness`
+  # thick at `side` that they take as one (for a lone band, that band's own box), my top slots
+  # taking `topDockThickness` of my body and my content `stackHeight` tall. Past my body's inner
+  # edges (my border or my bar) and my body margin, the box stands my band inset (_dockedBandInset:
+  # what the theme's band inset adds past that margin) further in on its three OUTER sides, its
+  # fourth side facing the content across my body margin -- TOP/BOTTOM: a box across my whole body
+  # less the inset at each end, the content starting a body margin below it (top) or ending a body
+  # margin above it (bottom: the box's top lands a body margin below the content, and its bottom
+  # stands the band inset above where the content region's bottom sits, my bottom edge and body
+  # margin, and the grip strip above them when I keep one -- _chromeHeight carries the matching
+  # reservation); LEFT/RIGHT: a column on that flank spanning the content's vertical span less the
+  # inset at each end, so a column and a top or bottom band stand as far apart where they meet as a
+  # band stands in from my body's edges.
+  #   PURE. Each band's own place is cut out of this box by _bandBoxesAt, the one home of where a
+  # band stands.
   _bandBoundsAt: (side, bandThickness, topDockThickness, stackHeight) ->
     bodyMargin = @_bodyMargin()
     bandInset = @_dockedBandInset()
@@ -1501,28 +1538,55 @@ class FrameWdgt extends ClippingWdgt
       else # 'left'
         (new Rectangle new Point bodyLeft + bandInset, columnTop).setBoundsWidthAndHeight bandThickness, columnRun
 
+  # WHERE EACH BAND OF ONE SIDE STANDS, outermost first, given each one's thickness (`thicknesses`,
+  # in the same order), my top slots taking `topDockThickness` of my body and my content
+  # `stackHeight` tall. The side's bands measure together as one band would -- the side's total
+  # (_sideThicknessFor, the very sum my measure reads), less the band inset and the body margin
+  # _bandBoundsAt itself adds around the whole -- and stand side by side inside that box from its
+  # OUTER edge inward, each a slot (_slotThicknessFor) past the one before, so two bands of a side
+  # stand as far apart (my body margin and my band inset) as bands of different sides do where they
+  # meet. A lone band's box is the whole box.
+  #   PURE, and the one home of where a band stands: my arrange places the bands I hold by it, with
+  # the content height its pass derived, and the picture of a dock not yet made asks it the terms
+  # that dock would give (bandBoxIfDocked), so the two cannot disagree.
+  _bandBoxesAt: (side, thicknesses, topDockThickness, stackHeight) ->
+    return [] if thicknesses.length is 0
+    together = (@_sideThicknessFor thicknesses) - (@_dockedBandInset() + @_bodyMargin())
+    whole = @_bandBoundsAt side, together, topDockThickness, stackHeight
+    offset = 0
+    for thickness in thicknesses
+      box = switch side
+        when 'top' then (new Rectangle new Point whole.left(), whole.top() + offset).setBoundsWidthAndHeight whole.width(), thickness
+        when 'bottom' then (new Rectangle new Point whole.left(), whole.bottom() - offset - thickness).setBoundsWidthAndHeight whole.width(), thickness
+        when 'right' then (new Rectangle new Point whole.right() - offset - thickness, whole.top()).setBoundsWidthAndHeight thickness, whole.height()
+        else (new Rectangle new Point whole.left() + offset, whole.top()).setBoundsWidthAndHeight thickness, whole.height()
+      offset += @_slotThicknessFor thickness
+      box
+
   # THE BAND `aFrame` WOULD BE, docked at `side`: its box in my own plane, as my arrange would
   # place it once the dock is made -- what the hand outlines while a frame hovers over the offer,
   # so the outline is the place and the size of what the release makes. Derived, with nothing
   # docked and nothing written, from the terms the dock itself would produce: the spec it would
   # hand the frame (_edgeDockSpecFor), the thickness the frame measures under it
-  # (_bandThicknessUnder), the slot that band takes in place of whatever holds `side` now (an
-  # occupied slot's holder goes: one frame per side), my content's height with my chrome so changed
-  # (_steadyContentHeight, the measure's own rule), and the placement my arrange uses
-  # (_bandBoundsAt); then the frame says what it takes of the box I would grant it
-  # (_bandBoxTakenOf). PUBLIC: the hand asks it of the host an offer names.
+  # (_bandThicknessUnder), the slot that band ADDS at `side` (_slotThicknessFor, the term each slot
+  # of a side's total is) -- the frame would stand nearest my content on its side, inward of every
+  # band the side holds, which all stay -- my content's height with my chrome so changed
+  # (_steadyContentHeight, the measure's own rule), and the placement my arrange uses (_bandBoxesAt,
+  # the frame's box being the side's last); then the frame says what it takes of the box I would
+  # grant it (_bandBoxTakenOf). PUBLIC: the hand asks it of the host an offer names.
   bandBoxIfDocked: (aFrame, side) ->
     dockSpec = @_edgeDockSpecFor aFrame, side
     bandThickness = aFrame._bandThicknessUnder dockSpec
     slotThickness = @_slotThicknessFor bandThickness
-    topDockThickness = if side is "top" then slotThickness else @_topDockThickness()
+    topDockThickness = @_topDockThickness() + (if side is "top" then slotThickness else 0)
     chromeHeight = @_chromeHeight()
     chromeWidth = @_chromeWidth()
     if side is "top" or side is "bottom"
-      chromeHeight += slotThickness - @_dockThicknessAt side
+      chromeHeight += slotThickness
     else
-      chromeWidth += slotThickness - @_dockThicknessAt side
-    aFrame._bandBoxTakenOf (@_bandBoundsAt side, bandThickness, topDockThickness, @_steadyContentHeight @width(), chromeWidth, chromeHeight), dockSpec
+      chromeWidth += slotThickness
+    boxes = @_bandBoxesAt side, ((@_bandThicknessesAt side).concat [bandThickness]), topDockThickness, (@_steadyContentHeight @width(), chromeWidth, chromeHeight)
+    aFrame._bandBoxTakenOf boxes[boxes.length - 1], dockSpec
 
   # WHAT I TAKE OF THE BOX A HOST GRANTS ME as a band under `dockSpec`: all of it, but for my height
   # in a side column when my payload keeps a height of its own (a text, which does not set its
@@ -1538,12 +1602,11 @@ class FrameWdgt extends ClippingWdgt
     myHeight = @contents.height() + @_barSpec().thickness - @_borderInset() + @_chromeBesidesStripsAcross "vertical"
     grantedBox.setBoundsWidthAndHeight grantedBox.width(), myHeight
 
-  # Am I holding this widget in one of my slots? (asked by the content hooks, which must let a band
-  # through: a band is a payload I HOLD, never the payload I WRAP)
+  # Am I holding this widget in one of my slots, as one of the bands a side's list holds? (asked by
+  # the content hooks, which must let a band through: a band is a payload I HOLD, never the payload
+  # I WRAP)
   _isMyDockedFrame: (aWdgt) ->
-    for side in FrameWdgt.DOCK_SIDES
-      return true if @dockedFrames?[side] == aWdgt
-    false
+    aWdgt in @_framesInMySlots()
 
   # THE UNDOCK GESTURE, as one declaration (the container gate of the notification grid): a band
   # in one of my slots is a payload I HOLD, not a part of me, so a drag on its grip lifts THE BAND
@@ -1565,18 +1628,19 @@ class FrameWdgt extends ClippingWdgt
   # across the band, no close, no resizer) derives from the frame's no-longer-free-floating
   # attachment. What the band grants the PAYLOAD is the thickness the payload declares for itself
   # if it declares one (dockThickness, which the spec asks at every measure, so nothing about it
-  # is recorded), else the extent it arrives with, which the spec records. An occupied slot's
-  # previous holder is set free first -- one frame per side. Last, the payload is told it ARRIVED
-  # (noteDockedOn, a capability: a payload with nothing to do about it answers nothing), with its slot
-  # already filled, so what it reads of me counts it.
+  # is recorded), else the extent it arrives with, which the spec records. The frame joins the
+  # side's list at its END, nearest my content, and the bands the side already holds stay as they
+  # are, outward of it: a dock destroys nothing. Last, the payload is told it ARRIVED (noteDockedOn,
+  # a capability: a payload with nothing to do about it answers nothing), with its place in the list
+  # already taken, so what it reads of me counts it.
   _dockFrameNoSettle: (aFrame, side) ->
     payload = aFrame.contents
     # armed BEFORE the add, so the band's own roster derive already sees the mode it lands in
     dockSpec = @_edgeDockSpecFor aFrame, side
-    @dockedFrames[side]?._fullDestroyNoSettle()
     @_addNoSettle aFrame, notContent: true, layoutSpec: dockSpec
-    # after the add: a re-dock's own departure notification would otherwise free the slot I just filled
-    @dockedFrames[side] = aFrame
+    # after the add: a re-dock's own departure notification would otherwise take back out of the
+    # list the frame I just put in it
+    @dockedFrames[side].push aFrame
     @_reflectDockVisibilityNoSettle()
     @_invalidateLayout()
     payload.noteDockedOn? @
@@ -1603,24 +1667,26 @@ class FrameWdgt extends ClippingWdgt
     !@_holdsAnEditMode() or @isInEditMode()
 
   # Whether a band is DRAWN follows its dock's engagement -- never the other way round, because
-  # visibility is never a layout input (the layout reads the spec, in _dockedFrameAt). One place,
-  # re-driven wherever engagement can change: the mode flip, my own collapse, a fresh dock.
+  # visibility is never a layout input (the layout reads the spec, in _bandsAt). One place,
+  # re-driven wherever engagement can change: the mode flip, my own collapse, a fresh dock. Per
+  # side, a band still mine shows exactly while it counts there, and every other one is hidden.
   _reflectDockVisibilityNoSettle: ->
     for side in FrameWdgt.DOCK_SIDES
-      dockedFrame = @dockedFrames?[side]
-      continue unless dockedFrame? and dockedFrame.parent == @
-      # public-call-sanctioned: show/hide are the public visibility pair (driven cross-object all
-      # over the system) -- they settle nothing and touch no geometry, so reaching them from a
-      # NoSettle core is settle-neutral.
-      if @_dockedFrameAt(side)? then dockedFrame.show() else dockedFrame.hide()
+      counting = @_bandsAt side
+      for dockedFrame in (@dockedFrames?[side] ? [])
+        continue unless dockedFrame.parent == @
+        # public-call-sanctioned: show/hide are the public visibility pair (driven cross-object all
+        # over the system) -- they settle nothing and touch no geometry, so reaching them from a
+        # NoSettle core is settle-neutral.
+        if dockedFrame in counting then dockedFrame.show() else dockedFrame.hide()
     return
 
   # My mode's half of the same question: editing ENGAGES every dock, viewing disengages it. The
   # user's own collapse of a band is the band's business and survives the round trip.
   _engageDocksNoSettle: (engaged) ->
     changed = false
-    for side in FrameWdgt.DOCK_SIDES
-      dockSpec = @dockedFrames?[side]?._myEdgeDockSpec()
+    for dockedFrame in @_framesInMySlots()
+      dockSpec = dockedFrame._myEdgeDockSpec()
       continue unless dockSpec? and dockSpec.engaged isnt engaged
       dockSpec.engaged = engaged
       changed = true
@@ -1628,25 +1694,25 @@ class FrameWdgt extends ClippingWdgt
     @_reflectDockVisibilityNoSettle()
     @_invalidateLayout()
 
-  # The docked frame holding my content's toolbar variant. The strip inside it is the PAYLOAD
-  # (program ruling C11) -- the frame around it is the same chrome any other frame wears, which is
-  # what lets the one object dock and float without being rebuilt.
+  # The first frame in my slots (DOCK_SIDES, each side's outermost first) that is still my child,
+  # whatever its payload, or undefined. What its askers ask by it is whether any band is docked on
+  # me at all: my rebuild docks my content's toolbar variant only where none is
+  # (_buildAndConnectChildrenNoSettle), and my "Toolbar" row is offered only then
+  # (_offersAFreshToolbar).
   _dockedToolbarFrame: ->
-    for side in FrameWdgt.DOCK_SIDES
-      dockedFrame = @dockedFrames?[side]
-      return dockedFrame if dockedFrame? and dockedFrame.parent == @
+    for dockedFrame in @_framesInMySlots()
+      return dockedFrame if dockedFrame.parent == @
     undefined
 
-  # WHAT I WEAR: the payloads of the frames in my edge slots, in my slots' order (DOCK_SIDES), each
-  # one still mine (a band on its way out is not). A band my view mode disengaged is hidden and
-  # still docked, so its payload is still listed. PUBLIC and paint-agnostic: whoever needs to know
-  # what a window wears asks it (ToolbarWdgt.wearsDrawingTools), and I tell these payloads when my
-  # tool changes (armDrawingTool).
+  # WHAT I WEAR: the payloads of the frames in my edge slots, in my slots' order (DOCK_SIDES, each
+  # side's outermost first), each one still mine (a band on its way out is not). A band my view mode
+  # disengaged is hidden and still docked, so its payload is still listed. PUBLIC and paint-agnostic:
+  # whoever needs to know what a window wears asks it (ToolbarWdgt.wearsDrawingTools), and I tell
+  # these payloads when my tool changes (armDrawingTool).
   dockedPayloads: ->
     payloads = []
-    for side in FrameWdgt.DOCK_SIDES
-      dockedFrame = @dockedFrames?[side]
-      payloads.push dockedFrame.contents if dockedFrame?.parent is @ and dockedFrame.contents?
+    for dockedFrame in @_framesInMySlots()
+      payloads.push dockedFrame.contents if dockedFrame.parent is @ and dockedFrame.contents?
     payloads
 
   # THE ONE WRITE of the tool I hold (armedDrawingTool above), the User's twin: it only states the
@@ -1671,25 +1737,25 @@ class FrameWdgt extends ClippingWdgt
     return unless toolbar?
     @_dockFrameNoSettle (new FrameWdgt toolbar), (side ? toolbar.dockSide)
 
-  # the content owns the slot's occupant, so a content CHANGE retires it -- the
-  # rebuild then makes the NEW content's variant (or none)
+  # A content CHANGE retires every band in my slots, whatever it holds (docs/architecture/toolbars.md
+  # §2), and the rebuild then docks the NEW content's variant (or none). The lists are emptied before
+  # any band is destroyed, so no destroy's notification (_reactToChildRemoved) finds a band of mine to
+  # free.
   _retireDockedFramesNoSettle: ->
+    return unless @dockedFrames?
+    retiring = @_framesInMySlots()
     for side in FrameWdgt.DOCK_SIDES
-      dockedFrame = @dockedFrames?[side]
-      continue unless dockedFrame?
-      delete @dockedFrames[side]
+      @dockedFrames[side] = []
+    for dockedFrame in retiring
       # the SUBTREE: a frame owns a bar, its pieces and a payload, and destroying it alone would
       # leave all of those alive and off-tree -- escaped widgets the instances registry pins forever
       dockedFrame._fullDestroyNoSettle()
     return
 
-  # The frame's own context-menu entries (on top of the generic Widget set):
-  # the toolbar-slot's dock-side chooser and undock action, on the frame's menu
-  # because the frame OWNS the slot -- and DELIBERATELY menu entries, never bar
-  # buttons (owner ruling D9, Frame-model plan §5.C: don't spend bar space on
-  # them). Gated on the toolbar actually showing (you adjust what you can see)
-  # -- or, for the chooser alone, on an EMPTY slot the content could refill
-  # (the re-dock path after "float the toolbar").
+  # The frame's own context-menu entries (on top of the generic Widget set), DELIBERATELY menu
+  # entries, never bar buttons (owner ruling D9, Frame-model plan §5.C: don't spend bar space on
+  # them): a band's own "Dock" and "Float" rows, offered while I carry a host's edge spec, and a
+  # host's "Toolbar" row, offered while _offersAFreshToolbar answers yes.
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     # A BAND's own rows: where it sits, and how to stop being a band at all. They are the band's
@@ -1699,10 +1765,10 @@ class FrameWdgt extends ClippingWdgt
       menu.addLine()
       menu.addMenuItem "Dock", @, "dockSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
       menu.addMenuItem "Float", @, "floatOutOfDock", toolTip: "leave the slot for a window on the desktop"
-    # A HOST's row: fill an empty slot with the toolbar my content declares. Offered only while
-    # there IS one to make and no slot already holds it -- you cannot dock a second copy of the
-    # same variant, and DELIBERATELY a menu entry, never a bar button (owner ruling D9: don't spend
-    # bar space on it).
+    # A HOST's row: dock the toolbar my content declares at a side. Offered while my content
+    # declares a variant and no band is docked on me at all (a drop can still dock a second copy of
+    # a variant beside the first), and DELIBERATELY a menu entry, never a bar button (owner ruling
+    # D9: don't spend bar space on it).
     if @_offersAFreshToolbar()
       menu.addLine()
       menu.addMenuItem "Toolbar", @, "toolbarSideMenu", closesUnpinnedPopUps: false, opensSubmenu: true, toolTip: ""
@@ -1712,7 +1778,8 @@ class FrameWdgt extends ClippingWdgt
       menu.addMenuItem "Pin", @, "pinPopUp", closesUnpinnedPopUps: false
 
   # Is there a toolbar to dock that is not docked already? The content must declare a variant (a
-  # framed citizen declares its own -- §5.B) and no slot may hold one.
+  # framed citizen declares its own -- §5.B) and no slot may hold a band at all (_dockedToolbarFrame
+  # answers the first of any payload).
   _offersAFreshToolbar: ->
     return false if @_dockedToolbarFrame()?
     (@buildToolbar? or @contents?.buildToolbar?) == true
@@ -1736,9 +1803,10 @@ class FrameWdgt extends ClippingWdgt
     menu.popUpAtHand()
 
   # Move me to another of my host's slots. A dock IS a placement, so re-siding is an edit to the
-  # spec that places me -- the same frame, the same payload, a different edge. (Menu-dispatched:
-  # the first two slots of the four-slot convention are the row and the menu's subject, and this
-  # verb wants neither.)
+  # spec that places me -- the same frame, the same payload, a different edge. I leave my side's
+  # list and join the new side's at its end, nearest the content, as a fresh dock does, and the
+  # bands there stay. (Menu-dispatched: the first two slots of the four-slot convention are the
+  # row and the menu's subject, and this verb wants neither.)
   dockAtSide: (ignored, ignored2, side) ->
     @_settleLayoutsAfter => @_reSideMyDockNoSettle side
 
@@ -1749,9 +1817,8 @@ class FrameWdgt extends ClippingWdgt
     host = @parent
     return unless host?._isMyDockedFrame? @
     host._freeDockSlotOf @
-    host.dockedFrames[side]?._fullDestroyNoSettle()
     dockSpec.side = side
-    host.dockedFrames[side] = @
+    host.dockedFrames[side].push @
     host._invalidateLayout()
 
   # Fill one of my empty slots with my content's toolbar variant, framed. (Menu-dispatched -- see
@@ -2527,9 +2594,9 @@ class FrameWdgt extends ClippingWdgt
 
     @_addNoSettle @contents
 
-    # the toolbar's slot occupant (keep-if-exist like the bar pieces; the
-    # content-CHANGE points retire it first so a new content gets its own
-    # variant). Born disengaged when viewing.
+    # my content's toolbar variant, docked only while no band is docked on me at all (keep-if-exist
+    # like the bar pieces; the content-CHANGE points retire every band first, so a new content gets
+    # its own variant). Born disengaged when viewing.
     @_buildDockedToolbarNoSettle() unless @_dockedToolbarFrame()?
 
     # the resize affordance the spec names: a frame that sizes to what it holds (a pop-up hugs
@@ -2815,7 +2882,7 @@ class FrameWdgt extends ClippingWdgt
         barBounds = barBounds.setBoundsWidthAndHeight @width(), @_titlebarHeight()
       @bar._reLayout barBounds
 
-    # the four slots: place each docked band in my body (_bandBoundsAt, with
+    # the four slots: place each side's bands in my body (_bandBoxesAt, with
     # the content height this pass just derived, so every placement is
     # pass-local -- no applied-bounds read-back). Driven SYNCHRONOUSLY via _reLayout bounds,
     # the same drive as @bar above -- a band's _reLayout applies its own
@@ -2828,9 +2895,9 @@ class FrameWdgt extends ClippingWdgt
     # narrow->wide window resize.)
     topDockThickness = @_topDockThickness()
     for side in FrameWdgt.DOCK_SIDES
-      dockedFrame = @_dockedFrameAt side
-      continue unless dockedFrame?
-      dockedFrame._reLayout @_bandBoundsAt side, (dockedFrame._bandThicknessUnder dockedFrame.layoutSpec), topDockThickness, stackHeight
+      boxes = @_bandBoxesAt side, (@_bandThicknessesAt side), topDockThickness, stackHeight
+      for band, i in @_bandsAt side
+        band._reLayout boxes[i]
 
     # (the resizer needs no placement here: it is corner-attached — its CornerInternalLayoutSpec,
     # bottom-right at the grip's own inset past my border (FrameGripWdgt._cornerInsetFrom), which puts

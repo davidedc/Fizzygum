@@ -190,12 +190,12 @@ the accent `dropCandidateOutline`, 2 px `dropOutlineWidth` inside the box, its c
 they meet them), just applied to a region of the host's body rather than to a widget, and mapped through the
 host's screen bounds so it renders correctly inside a rotated/scaled island too (§11). The box is the band's
 place and size once docked: a toolbar's is its own `dockThickness` thick, a window's as thick as its payload
-arrives, a side column starts below a top band, and a slot already held outlines the band that would replace
-its holder. `bandBoxIfDocked` docks nothing and writes nothing. It derives the box from the terms the dock
+arrives, a side column starts below a top band, and a side a band already holds outlines the band that would join
+it, nearest the content. `bandBoxIfDocked` docks nothing and writes nothing. It derives the box from the terms the dock
 itself would produce, each with one home the host's arrange and measure share: the spec the dock would hand
 over (`_edgeDockSpecFor`), the thickness the frame measures under it (`_bandThicknessUnder`), the host's
-content height with its chrome so changed (`_steadyContentHeight`), the placement of a band (`_bandBoundsAt`),
-and what the frame takes of the box it is granted (`_bandBoxTakenOf`).
+content height with its chrome so changed (`_steadyContentHeight`), the placement of each band of a side
+(`_bandBoxesAt`), and what the frame takes of the box it is granted (`_bandBoxTakenOf`).
 
 **Release outcome (§7): docks, not embeds.** An ARMED release resolved to a band skips the ordinary
 `_beforeChildDropped` content hand-off (a dock takes a slot BESIDE the host's content, never instead of it)

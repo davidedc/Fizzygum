@@ -120,8 +120,16 @@ const METHOD_CEILINGS = {
   // parameters) and _bandBoxTakenOf (what the frame takes of the box it is granted: a text's band in a side column
   // keeps the text's height); _bandThicknessUnder took _dockedBandThickness's place, the spec passed in. And for the offer, which a
   // frame in view mode no longer makes: _myModeEngagesMyDocks (asked by the offer and by a fresh dock's spec) and
-  // _holdsAnEditMode (the one definition offersEditToggle and it both read)
-  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 176 },
+  // _holdsAnEditMode (the one definition offersEditToggle and it both read). Raised 176 -> 181 on 2026-11-23 under
+  // the same ruling, for the several bands of a side: a side holds a list of bands and no dock destroys one, so the
+  // one-occupant read (_dockedFrameAt) went, and four terms came that the measure, the arrange and the outline
+  // share -- _bandsAt (a side's bands that count), _bandThicknessesAt (what each measures), _sideThicknessFor (what
+  // bands of those thicknesses take of my body, summed once for the measure and the placement) and _bandBoxesAt
+  // (where each band of a side stands, the one home of the placement) -- one for my bands as a whole
+  // (_framesInMySlots: whether a widget is one of them, what I wear, what a content change retires), and the floor
+  // one band asks of my extent (_floorKeepingBandUsable), lifted out of smallestExtentKeepingMyControlsUsable now
+  // that it runs per band
+  FrameWdgt: { file: 'FrameWdgt.coffee', ceiling: 181 },
 };
 
 const COMPLEXITY_CEILING = 15;

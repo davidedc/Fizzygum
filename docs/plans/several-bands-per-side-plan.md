@@ -7,8 +7,8 @@ and Fizzygum-tests `ee76daf2c`. Line numbers drift: a method's NAME and the quot
 grep them fresh before trusting a number.
 
 **Mandate: transformation, not accommodation.** After this plan the rule "at most one docked frame per side"
-does not exist anywhere: a side of a window holds a LIST of bands, and no path destroys a band to make room for
-another. View mode puts away what is there for editing and nothing else. A toolbar's depth in a slot is a
+does not exist anywhere: a side of a window holds a LIST of bands, no path destroys a band to make room for
+another, and a content change retires only the band its content brought (O4). View mode puts away what is there for editing and nothing else. A toolbar's depth in a slot is a
 record of the attachment, like every other payload's cross extent. Nothing is special-cased by payload class,
 and no second mechanism is added beside the edge dock.
 
@@ -25,16 +25,18 @@ and no second mechanism is added beside the edge dock.
 | D4 | The paint toolbar is TWO cells deep, in this plan | RULED 2026-11-23 ("I want this now rather than later with paint") |
 | D5 | Today's corner rule stays (top and bottom span, the sides sit between); no drag to reorder | advised 2026-11-23, the owner said "go ahead" |
 | D6 | A band's strip offers its collapse piece only where collapsing gives room back; a strip that shows no piece shows a GRIP MARK, a FIELD OF DOTS | proposed by the owner and RULED 2026-11-23, after the review page's section 7: "yes", and of the three looks "(b) a field of dots" |
+| O4 | A content change retires ONLY the band its content brought (the content's own toolbar); every other band (one a person docked) stays where it is | RULED 2026-11-23 during U1, of three options (keep every band; float the person's out; this): "go with (a) and add to the loop, in the proper sequence and properly grouped if needed" |
 
 **How this plan is run.** By the loop prepared in `Fizzygum-tests/.scratch/several-bands-loop/` (`BRIEF.md` is the
-process, `LEDGER.md` the state, `LOOP-PROMPT.md` what the owner types), unattended, in five units. Where the brief
+process, `LEDGER.md` the state, `LOOP-PROMPT.md` what the owner types), unattended, in six units (U1b added by the owner's O4 during U1). Where the brief
 and §0.5 below disagree on PROCESS, the brief wins: the prompt's grants replace "wait for the owner's word", and
 each unit recaptures its own pictures instead of one wave in Phase 4. Run WITHOUT the loop (a plain cold
 execution, the owner present), §0.5 stands as written.
 
 | Unit | What | Sections | State |
 |---|---|---|---|
-| U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | not started |
+| U1 | A side holds a list of bands; a dock destroys nothing | §4 R1–R5, R8; Phase 0, Phase 1; Phase 4 test 1 | LANDED 2026-11-23 |
+| U1b | A content change retires only the band its content brought | §4 R12; Phase 1b; Phase 4 test 1b | not started |
 | U2 | View mode puts away only what is there for editing | §4 R6; Phase 2; Phase 4 test 2 | not started |
 | U3 | A toolbar docks at the depth it floats at; the paint toolbox is two cells deep | §4 R7, R9; Phase 3; Phase 4 test 3 | not started |
 | U4 | A band's strip: its collapse piece only where it gives room back, a field of dots otherwise | §4 R10, R11; Phase 3b; Phase 4 test 4 | not started |
@@ -294,6 +296,11 @@ as §5 says.
   one-row toolbar band is 46 deep, so such a band shows no piece; a two-cell toolbox (96) and a docked document
   keep theirs. A window on the desktop always offers it. Measured in the page: on the owner's composite the
   four one-row toolbar bands lose the piece, the docked document keeps it.
+- **R12 (O4).** A window whose content changes (its content leaves it by any door, a widget dropped into it
+  becomes its content, a Maker rebuilds its payload) retires only the band its content BROUGHT: the toolbar the
+  window docked for that content (`FrameWdgt._buildDockedToolbarNoSettle`, reached by the window's construction and
+  rebuild and by its "Toolbar" row). Every other band stays where it is, in its list, alive. The window offers its
+  content's toolbar (the rebuild, the "Toolbar" row) while no band its content brought is docked, whatever else is.
 - **R11 (D6).** A band's strip that shows no piece shows a GRIP MARK, a field of dots centred in it: the strip is the band's handle,
   and a bare grey square does not say so. It is paint, not a control: a press anywhere on the strip is still
   the strip's. A strip too short for its piece (a band 41 deep) shows the mark too, for the same reason.
@@ -496,6 +503,60 @@ static-gate findings and their answers:
 - A complexity record for `FrameWdgt#_positionAndResizeChildren` (46): if the tail's inner loop raises it, the
   same class of answer; if the score falls, lower the record to the new score.
 - Anything else is not predicted: read the gate's own advice row first.
+
+**Landed 2026-11-23 (U1 of the several-bands loop).** Built as steps 1–6 say, with these corrections, measured:
+the per-band floor is its own method, `_floorKeepingBandUsable (band, side, emptyWidth, emptyHeight)` (with the
+nested loop inline `smallestExtentKeepingMyControlsUsable` scores 18; lifted, 10 and 5); the `# public-call-sanctioned:`
+comment on the show/hide line is read by no gate (call-separation [S] reads that marker, for `@`-self calls only) and
+stays for its reason; `dockSideAt`'s comment needed no change, while about twenty FrameWdgt comments, the
+`EdgeDockLayoutSpec` header and `docs/specs/drag-embed-interaction-spec.md` (the outline over a held side) did.
+Program ruling C12's "one per side" is amended by this plan (D1, D2, O2): a side's slot is a list. A consequence
+the plan states only in Phase 5 lands here, in `toolbars.md` §4.4: a palette dropped onto a side another palette
+holds joins it, so the host keeps its own tool. The scripted `[0]` edit touched 30 files (74 reads in 29 tests, 3
+in the menu sweep); every read keeps its meaning but the two this step rewrites by hand. Test 1,
+`SystemTest_macroSecondBandJoinsItsSide`, checks R2 by EQUALITIES of laid-out gaps (layering rule [D] bans a
+private read in a macro, so "read both terms off the host" became "the gap between two bands of a side equals the
+gap where the top meets the left column", 8 = 8); its guests are hugged one-row toolbar windows, so Phase 3 leaves
+it alone and Phase 3b changes its strips. Bites: the dock door destroying the side's bands, the re-side door
+destroying the target side's, a copy sharing the original's lists, each failing its own assertion under both
+pointers; its follower clean on both. Presuite: the predicted two failed, on pictures only (DockOutline images 1
+and 2, ViewModeWindowOffersNoDockSlot image 1), recaptured. The unit's review found no behaviour defect; it found the
+sum of a side's slots computed twice (the measure and the placement), now one term, `_sideThicknessFor`, and two
+rules bitten only as side effects, now each by its own plant (the outline keeping the one-band swap; a side's bands
+standing flush). Ratchet: `METHOD_CEILINGS.FrameWdgt` 176 → 181 (`_bandsAt`, `_bandThicknessesAt`,
+`_sideThicknessFor`, `_bandBoxesAt`, `_framesInMySlots`, `_floorKeepingBandUsable` in; `_dockedFrameAt` out);
+`_positionAndResizeChildren` stays at 46.
+
+### Phase 1b — a content change retires only the band its content brought (R12, O4)
+
+Added 2026-11-23 by the owner's ruling O4, during U1, after U1's review traced it (`FrameWdgt` at U1's tree): the
+three content-change doors, `FrameWdgt._resetToDefaultContents` (a content that LEAVES: the placeholder comes
+back), `FrameWdgt._reactToChildDropped` (a widget dropped into an empty window becomes its content) and
+`MakerDocumentWdgt._resetToDefaultContents` (a Maker whose payload left builds a fresh one), each call
+`_retireDockedFramesNoSettle`, which destroys EVERY band in the window's slots, a window a person docked included,
+with what it holds (a docked text window's typing): silently, with no undo. The rule dates from when a slot held
+only the content's own toolbar (the method was `_destroyToolbarNoSettle` before docking took any frame); no ruling
+gives a reason for destroying a band the content did not bring. With several bands a side, the collision that
+replacing used to avoid is gone. The rebuild's guard (`@_buildDockedToolbarNoSettle() unless
+@_dockedToolbarFrame()?`) and the host's "Toolbar" row (`_offersAFreshToolbar`) ask whether ANY band is docked; under
+R12 they ask whether a band the content brought is.
+
+The shape is the unit's research's to propose on its merits and verify: how the window knows which band its content
+brought (a RECORD of the attachment on the band's `EdgeDockLayoutSpec`, written by the one door that docks a content's
+variant, which copies and saves with the band, is the expected shape; derive it if a derivation exists that a
+person's own second copy of the same toolbar class cannot fool, as U1's test docks one); what a content toolbar
+floated away and docked back by a person is (a fresh spec: the person's); what each of the three doors keeps; what a
+Maker's rebuild of its own payload does with its own band (retired and rebuilt, or kept). Find every reader of
+`_dockedToolbarFrame` and `_retireDockedFramesNoSettle` in both repos. The noted-not-queued line on
+`_offersAFreshToolbar` (this plan's ledger) closes with this phase.
+
+**Test 1b, `SystemTest_macroContentChangeKeepsThePersonsBands`** (R12). A window whose content brought a toolbar,
+with a band a person docked beside it (a text window holding typed text, and a second toolbar): the content leaves
+by a door a PERSON has (the unit's research names it and the mode it needs); the content's own toolbar is retired,
+the person's bands stay alive in their lists, the text keeps its typing; a new content arrives (a drop into the
+emptied window, or the Maker's rebuild) and its own toolbar docks beside them. Both pointers, dpr 1 and 2, the
+follower proof, and plants: the retirement destroying every band (the old rule); the rebuild's guard asking for any
+band.
 
 ### Phase 2 — view mode hides only the tool bands (R6)
 
@@ -859,7 +920,7 @@ Three pieces were designed with this plan and left for their first consumer, the
 
 Noted, not queued:
 
-- `FrameWdgt._offersAFreshToolbar` offers a host's "Toolbar" row only while NO band is docked at all
+- (closes with Phase 1b, R12) `FrameWdgt._offersAFreshToolbar` offers a host's "Toolbar" row only while NO band is docked at all
   (`_dockedToolbarFrame()` answers any band). With several bands a side, a window whose own toolbar was floated
   away and which holds some other band is not offered its toolbar back by that row. Unreached in the shipped
   windows; left as it is.

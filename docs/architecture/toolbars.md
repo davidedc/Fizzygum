@@ -75,6 +75,13 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
 - **Docked = a band in a window's EDGE SLOT** (`FrameWdgt.dockHost`: my parent, when my layout spec is an
   edge dock; else undefined). A toolbar standing inside a window as its CONTENT is not docked and works for
   the person, exactly like a floating one.
+- **A side holds a list of bands** (`FrameWdgt.dockedFrames`, a side to its bands, outermost first). A frame docked
+  on a side joins its list at the end, nearest the content, and nothing is destroyed to make room: a side's bands
+  measure together as one band would and stand side by side, as far apart as bands of different sides stand where
+  they meet (`FrameWdgt._bandBoxesAt`, the one home of each band's place). A band that leaves its side (lifted out,
+  floated, re-sided, destroyed) leaves the list and the others close up; one re-sided by its "Dock ▸ side" row
+  joins the new side nearest the content. The corners are fixed: top and bottom bands span the body, left and right
+  columns stand between them.
 - **Every edge-slot dock ties**, whatever the host holds: no content, or content that is itself a toolbar. A band
   never asks its host's content whom it works for. A window whose content is REPLACED (a widget dropped into an empty
   window, or its content leaving it by any door, `FrameWdgt._reactToChildRemoved`) retires every band it wears
@@ -84,9 +91,8 @@ The toolbars: `TextToolbarWdgt`, `SheetToolbarWdgt` (the text bar plus the sheet
   host's payloads (`FrameWdgt.dockedPayloads`).
 - **A window in view mode offers no slot.** `FrameWdgt.dockSideAt`, the dock offer the hand asks, answers
   nothing while the window's mode disengages its docks (`_myModeEngagesMyDocks`: it holds an edit mode and is
-  viewing) or while it stands in view-mode content, so no band can land hidden there and none replaces a
-  disengaged one. A frame dragged over it meets the reluctant cue of any view-mode content and lands on the
-  desktop. A toolbar is born locked, so its own frame offers no slot either, docked or floating: a frame
+  viewing) or while it stands in view-mode content, so no band can land hidden there. A frame dragged over it
+  meets the reluctant cue of any view-mode content and lands on the desktop. A toolbar is born locked, so its own frame offers no slot either, docked or floating: a frame
   released over a docked band is offered the HOST's slot.
 - **The outline of a dock is the band it would make.** While a frame hovers over an offer the hand outlines
   `FrameWdgt.bandBoxIfDocked(frame, side)`: where the band would stand and how big, derived from the terms
@@ -188,7 +194,7 @@ idempotent: holding what is already held changes nothing and tells no one):
 - **A window**, `FrameWdgt.armedDrawingTool`: a plain string field, undefined by default, riding the window's
   ordinary save and copy. A window's tool counts only while the window WEARS drawing tools: one of its docked payloads
   holds a tool naming a `drawingToolKey` (`ToolbarWdgt.holdsDrawingTools`, `ToolbarWdgt.wearsDrawingTools(aFrame)`).
-  A palette destroyed in its slot (replaced, or retired with its host's content) leaves the field set, and nothing
+  A palette destroyed in its slot (retired with its host's content, say) leaves the field set, and nothing
   reads it until a palette arrives again.
   After a real change, `FrameWdgt.armDrawingTool` tells each payload it wears `noteToolStatesChanged`. A
   window holds only the key; what a key means is the parts' business.
@@ -250,8 +256,7 @@ paint-agnostic; the logic lives on `ToolbarWdgt`, so a mixed bar transfers too.
 - **Arrival** (`FrameWdgt._dockFrameNoSettle` ends with `payload.noteDockedOn? @`): when the toolbar holds
   drawing tools and no other payload the host wears does, the host adopts the person's tool as it stands (an
   empty hand included). A host already wearing drawing tools keeps its own, and the arriving palette shows it.
-  A palette dropped into an OCCUPIED slot destroys the occupant first, so the host then adopts the hand (unless
-  another of its slots still wears drawing tools).
+  A palette dropped onto a side another palette holds joins it, so the host keeps its own tool.
 - **Departure by re-homing** (`FrameWdgt._reactToChildRemoved` tells `noteUndockedFrom` to the payload of a band
   that was docked and is not destroyed): when the host is left wearing no drawing tools, the person takes the host's tool
   and the host gives it up. Every other drawing that follows the hand changes tool with it.
@@ -424,6 +429,8 @@ SystemTests:
   bare in (`SystemTest_macroViewModeSheetRefusesEditing`);
 - the dock offer in view mode and the outline of a dock: `SystemTest_macroViewModeWindowOffersNoDockSlot`,
   `SystemTest_macroDockOutlineIsTheBandItMakes`;
+- a side's list of bands (a dock and a re-side join it, a lifted band lets the others close up, a copy holds its
+  own): `SystemTest_macroSecondBandJoinsItsSide`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
 - the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;
