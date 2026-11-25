@@ -37,9 +37,10 @@ class ListWdgt extends ViewportWdgt
   # element's label. The ONE record of my selection: my rows show it by reading it as they paint
   # (MenuItemWdgt._shownState), never by keeping a copy of it.
   selected: undefined
-  # my target's methods I dispatch BY NAME, each handed an element's label: `action` when a row is
-  # selected (select), `doubleClickAction` when a row is double-clicked (openRow) -- strings, so a
-  # copy of me dispatches at its own target and I hold no closure
+  # my target's methods I dispatch BY NAME, each handed an element's label and its place among my
+  # elements (the row's own: select): `action` when a row is selected (select), `doubleClickAction`
+  # when a row is double-clicked (openRow) -- strings, so a copy of me dispatches at its own target
+  # and I hold no closure
   action: undefined
   target: undefined
   doubleClickAction: undefined
@@ -50,9 +51,10 @@ class ListWdgt extends ViewportWdgt
   # (_positionAndResizeChildren). Asked once per element, as my rows are built.
   memberFactsQuery: undefined
 
-  # The rows are the operand: every caller supplies them, while only a member list (MemberListWdgt)
-  # supplies target/action — which as leading positionals made the other six sites
-  # open with `undefined, undefined` just to reach the rows (R3).
+  # The rows are the operand: every caller supplies them, while target/action are configuration,
+  # supplied by a member list (MemberListWdgt) and by an object list (ObjectListWdgt, which reads the
+  # place of the pressed row I hand it with the label: select) — as leading positionals they would make a
+  # list with neither open with `undefined, undefined` just to reach the rows (R3).
   constructor: (@elements = [], opts = {}) ->
     @target = opts.target
     @action = opts.action
@@ -109,7 +111,7 @@ class ListWdgt extends ViewportWdgt
     placeholder = !@elements.length
     @elements = ["(empty)"]  if placeholder
     @_repaintAsOneUnit =>
-      @elements.forEach (element) =>
+      @elements.forEach (element, place) =>
         color = undefined
         bold = false
         italic = false
@@ -126,7 +128,8 @@ class ListWdgt extends ViewportWdgt
         # what a member row shows of its element beside the name, from my target
         memberFacts = if @memberFactsQuery? and !placeholder then @target[@memberFactsQuery] element else {}
 
-        # a row's double-click reaches me (openRow, slot 1 the row), and I forward it to my target
+        # a row's double-click reaches me (openRow, slot 1 the row), and I forward it to my target; each
+        # row CARRIES ITS PLACE, its element's index in my elements (arg1), fixed as it is built
         @listContents.addMenuItem (ListWdgt.labelOf element), @, "select",
           color: color
           bold: bold
@@ -134,6 +137,7 @@ class ListWdgt extends ViewportWdgt
           kindTag: memberFacts.kindTag
           dimmed: memberFacts.dimmed
           doubleClickAction: (if @doubleClickAction? then "openRow")
+          arg1: place
 
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
@@ -150,13 +154,17 @@ class ListWdgt extends ViewportWdgt
     undefined
 
   # A row's click dispatches here with the row itself in slot 1 (ButtonWdgt.trigger); slot 2, the
-  # row's subject, is always this list, so it carries nothing and is not taken. My rows read the
-  # selection as they paint (CommandPanelWdgt.showsAsItsSelection), so my rows panel is told it moved.
+  # row's subject, is always this list, so it carries nothing and is not taken; slot 3 is the row's
+  # place, which I read off the row itself, so a row a rig hands me directly says it too. My target is
+  # handed the row's LABEL and its PLACE (its element's index in my elements, fixed at my build:
+  # argumentToAction1), undefined for a row that carries none (a hand-made row a rig hands me); a
+  # target that resolves by label takes the label alone. My rows read the selection as they paint
+  # (CommandPanelWdgt.showsAsItsSelection), so my rows panel is told it moved.
   select: (row) ->
     @selected = row
     @listContents.noteShownSelectionChanged()
     if @action? and @action != ""
-      @target[@action].call @target, row.labelString
+      @target[@action].call @target, row.labelString, row.argumentToAction1
     return
 
   # NO ROW OF MINE IS SELECTED any more: my target says so when what it chose through me stopped being
@@ -169,9 +177,10 @@ class ListWdgt extends ViewportWdgt
     return
 
   # A row's DOUBLE-click dispatches here, the row again in slot 1 (ButtonWdgt.triggerDoubleClick), and
-  # follows the click that selected it: my target's doubleClickAction is run on the row's label.
+  # follows the click that selected it: my target's doubleClickAction is run on the row's label and
+  # its place, as select hands them.
   openRow: (row) ->
-    @target[@doubleClickAction].call @target, row.labelString
+    @target[@doubleClickAction].call @target, row.labelString, row.argumentToAction1
     return
 
   # MY MEMBER ROWS ARE AS WIDE AS I AM. At every arrange of mine -- the settle of my build, a resize,

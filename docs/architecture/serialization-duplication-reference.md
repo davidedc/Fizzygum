@@ -104,7 +104,7 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   as a widget, and a non-widget one would be copied into an object posing as its class's prototype.
   (A class FUNCTION rides a copy uncopied, as every function does but a widget's injected method,
   which the copy compiles afresh — §5's Functions — and a save names it by its class too.) An inspector on a class has one as its subject, whichever door opened it (a class chip, a
-  `__super__` row, Inspect selection), and a class member's reference holds one (`ClassMemberRef.holder`).
+  `__super__` row, a row of a class's Subclasses list, Inspect selection), and a class member's reference holds one (`ClassMemberRef.holder`).
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
   keep a live pointer, so this is where the well-known / error policy applies (§4). That is
@@ -464,12 +464,16 @@ NAMED like one.
     through `NativeValueKinds.isDerivedAt`, to place a stamped value (below) — and its coverage
     comes from eight mechanisms of its own:
     a class's `@copyTransients` (merged up the chain like `@serializationTransients`): the fields
-    the copy rebuilds, LEFT OUT of it (the clone holds none of its own) — a sheet's cell records'
-    four derived fields, which the copied sheet recommits (`_reactToBeingCopied` marks every cell
+    LEFT OUT of the copy (the clone holds none of its own), each coming back its class's own way — a sheet's cell
+    records' four derived fields, which the copied sheet recommits (`_reactToBeingCopied` marks every cell
     stale; the next drain computes each value), so a formula's value of a type no copy carries (a
-    RegExp, an Error) never meets the copier (the Duplicator's Note 5). It is the class's statement,
-    field by field, never a blanket rule: a save's transients are rebuilt by a load's paths
-    (`_afterDeserialization`, the stepping loop's re-seed), and a copy runs other hooks;
+    RegExp, an Error) never meets the copier (the Duplicator's Note 5); an inspector's object list's objects
+    (`ObjectListWdgt.objects`, transient for both walkers: what it lists is never its own),
+    which no hook rebuilds: a copy, as a restore, derives them at its first press and honours a row only while it is
+    true (`ObjectListWdgt.chooseRow`; the rig's `inspector.childrenViewCopiesNoListedObject` and
+    `world.inspector.childrenViewSurvivesSnapshot`). It is the class's statement,
+    field by field, never a blanket rule: a save's transients come back by a load's paths
+    (`_afterDeserialization`, the stepping loop's re-seed) or at their holder's first use, and a copy runs other hooks;
     a NAME-convention skip in `_cloneContentInto` (the version-keyed cache pairs
     `cached*`/`check*Cache` plus `childrenBoundsUpdatedAt`, and the island source-lane
     `_islandBufferSource*` pair), the `rebuildDerivedValue` skip-and-rebuild of a value derived
@@ -715,8 +719,8 @@ for the next thing, for the door to RE-ENTER its load on, one thing per trip:
    fails the load, as one a widget needs does;
 2. then the reflective layer, when `Deserializer._needsTheReflectiveLayer` says the file needs it: it
    is absent but can load, and the file carries class-scope source edits (§12) or holds a
-   widget whose class declares `readsClassMemberMaps` — an inspector and its views (`InspectorWdgt`,
-   `MemberListWdgt`, `MemberEditorWdgt`), which show and edit a member's recorded source, and before the layer would show compiled JS. That declaration is read off
+   widget whose class declares `readsClassMemberMaps` — an inspector and its member views (`InspectorWdgt`,
+   `MemberListWdgt`, `MemberEditorWdgt`; an object list reads no member map and declares none), which show and edit a member's recorded source, and before the layer would show compiled JS. That declaration is read off
    the resident class, which is why it is asked on the trip after the parts.
 A failed load rejects with a load `SerializationError` naming what did not arrive, which the file door
 reports (§10). `parts-snapshot-load-headless.js` holds the parts half on the dev `index.html`
@@ -875,7 +879,7 @@ source-edit notice):
      takes too), one bail-out-then-re-enter per thing: the LAZY PARTS owning the classes
      `Deserializer.classNamesIn` lists and the classes its class-scope source edits name
      (`SourceEditsRegistry.namesOfTheCodeEditedIn`), then the reflective layer when the file carries
-     class-scope source edits or holds an inspector or one of its views (`readsClassMemberMaps`). It sits after the confirm
+     class-scope source edits or holds an inspector or one of its member views (`readsClassMemberMaps`). It sits after the confirm
      so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
      other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
      and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does

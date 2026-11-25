@@ -154,7 +154,7 @@ silently lands on something else changes the pixels, and a recapture would then 
   `dwellDragWindowByTitleToEmbed_InputEvents_Macro`, `titleGrabPoint`), its content (`contentPointOf`), its
   extent (`resizeWindowBy/To_InputEvents`, `resizeWidgetBy_InputEvents`), text by SLOT
   (`clickOnTextSlot_InputEvents` and the double/triple/shift twins — name the slot from the text's content and
-  assert the caret or selection it produces), list rows by identity (`clickOnListItem_InputEvents`), an
+  assert the caret or selection it produces), list rows by their label (`clickOnListItem_InputEvents`), an
   auto-scroll band (`autoScrollBandPointOf`). A fraction into text, a fraction of a title strip, an offset from a
   widget's edge into its chrome are exactly the aims a redesign moves.
 `Fizzygum-tests/scripts/aim-census.js` measures what is left (a census, not a gate — the runtime check is the gate). Its own
@@ -313,20 +313,30 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `opensSubmenu` flag, the one its drawn chevron shows — `(@rowOfMenuStandingFor menu, widget).opensSubmenu`
   for a row naming a widget, `(@getTextMenuItemFromMenu menu, "Attach").opensSubmenu` for a wording row —
   asserted through `assertValuesEqual`. All `…_InputEvents`.
-- **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `bringUpInspector`,
+- **L3 verbs** (generators, `…_InputEvents_Macro`): `takeScreenshot`, `clickMenuItemOfWidget`, `clickMenuItemOfWindow
+  win, item` (its twin for a window, whose content answers a press on it: a right-click on its title, the hierarchy
+  menu's row standing for the window, then its own row), `bringUpInspector`,
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
   `bringListItemInView` (a list's named row brought in view WHOLE: the bar's thumb for reach, then one wheel for
   precision only if the row does not show whole, then `assertListItemInView` — a fault, never a retry),
   `bringInViewAndClickOnListItem` (that, then the click, on a list you NAME — a test holding two member lists passes
   the one it means; the top-inspector verb is this one applied to `topInspectorList()`, the `list` of the
   `topMemberList()` locator: the inspector entry below has both locators),
+  `clickViewToggle inspector, face` (the inspector's chooser toggle that shows `face`, found by what it shows and
+  answers, never through `viewToggles`/`shownViewTitle`, clicked and verified; NO VIEW TOGGLE, naming the faces
+  shown, where none shows it), `dragSplitControlBy control, deltaX` (a drag on a split's divider or split button in
+  legs: a verified press, a held move, a release — a plain touch stroke under a finger, both controls owning the
+  drags that start on them),
   `bringMenuRowIntoView row` (a menu row the locators answered, brought into view through the input queue: ONE wheel
   over the pop-up's rows by the delta that CENTRES the row — the list wheel's rule, `_centringDelta`; a finger run
   swipes the rows — then `assertMenuRowInView`, never a retry; a row already showing takes no wheel and no cycle. Hold
   the menu from BEFORE it: a finger's swipes end in pointer-ups, which clear `getMostRecentlyOpenedMenu`'s fresh set.
   The shared verbs below that press rows say it before each press),
   `openOwnMenuAtFractionOf` (right-click a widget at a fraction and land in its OWN menu, stepping through the
-  hierarchy menu by the widget's own row where one opens instead),
+  hierarchy menu by the widget's own row where one opens instead), `pickUpAndDropAt widget, dropPoint[,
+  menuFraction]` (that menu's "Pick up", then the drop at the point, the widget centred on it: lifts a part no
+  float-drag lifts, a view, an inspector, a split button, a paragraph of a tight stack, a page; the drop is
+  unchecked, so assert what received it),
   `setControllerTargetToWidgetProperty` (controller, target WIDGET, pin label — "Connect" → "Connect to" → the
   target's row in the "target" chooser, found by the widget → the property row),
   `bindControllerTo` (its TWO-WAY sibling — "Bind ⇄", which takes no
@@ -404,17 +414,31 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `StringWdgt` face centred in its box and cropped on `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector tool — a ROW of inspectors, in a window by default, and a widget like any other with none:** "Dev →
-  Inspect" (`inspect` → `Widget.spawnInspector`, the one door) opens a 760 × 480 window whose content is an
+  Inspect" (`inspect` → `Widget.spawnInspector`, the one door) opens a 760 × 528 window (`InspectorRowWdgt.defaultExtent`;
+  its row 758 × 439) whose content is an
   `InspectorRowWdgt` (a `ClippingWdgt`), titled by its first inspector ("Inspector — analog clock").
   `row.inspectors()` are its `InspectorWdgt`s, left to right, a splitter between two: each has its `inspectedObject`,
-  a `header` (`headerTitle`, and a `classChip` naming the class its subject is made by) and ONE `view`. The first's
-  view is a **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s, the footer's `addPropertyButton` /
-  `duplicatePropertyButton` / `renamePropertyButton` / `removePropertyButton`, `cutNoticeBand`, `footerBand`). A
+  a `header` (`headerTitle`, and a `classChip` naming the class its subject is made by), a `chooser` band when its
+  subject offers more than one VIEW (`viewToggles`, one `LabelledToggleWdgt` per view, the shown one ON: a widget
+  offers Members and Children, a class's prototype Members, Instances where instances register, and Subclasses), and
+  ONE `view`. The first view is always the **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s, the
+  footer's `addPropertyButton` / `duplicatePropertyButton` / `renamePropertyButton` / `removePropertyButton`,
+  `cutNoticeBand`, `footerBand`), so `inspectors()[0].view` read right after the build is a member list; on a
+  subject with a chooser it stands 48 px lower (header 44, chooser 48, then its toggles 48, its list 247, its footer
+  52 in the default window). A press on another toggle (`clickViewToggle_InputEvents_Macro inspector, face`) shows that view in the same inspector (an `ObjectListWdgt`
+  for Children, Instances, Subclasses: rows of objects, a press on one opens THAT object on the right), a press on
+  the lit toggle has the view read its list again, and either closes what stood right of it. A
   CHOICE in an inspector replaces whatever stands right of it: a click on a member row (`selectionFromList`) puts an
   inspector on THAT member there, its view a **member editor** (`MemberEditorWdgt`: `.memberRef`, the code area
-  `.tempPromptEntryField`, its `.textWidget`, `.saveButton`); a double-click on a row whose value is an object
-  (`inspectMemberValue`) puts one on the value, and the class chip one on the class it names (its prototype), each a
-  member list; a choice that needs width widens a free-floating window. ⚠ An editor exists only once a member is
+  `.tempPromptEntryField`, its `.textWidget`, `.saveButton`; an editor's inspector offers one view and stands no
+  chooser); a double-click on a row whose value has members to show -- an object, or a Fizzygum class (a function
+  carrying the class marker, a `constructor` row's) -- (`inspectMemberValue`) puts one on the value, while a plain
+  method's row keeps its editor; the class chip puts one on the class it names (its prototype), each a member list.
+  A choice that leaves the row short of its least width widens a free-floating window, toward the width at which
+  the inspector it ADDED has its normal width (an editor 374, as beside a list in the default window; a list its
+  desired width), as far as the desktop's right edge. "Add…", "Duplicate…" and "Rename…" refuse a new name the
+  subject already answers, its own or inherited, with an inform (a rename to the member's own name does nothing and
+  says nothing); an own version of an inherited member is made by choosing it and pressing Save. ⚠ An editor exists only once a member is
   chosen; ANOTHER member REPLACES its inspector with a new one holding a new editor (the same member chosen again
   reloads the editor in place: its text put back, as one step of its undo history), and a filter toggle, a footer
   edit or the class chip takes it away — re-locate the editor after EVERY choice, never keep one from before it. The
@@ -429,8 +453,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   no member is chosen (NO SAVE BUTTON for a member no Save edits). A test holding a list of its own (a copied window's,
   the second of two) hands THAT list to `memberEditorFedBy`. An inspector's `parent` is its row and the row's the
   window: move the WINDOW, never an inspector (a cell of its row's division). A part picked out of its row stands
-  alone: an inspector whose view is picked out of it shows no subject, and a choice in a list in no row opens a
-  window of its own.
+  alone, on a body it paints itself: an inspector whose view is picked out of it shows no subject (it keeps its
+  header and its chooser), a choice in a list in no row opens a window of its own, and a split button anywhere but
+  at the lead of its inspector's header moves no split.
   **With no window** (`world.add new InspectorRowWdgt target`) the row paints its own body (`inspectorBodyFill`) and
   chooses and edits the same way, found by the same locators; it has NO resizer of its own, and a choice that needs
   width narrows its inspectors instead. Resize it as any widget, by the halo its "Resize/move…" gives it

@@ -16,9 +16,11 @@
 # would write into this one.
 #   I stand on the body of the row of inspectors that holds me: my code area wears the inspector's
 # pane roles, no fill and no border, and the rules between me and my neighbours are theirs and the
-# bands'. My division box gives me a floor of my own (inspectorEditorLeastWidth wide, a footer band
-# tall), since I have no division children to derive one from, and a large most size, so the slack of
-# my inspector's column is mine.
+# bands'. Standing anywhere else -- a person took me out of my inspector -- I paint that body myself,
+# under my code area and my footer's rule (InspectorBodyAppearance, in place of the seam rules alone
+# my family paints). My division box gives me a floor of my own (inspectorEditorLeastWidth wide, a
+# footer band tall), since I have no division children to derive one from, and a large most size, so
+# the slack of my inspector's column is mine.
 class MemberEditorWdgt extends CodeAreaWdgt
 
   # a file holding me needs the class member maps before I am restored: the text I show of a class's
@@ -35,10 +37,19 @@ class MemberEditorWdgt extends CodeAreaWdgt
   # The member reference is my identity, my one positional parameter.
   constructor: (@memberRef) ->
     super()
+    @appearance = new InspectorBodyAppearance @
     theme = WorldWdgt.theme
     least = new Point theme.inspectorEditorLeastWidth, theme.footerBandHeight
     @setMinAndMaxBoundsAndSpreadability least, least, DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @_buildAndConnectChildren()
+
+  # MY SHADOW IS THE BODY'S BOX, my parts' silhouettes left out, while I paint the body
+  # (InspectorBodyAppearance.castsOnlyTheBody says when, and its header why); otherwise my base's pass.
+  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
+    if @appearance.castsOnlyTheBody appliedShadow
+      @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
+    else
+      super
 
   # HOW MUCH OF ITS ROW'S SPARE WIDTH MY INSPECTOR TAKES, by weight (InspectorWdgt sets its own most
   # width from it): nearly all of it, since code is what wants width. My inspector's most width is

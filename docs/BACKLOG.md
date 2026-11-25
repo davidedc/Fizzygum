@@ -266,9 +266,8 @@ A click on a toolbar Template's cell and a drag out of it give one copy, at the 
 - [ ] **An enlarged toolbar window docks as deep as its shorter side** — a person who makes a toolbar window 600 × 600 and docks it gets a band about ten cells deep, wider than a Docs Maker's body; R7 records the depth it stands at with no bound — reachable, medium; an owner question.
 
 ### `plans/inspector-overhaul-plan.md`
-AUTHORED 2026-11-24, spiked the same day, IN EXECUTION (the inspector-overhaul loop: U1 and U1b landed 2026-11-24, U2 and U3 on 2026-11-25); one inspector tool: a row of inspectors, each a member list or a member editor, on the division stack. Supersedes the Smalltalk talk plan's U3 (an explorer beside the inspector). Its §0.4 holds the owner's rulings and the open decisions, each with a default.
+AUTHORED 2026-11-24, spiked the same day, IN EXECUTION (the inspector-overhaul loop: U1 and U1b landed 2026-11-24, U2, U3 and U4 on 2026-11-25); one inspector tool: a row of inspectors, each showing one view of its subject (its members, its children, a class's instances or subclasses, or one member's editor), on the division stack. Supersedes the Smalltalk talk plan's U3 (an explorer beside the inspector). Its §0.4 holds the owner's rulings and the open decisions, each with a default.
 - [ ] U3b: the finger icon on the split button — candidates, then the owner's choice (not run in the inspector-overhaul loop, by the owner's ruling of 2026-11-24: the button ships with the double arrow alone)
-- [ ] U4: object-list views (Children, Instances, Subclasses) and the view chooser
 - [ ] U5: architecture docs, the churn set, close
 - [ ] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24)
 

@@ -2662,7 +2662,9 @@ class MacroToolkit
     # a member list. bringInViewAndClickOnListItemFromTopInspector chooses a member in the top member
     # list (topInspectorList), which puts an inspector on that member beside the list, its view the
     # member editor the code-pane verbs act on (topMemberEditor); bringUpInspectorAndSelectListItem is
-    # the two, one after the other.
+    # the two, one after the other. Below the list verbs, clickViewToggle shows another view of an
+    # inspector's subject (its chooser's toggle, by the face it shows), and dragSplitControlBy moves the
+    # split between two inspectors (by the divider or by the split button).
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
         clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
@@ -2710,9 +2712,78 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
+    # AN INSPECTOR'S VIEW TOGGLE CLICKED, as a person clicks it (a tap under a finger): the toggle of the
+    # inspector's CHOOSER band -- one toggle per view its subject offers, the shown one ON
+    # (InspectorWdgt._views) -- that shows `face` ("Members", "Children", "Instances", "Subclasses"); the
+    # press is verified to land on it, and the queue drained. The toggle is found by what it SHOWS and
+    # what it answers, never through the inspector's own record of its views (viewToggles,
+    # shownViewTitle: the rule a test of the switch holds to account) and never by its class (the
+    # inspector's are the lazy part's): a toggle is the one control that answers setOn
+    # (LabelledToggleWdgt), met among the pieces of the inspector's OWN cells, which only its chooser's
+    # are; a member list's filter toggles stand a cell deeper, in the member list, and are never met. An
+    # inspector showing no such toggle (one view only, or other faces) is a fault, raised naming the
+    # faces it shows: a press is never placed elsewhere.
+    macroSubroutines.add Macro.fromString """
+      clickViewToggle_InputEvents_Macro = (inspector, face) ->
+        toggle = undefined
+        faces = []
+        for cell in (inspector?.children ? [])
+          for piece in (cell.children ? []) when piece.setOn? and piece.faceWidget?
+            faces.push piece.faceWidget.text
+            toggle = piece  if piece.faceWidget.text is face
+        unless toggle?
+          throw new Error "NO VIEW TOGGLE: clickViewToggle clicks the toggle '" + face + "' of the chooser of " + inspector + ", which shows " + (if faces.length > 0 then faces.join(", ") else "no chooser")
+        @moveToAndClick_InputEvents toggle
+        yield "waitNoInputsOngoing"
+    """
+
+    # A DRAG ON ONE OF A SPLIT'S CONTROLS by deltaX across -- an inspector row's divider (its splitter,
+    # StackElementsSizeAdjustingWdgt, the mouse's way) or the split button leading the header of the
+    # inspector right of it (SplitGripWdgt, the finger's way) -- in LEGS, as a person drags: the press on
+    # the control (its centre, the press verified to land on it), drained, so the drag starts where it
+    # pressed; then a move with the button held to deltaX right of the press, and the release. Under a
+    # finger the press is a touch-down, the move the finger's move stream and the release its lift: a
+    # plain touch stroke with NO hold, right for both controls, which own the drags that start on them
+    # (ownsDragsStartingOnMe: a finger's press arms at once), where syntheticEventsMouseMovePressDragRelease
+    # would hold first. The first move sample lands on the press point, so both pointers move a split by
+    # exactly deltaX, as far as the split's solve lets it go. The control is chrome: it stays where it
+    # stands, and its nonFloatDragging moves the split.
+    macroSubroutines.add Macro.fromString """
+      dragSplitControlBy_InputEvents_Macro = (control, deltaX) ->
+        @moveToAndMouseDown_InputEvents control
+        yield "waitNoInputsOngoing"
+        pressedAt = world.hand.position()
+        @syntheticEventsMouseMove_InputEvents (new Point (pressedAt.x + deltaX), pressedAt.y), "left button"
+        yield "waitNoInputsOngoing"
+        @syntheticEventsMouseUp_InputEvents()
+        yield "waitNoInputsOngoing"
+    """
+
     macroSubroutines.add Macro.fromString """
       clickMenuItemOfWidget_InputEvents_Macro = (whichWidget, whichItem) ->
         @openMenuOf_InputEvents whichWidget
+        yield "waitNoInputsOngoing"
+        menu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, whichItem)
+        @moveToItemOfMenuAndClick_InputEvents menu, whichItem
+        yield "waitNoInputsOngoing"
+    """
+
+    # A WINDOW'S OWN MENU ROW clicked -- clickMenuItemOfWidget's twin for a window, whose content answers
+    # a press on the window with a menu of its own (an inspector's panes coalesce theirs). The press is
+    # a right-click on the window's TITLE (FrameWdgt.label; a hold under a finger), which catches it over
+    # its whole box, so it never meets the window itself nor its content; the title stands nested in the
+    # window, so the hierarchy menu always opens, one row per widget under the pointer (the title's, the
+    # window's), and the verb steps into the row standing for the window, found by the widget, into the
+    # window's own menu, whose row `whichItem` it clicks ("Duplicate", "Pick up", …). Each row is brought
+    # into view before its press, on the menu held from before it.
+    macroSubroutines.add Macro.fromString """
+      clickMenuItemOfWindow_InputEvents_Macro = (win, whichItem) ->
+        @openMenuOf_InputEvents win.label
+        yield "waitNoInputsOngoing"
+        hierarchy = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@rowOfMenuStandingFor hierarchy, win)
+        @moveToRowOfMenuStandingForAndClick_InputEvents hierarchy, win
         yield "waitNoInputsOngoing"
         menu = @getMostRecentlyOpenedMenu()
         bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu menu, whichItem)
@@ -2735,6 +2806,27 @@ class MacroToolkit
           bringMenuRowIntoView_InputEvents_Macro (@rowOfMenuStandingFor menu, theWidget)
           @moveToRowOfMenuStandingForAndClick_InputEvents menu, theWidget
           yield "waitNoInputsOngoing"
+    """
+
+    # A WIDGET PICKED UP THROUGH ITS OWN MENU AND DROPPED AT A POINT, as a person lifts out a part that
+    # no float-drag lifts on its own (a view or a whole inspector out of its row, a split button out of
+    # its header, a paragraph out of a tight stack, a page out of its window): its own menu
+    # (openOwnMenuAtFractionOf: a right-click at menuFraction of it, a hold under a finger, stepping into
+    # its row of the hierarchy menu where the press meets a part of it), its "Pick up"
+    # (Widget.pickUpMenuAction), brought into view first, which lifts the REAL widget onto the hand,
+    # centred on the pointer; then the drop at dropPoint (dropCarriedWidgetAt: the walk, then the click --
+    # under a finger the buttonless carry stream, then its tap), so it comes to rest centred on that
+    # point. The drop is a placement, deliberately unchecked: what received it is the caller's to assert
+    # (the bare desktop: `widget.parent is world`).
+    macroSubroutines.add Macro.fromString """
+      pickUpAndDropAt_InputEvents_Macro = (widget, dropPoint, menuFraction = [0.5, 0.5]) ->
+        openOwnMenuAtFractionOf_InputEvents_Macro widget, menuFraction
+        ownMenu = @getMostRecentlyOpenedMenu()
+        bringMenuRowIntoView_InputEvents_Macro (@getTextMenuItemFromMenu ownMenu, "Pick up")
+        @moveToItemOfMenuAndClick_InputEvents ownMenu, "Pick up"
+        yield "waitNoInputsOngoing"
+        @dropCarriedWidgetAt_InputEvents dropPoint
+        yield "waitNoInputsOngoing"
     """
 
     # Patch-programming "Connect to": wire a CONTROLLER widget (a ColorPaletteWdgt, GrayPaletteWdgt,

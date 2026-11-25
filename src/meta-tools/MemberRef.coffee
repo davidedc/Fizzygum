@@ -155,9 +155,11 @@ class MemberRef
   # of it under newName on my holder, through the Widget-level duplicateOwnProperty twin (a field's
   # copy holds the same value; an injected method's is injected again from its kept source, so it
   # keeps a source of its own). Recorded nowhere, as a rename is not: a copied method rides a save
-  # as its own {"$src"}. ClassMemberRef overrides this with an edit under the new name. The gesture
-  # has refused `constructor` and a name my holder already owns (MemberListWdgt.duplicateProperty): a
-  # copy never overwrites a member.
+  # as its own {"$src"}. ClassMemberRef overrides this with an edit under the new name. I have no guard
+  # on newName: the twin overwrites a member my holder has under it, and stands an own one over one
+  # my holder inherits. The guard is my caller's: the member list's Duplicate… refuses `constructor`
+  # and a name my holder already answers, owned or inherited, before it asks me
+  # (MemberListWdgt.duplicateProperty, _refusesAsAnAnsweredName).
   duplicate: (newName) ->
     @holder.duplicateOwnProperty @name, newName
     @_notifyOfEdit()
@@ -166,8 +168,12 @@ class MemberRef
   # the one differing step between an object's and a class's rename (mirroring save above): an
   # object's member goes through the Widget-level renameOwnProperty twin (an injected method's
   # function carries its kept source to the new name). ClassMemberRef overrides this with an edit
-  # under the new name and a removal of the old. The gesture has refused the name my member already
-  # has and `constructor` (MemberListWdgt.renameProperty): a move onto itself would drop the member.
+  # under the new name and a removal of the old. I have no guard on newName: the twin overwrites a
+  # member my holder has under it, stands an own one over one my holder inherits, and a move onto my
+  # member's own name would drop it. The guard is my caller's: the member list's Rename…
+  # (MemberListWdgt.renameProperty) asks me with none of three names -- my member's own name, which is
+  # nothing to do, so it does nothing and says nothing; `constructor`, refused; and a name my holder
+  # already answers, owned or inherited, refused (_refusesAsAnAnsweredName).
   rename: (newName) ->
     @holder.renameOwnProperty @name, newName
     @_notifyOfEdit()

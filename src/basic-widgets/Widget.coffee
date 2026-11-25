@@ -4454,9 +4454,11 @@ class Widget extends TreeNode
   # the SAME value -- the slot copied, not the thing it holds. A function injected with its source
   # (keptSourceOf) is injected again under the new name from that source, so the copy is a function of
   # its own keeping its own source, as a load or a copy of me compiles one from its {"$src"}; a function
-  # with no kept source (a run's) is copied as the slot, as the rename twin moves it. A member already
-  # under newName is overwritten, as the rename twin overwrites one: the gesture refuses a name I own
-  # before it gets here (MemberListWdgt.duplicateProperty).
+  # with no kept source (a run's) is copied as the slot, as the rename twin moves it. I have no guard on
+  # newName, as the rename twin has none: a member of mine already under it is overwritten, and one I
+  # inherit under it gets an own member standing over it. The guard is my caller's gesture: an
+  # inspector's Duplicate… refuses a new name its subject already answers, owned or inherited, before
+  # it gets here (MemberListWdgt.duplicateProperty, _refusesAsAnAnsweredName).
   duplicateOwnProperty: (oldName, newName) ->
     keptSource = Widget.keptSourceOf @[oldName]
     if keptSource?

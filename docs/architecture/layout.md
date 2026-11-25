@@ -422,8 +422,8 @@ A border layout is COMPOSITION, not an engine: a 'y' division stack whose middle
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
 A TOOL is composition the same way. The inspector (`InspectorRowWdgt`) is an 'x' division row of inspectors with a
 splitter between each two, which the row derives from its inspectors itself
-(`InspectorRowWdgt._reconcileSplittersNoSettle`); each inspector (`InspectorWdgt`) a 'y' division stack of its header band over
-one view (a member list, a 'y' stack in turn: its bands around its list); each band (`BandWdgt`) an 'x' row of controls fixed at their own sizes, centred down it, with gaps
+(`InspectorRowWdgt._reconcileSplittersNoSettle`); each inspector (`InspectorWdgt`) a 'y' division stack of its header band, its
+chooser band when its subject offers more than one view, and one view at a time (a member list or an object list, each a 'y' stack in turn: its list with its bands); each band (`BandWdgt`) an 'x' row of controls fixed at their own sizes, centred down it, with gaps
 (`BandSpaceWdgt`) and ONE piece that takes the slack, a spring or a text that gives. None of the three has a
 `_reLayout`: every cell is sized by its division box, and a holder's least width is its cells' (`getRecursiveMinDim`).
 Three rules such a row keeps: a piece meant to stay FIXED pins least = desired = max with spreadability 0

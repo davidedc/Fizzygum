@@ -387,7 +387,7 @@ turns the normalization off), and its `tight: false` height AGREES with grow-to-
 construction. ⚠ `ListWdgt` keeps the interposed-pane shape deliberately: its design sizes
 the rows panel PAST the hug (anti-vacant-space, `ListWdgt._applyExtent`), so the panel's
 unconditional hug self-write and the list's committed frame structurally disagree — there
-the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — an inspector's member list's —
+the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — an inspector's member list's, or its object list's —
 does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` / `CommandPanelWdgt._myArrangedWidth`.)
 
 ## Naming

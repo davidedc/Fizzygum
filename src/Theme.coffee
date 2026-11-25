@@ -1087,20 +1087,23 @@ class Theme
     @footerGap = 8
 
     # an INSPECTOR's bands (BandWdgt: a row of controls at their own sizes, centred down the band):
-    # the width of the RULE a band draws inside its height, along its bottom (an inspector's header, a
-    # member list's toggles band) or its top (a member list's cut-notice band and its footer band,
-    # which is footerBandHeight tall and keeps footerInset and footerGap, above) ...
+    # the width of the RULE a band draws inside its height, along its bottom (an inspector's header and
+    # its chooser band, a member list's toggles band) or its top (the cut-notice band a member list or
+    # an object list shows, and a member list's footer band, which is footerBandHeight tall and keeps
+    # footerInset and footerGap, above) ...
     @inspectorRuleWidth = 1
     # ... an inspector's HEADER band (InspectorWdgt): its height, its rule included, a chrome target's
     # (the split button stands in it whole); how far in from its left edge its title starts, which is
-    # also how far short of its right edge its class chip ends, and how tall a member list's
-    # cut-notice band stands and how far in its notice starts; and the gap between the split button
+    # also how far short of its right edge its class chip ends, and how tall the cut-notice band a
+    # member list or an object list shows stands and how far in its notice starts (both build it by
+    # one routine, MemberListWdgt.cutNoticeBandFor); and the gap between the split button
     # and the title, where an inspector a splitter stands before opens with one ...
     @inspectorHeaderHeight = 44
     @inspectorHeaderInset = 12
     @inspectorHeaderGap = 8
-    # ... a member list's TOGGLES band (MemberListWdgt): its height, how far in from its left edge its
-    # first toggle starts, and the gap between two toggles ...
+    # ... a band of TOGGLES -- a member list's filter band (MemberListWdgt) and an inspector's chooser
+    # band (InspectorWdgt): its height, how far in from its left edge its first toggle starts, and the
+    # gap between two toggles ...
     @toggleBandHeight = 48
     @toggleBandInset = 12
     @toggleBandGap = 8

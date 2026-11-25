@@ -5,9 +5,10 @@
 # on me moves that splitter's split exactly as a drag on the splitter does: the split's arithmetic is
 # the splitter's own (StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt), and I only say
 # where its leading edge should be.
-#   I hold no splitter: I ask the inspector I stand in which one stands before it, as I am dragged
-# (InspectorWdgt.splitterBeforeMe, read off its row's children), so a copy of me, or my inspector
-# taken out of its row, drags nothing that is not its own.
+#   I hold no splitter: I ask the inspector I stand in which splitter I move, as I am dragged
+# (InspectorWdgt.splitterMovedBy, read off its row's children), and it answers only while I am its
+# own split button and lead its header: a copy of me, my inspector taken out of its row, a button a
+# person put after a title or into another inspector's header, or one on the desktop drags nothing.
 #   My look is the layout chrome's (LayoutChromeWdgt, LayoutChromeAppearance): its plate, in the look
 # of my pointer state, and on it the double arrow across, as a layout spacer shows it. A drop on me
 # is refused, as on every plain widget.
@@ -37,11 +38,11 @@ class SplitGripWdgt extends LayoutChromeWdgt
   # my hover shows the cursor a row's splitter shows (LayoutChromeWdgt.hoverEntered)
   _resizeCursor: -> "col-resize"
 
-  # the splitter before the inspector I stand in: the nearest container of mine that can say
+  # the splitter I move: the nearest container of mine that can say (an inspector) says, or none
   _mySplitter: ->
     holder = @parent
-    holder = holder.parent  until !holder? or holder.splitterBeforeMe?
-    holder?.splitterBeforeMe()
+    holder = holder.parent  until !holder? or holder.splitterMovedBy?
+    holder?.splitterMovedBy @
 
   # A drag on me: the split moves so that the splitter's LEADING EDGE lands where the pointer, less
   # where I was grabbed, less the splitter's own width says. I stand flush after the splitter (I am

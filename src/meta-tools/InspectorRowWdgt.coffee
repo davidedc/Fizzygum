@@ -5,16 +5,19 @@
 # DIVISION row (StackLayoutEngine), a splitter between two of them (StackElementsSizeAdjustingWdgt),
 # so they divide my width, a person drags a splitter -- or the split button standing right of it in
 # the next inspector's header (SplitGripWdgt) -- to re-divide it, and my least width is theirs and my
-# splitters' together (Widget.getRecursiveMinDim). I paint the body every inspector of mine stands
-# on (inspectorBodyFill); they paint only their rules.
+# splitters' together (Widget.getRecursiveMinDim). I paint the BODY every inspector of mine stands
+# on (inspectorBodyFill), and say so to my parts (laysTheInspectorBodyUnderItsParts); a part of the
+# tool standing anywhere else paints a body of its own (InspectorBodyAppearance).
 #   A CHOICE replaces whatever stands right of the inspector it was made in, in ONE settle: the
 # subject that inspector's neighbour already shows is reloaded there, any other subject gets a new
 # inspector, and no subject only removes what stands right of the chooser. A split a person moved
 # stays where they put it while a view of the same kind takes the place right of it, and is undone
 # when another kind takes that place or none does (_showNextToNoSettle: one rule, from what a drag on
-# a split trades). A choice that leaves me narrower than my inspectors'
-# least widths WIDENS my window when it stands on the desktop, as far as the desktop's right edge;
-# past that, or in any other holder, my inspectors narrow. Nothing is ever dropped from my left.
+# a split trades). A choice that leaves me narrower than my inspectors' least widths WIDENS my window
+# when it stands on the desktop, toward the NORMAL width of the inspector the choice added (a list
+# its desired width, an editor the width the default window gives it: _normalWidthOf), as far as the
+# desktop's right edge; past that, or in any other holder, my inspectors narrow. Nothing is ever
+# dropped from my left.
 #   My SPLITTERS are derived from my inspectors, never placed by hand: exactly one between two
 # inspectors that stand side by side, none anywhere else (_reconcileSplittersNoSettle), re-derived
 # at every choice and whenever a child of mine leaves me, however it leaves -- a choice's removal, a
@@ -53,14 +56,24 @@ class InspectorRowWdgt extends ClippingWdgt
   # which tells no one: I stand in no window yet, and a window reads my name itself as it opens me.
   _inspectorNamingMe: undefined
 
-  # A row built with no window gives itself a usable extent, and Widget.spawnInspector opens my
-  # window at this same extent: one place states it.
+  # THE DEFAULT EXTENT, its one statement: a row built with no window gives itself this extent, a
+  # window opened on a fresh row opens at it (Widget.spawnInspector, showChoice), and the widening
+  # reads the width an editor has in it (_normalWidthOf). Tall enough that a widget's or a class's
+  # member list, under a header, a chooser, its toggles and its footer, shows five whole rows. A
+  # method, never a class-level Point: a class constant may not name another class.
+  @defaultExtent: ->
+    new Point 760, 528
+
   constructor: (subject) ->
     super()
-    @__commitExtent new Point 760, 480
+    @__commitExtent InspectorRowWdgt.defaultExtent()
     @color = WorldWdgt.theme.inspectorBodyFill
     @appearance = new RectangularAppearance @
     @_buildAndConnectChildren subject
+
+  # I lay the inspector's body under my parts (my appearance paints it, under all of them), so an
+  # inspector of mine paints none of its own (InspectorBodyAppearance asks, as it paints).
+  laysTheInspectorBodyUnderItsParts: -> true
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled). The subject is handed to the build rather than read from a field of mine, where the
@@ -131,7 +144,8 @@ class InspectorRowWdgt extends ClippingWdgt
   # after its title, leads that header again after every choice, and a child a person attached to me
   # is reconciled too (InspectorWdgt._reconcileSplitGripNoSettle; with nothing out of place it changes
   # nothing). Then my window is widened if my inspectors do not fit it, the header that button opens
-  # counted: inside this same settle, never in a layout pass.
+  # counted, toward the normal width of the inspector this choice added, if it added one: inside this
+  # same settle, never in a layout pass.
   _showNextToNoSettle: (inspector, subject) ->
     following = @_inspectorsAfter inspector
     if subject? and following[0]?.showsSubject subject
@@ -143,7 +157,7 @@ class InspectorRowWdgt extends ClippingWdgt
       @_removeInspectorsNoSettle following, (if sameKind then fresh else inspector)
       @_addInspectorNoSettle fresh  if fresh?
     @_reconcileSplittersNoSettle()
-    @_widenMyWindowToFitNoSettle()
+    @_widenMyWindowToFitNoSettle fresh
 
   # my inspectors right of `inspector`, in order; none when it is no inspector of mine
   _inspectorsAfter: (inspector) ->
@@ -187,7 +201,7 @@ class InspectorRowWdgt extends ClippingWdgt
     (child.layoutSpec?.isDivisionElement?() is true) and child.maxDimsPuttingMyLeadingEdgeAt?
 
   # The splitter standing before `inspector` among my cells, or undefined: what its split button drags
-  # (InspectorWdgt.splitterBeforeMe asks). An "Edit layout" slot between the two is no cell of mine,
+  # (InspectorWdgt._splitterBeforeMe asks). An "Edit layout" slot between the two is no cell of mine,
   # so it does not stand between them.
   splitterBefore: (inspector) ->
     cells = @_myCells()
@@ -258,19 +272,42 @@ class InspectorRowWdgt extends ClippingWdgt
     @_beingFullDestroyed = true
     super
 
-  # A choice that leaves me narrower than my cells' least widths together widens my WINDOW by what is
-  # missing -- but no further than the desktop's right edge: past that, my inspectors narrow (the
-  # stack's first regimes). Only a window whose whole content I am, and which stands on the desktop
-  # (its parent is the world), where its bounds are the desktop's own px; a window in any other holder
-  # -- a panel, a document, a dock, a transform island -- is that holder's to place and size, and my
-  # inspectors narrow in it. The frame's own core, inside my choice's settle: a public setExtent here
-  # would be a second settle. My least width reads division boxes, which are fields, so it is current
-  # inside the very settle that added an inspector; my width is the one I was given.
-  _widenMyWindowToFitNoSettle: ->
-    missing = @getRecursiveMinDim().x - @width()
-    return unless missing > 0 and @parent?.isMyContents?(@) and @parent.parent is world
+  # A choice that leaves me narrower than my cells' least widths together WIDENS my WINDOW: that is
+  # the trigger, so a window a person narrowed, but kept at least that wide, keeps its width. By how
+  # much: when the choice ADDED an inspector, up to my width with that one at its NORMAL width
+  # (_normalWidthOf) and every other cell at its desired width, the default window's own layout of
+  # them; when it added none, by what my least width lacks. Never further than the desktop's right
+  # edge: past that, my inspectors narrow (the stack's first regimes), and the added one takes what the
+  # room gives, between its least and its normal width. Only a window whose whole content I am, and
+  # which stands on the desktop (its parent is the world), where its bounds are the desktop's own px; a
+  # window in any other holder -- a panel, a document, a dock, a transform island -- is that holder's
+  # to place and size, and my inspectors narrow in it. The frame's own core, inside my choice's settle:
+  # a public setExtent here would be a second settle. My least and desired widths read division boxes,
+  # which are fields, so they are current inside the very settle that added an inspector; my width is
+  # the one I was given.
+  _widenMyWindowToFitNoSettle: (added) ->
+    least = @getRecursiveMinDim().x
+    return unless least > @width() and @parent?.isMyContents?(@) and @parent.parent is world
+    wanted = if added? then @getRecursiveDesiredDim().x + (@_normalWidthOf added) - added.getDesiredDim().x else least
     room = Math.max 0, world.right() - @parent.screenBounds().right()
-    widening = Math.min missing, room
+    widening = Math.min wanted - @width(), room
     return unless widening > 0
     @parent._setExtentNoSettle @parent.extent().add new Point widening, 0
     return
+
+  # THE NORMAL WIDTH of an inspector a choice added: a list's, its desired width; an editor's (its
+  # subject a member, the question InspectorWdgt builds an editor by), the width the DEFAULT window
+  # gives it -- that window's row width (defaultExtent less my window's chrome across, the frame's own
+  # statement: extentWrappingPayloadAt) less what stands left of the editor there, the inspector it was
+  # chosen in at its desired width and the splitter between them: 758 - 372 - 12 = 374 beside a
+  # widget's member list. Never less than its desired width. Asked by the widening, while my window
+  # holds me.
+  _normalWidthOf: (added) ->
+    desired = added.getDesiredDim().x
+    return desired unless added.inspectedObject?.editsAsAMember?()
+    mine = @inspectors()
+    left = mine[mine.indexOf(added) - 1]
+    splitter = @splitterBefore added
+    return desired unless left? and splitter?
+    defaultRowWidth = InspectorRowWdgt.defaultExtent().x - @parent.extentWrappingPayloadAt(new Point 0, 0).x
+    Math.max desired, defaultRowWidth - left.getDesiredDim().x - splitter.getDesiredDim().x

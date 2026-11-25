@@ -92,17 +92,27 @@ class ClassMemberRef extends MemberRef
     true
 
   # A duplicate is the copy alone (_editCopyUnder), recorded as the one edit under the new name, then
-  # the one notification. A refused copy changes nothing and tells no one, and answers false.
-  # (`constructor` and a name my class already holds never get here: MemberListWdgt.duplicateProperty
-  # refuses them.)
+  # the one notification. A refused copy changes nothing and tells no one, and answers false. My one
+  # guard is the copy's, on my member (a member with no source to recompile); on newName I have none:
+  # the edit under it replaces a member my class defines under that name, or defines one over a
+  # superclass's. The guard on newName is my caller's: `constructor` and a name my holder already
+  # answers, my class's own or inherited, never get here (MemberListWdgt.duplicateProperty,
+  # _refusesAsAnAnsweredName).
   duplicate: (newName) ->
     return false unless @_editCopyUnder newName, "duplicate"
     @_notifyOfEdit()
     true
 
   # A rename is the copy (_editCopyUnder), then a removal of the old name: the record of it is the two
-  # steps, and it tells once. A refused copy removes nothing and tells no one, and answers false.
-  # (`constructor` never gets here, either way round: MemberListWdgt.renameProperty refuses it.)
+  # steps, and it tells once. A refused copy removes nothing and tells no one, and answers false. My one
+  # guard is the copy's, on my member (a member with no source to recompile); on newName I have none:
+  # the edit under it replaces a member my class defines under that name, or defines one over a
+  # superclass's, and a move onto my member's own name would remove the member it just wrote. The guard
+  # on newName is my caller's: the member list's Rename… (MemberListWdgt.renameProperty) asks me with
+  # none of three names -- my member's own name, which is nothing to do, so it does nothing and says
+  # nothing; `constructor`, refused; and a name my holder already answers, my class's own or inherited,
+  # refused (_refusesAsAnAnsweredName). (`constructor` is never my member either: a member list offers
+  # no rename of it, MemberRef.canBeRenamedOrRemoved.)
   rename: (newName) ->
     return false unless @_editCopyUnder newName, "rename"
     @_removeClassMember @name

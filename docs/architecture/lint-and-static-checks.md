@@ -320,7 +320,7 @@ Arcs: `docs/archive/bite-proofs-plan.md`, `docs/archive/every-gate-bites-plan.md
   | `clock-read` | 5 | a read of a clock — the wall clock (`Date.now()`, or a `new Date` given no argument, followed by an operator, a closing bracket, punctuation or the end of the line; `new Date x` / `new Date -x` are values) or the monotonic one (`performance.now()`) — breaks event-stream determinism (DETERMINISM.md — recognition keys off EVENT timestamps); sanctioned by name: the world's one per-cycle clock (`WorldWdgt._updateTimeReferences`), a clock widget built outside a cycle, the harness's own clocks, the compile scheduler's frame budget (`WorldWdgt.doOneCycle`, `SourceCompileScheduler.drainAtEndOfCycle` / `_drain`) — which paces how much compiling a frame does: on the pages the suite drives nothing is queued behind a running world, so no reference pixel depends on it, while on `index.html` it decides in which frame a lazy part's door opens (why laziness is held by rigs, not SystemTests) — and the ingest's debug timing. Its existential spellings count too (`performance?.now()`, `Date.now?()`). Cannot see: a read inside a string interpolation (the mask blanks `#{ }`); a clock passed uncalled (`performance.now.bind performance`, `opts.now ? Date.now`), read through a string key (`performance['now']()`) or by `do`; `Date()` without `new`; and clocks read through other APIs (`performance.timeOrigin`, `event.timeStamp`, a `requestAnimationFrame` callback's timestamp, `document.timeline`) |
   | `timer` | 4 | `setTimeout`/`setInterval` diverge at dpr2 under parallel load (bug-class B); the cycle/step machinery is the sanctioned clock |
   | `math-random` | 4 | breaks byte-exact screenshot determinism in render/layout/input code |
-  | `instanceof-type-test` | 64 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
+  | `instanceof-type-test` | 62 | locks the type-test-elimination campaign's tail against regrowth — prefer polymorphism (Pharo: `ReBadMessageRule`) |
   | `raw-chrome-color` | 0 | a colour literal (`Color.create`, `new Color`, `Color.<CONSTANT>`, a CSS `'#hex'` / `'rgb(…)'` / `'rgba(…)'` string) in a CHROME file is a look decided outside `src/Theme.coffee` ([`visual-design-system.md`](visual-design-system.md)), so a restyle cannot reach it — read the surface's `WorldWdgt.theme` role (add one when the surface has none). Uses `exclude` (Theme, the Color class and value plumbing, CONTENT directories, ICON art — a NEW file is counted by default), `readsLiterals`, and `sanctioned`: the literals inside counted files that are DATA, not a look decision (wallpaper patterns, palette data, the paint tools' source strings, a new shape's content default, the debug overlay, DOM input styling, a pixel read), each declared by file and enclosing member with its count and reason — an entry whose member holds a different number of hits fails the build (`SANCTION COUNT`, or `STALE SANCTION` at 0), so the list can neither outlive nor widen what it names. At 0 it is a HARD rule: a chrome colour is a `Theme` role, read where it is used (a class-level state colour is derived at each state change, since a class-level declaration may not reference another class); `fg stinks --list raw-chrome-color` lists the sanctioned sites with their reasons |
   | `comment-meta-edit` | 0 | HARD: a comment arguing with itself ("the below is actually correct", "to be clear,") is process residue — state the surviving constraint once |
   | `comment-narration` | 87 | history narration in comments ("used to", "previously", "no longer", "in the old model") — history's home is `docs/archive/` + a pointer; a comment states what IS | <!-- narration-ok: this row DEFINES the narration rule, so it must quote its own trigger words -->
@@ -433,13 +433,16 @@ blind spot is structural:
   starts with a capital or a non-letter (`SENTENCE_CASE`). Each rule has a stated-decision allowlist
   (`ELLIPSIS_EXCEPTIONS`, `SENTENCE_CASE_EXCEPTIONS`) and a vacuity guard (`ELLIPSIS_CHECK_VACUOUS`,
   `SENTENCE_CASE_CHECK_VACUOUS`).
-  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: 24 roots (two world roots, 16 representative widget classes,
-  the inspector pair — whose prompts open from a BUTTON row no menu walk can reach — a `MenuWdgt`/`PromptWdgt` pair,
-  each popped up and right-clicked on ITSELF, since no other root stands in a pop-up and so nothing else walks a
-  transient frame's own entries, and the P5 docking pair (`FrameWdgt[docked band]` / `FrameWdgt[host with an empty
-  slot]` — a Docs Maker's own docked toolbar, built and floated the product way, since a bare `FrameWdgt` representative
-  is free-floating with an empty slot and offers neither side's dock rows)), so a class not among them is
-  unreached. That is why
+  ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: its roots (its summary's `roots` line counts them) are two
+  world roots, representative widget classes, the two inspector rows (`InspectorRowWdgt[widget]`,
+  `InspectorRowWdgt[class]`; their member lists' prompts open from a BUTTON row no menu walk can reach, which a section
+  of their own presses), a `MenuWdgt`/`PromptWdgt` pair, each popped up and right-clicked on ITSELF, since no other
+  root stands in a pop-up and so nothing else walks a transient frame's own entries, the P5 docking pair
+  (`FrameWdgt[docked band]` / `FrameWdgt[host with an empty slot]` — a Docs Maker's own docked toolbar, built and
+  floated the product way, since a bare `FrameWdgt` representative is free-floating with an empty slot and offers
+  neither side's dock rows), and the NESTED shapes whose rows exist only inside a container, among them each part of
+  an inspector where it stands (the row, an inspector, a member list, a member editor, a header band, a chooser band,
+  an object list, a split button, a splitter), so a class not among them is unreached. That is why
   it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
   catches 2 of the 16 affected classes and the pin sweep catches all 16.
   ⚠⚠ **A menu built behind a BRANCH is only swept in the branch the rig happens to be standing in**, and an action can

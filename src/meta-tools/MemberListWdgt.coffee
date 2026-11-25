@@ -3,13 +3,15 @@
 # (MemberRef.canEdit), the gestures that change WHICH members it has: Add… Duplicate… Rename…
 # Remove. A row chosen is a CHOICE (InspectorRowWdgt.showChoice): the inspector to my right shows
 # that member (a click: its editor, MemberEditorWdgt) or that member's value (a double-click, when
-# the value is an object), so I show no member's code myself. I stand in an inspector
-# (InspectorWdgt) whose subject is my inspectedObject; picked out of it, I still list and edit it.
+# the value has members to show: an object, or a class), so I show no member's code myself. I stand
+# in an inspector (InspectorWdgt) whose subject is my inspectedObject, its first view; picked out of
+# it, I still list and edit it.
 #   Top to bottom, the elements of a vertical DIVISION stack (StackLayoutEngine), each a band of mine
 # or my list: my TOGGLES band (BandWdgt), my member LIST, which takes the slack, my CUT-NOTICE band
 # when my list cuts an indexed subject's items, and my FOOTER band of buttons when my subject's
-# members are edited. I have no layout of my own, and I paint nothing: my bands paint their rules,
-# and the row I stand in paints the body under all of us.
+# members are edited. I have no layout of my own. In an inspector I paint nothing -- my bands paint
+# their rules, and the row paints the body under all of us -- and standing anywhere else I paint
+# that body myself (InspectorBodyAppearance): one body under my bands, one shadow.
 #   My TOGGLES (LabelledToggleWdgt) show my member FILTER -- Methods, Fields, Inherited, Own props
 # only (none for a class's prototype, whose every member is its class's) -- whose one truth is my
 # showing* fields. A click on a toggle runs its action (toggleShowing*), which flips that field and
@@ -22,6 +24,10 @@
 # instance edit protocol, a class's through its meta-object, recorded), which makes the edit, tells
 # once, and answers whether it made it: a step that refuses (a class's member with no source to
 # copy) changes nothing, so the gesture neither re-filters nor drops the selection.
+#   A NEW member's name -- the one an Add…, a Duplicate… or a Rename… gives -- is one my subject does
+# not already answer, its own or inherited (_refusesAsAnAnsweredName refuses an answered one, in one
+# sentence): no gesture of mine overwrites a member or stands an own one over an inherited one. My
+# subject's own version of an inherited member is made by choosing that member and pressing Save.
 class MemberListWdgt extends Widget
 
   # I show what the class MEMBER MAPS record and edit a class through them (my gestures' class steps
@@ -65,18 +71,51 @@ class MemberListWdgt extends Widget
   renamePropertyButton: undefined
   removePropertyButton: undefined
 
-  # At most this many ITEMS of an indexed subject are listed: a person scrolls a list, and no list of a
-  # million rows is one -- a surface's pixel buffer, reached by drilling into a canvas, holds millions,
-  # and every row is a widget. A cut list is said in my cut-notice band (_cutNoticeText).
+  # At most this many ITEMS of an indexed subject are listed, and at most this many objects in an
+  # object list (ObjectListWdgt): a person scrolls a list, and no list of a million rows is one -- a
+  # surface's pixel buffer, reached by drilling into a canvas, holds millions, and every row is a
+  # widget. A cut list is said in a cut-notice band (cutNoticeBandFor).
   @MOST_ITEMS_LISTED: 1000
+
+  # THE CUT-NOTICE BAND of a list that shows `listed` of `count` things, or undefined when it shows
+  # them all: the one statement of the band both list views build (mine and ObjectListWdgt's). Its text
+  # gives way as an inspector's title does (BandWdgt's `gives` item): the band's spring, cropped with
+  # "…" where the band is narrower than it, so its length is in none of the list's widths. As tall as an
+  # inspector's header, its rule along its top.
+  @cutNoticeBandFor: (listed, count) ->
+    return undefined unless count > listed
+    theme = WorldWdgt.theme
+    noticeText = new StringWdgt ("The first " + listed + " of " + count + " items are listed."), fontRole: theme.fonts.buttonLabel
+    new BandWdgt theme.inspectorHeaderHeight, [theme.inspectorHeaderInset, {gives: noticeText}, theme.inspectorHeaderInset], rule: "top"
+
+  # A LIST DRESSED AS A VIEW'S: it takes no drops; it wears the inspector's pane roles
+  # (ViewportWdgt.wearPaneRoles; its plane wears them too), read as it paints and kept by name, so the
+  # body and the bands' rules show through it; and its division box is a chrome target's side square
+  # tall at least, `leastWidth` / `desiredWidth` wide, and grows to any size, so the slack of the view's
+  # stack is the list's. The one statement both list views dress their list by (mine and
+  # ObjectListWdgt's, which states there the width its inspector had: InspectorWdgt._showViewNoSettle).
+  @dressAsAViewsList: (list, leastWidth, desiredWidth) ->
+    list.disableDrops()
+    list.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
+    least = WorldWdgt.theme.minimumTargetSize
+    list.setMinAndMaxBoundsAndSpreadability (new Point leastWidth, least), (new Point desiredWidth, least), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
 
   # The subject is my identity, my one positional parameter. My own division box takes my
   # inspector's slack: its most size is large, while my least and desired sizes are my bands' and my
   # list's, which the stack derives.
   constructor: (@inspectedObject) ->
     super()
+    @appearance = new InspectorBodyAppearance @
     @setMinAndMaxBoundsAndSpreadability (new Point 1, 1), (new Point 1, 1), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @_buildAndConnectChildren()
+
+  # MY SHADOW IS THE BODY'S BOX, my parts' silhouettes left out, while I paint the body
+  # (InspectorBodyAppearance.castsOnlyTheBody says when, and its header why); otherwise my base's pass.
+  _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
+    if @appearance.castsOnlyTheBody appliedShadow
+      @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
+    else
+      super
 
   # HOW MUCH OF ITS ROW'S SPARE WIDTH MY INSPECTOR TAKES, by weight (InspectorWdgt sets its own most
   # width from it): little. I keep the width my controls and names need, and the code beside me takes
@@ -120,13 +159,11 @@ class MemberListWdgt extends Widget
 
     @_buildAndConnectMemberList()
 
-    # my cut notice, a text that gives way as my inspector's title does (BandWdgt's `gives` item): its
-    # band's spring, cropped with "…" where the band is narrower than it, so its length is in none of
-    # my widths
-    if (notice = @_cutNoticeText())?
-      noticeText = new StringWdgt notice, fontRole: theme.fonts.buttonLabel
-      @cutNoticeBand = new BandWdgt theme.inspectorHeaderHeight, [theme.inspectorHeaderInset, {gives: noticeText}, theme.inspectorHeaderInset], rule: "top"
-      @_addCellNoSettle @cutNoticeBand
+    # my cut notice, when my list cuts an indexed subject's items, so the list never reads as the whole
+    # collection
+    {items, itemCount} = @_subjectsItemsAndNames()
+    @cutNoticeBand = MemberListWdgt.cutNoticeBandFor items.length, itemCount
+    @_addCellNoSettle @cutNoticeBand  if @cutNoticeBand?
 
     @_buildAndConnectEditRow() if MemberRef.canEdit @inspectedObject
 
@@ -214,14 +251,6 @@ class MemberListWdgt extends Widget
   @_isAnIndex: (name) ->
     /^(0|[1-9]\d*)$/.test(name) and Number(name) < 4294967295
 
-  # What my cut-notice band says: how many items my list shows of how many, when it cuts an indexed
-  # subject's items, so the list never reads as the whole collection -- or undefined when it holds
-  # them all, and I build no such band.
-  _cutNoticeText: ->
-    {items, itemCount} = @_subjectsItemsAndNames()
-    return undefined unless itemCount > items.length
-    "The first " + items.length + " of " + itemCount + " items are listed."
-
   # Duplicate, rename and remove act on the SELECTED member, so they are enabled exactly while my
   # list has a selection they can act on (_selectedMemberCanBeRenamedOrRemoved): disabled as built,
   # then following each selection (selectionFromList, a row that names no member included) until my
@@ -281,6 +310,13 @@ class MemberListWdgt extends Widget
     @_reflectFiltersOnToggles()
     @_invalidateLayout()
 
+  # MY LIST READ AGAIN, as my inspector asks when its chooser's lit toggle, mine, is pressed
+  # (InspectorWdgt._showViewNoSettle): a re-filter, keeping my filter as it stands. The name every view
+  # a chooser offers answers (ObjectListWdgt's derives its list again). A core: my inspector calls it
+  # inside its switch's settle.
+  _rereadNoSettle: ->
+    @_refilterMembersNoSettle()
+
   # The names of the members my filter lets through, in the order my list shows them. It starts
   # from every enumerable property of my subject and of its whole prototype chain (a Fizzygum
   # class's members are enumerable, its methods included) and keeps:
@@ -329,10 +365,10 @@ class MemberListWdgt extends Widget
   # told what each member is by my memberFactsOf. Everything the list reaches me through is a method
   # NAME -- a click selects a member (selectionFromList), a double-click opens its value
   # (inspectMemberValue) -- so a copy of me is reached by its own list, and the list holds no
-  # closure. It wears the inspector's pane roles (ViewportWdgt.wearPaneRoles; its plane wears them
-  # too), read as it paints and kept by name, so the row's body and my bands' rules show through it,
-  # and a list taken out of me keeps them. It and its contents take no drops. Its division box is a
-  # chrome target's side square at least, and grows to any size: the slack of my stack is its.
+  # closure. It is dressed as a view's list (dressAsAViewsList): no drops, the inspector's pane roles,
+  # kept by name, so the body and my bands' rules show through it and a list taken out of me keeps
+  # them, and a division box a chrome target's side square at least, growing to any size: the slack of
+  # my stack is its, while my bands state my width.
   _buildAndConnectMemberList: ->
     if @list?.parent is @
       atIndex = @children.indexOf @list
@@ -345,10 +381,8 @@ class MemberListWdgt extends Widget
       action: "selectionFromList"
       doubleClickAction: "inspectMemberValue"
       memberFactsQuery: "memberFactsOf"
-    @list.disableDrops()
-    @list.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
     least = WorldWdgt.theme.minimumTargetSize
-    @list.setMinAndMaxBoundsAndSpreadability (new Point least, least), (new Point least, least), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
+    MemberListWdgt.dressAsAViewsList @list, least, least
     @_addNoSettle @list, atIndex: atIndex, layoutSpec: @list.divisionBox('y')
 
   # WHAT MY LIST SHOWS OF A MEMBER beside its name (my list's memberFactsQuery, asked once per row
@@ -383,14 +417,17 @@ class MemberListWdgt extends Widget
     InspectorRowWdgt.showChoice @, (if name? then MemberRef.of(@inspectedObject, name))
 
   # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
-  # chose the member): when the member's VALUE is an object -- the only kind of value with members to
-  # show -- that value is my choice, in place of the member, so the inspector on my right shows it (a
-  # class function's `__super__` its superclass's prototype, edited as that class, MemberRef.of). Any
-  # other value opens nothing, and so does a label that names no member (_memberNamedBy).
+  # chose the member): when the member's VALUE has members of its own to show -- an object, or a
+  # Fizzygum CLASS (a function carrying the class marker, as classNamed tells it: a widget's
+  # `constructor` row) -- that value is my choice, in place of the member, so the inspector on my right
+  # shows it (a class function's `__super__` its superclass's prototype, edited as that class,
+  # MemberRef.of). Any other value -- a method, a number, a string -- opens nothing more: the click
+  # already chose the row, and its editor stands. So does a label that names no member (_memberNamedBy).
   inspectMemberValue: (memberName) ->
     return unless (name = @_memberNamedBy memberName)?
     value = @inspectedObject[name]
-    return unless Utils.isObject value
+    hasMembersToShow = value? and (typeof value is "object" or (Utils.isFunction(value) and classNamed(value.name) is value))
+    return unless hasMembersToShow
     InspectorRowWdgt.showChoice @, value
 
   # NO ROW OF MINE IS CHOSEN any more: what stands on my right shows something other than my choice,
@@ -414,9 +451,14 @@ class MemberListWdgt extends Widget
   # (InspectorRowWdgt.showChoice, with no subject), after my settle. A step that refused changed
   # nothing, so I keep my list and my choice as they are.
 
-  # the add, past the prompt (addPropertyPopout)
+  # The add, past the prompt (addPropertyPopout). Refused: the name `constructor`
+  # (_refusesAsANewMemberName), and a name my subject already ANSWERS, its own or one it inherits
+  # (_refusesAsAnAnsweredName) -- an add never overwrites a member nor stands over one my subject
+  # inherits, so I say so, as a duplicate and a rename do. My subject's own version of an inherited
+  # member is made by choosing that member and pressing Save.
   addProperty: (prop) ->
-    return unless prop? and (MemberRef.canEdit @inspectedObject) and !@_refusesAsANewMemberName prop
+    return unless prop? and (MemberRef.canEdit @inspectedObject)
+    return if @_refusesAsANewMemberName(prop) or @_refusesAsAnAnsweredName(prop, "a new member")
     return unless MemberRef.of(@inspectedObject, prop).add()
     @_refilterMembers()
     InspectorRowWdgt.showChoice @, undefined
@@ -429,6 +471,26 @@ class MemberListWdgt extends Widget
     @inform "constructor is the class\nitself: no member can\ntake its name"
     true
 
+  # A NAME MY SUBJECT ALREADY ANSWERS is no name a NEW member can take: its own member's, or one it
+  # inherits. Add…, Duplicate… and Rename… each make a member under a new name, and under a name
+  # answered already that member would overwrite an own one, or stand over an inherited one and change
+  # what my subject answers (an Add… of `color` on a rectangle: an own member holding nothing, so the
+  # rectangle paints no fill). So each refuses such a name, saying so in one sentence that names the
+  # gesture's member (`noun`: "a new member", "a duplicate", "a rename"). An own version of an inherited
+  # member -- one object's, or one class's over its superclass's -- is made the one way that stays:
+  # choose that member (the Inherited filter lists it) and press Save.
+  #   The test is the `of` test on my subject. Every caller asks it of a subject my edits reach
+  # (MemberRef.canEdit: a widget, a Fizzygum class's prototype), and on those it never throws and runs
+  # no getter: on a WIDGET it answers its own members, its class's, every superclass's and Object's
+  # (`toString`); on a class's PROTOTYPE, the members the class defines, every superclass's and
+  # Object's. Asked after the refusal of `constructor` (_refusesAsANewMemberName), which every subject
+  # answers and which has words of its own. The one statement of the rule and of its words. Answers
+  # whether it refused.
+  _refusesAsAnAnsweredName: (name, noun) ->
+    return false unless name of @inspectedObject
+    @inform name + " is a member\nalready: " + noun + "\nreplaces no member"
+    true
+
   addPropertyPopout: ->
     # Chrome cannot handle empty strings (others do), hence the "property" default
     @prompt "new property name:", @, "addProperty", defaultContents: "property"
@@ -436,15 +498,13 @@ class MemberListWdgt extends Widget
   # A duplicate, past the prompt (duplicatePropertyPopout): the selected member, kept, and a copy of it
   # under the name given. A duplicate of a member I do not offer to duplicate does nothing
   # (_selectedMemberCanBeRenamedOrRemoved), as a click on my disabled button does. Refused: the name
-  # `constructor` (_refusesAsANewMemberName), and a name my subject already OWNS, the selected
-  # member's own included -- a copy never overwrites a member, so I say so.
+  # `constructor` (_refusesAsANewMemberName), and a name my subject already ANSWERS, its own or one it
+  # inherits, the selected member's own included (_refusesAsAnAnsweredName) -- a copy never overwrites
+  # a member nor stands over one my subject inherits, so I say so.
   duplicateProperty: (newName) ->
     return unless newName? and @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @_selectedMemberName()
-    return if @_refusesAsANewMemberName newName
-    if Object::hasOwnProperty.call @inspectedObject, newName
-      @inform newName + " is a member\nalready: a duplicate\nreplaces no member"
-      return
+    return if @_refusesAsANewMemberName(newName) or @_refusesAsAnAnsweredName(newName, "a duplicate")
     return unless MemberRef.of(@inspectedObject, propertyName).duplicate newName
     @_refilterMembers()
     InspectorRowWdgt.showChoice @, undefined
@@ -459,15 +519,19 @@ class MemberListWdgt extends Widget
     propertyName = @_selectedMemberName()
     @prompt "name of the copy:", @, "duplicateProperty", defaultContents: propertyName
 
-  # A rename to the name the member already has changes nothing, so it does nothing (each step's
-  # move would otherwise drop the member it moves onto itself); so does a rename of a member I do
-  # not offer to rename (_selectedMemberCanBeRenamedOrRemoved), as a click on my disabled button does.
-  # A rename to `constructor` is refused (_refusesAsANewMemberName).
+  # A rename to the name the member already has changes nothing, so it does nothing, and says
+  # nothing, before any refusal is asked (each step's move would otherwise drop the member it moves
+  # onto itself); so does a rename handed no name (a prompt cancelled), as an add and a duplicate do,
+  # and a rename of a member I do not offer to rename (_selectedMemberCanBeRenamedOrRemoved), as a
+  # click on my disabled button does. Refused: the name
+  # `constructor` (_refusesAsANewMemberName), and any other name my subject already ANSWERS, its own or
+  # one it inherits (_refusesAsAnAnsweredName) -- a rename never overwrites another member nor stands
+  # over one my subject inherits, so I say so.
   renameProperty: (prop) ->
-    return unless @_selectedMemberCanBeRenamedOrRemoved()
+    return unless prop? and @_selectedMemberCanBeRenamedOrRemoved()
     propertyName = @_selectedMemberName()
     return if prop is propertyName
-    return if @_refusesAsANewMemberName prop
+    return if @_refusesAsANewMemberName(prop) or @_refusesAsAnAnsweredName(prop, "a rename")
     return unless MemberRef.of(@inspectedObject, propertyName).rename prop
     @_refilterMembers()
     InspectorRowWdgt.showChoice @, undefined
