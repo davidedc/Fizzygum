@@ -620,8 +620,9 @@ class InspectorWdgt extends Widget
   classChip: undefined
   # the widget showing my subject: a member editor or a member list
   view: undefined
-  # does my header open with a split button? Derived from where I stand (_reconcileSplitGripNoSettle)
-  showsSplitGrip: false
+  # the split button I built for my header's lead, or undefined; shown exactly while it LEADS my header (stands in
+  # it before my title)
+  splitGrip: undefined
   # the PLACE my view left in me, while a person has taken it out (below)
   viewsPlace: undefined
   # am I being destroyed whole? Then my view leaving me is my teardown, and no place is kept
@@ -707,11 +708,17 @@ Build (inside ONE settle, children added with the NoSettle tier):
   pieces' and the title's 5 px floor, and a long name widens no window and holds no split. The chip is
   `new ChipWdgt target: @, action: "chooseMyClass", face: link.constructor.name, current: true`.
 - the split grip, DERIVED from where I stand and never told: **`_reconcileSplitGripNoSettle()`** asks whether a
-  splitter stands before me (`splitterBeforeMe()?`); when `showsSplitGrip` (false as built) already says so, it
-  does nothing; otherwise it RE-LEADS my header in place (`BandWdgt._replacePiecesBeforeNoSettle @headerTitle,
-  lead`): every piece before the title gives way to `[new SplitGripWdgt, theme.inspectorHeaderGap]`, or to
-  `[theme.inspectorHeaderInset]` alone. The title, the chip and the band stay the same widgets, and nothing made
-  there settles as it is made. My row's reconcile runs it, and so do `_reactToBeingCopied` and
+  splitter stands before me (`splitterBeforeMe()?`); when my header already shows that, it does nothing; otherwise
+  it RE-LEADS my header in place (`BandWdgt._replacePiecesBeforeNoSettle @headerTitle, lead`): every piece before
+  the title gives way to `[new SplitGripWdgt, theme.inspectorHeaderGap]`, or to `[theme.inspectorHeaderInset]`
+  alone. What my header shows is READ OFF my header, never remembered: I hold the button I built (`splitGrip`) and
+  `_showsMySplitGrip()` asks whether it still LEADS it (it stands in my header before my title), so a button a
+  person took out (its menu's "Pick up" or "Destroy"), or put back after the title, is let go of (it is theirs)
+  and the lead rebuilt whole at my row's next reconcile, which runs at every choice and whenever a child of the
+  row leaves it. No field records the answer: a test reads the header's pieces by class. Nothing is judged while
+  my header or my title stands elsewhere (a person took it out), nor inside a layout pass (a lead rebuilt there
+  would schedule layout mid-pass). The title, the chip and the band stay the same widgets, and nothing made there settles as it
+  is made. My row's reconcile runs it, and so do `_reactToBeingCopied` and
   `_afterDeserialization` (no class above me defines either, so neither calls `super`): an inspector copied or
   saved alone out of a row stands in none and sheds its grip; inside a copied or restored row the row's structure
   gives it back. A header or a title a person took out of me is not re-led. The header band is 44 tall and the
@@ -1161,7 +1168,7 @@ Notes, as built:
 | U1 | `MemberRef` / `ClassMemberRef` under the OLD inspectors: no pixel changes | `fg gauntlet` | [x] 2026-11-24 |
 | U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [x] 2026-11-24 |
 | U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [x] |
-| U3 | Tests of what is new, each proven to bite | `fg presuite` | [ ] |
+| U3 | Tests of what is new, each proven to bite | `fg presuite` | [x] 2026-11-25 |
 | U3b | The finger icon on the split button: candidates, then the owner's choice (D11) | `fg presuite` after the choice | [ ] |
 | U4 | Object-list views (Children, Instances, Subclasses) and the chooser (D12) | `fg gauntlet` | [ ] |
 | U5 | Docs, BACKLOG, churn set, close | `fg gauntlet` | [ ] |
@@ -1573,7 +1580,7 @@ split a split moves right only (§5.10). Picture nothing below a row's least wid
 |---|---|---|---|
 | `macroInspectorMemberClickOpensItsEditorBesideTheList` | a click adds the second inspector; another row REPLACES it (still two); the same row again RELOADS it (typed text gone, undo brings it back) | the reload and its undo, and another member's NEW editor beside the list: `macroFormulaBarUndoStaysInItsEdit`; the same subject chosen again reloads the same inspector, and a choice further left removes what stands right of it: `macroInspectorClassChipShowsTheClassBesideIt`. Unpinned: the count "still two" after another member | `_showNextToNoSettle` always appends |
 | `macroInspectorDrillWidensItsWindow` | a double-click on an object-valued field shows the value beside the list; a third inspector widens the window by the missing width; the first inspector is still there | the drill to a second and a third inspector: `macroInspectorEditsAClassPrototypeAsAClass`; a three-inspector window 1048 wide, by its PIXELS only: `macroInspectorCodePaneRunsAgainstItsSubject` image_3. Unpinned: the widening by the missing least width as a value, and its stop at the desktop's right edge | `_widenMyWindowToFitNoSettle` a no-op |
-| `macroInspectorSplitMovesByDividerAndByButton` | the divider shows its dots and the second inspector's header opens with the split button, the first inspector's does not; a drag on the DIVIDER moves the split by the drag's travel and nothing else; a drag on the BUTTON does the same. The test runs on both pointer axes: the finger run is the proof D11 asks for (its button drag is a touch drag) | the second inspector's split button (`showsSplitGrip`): `macroPickingUpPartsFromInspector`, `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: every drag; that the first inspector carries none; a dragged split kept across a member choice, and its return to the default after a kind change (a drill to a value) or a filter toggle (measured in a browser, §5.4; pinned by no test) | `SplitGripWdgt.nonFloatDragging` a no-op |
+| `macroInspectorSplitMovesByDividerAndByButton` | the divider shows its dots and the second inspector's header opens with the split button, the first inspector's does not; a drag on the DIVIDER moves the split by the drag's travel and nothing else; a drag on the BUTTON does the same. The test runs on both pointer axes: the finger run is the proof D11 asks for (its button drag is a touch drag) | the second inspector's split button (its header's pieces read by class): `macroPickingUpPartsFromInspector`, `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: every drag; that the first inspector carries none; a dragged split kept across a member choice, and its return to the default after a kind change (a drill to a value) or a filter toggle (measured in a browser, §5.4; pinned by no test) | `SplitGripWdgt.nonFloatDragging` a no-op |
 | `macroInspectorTakenOutLeavesNoStraySplitter` | "Pick up" of the second inspector leaves one inspector and NO splitter; a choice made in the picked-out one opens a window of its own | a picked-out VIEW's choice opening exactly one new window, the row left as it was: `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: a whole inspector picked out, the splitter it leaves, the grip it sheds, and the window's title following the row's new first inspector | `InspectorRowWdgt._reactToChildRemoved` a no-op |
 | `macroInspectorRowSurvivesACopyAndASnapshot` | a duplicate of a two-inspector row drives its own editor; a snapshot round trip restores both inspectors and the member's source | the copy: `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the copy's editor saves into the copied subject only), `macroDuplicatedInspectorsCloseIndependently` and `macroDuplicateComplexWidgetPaintsCleanly` (a row of its own); the snapshot: the serialization rig's `world.inspector.classSubjectsSurviveSnapshot` (rows with a member chosen restore with the same pixels, each editor on its member of the restored subject, a Save still editing). Nothing is left unpinned | (assert only; the serialization leg is the gate) |
 | `macroInspectorReadOnlyMemberHasNoFooter` | on a Point: the list has no footer band, the editor no Save and no band | PARTLY: the list's missing footer band on a number, a string and a Point, and, given back after U2's review found it lost in the port, a member's editor there with no Save, no Save child and no band, its code area to its bottom: `macroInspectorOnNonWidgetIsReadOnly`; the same of a class function's member, beside a prototype's `constructor` editor with its Save and its 52 px band: `macroInspectorEditsAClassPrototypeAsAClass`. Unpinned: the plant seen failing those assertions | `CodeAreaWdgt._hasAFooterBand` answering true |
@@ -1585,9 +1592,74 @@ The rig expectation this unit was to add (a snapshot holding a row whose second 
 `world.inspector.classSubjectsSurviveSnapshot` (`serialization-roundtrip-headless.js`, held by
 `lib/serialization-expectations.js`): the plan's risk R6, met (§8).
 
-`fg menusweep` has no ROOT for an inspector PART's own menus (a header's, a band's, a view's, a splitter's: the
-division stack's "Layout in row/column", "Cross: …" and "Edit layout" rows on them were fired once by a scratch
-probe, 494 rows, no throw). U3 adds one, a nested root as the sweep's member-editor roots are.
+`fg menusweep` sweeps each PART of an inspector where it stands in the tool, as nested roots beside its
+member-editor roots ("THE INSPECTOR'S PARTS" in `menu-click-sweep-headless.js`): the row in its window, the first
+inspector of a row, a member list and a member editor in their inspectors, an inspector's header band, the split
+button in a header and the splitter between two inspectors; the first five are swept a second time for the rows
+that stand after "Destroy" in their menus (a walk that fires "Destroy" first reaches them stale).
+
+**Landed 2026-11-25 (U3 of the inspector-overhaul loop).** Six of the table's eight tests are written; two are not,
+each because nothing of it was left unpinned: `macroInspectorRowSurvivesACopyAndASnapshot` (three ported tests pin
+the copy, the serialization rig the snapshot) and `macroInspectorReadOnlyMemberHasNoFooter` (after U2's review,
+`macroInspectorOnNonWidgetIsReadOnly` and `macroInspectorEditsAClassPrototypeAsAClass` assert a read-only member's
+editor has no Save and no band). A test that proves what another already proves is not written.
+- **The six,** 42 assertions, each proving only what U2's ports left unpinned and saying so in its `intent`:
+  `macroInspectorMemberClickOpensItsEditorBesideTheList` (5: the protocol's counts: a click adds the second
+  inspector, another member replaces it, the same member reloads it); `macroInspectorDrillWidensItsWindow` (5, one
+  shot: the widening as a value, and its stop at the desktop's edge); `macroInspectorCutListSaysSo` (4, one shot:
+  the cut notice on a plain array); `macroInspectorSplitMovesByDividerAndByButton` (11, two shots: every drag on
+  the divider and on the button moves the split by exactly its travel and nothing else, the stops, and the split a
+  person set kept by a choice of the same kind; under `--pointer=finger` every drag is a touch stroke);
+  `macroInspectorTakenOutLeavesNoStraySplitter` (9: a whole inspector picked out through its own menu, the window's
+  shown title following the row's new first inspector, a choice in a list standing in no row opening exactly one
+  window, and the split button picked out of its header coming back); `macroInspectorDuplicateCopiesAMember` (8:
+  through the real button and prompt, on a widget and on a class, the refusal of an owned name, the class's one
+  record and the world told once). Pictures only where the look is the subject: four shots, sixteen references
+  (dpr 1 and 2, mouse and finger; the two pointers render the same pixels in every shot).
+- **Every assertion seen failing:** 46 plants (`--prelude` files that replace one product method each), each failing
+  its test FIRST on the assertion it targets: the split test's eleven and the taken-out test's eleven under both
+  pointers, the other twenty-four under the mouse. Each test followed clean by another under both pointers. Two
+  plants at first failed nothing, and each showed its TEST short, strengthened before the plant was run again: a
+  divider drag that carried the window went unseen (the "nothing else" line read widths only); a window's title
+  was read through `FrameWdgt.titleText()`, which derives it at each ask (the strip's `label.text` is what a
+  person sees; the ported `macroInspectorEditsAClassPrototypeAsAClass` reads it so too now).
+- **What the unit's independent review changed** (`u3/REVIEW.md` in the loop's scratch): the Duplicate test's last
+  assertion compared two records with each other and now holds each to the written move (an edit under the new
+  name, then a removal of the old), with a plant for the bug the old line could not see; the taken-out test no
+  longer requires the header to stand WITHOUT its button right after a pick-up (an interval the product does not
+  mean), and its plant plants a visible bug instead; the split test's plants were run under the finger; a twin
+  root of the sweep that would fire nothing fails as unbuilt; the fix below reads LEADS where it read STANDS IN,
+  and the flag it had kept as a reading is gone.
+- **A product defect the menu sweep's new roots met, fixed at its cause:** a split button a person took out of its
+  header (its menu's "Pick up" or "Destroy") never came back: the inspector trusted a flag in place of its header.
+  It holds the button it built now (`splitGrip`) and reads what its header shows off its header
+  (`_showsMySplitGrip`: the button stands in it before the title); a button that left, or that a person put back
+  after the title, is let go of and the header's lead rebuilt at the row's next reconcile, which runs at every
+  choice (a reload adds and removes nothing: without that line a re-choice gives no button back, as a plant
+  shows). The flag (`showsSplitGrip`) is deleted: no product code read it. §5.5 says it as built. Measured on a
+  fresh tool on every path: the same member chosen again, another member, the splitter destroyed and put back, a
+  filter toggle then a member, the middle inspector of three, a copy of an inspector alone and of a window, the
+  button attached back after the title. Left for U4: a split button that is not its inspector's lead still finds
+  that inspector's splitter, so a drag on a stray one makes the split jump.
+- **The sweep:** twelve new roots (72 built, none unbuilt; 104 prompt OKs; 1062 distinct pairs, from 914), no throw
+  from any row of any part. `PROMPTS_DRIVEN_FLOOR` 55 → 77: raised by the 22 prompt OKs the parts' roots add (7
+  developer menus × Color… and Transparency…, 4 layout twins × Desired size… and Max size…) so that it stands the
+  27 under a full run's count that it stood before (55 under 82, 77 under 104). It is the vacuity rule's floor
+  (the self-test's emptied run drives 36), not a count of reach: a root's reach is held by `ROOT_UNBUILT`.
+- **Two spellings the static gates asked of a new test,** no gate touched: a member a test makes at run time is
+  called by its name as data (`subject["probeMethod"]()`: `check-unresolved-sends` resolves a dotted send against
+  the sources), and a class a test restores in a `finally` is cleaned through a variable holding the class
+  (`delete Point.prototype[name]` reads to `check-dead-methods` as reaching every method of `Point`).
+- **Met and filed, not fixed here (U5 step 3):** a core defect older than this arc: "Pick up" of a cell of a plain
+  holder's division stack leaves the other cells where they stood until something else re-lays the holder
+  (`Widget._beforeBeingGrabbed` drops the layout spec and marks nothing; the hand's `add` then finds the widget
+  free-floating, and only a holder that defines `_reLayoutChildren` re-lays). On the inspector it shows as a
+  header's title standing beside a 44 px hole between a button's pick-up and the row's next reconcile.
+- **Evidence:** `fg presuite` OK with the predicted EMPTY failing set (477 tests); `fg gauntlet` OK twice: on the unit
+  before its review's fixes (all 20 legs in wave, 1745 s) and after them (2223 s; 19 legs in wave, and the
+  `selftests` leg on its serial retry: in wave, one case of the run-sequence runner's own self-test, "the page
+  stopping answering as the sequence starts", read NOT RUN where it plants INVALID; alone it passed: a load
+  flake of that self-test's timing, seen once, in no code this unit touches).
 
 ### U3b. The finger icon (0.5 day of work, then the owner)
 
@@ -1713,7 +1785,8 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
    - Add… with a name the subject already owns replaces that member with undefined, silently (as before U2),
      beside a Duplicate… that refuses the same name;
    - and, filed or kept as ledger lines by the house bar (a reachable or medium item is queued), the low lines
-     U2's two reviews listed: an inspector ATTACHED into a row is not reconciled until something leaves the row,
+     U2's two reviews listed: an inspector ATTACHED into a row is not reconciled until the row's next choice or until
+     something leaves it,
      and one attached free-floating counts as a cell; a view attached back onto its inspector shares the height
      with its place; a row whose only inspector was picked up stays a blank window titled "Inspector"; a split
      button whose header band a person rotates maps its pointer in another plane; a member reference cannot be
@@ -1723,7 +1796,18 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
      `POPOUT_BUTTON_UNSWEPT` scans the member list only; `world.inspector.survivesSnapshot`'s `rows > 0` counts the
      placeholder row too; the rigs open rows in 560 × 410 windows; a lone view saved in a file is probed nowhere;
      unsaved typing a re-filter takes away cannot be undone (ruled in U2's preparation, stated in no doc);
-     `docs/BACKLOG.md`'s Inherited-filter line still says "An object inspector's…".
+     `docs/BACKLOG.md`'s Inherited-filter line still says "An object inspector's…";
+   - from U3: "Pick up" of a cell of a plain holder's division stack leaves the other cells where they stood
+     (reachable through any such cell's menu, medium-low; core: `Widget._beforeBeingGrabbed` marks no holder, and
+     `ActivePointerWdgt.grab`'s comment says it does; the fix is the holder marked while the spec still says the
+     widget takes space in it, with the suite's pixels predicted first); a world snapshot taken between a split
+     button's pick-out and its row's next reconcile carries the stray button (low; the interval a view or a header
+     a person took out has too); two tests carry the same seven-line drag verb (`dragControlBy_InputEvents_Macro`):
+     the toolkit is its home when a third needs it; a split button dropped on the desktop takes no drag, so only
+     its developer menu removes it (low); the scroll thumb of a 1000-row list is a dot about 3 px long (low: a
+     viewport's thumb has no least length); no test drives "Destroy" of a split button (the sweep's probe did);
+     `CommandPanelWdgt.rowLabelsNaming` can number a row onto another widget's own name ("Rectangle 2" twice
+     when a third widget is so named: low, every hierarchy menu and chooser).
 4. **Close the arc** with the `/close-arc` skill: final `fg gauntlet`, the commit messages proposed,
    and the wait for approval. The plan STAYS in `docs/plans/`: U3b, the finger icon, is still open by the
    owner's ruling (§0.4 D11), so the status line at its top says which units landed and that U3b waits for
@@ -2018,7 +2102,7 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 | `MacroToolkit._findTopInspector` | deleted; the toolkit's locators `topMemberList()`, `memberEditorFedBy(memberList)` and `topMemberEditor()` (`src/macros/MacroToolkit.coffee`, "THE INSPECTOR'S TWO LOCATORS"); every verb keeps its name |
 
 New in U2, the home of no old member: all of `InspectorRowWdgt` (`_inspectorNamingMe` among it), `BandWdgt`,
-`BandSpaceWdgt` and `SplitGripWdgt`; in `InspectorWdgt`, `header`, `headerTitle`, `view`, `showsSplitGrip`, `viewsPlace`,
+`BandSpaceWdgt` and `SplitGripWdgt`; in `InspectorWdgt`, `header`, `headerTitle`, `view`, `viewsPlace`,
 `_defaultBox`, `mostWidthGivenAway`, `_giveUpMostWidthNoSettle`, `_buildHeaderNoSettle`, `showsSubject`,
 `_reloadNoSettle`, `_subjectName`, `splitterBeforeMe`, `_reconcileSplitGripNoSettle`, `_reactToChildRemoved`,
 `_fullDestroyNoSettle`, `_reactToBeingCopied`, `_afterDeserialization`; in `MemberListWdgt`, `rowSlackWeight`,
@@ -2065,3 +2149,4 @@ byte-identical-not-sacred-for-benign-inspector-recapture, fizzygum-macro-test-sy
 - [x] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change — CLOSED 2026-11-24 (inspector-overhaul loop, U1): the two classes landed under the old inspectors, each inspector class choosing its ref (`_memberRefOf`); presuite's failing set empty as predicted, no reference changed.
 - [x] U1b: every division stack's splitter 12 px wide with grip dots — CLOSED 2026-11-24 (inspector-overhaul loop, U1b): `Theme.layoutAdjusterThickness` 12, the house's grip dots from one routine (`Appearance._paintGripDots`) shared with a band's strip; five tests' 18 shots recaptured, the predicted set.
 - [x] U2: the switch — the row, the rewritten inspector, the member list and editor, the split button; 32 tests and the rigs ported; recapture — CLOSED 2026-11-25 (inspector-overhaul loop, U2): one tool, `InspectorRowWdgt`, a division row of `InspectorWdgt`s each with a `MemberListWdgt` or a `MemberEditorWdgt`, on `BandWdgt`s, with a splitter and a 44 × 44 split button (`SplitGripWdgt`) between two; `ClassInspectorWdgt`, the breadcrumb and the corner chain deleted; the 32 tests ported (six renamed) and the menu sweep, serialization, boot-smoke and parts rigs with them; the suite's failing set equalled the predicted one (16 tests, 46 shots) under mouse and finger, 184 references recaptured. Its Landed paragraph (§6 U2) has what changed against the plan's first text.
+- [x] U3: tests of what is new (a drill, the widening, the split by divider and by button, Duplicate, a copy and a snapshot) — CLOSED 2026-11-25 (inspector-overhaul loop, U3): six new SystemTests, 42 assertions, each seen failing first under a plant on its own line (46 plants: the split and taken-out tests' 22 under both pointers, the others under the mouse), four shots; the copy and the snapshot were already pinned by U2's ports and the serialization rig, so no test repeats them; the menu sweep sweeps each part of an inspector where it stands (twelve roots, its prompt floor 77); a split button taken out of its header comes back at its row's next reconcile (`InspectorWdgt.splitGrip`, read off the header: it shows while it leads).

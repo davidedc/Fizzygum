@@ -1500,7 +1500,8 @@ assertion a recapture after a regression silently stores two different hashes an
   a COPY, and the "Duplicate" item, which stands a copy in place) detaches the REAL view, CENTRED on the pointer; dropped on the bare desktop it
   stands alone. The inspector it left keeps its header with nothing below it, and the row keeps both inspectors, the same splitter and the
   split button — the row's splitters and split buttons are derived from its INSPECTORS, which stay (assert the row's structure after each
-  pick-up: `row.inspectors()`, `row.splitterBefore inspector`, `inspector.showsSplitGrip`; require the splitter read up front to EXIST,
+  pick-up: `row.inspectors()`, `row.splitterBefore inspector`, and the split button read among the header's pieces by class — one
+  `SplitGripWdgt` in `inspector.header.children`, its first piece; require the splitter read up front to EXIST,
   since with none built "the same one" compares two absent splitters as equal). Those lines see a view's leaving disturb the split button or
   the splitter, never the row's splitter reconcile itself: a view is its inspector's child, not the row's, so its leaving never reaches the
   reconcile, which only the line before any pick-up reads (what it built). Choose a member first (the editor exists only
@@ -1643,6 +1644,92 @@ assertion a recapture after a regression silently stores two different hashes an
   desktop: the member list's bands keep their heights and its list takes the change, the editor's code area takes it and its Save stays at
   its footer's right (assert both as values). Choose in the picked-out list BEFORE shrinking it: a finger cannot scroll a short list to a
   far row. Move the pointer CLEAR before each shot. No new verb.
+- **The choice protocol by its COUNTS — read a row's cells by CLASS** (`macroInspectorMemberClickOpensItsEditorBesideTheList`,
+  assertion-only): a click on a member row (`bringInViewAndClickOnListItem_InputEvents_Macro memberList.list, name`, a real verified click)
+  puts ONE inspector on that member right of the list's, ONE splitter between them; another row REPLACES it (still two, the old inspector
+  and its editor `destroyed`); the same row again RELOADS it (the same inspector, the same editor — `@memberEditorFedBy memberList` is the
+  one read before). Read the row's children by class, never through the rule under test: `(c for c in row.children when c instanceof
+  InspectorWdgt)` for the inspectors, and the cells as one string, each child mapped to "inspector" / "splitter"
+  (`StackElementsSizeAdjustingWdgt`) / "other" — `row.inspectors()` and `row.splitterBefore` are the row's own answers. Read the cells
+  BEFORE the first click too (one inspector alone), in the same line as after it. Build the row by code through the door's own two calls
+  (`row = new InspectorRowWdgt subject; win = world.openFrameWith row, row.extent(), topLeft`, the subject never mounted, so destroyed
+  beside the window in a `finally`). A RectangleWdgt's own class fields `toolName` and `toolExtent` show without the Inherited toggle.
+  The reload's text and undo are `macroFormulaBarUndoStaysInItsEdit`'s. No new verb.
+- **The window's WIDENING as a value, and its stop at the desktop's edge** (`macroInspectorDrillWidensItsWindow`): a choice that leaves
+  the row narrower than its cells' least widths widens its free-floating window by exactly what is missing, to the right, no further than
+  the desktop's right edge (`InspectorRowWdgt._widenMyWindowToFitNoSettle`). Two inspectors fit the 760 window (a list and an editor
+  663, two lists 754), so a member, then the class chip (`@moveToAndClick_InputEvents first.classChip`), widen nothing; a member of the
+  class adds the third. Ask every expected number of the world: read `row.width()` BEFORE the choice and `row.getRecursiveMinDim().x`
+  AFTER it (division boxes are fields: the least width is current the moment the inspector is added) — the window must be wider by
+  their difference (288 here; never write 1048), its `left()` unchanged, the first inspector, read by class as the entry above reads the
+  row's cells, the same widget. For the stop, open the
+  window `world.right() - 100 - 760` from the left and read the ROOM (`world.right() - win.right()`) AS IT OPENS, not before the third
+  choice: a widening that had wrongly used the room up already leaves 0 there, and "widened by the room" then passes vacuously. The
+  stopped row stands BELOW its least width — an open question for the owner, so assert it (`row.width() < row.getRecursiveMinDim().x`)
+  and never picture it: the one shot is the first window, three inspectors, the pointer parked off it (mouse and finger
+  byte-identical). Plants that each fail one line first: the widening a no-op, ignoring the room, growing leftward, dropping the
+  leftmost inspector instead, and forgetting the row's own width. No new verb.
+- **A CUT list says so — an inspector on a plain Array of 1200** (`macroInspectorCutListSaysSo`): a member list lists at most
+  `MemberListWdgt.MOST_ITEMS_LISTED` (1000) items of an indexed subject and puts a band under the list (`memberList.cutNoticeBand`, a
+  `BandWdgt` whose `StringWdgt` piece reads "The first 1000 of 1200 items are listed."); an uncut list builds none. Build the row by code
+  on the array in a window (`new InspectorRowWdgt [0...1200]`, `world.openFrameWith row, row.extent(), topLeft`). Count item rows by their
+  LABEL (`r.labelString` matching a regular expression of digits — written `/^\\d+$/` inside the macro's template literal), never by
+  the product's `_isAnIndex`, and assert the count against the number the notice STATES. Read the band's place structurally (the cell
+  right after `memberList.list`, `band.top() is list.bottom()`) and its text as shown (`notice.textPossiblyCroppedToFit is
+  notice.text`). An Array is read-only (`MemberRef.canEdit`: no class's prototype, no `injectProperty`): no `footerBand`, the band the
+  last cell. After the 1000 items the list shows `chunk` and `remove` — Fizzygum's Array extensions, enumerable on `Array.prototype`. To
+  show the END with the band, `bringListItemInView_InputEvents_Macro memberList.list, "999"`: the last item's share of the list is its
+  end, so the thumb drag lands there (rows 996–999, chunk, remove). An uncut list can be checked off-tree (`new InspectorRowWdgt [0...5]`,
+  never shown, then `fullDestroy`). No new verb.
+- **The split's two controls, dragged on both pointers — and the split a person set** (`macroInspectorSplitMovesByDividerAndByButton`):
+  a row holding a member list and an editor has the splitter (`StackElementsSizeAdjustingWdgt`, the divider) and, first in the SECOND
+  header only, a 44 × 44 `SplitGripWdgt`; find the button among the header's pieces by class (`c instanceof SplitGripWdgt` among
+  `header.children`), never through what the inspector holds of it. Drag either in LEGS, the stack-divider pattern: `@moveToAndMouseDown_InputEvents control` (verified),
+  drain, read `world.hand.position()` as the press point, `@syntheticEventsMouseMove_InputEvents (press + dx), "left button"`, drain,
+  `@syntheticEventsMouseUp_InputEvents()`. Under `--pointer=finger` that is a plain touch stroke with no hold, which both controls arm at
+  once (`ownsDragsStartingOnMe`); the first move sample lands on the press point, so both pointers move the split by exactly `dx`
+  (`syntheticEventsMouseMovePressDragRelease` would HOLD first under a finger). Read each width BEFORE the drag that changes it; ask the
+  world the numbers: the list's `getDesiredDim().x` (372, where the solve clamps it: from the default split a drag LEFT moves nothing), the
+  editor inspector's `getRecursiveMinDim().x` (280, the far-right stop), `theme.layoutAdjusterThickness` and `theme.minimumTargetSize`.
+  "Nothing else" = the splitter 12, the window's bounds, the cells by class, the same widgets, `world.hand.isThisPointerFloatDraggingSomething()`
+  false — read the baseline BEFORE the first drag, so a drag that carries the window is seen whichever drag it is. The split a person
+  set: another member keeps it exactly (a new second inspector), the same member keeps it, a filter toggle (Methods off keeps a field
+  listed) then a member returns the default; stay clear of a double-click drill (owner questions). A plant that makes a control GRAB TO
+  ITS PARENT must also take its `nonFloatDragging` away: a widget that has one is its own grab root (`Widget.findFirstLooseWidget`).
+  Two shots, the pointer parked off the window: mouse and finger byte-identical. No new verb.
+- **A WHOLE inspector taken out of its row, and a split button out of its header** (`macroInspectorTakenOutLeavesNoStraySplitter`,
+  assertion-only): an inspector's own menu is
+  reached by the hierarchy menu's row standing for it — `openOwnMenuAtFractionOf_InputEvents_Macro inspector, [0.5, 0.5]` right-clicks
+  (holds, under a finger) a part of its view and steps into the inspector's row — then "Pick up" and `@dropCarriedWidgetAt_InputEvents`
+  clear of the window. The row then reads ONE inspector and NO splitter (cells by class), the inspector that left has no `SplitGripWdgt`
+  in its header and still holds its own view; picking out the FIRST also strips the remaining inspector's button (no splitter before
+  it). ⚠ Read a window's title as its strip SHOWS it, `win.label.text`: `FrameWdgt.titleText()` derives the title from the contents' name
+  every time it is asked, so it "follows" the first inspector even when the strip was never re-titled (a plant of the missing re-title
+  passed against it). A choice in the picked-out inspector's list opens ONE window of its own (diff the desktop's windows) and changes
+  nothing else. A SPLIT BUTTON is picked out the same way, by the same test-local verb (`pickUpToDesktop_InputEvents_Macro aWidget,
+  dropPoint`, any part: the right-click at the button's centre opens the hierarchy menu, whose row standing for the button opens its
+  own): the row's cells stand as they were and the button stands on the desktop, the same widget (what the header holds until the next
+  choice is not pinned: a button given back at once would be right too). The SAME member
+  chosen again (a click on the selected row: a reload, which adds and removes no inspector) gives the header ONE button again, a NEW
+  one (`isnt` the one on the desktop, which stays there, not destroyed), 44 × 44 with its left on the splitter's right, and a drag
+  on it (the split test's `dragControlBy`, copied whole) moves the split by its travel. Read the button among the header's pieces by
+  class before and after, never through what the inspector holds of it. When no button came back, give the drag's line
+  a fixed found value instead of skipping it, so the line fails under a plant rather than vanishing. Destroy what the earlier
+  sections left before opening a section's window, so its drop point is bare desktop. Destroy every inspector and button picked out:
+  neither is under its window any more. No new toolkit verb.
+- **Duplicate… on a widget and on a class, through its prompt** (`macroInspectorDuplicateCopiesAMember`, assertion-only): press the
+  footer button, hold the prompt (`@getMostRecentlyOpenedMenu()`, a `PromptWdgt`), then either type after the name it holds (the caret
+  stands at its end: "Copy" makes `probeMethodCopy`) or replace it (`"Meta+a"`, then type), and `@clickPromptButton_InputEvents prompt,
+  "OK"`. Make a method by the editor's own Save (`editor.textWidget.setText`, then its `saveButton`): its copy is a function of its own
+  with the same `Widget.keptSourceOf`. A name the subject owns is refused by an inform: diff `world.children` across the gesture and read
+  the new pop-ups' `title` ("probeField is a member\nalready: a duplicate\nreplaces no member"; write `\\n` in the template literal).
+  On a class use Point's prototype, make the member through `Point.class.applyMemberEdit` (recorded nowhere, so every record read is a
+  gesture's) and take every probe off in a `finally`; read records as the slice `world.sourceEditsRegistry.records` gained across the
+  gesture, and count `WorldWdgt::noteCodeChanged` by wrapping it (restored in the `finally`). To compare a rename with a duplicate and a
+  remove, diff `Point.class.nonStaticPropertiesSources` and the prototype's own names against the same start for each way, put the start
+  back through the meta-object between them, and open a fresh window (the list is stale); hold EACH way to the move written out, its
+  records included, never one way to the other: two ways that agree on a wrong record pass a comparison of one with the other. An
+  editor's text there is set by code (`textWidget.setText`) before a real press of its Save. No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.activated` is EMPTY and its
   `pressBegan` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a

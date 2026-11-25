@@ -21,8 +21,10 @@
 # squeezes a control.
 #   My header opens with a SPLIT BUTTON (SplitGripWdgt) exactly while a splitter stands before me in
 # my row: the touch-sized way to move that split. The button is DERIVED from where I stand, never
-# told: my row reconciles it whenever its children change (_reconcileSplitGripNoSettle), and so do
-# a copy of me and a restore of me, which can stand in no row.
+# told: my row reconciles it at every choice (an inspector a choice adds among them) and whenever a
+# child leaves the row (_reconcileSplitGripNoSettle) -- a widget a person attaches is no moment of
+# its own, and waits for the next of those -- and so do a copy of me and a restore of me, which can
+# stand in no row. A button a person took out of my header comes back at my row's next reconcile.
 #   I paint nothing: my bands paint their rules, and the row I stand in paints the body under all of
 # us (inspectorBodyFill).
 class InspectorWdgt extends Widget
@@ -45,9 +47,12 @@ class InspectorWdgt extends Widget
   classChip: undefined
   # the widget showing my subject: a member editor or a member list
   view: undefined
-  # does my header open with a split button? Derived from where I stand (_reconcileSplitGripNoSettle):
-  # exactly while a splitter stands before me in my row. False as I am built.
-  showsSplitGrip: false
+  # the SPLIT BUTTON I built to lead my header (a SplitGripWdgt), or undefined while I have none. What
+  # my header shows is read off my header, never remembered: my button shows exactly while it stands
+  # in my header BEFORE my title (_showsMySplitGrip). One a person took out (picked up, destroyed) or
+  # put back after my title is theirs: my reconcile lets go of it, leaving the widget where it stands,
+  # and leads my header afresh.
+  splitGrip: undefined
   # the PLACE my view left in me (my header says why): built once, as my view leaves me
   # (_reactToChildRemoved), and undefined while my view stands in me
   viewsPlace: undefined
@@ -209,20 +214,40 @@ class InspectorWdgt extends Widget
   splitterBeforeMe: ->
     @parent?.splitterBefore? @
 
+  # Does my header show my split button? I hold one and it LEADS my header: it stands in my header
+  # before my title, where my lead is (every piece before my title: BandWdgt._replacePiecesBeforeNoSettle).
+  # Read off my header each time, as showsSubject reads my view, and by the two pieces' places, never
+  # by "first": an "Edit layout" slot stands before my button while my band is edited.
+  _showsMySplitGrip: ->
+    return false unless @splitGrip?.parent is @header
+    pieces = @header.children
+    pieces.indexOf(@splitGrip) < pieces.indexOf(@headerTitle)
+
   # MY SPLIT BUTTON, derived: my header opens with one exactly while a splitter stands before me
-  # (splitterBeforeMe). Nothing to do when that is what my header shows; else my header is RE-LED in
-  # place -- every piece of it before my title (BandWdgt._replacePiecesBeforeNoSettle) -- with a fresh
-  # split button and inspectorHeaderGap, or with inspectorHeaderInset alone. Only that lead changes:
-  # my title, my chip and my band stay the same widgets, and nothing made here settles as it is made,
-  # so my copy and restore hooks may run it as my row's reconcile does. A header or a title a person
-  # took out of me is theirs: I re-lead no band that is not mine.
+  # (splitterBeforeMe). A header or a title a person took out of me is theirs, and my lead is what
+  # stands before my title, so while either stands anywhere else I judge nothing and change nothing.
+  # Otherwise what my header shows is read off it (_showsMySplitGrip), never remembered: a button I
+  # built that does not lead -- a person picked it up, destroyed it, or put it back after my title --
+  # is let go of (my field cleared, the widget left where it stands: it is the person's), so a copy or
+  # a file of me made from then on carries no widget that left me, and my lead, which lost it, is
+  # rebuilt whole. Nothing to do when my header shows what is wanted; else my header is RE-LED in
+  # place -- every piece of it before my title (BandWdgt._replacePiecesBeforeNoSettle), the gap a lost
+  # button left included -- with a fresh split button and inspectorHeaderGap, or with
+  # inspectorHeaderInset alone. Only that lead changes: my title, my chip and my band stay the same
+  # widgets, and nothing made here settles as it is made, so my copy and restore hooks may run it as
+  # my row's reconcile does. Inside a layout pass (an "Edit layout" slot the pass takes away tells my
+  # row a child left) I change nothing: a lead rebuilt there would schedule layout mid-pass, so my
+  # row's next reconcile outside a pass rebuilds it.
   _reconcileSplitGripNoSettle: ->
-    wanted = @splitterBeforeMe()?
-    return if wanted is @showsSplitGrip
+    return if world?._recalculatingLayouts
     return unless @header?.parent is @ and @headerTitle?.parent is @header
-    @showsSplitGrip = wanted
+    lost = @splitGrip? and !@_showsMySplitGrip()
+    @splitGrip = undefined  if lost
+    wanted = @splitterBeforeMe()?
+    return unless lost or wanted isnt @splitGrip?
     theme = WorldWdgt.theme
-    lead = if wanted then [(new SplitGripWdgt()), theme.inspectorHeaderGap] else [theme.inspectorHeaderInset]
+    @splitGrip = if wanted then new SplitGripWdgt() else undefined
+    lead = if wanted then [@splitGrip, theme.inspectorHeaderGap] else [theme.inspectorHeaderInset]
     @header._replacePiecesBeforeNoSettle @headerTitle, lead
     return
 

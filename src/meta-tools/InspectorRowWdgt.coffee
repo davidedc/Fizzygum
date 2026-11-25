@@ -17,9 +17,12 @@
 # past that, or in any other holder, my inspectors narrow. Nothing is ever dropped from my left.
 #   My SPLITTERS are derived from my inspectors, never placed by hand: exactly one between two
 # inspectors that stand side by side, none anywhere else (_reconcileSplittersNoSettle), re-derived
-# whenever a child of mine leaves me, however it leaves -- a choice's removal, a person's "Pick up"
-# or "Destroy" of an inspector or of a splitter -- and each inspector then re-derives its split
-# button from them. My CELLS, the only children that reconcile reads or touches, are my inspectors
+# at every choice and whenever a child of mine leaves me, however it leaves -- a choice's removal, a
+# person's "Pick up" or "Destroy" of an inspector or of a splitter -- and each inspector then
+# re-derives its split button from them, a button a person took out of its header (or put back after
+# its title) included. A child a person attaches to me is no moment of its own: it waits for the next
+# of those, an inspector attached to me standing with no splitter until then. My
+# CELLS, the only children that reconcile reads or touches, are my inspectors
 # (every child of mine that answers showsSubject) and my splitters (my division cells that answer the
 # split's solve, maxDimsPuttingMyLeadingEdgeAt); any other child of mine (a halo's handle, an "Edit
 # layout" slot, a widget attached to me that is neither) is left where it is. My name is my first
@@ -121,10 +124,14 @@ class InspectorRowWdgt extends ClippingWdgt
   # chosen again, the kept neighbour, the removed cells being the ones right of it. Its trade with its
   # own left neighbour is untouched, so this holds in a row of any length, and an inspector a choice
   # leaves alone is back at its default. A "Pick up" or a "Destroy" of an inspector is no choice, and
-  # re-boxes nothing: my reconcile, which also runs inside layout passes, builds nothing and re-boxes
-  # nothing, so the neighbour such a departure leaves keeps the box it had.
-  #   Then my window is widened if my inspectors do not fit it: inside this same settle, never in a
-  # layout pass.
+  # re-boxes nothing: my reconcile, which also runs inside layout passes, writes no box, so the
+  # neighbour such a departure leaves keeps the box it had.
+  #   Then my structure is reconciled, whatever the choice removed or added -- a reload or a choice of
+  # no subject may do neither -- so a split button a person took out of a header of mine, or put back
+  # after its title, leads that header again after every choice, and a child a person attached to me
+  # is reconciled too (InspectorWdgt._reconcileSplitGripNoSettle; with nothing out of place it changes
+  # nothing). Then my window is widened if my inspectors do not fit it, the header that button opens
+  # counted: inside this same settle, never in a layout pass.
   _showNextToNoSettle: (inspector, subject) ->
     following = @_inspectorsAfter inspector
     if subject? and following[0]?.showsSubject subject
@@ -135,6 +142,7 @@ class InspectorRowWdgt extends ClippingWdgt
       sameKind = fresh? and fresh.view.rowSlackWeight() is following[0]?.view.rowSlackWeight()
       @_removeInspectorsNoSettle following, (if sameKind then fresh else inspector)
       @_addInspectorNoSettle fresh  if fresh?
+    @_reconcileSplittersNoSettle()
     @_widenMyWindowToFitNoSettle()
 
   # my inspectors right of `inspector`, in order; none when it is no inspector of mine
@@ -195,7 +203,8 @@ class InspectorRowWdgt extends ClippingWdgt
   # stands. Run under a flag, in a try/finally: the splitters it destroys tell me they left, and that
   # must not reconcile again inside this run. Builds nothing when nothing is out of place, so a child
   # leaving me in the middle of a layout pass (an "Edit layout" slot the pass takes away) finds nothing
-  # to do.
+  # to do; a split button a person took out is out of place, and its inspector rebuilds it only outside
+  # a pass (InspectorWdgt._reconcileSplitGripNoSettle).
   _reconcileSplittersNoSettle: ->
     @_reconcilingSplitters = true
     try
