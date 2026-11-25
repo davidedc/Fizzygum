@@ -462,8 +462,9 @@ assertion a recapture after a regression silently stores two different hashes an
   `constructor`, whose editor is read-only), find its editor (`@memberEditorFedBy memberList`), type code over the shown source
   and select it. The editor of a CLASS's member offers NO run row (`MemberEditorWdgt.codeReceiver`: it holds no instance): the
   header's class chip (`row.inspectors()[0].classChip`) puts an inspector on the class's prototype beside the list, in the same
-  window, in place of the member's editor, and a member chosen there opens a third inspector, for which the window widens by
-  the editor's least width alone (280). A long line of a member's source then runs past the editor's edge and the text's
+  window, in place of the member's editor, and a member chosen there opens a third inspector, for which the window widens to
+  give its editor its normal width (374: a row of 372 + 12 + 372 + 12 + 374, a window 1144 wide). A long line of a member's
+  source then runs past the editor's edge and the text's
   CENTRE past the window, so press where the text shows (`@clickOnTextSlot_InputEvents text, text.text.length, "right
   button"`: the end of its last line), never `openMenuOf` the text.
 - **Add an indented paragraph to a document via its layout menu** (`macroSimpleDocumentCanAddIndentedParagraph`): a
@@ -1629,7 +1630,7 @@ assertion a recapture after a regression silently stores two different hashes an
   which lays its inspector out — the header, the inspector's chooser band (a widget offers Members and Children), the member
   list's toggles band and its footer keep their heights (44, 48, 48, 52) and the list takes the change (247 as opened), which the
   test asserts as values (`listHeightAsOpened - memberList.list.height()` is the height the window lost). A window resized by a
-  DELTA from the default moved when the default grew 48 px: port its stated size by its arithmetic (528 - 155 = 373). Move the pointer
+  DELTA from the default lands at the default less that delta, so state its size by that arithmetic (528 - 155 = 373). Move the pointer
   CLEAR before the post-resize shot (the drag ends on the window — a hover highlight would otherwise vary). (Re-authored from the
   old naked-inspector version, which dragged the inspector's OWN ctor resizer.) No new verb.
 - **A gutted inspector still resizes — and the views picked out of it still WORK** (`macroInspectorResizingOKEvenWhenTakenApart`):
@@ -1688,7 +1689,7 @@ assertion a recapture after a regression silently stores two different hashes an
   it (`row.width() < row.getRecursiveMinDim().x`) and never picture it: the one shot is the first window, three inspectors, the pointer parked off it (mouse and finger
   byte-identical). Put the case between AFTER the stop, so a plant ignoring the room still fails the stop's line first. Plants that each
   fail one line first: the widening a no-op, ignoring the room, growing leftward, dropping the leftmost inspector instead, forgetting the
-  row's own width, the widening by the least alone (as before the owner's ruling A2), and a short room falling back to the least. No new
+  row's own width, the widening by the least alone (where the added inspector's normal width is asked), and a short room falling back to the least. No new
   verb.
 - **A CUT list says so — an inspector on a plain Array of 1200** (`macroInspectorCutListSaysSo`): a member list lists at most
   `MemberListWdgt.MOST_ITEMS_LISTED` (1000) items of an indexed subject and puts a band under the list (`memberList.cutNoticeBand`, a
@@ -1749,10 +1750,15 @@ assertion a recapture after a regression silently stores two different hashes an
   stands at its end: "Copy" makes `probeMethodCopy`) or replace it (`"Meta+a"`, then type), and `@clickPromptButton_InputEvents prompt,
   "OK"`. Make a method by the editor's own Save (`editor.textWidget.setText`, then its `saveButton`): its copy is a function of its own
   with the same `Widget.keptSourceOf`. A NEW name the subject already ANSWERS -- its own member's, or one it inherits -- is refused by an
-  inform: diff `world.children` across the gesture and read the new pop-ups' `title` ("probeField is a member\nalready: a
-  duplicate\nreplaces no member"; write `\\n` in the template literal). "Add…", "Duplicate…" and "Rename…" each refuse it, in the one
-  sentence they share (`MemberListWdgt._refusesAsAnAnsweredName`), naming the gesture's member ("…already: a new member…", "…a
-  duplicate…", "…a rename…"); a rename onto ANOTHER owned member is refused too, and a rename to the member's OWN name does nothing and
+  inform: diff `world.children` across the gesture and read the new pop-ups' `title` ('"probeField" is a member\nalready: a
+  duplicate\nreplaces no member'; write `\\n` in the template literal, and a single-quoted CoffeeScript string holds the
+  quotes). "Add…", "Duplicate…" and "Rename…" each refuse it, in the one sentence they share
+  (`MemberListWdgt._refusesAsAnAnsweredName`), naming the gesture's member ("…already: a new member…", "…a duplicate…", "…a
+  rename…") and starting with the name in quotes: a message that starts with a member's name writes it in quotes, since a
+  pop-up SHOWS its message as a sentence, its first character a capital, and a name shown capitalised names another member.
+  Read what a bubble SHOWS off its message piece, `bubble.label.textPossiblyCroppedToFit` (the stored words in the piece's
+  display case, never a case rule of the test's own), and hold its first line to a written value ('"probeField" is a member'),
+  on the run's FIRST refusal, so a refusal written without its quotes fails that line before every line of stored words; a rename onto ANOTHER owned member is refused too, and a rename to the member's OWN name does nothing and
   says nothing (no pop-up, the same list). For an inherited name take a field the class chain declares and the subject does not hold
   itself (a never-mounted rectangle's `color`, `alpha`, `paddingLeft`: check that in the fixture, and use one name per gesture so a
   gesture wrongly made leaves the others inherited), and delete any own one in the `finally`. On a class's prototype a member the class

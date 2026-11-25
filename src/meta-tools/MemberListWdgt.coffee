@@ -465,10 +465,11 @@ class MemberListWdgt extends Widget
 
   # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its
   # class, what every `.constructor` read answers (Class.refuseTheConstructor), so Add…, Duplicate…
-  # and Rename… refuse it, saying why. Answers whether it refused.
+  # and Rename… refuse it, saying why, its name quoted as a message that starts with a member's name
+  # quotes it (_refusesAsAnAnsweredName says why). Answers whether it refused.
   _refusesAsANewMemberName: (name) ->
     return false unless name is "constructor"
-    @inform "constructor is the class\nitself: no member can\ntake its name"
+    @inform '"constructor" is the class\nitself: no member can\ntake its name'
     true
 
   # A NAME MY SUBJECT ALREADY ANSWERS is no name a NEW member can take: its own member's, or one it
@@ -486,9 +487,15 @@ class MemberListWdgt extends Widget
   # Object's. Asked after the refusal of `constructor` (_refusesAsANewMemberName), which every subject
   # answers and which has words of its own. The one statement of the rule and of its words. Answers
   # whether it refused.
+  #   A MESSAGE THAT STARTS WITH A MEMBER'S NAME QUOTES IT ("color" is a member…): a pop-up shows its
+  # message with its first character a capital (FrameWdgt._titleDisplayCase, "sentence"), and a
+  # member's name is case-sensitive -- `Color` would name another member. Quoted, the first character
+  # is the quote mark and the name keeps its case. The same rule quotes `constructor`'s refusal
+  # (_refusesAsANewMemberName) and a class member's copy refused for want of a source
+  # (ClassMemberRef._editCopyUnder).
   _refusesAsAnAnsweredName: (name, noun) ->
     return false unless name of @inspectedObject
-    @inform name + " is a member\nalready: " + noun + "\nreplaces no member"
+    @inform '"' + name + '" is a member\nalready: ' + noun + "\nreplaces no member"
     true
 
   addPropertyPopout: ->

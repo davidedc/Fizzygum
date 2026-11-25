@@ -190,13 +190,14 @@ border, as the button); on, an `accentTint` fill inside an `accent` border with 
 state is its HOST's: a click dispatches its one action, and the host decides the new state and shows it on the
 toggle (`setOn`); the toggle never flips itself. `toggleHeight` tall, its label plus `togglePaddingX` at each side
 plus its border wide, never narrower than `minimumTargetSize`. Its hosts: a member list's filter (`MemberListWdgt`: Methods,
-Fields, Inherited, Own props only), an inspector's chooser (`InspectorWdgt`: a toggle per view its subject offers, Members first, then Children, Instances or Subclasses, on for the view shown; a press on the lit one has that view read its list again) and the error log's "Pause", on while the log is paused (`ErrorsLogViewerWdgt.paused`).
+Fields, Inherited and, on any subject but a class's prototype, Own props only), an inspector's chooser (`InspectorWdgt`: a toggle per view its subject offers, Members first, then a widget's Children, or a class's Instances, where instances register, and Subclasses, on for the view shown; a press on the lit one has that view read its list again) and the error log's "Pause", on while the log is paused (`ErrorsLogViewerWdgt.paused`).
 
 **The chip** (`ChipWdgt`, a `SimpleButtonWdgt`): a label control `chipHeight` (32) tall at radius
 `chipCornerRadius` (16), its label plus `chipPaddingX` at each side plus its border wide, never narrower
 than `minimumTargetSize`; no fill inside a `chip` border with `text2` text (hovered `desk`, pressed `chrome`
 inside a `frame` border); the CURRENT chip an `accentTint` fill inside an `accent` border with `accent` text, in
-every state. An inspector's header holds one, its CLASS CHIP, current, at the header's right: the class the
+every state. An inspector's header holds one, its CLASS CHIP, current, at the header's right, where its subject is
+made by a class other than `Object` (an inspector on one member has none): the class the
 inspector's subject is made by (a class's superclass, for a class's prototype), whose press shows that class in the
 inspector to its right (`InspectorWdgt.chooseMyClass`).
 

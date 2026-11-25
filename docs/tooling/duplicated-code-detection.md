@@ -117,9 +117,9 @@ script overrides them (e.g. `./find_duplicated_code.sh --min-tokens 35`).
    ANSI codes and the trailing timing/sponsor banner are stripped).
 5. **jsinspect's CLI hard-codes ignoring any path matching `node_modules|bower_components|
    test|spec`** — its `--ignore` only APPENDS patterns. "Fizzygum-tests", ".../tests/...",
-   and even "Inspector" (In-**spec**-tor, lowercase substring match) all trip it: the two
-   `meta/*Inspector*` files are the ones this silently drops from a directory-based structural
-   scan. Explicit FILE arguments bypass the filter, so `find_similar_code.sh`
+   and even "Inspector" (In-**spec**-tor, lowercase substring match) all trip it: the
+   `meta-tools/Inspector*` files (mirrored as `meta-tools__Inspector*.js`) are the src files this silently drops
+   from a directory-based structural scan. Explicit FILE arguments bypass the filter, so `find_similar_code.sh`
    always expands the file lists itself — **never call the jsinspect bin with a directory
    argument.**
 6. **jscpd's `--ignore` globs cannot exclude dot-directories** (`**/.scratch/**` silently
@@ -254,7 +254,7 @@ Closed-arc snapshot with the full case law (the removability test, the inspector
 [`docs/archive/duplication-triage-2026-07-15-hierarchy-round4.md`](../archive/duplication-triage-2026-07-15-hierarchy-round4.md).
 
 \* pre-fix numbers: structural scans before `fc0aef7c`-era tooling silently excluded the two
-`Inspector*` files (gotcha 5 below), and the first tests scans were ad-hoc CLI runs.
+`Inspector*` files (gotcha 5 above), and the first tests scans were ad-hoc CLI runs.
 
 ## Feeding the results to an LLM
 

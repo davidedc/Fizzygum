@@ -79,14 +79,16 @@ class ClassMemberRef extends MemberRef
   # (Class.fieldRecordHolds). A member my class has no source for (one its source never wrote, nor any
   # edit since), or one a run replaced or rewrote (its source is no longer what it holds), has nothing
   # to recompile, so it is refused, said through the world (I am no widget to open a bubble from) with
-  # the gesture's verb in the words. Answers whether it made the copy.
+  # the gesture's verb in the words, and my member's name quoted, as a message that starts with a
+  # member's name quotes it (MemberListWdgt._refusesAsAnAnsweredName says why). Answers whether it made
+  # the copy.
   _editCopyUnder: (newName, verb) ->
     theClass = @holder.constructor.class
     held = @holder[@name]
     source = theClass.nonStaticPropertiesSources[@name]
     sourceIsWhatItHolds = if Utils.isFunction(held) then Class.memberRecordOf(held) is source else Class.fieldRecordHolds @holder, @name, held
     unless theClass.definesMember(@name) and sourceIsWhatItHolds
-      world.inform @name + " has no CoffeeScript\nsource in " + theClass.name + "\nto " + verb
+      world.inform '"' + @name + '" has no CoffeeScript\nsource in ' + theClass.name + "\nto " + verb
       return false
     @_editClassMember newName, source
     true

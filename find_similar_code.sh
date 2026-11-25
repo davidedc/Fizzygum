@@ -109,9 +109,9 @@ JIARGS=("$@"); [ $# -eq 0 ] && JIARGS=(-t 30)
 
 echo "==> jsinspect structural scan (args: ${JIARGS[*]}) ..."
 # ⚠ Pass the mirror as EXPLICIT FILES, never as a directory: jsinspect's CLI hard-codes
-# ignoring any path matching test|spec when it expands directories — which silently dropped
-# meta__InspectorWdgt.js + meta__ClassInspectorWdgt.js ("Inspector" contains "spec") from
-# every directory-based scan. Explicit file arguments bypass the filter.
+# ignoring any path matching test|spec when it expands directories — which silently drops
+# the meta-tools__Inspector*.js mirrors ("Inspector" contains "spec") from a
+# directory-based scan. Explicit file arguments bypass the filter.
 "$JSINSPECT" "${JIARGS[@]}" --reporter json duplication-report/js-mirror/*.js > duplication-report/jsinspect-report.json
 RC=$?
 if [ "$RC" != "0" ] && [ "$RC" != "5" ]; then

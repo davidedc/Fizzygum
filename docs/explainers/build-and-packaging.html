@@ -126,7 +126,7 @@
 
   <h2>A part — a named slice that comes and goes as a unit</h2>
 
-  <p>Every shipping directory belongs to exactly one of the <strong>21 parts</strong>; a source
+  <p>Every shipping directory belongs to exactly one of the <strong>19 parts</strong>; a source
   file no part claims is a build failure. A part owns up to four kinds of thing — sources
   (<code>dirs</code>), copied files (<code>assets</code>), assembled vendor payloads
   (<code>vendor</code>), and boot-bundle pieces (<code>bootPrelude</code>) — and all four appear
@@ -134,32 +134,30 @@
 
   <figure>
     <div class="bar" aria-label="The partition, roughly by source size">
-      <div style="flex:676; background:var(--s2)" title="core — 1742.2 KB"></div>
-      <div style="flex:9; background:var(--s3)" title="app-kit (lazy) — the shared base layer, 22.6 KB"></div>
-      <div style="flex:90; background:var(--s3)" title="authoring (lazy) — 231.2 KB"></div>
-      <div style="flex:45; background:var(--s3)" title="spreadsheet (lazy) — 116.2 KB"></div>
+      <div style="flex:1127; background:var(--s2)" title="core — 2903.4 KB"></div>
+      <div style="flex:26; background:var(--s3)" title="app-kit (lazy) — the shared base layer, 66.7 KB"></div>
+      <div style="flex:121; background:var(--s3)" title="authoring (lazy) — 311.7 KB"></div>
+      <div style="flex:71; background:var(--s3)" title="spreadsheet (lazy) — 183.4 KB"></div>
       <div style="flex:15; background:var(--s3)" title="maps (lazy) — 39.3 KB"></div>
-      <div style="flex:19; background:var(--s3)" title="meta-tools (lazy) — 47.7 KB"></div>
-      <div style="flex:17; background:var(--s3)" title="plots (lazy) — 43.3 KB"></div>
-      <div style="flex:4; background:var(--s3)" title="examples-icons (lazy) — 9.4 KB"></div>
-      <div style="flex:7; background:var(--s3)" title="the five example-* doors (lazy, one class each) — 17.9 KB"></div>
-      <div style="flex:46; background:var(--s4)" title="fizzytiles (lazy) — 118.0 KB"></div>
-      <div style="flex:21; background:var(--s4)" title="demos (lazy) — 53.8 KB"></div>
-      <div style="flex:13; background:var(--s4)" title="video-player — 32.4 KB"></div>
-      <div style="flex:10; background:var(--s4)" title="dev-tools — 24.9 KB"></div>
+      <div style="flex:57; background:var(--s3)" title="meta-tools (lazy) — 146.3 KB"></div>
+      <div style="flex:17; background:var(--s3)" title="plots (lazy) — 45.1 KB"></div>
+      <div style="flex:5; background:var(--s3)" title="examples-icons (lazy) — 12.4 KB"></div>
+      <div style="flex:7; background:var(--s3)" title="the five example-* doors (lazy, one class each) — 18.4 KB"></div>
+      <div style="flex:50; background:var(--s4)" title="fizzytiles (lazy) — 130.0 KB"></div>
+      <div style="flex:21; background:var(--s4)" title="demos (lazy) — 55.0 KB"></div>
+      <div style="flex:10; background:var(--s4)" title="dev-tools — 25.1 KB"></div>
       <div style="flex:8; background:var(--s4)" title="dev-icons — 21.1 KB"></div>
-      <div style="flex:7; background:var(--s4)" title="patch-programming-experimental — 18.5 KB"></div>
-      <div style="flex:33; background:var(--s1)" title="macros — 84.1 KB"></div>
-      <div style="flex:56; background:var(--s1)" title="harness — 145.5 KB"></div>
+      <div style="flex:7; background:var(--s4)" title="patch-programming-experimental — 19.1 KB"></div>
+      <div style="flex:142; background:var(--s1)" title="harness, the macro toolkit with it — 367.0 KB"></div>
     </div>
     <div class="legend">
-      <span><span class="chip" style="background:var(--s2)"></span>core — 61.8% of shippable source bytes</span>
+      <span><span class="chip" style="background:var(--s2)"></span>core — 66.8% of shippable source bytes</span>
       <span><span class="chip" style="background:var(--s3)"></span>in production, all LAZY: app-kit · authoring · spreadsheet · maps · plots · meta-tools · examples-icons · the five example-* doors</span>
-      <span><span class="chip" style="background:var(--s4)"></span>not in production: fizzytiles · demos · dev-tools · dev-icons · patch-programming-experimental · video-player</span>
-      <span><span class="chip" style="background:var(--s1)"></span>test-side: macros · harness</span>
+      <span><span class="chip" style="background:var(--s4)"></span>not in production: fizzytiles · demos · dev-tools · dev-icons · patch-programming-experimental</span>
+      <span><span class="chip" style="background:var(--s1)"></span>test-side: harness</span>
     </div>
-    <figcaption>The 21 parts, roughly to source-size scale (the smallest are drawn at a floor to stay
-    visible). The test machinery is just two parts like any other; nothing about tests is
+    <figcaption>The 19 parts, roughly to source-size scale (the smallest are drawn at a floor to stay
+    visible). The test machinery is just one part like any other; nothing about tests is
     special-cased in the build. <b>Being in production and being loaded at boot are different
     things</b> — production ships twelve parts besides core and <em>every one of them is lazy</em>,
     so production's eager image IS the core image, and <code>homepage</code> and <code>lean</code>
@@ -297,7 +295,7 @@
     <div class="seg">native bundle</div>
     <div class="seg">pre-compiled image</div>
     <div class="seg world">world — immediately</div>
-    <div class="seg">nothing else is fetched… until an inspector opens (the ≈1.9 MB reflective layer, once) or a map is asked for (the maps part)</div>
+    <div class="seg">nothing else is fetched… until an inspector opens (the meta-tools part and the reflective layer, once) or a map is asked for (the maps part)</div>
   </div>
 
   <div class="tl-label">lean (precompiled + sources: none): 10 files, ≈0.9 MB, sources never</div>

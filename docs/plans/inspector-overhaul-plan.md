@@ -1,8 +1,11 @@
 # Inspector overhaul: one tool, a row of inspectors, each one a small composed widget
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-**STATUS: IN EXECUTION since 2026-11-24** (authored and spiked that day; §6's table says which units have
-landed, and each landed unit's paragraph says what it corrected here). Every fact in §1 and §7 was read off the tree at
+**STATUS: IN EXECUTION since 2026-11-24** (authored and spiked that day). U1 and U1b landed on 2026-11-24, U2, U3,
+U4 and U5 on 2026-11-25, and each landed unit's paragraph (§6) says what it corrected here; U3b, the finger icon on
+the split button, waits for the owner (§0.4 D11), so the plan stays in `docs/plans/` and its BACKLOG section keeps
+U3b's line. What the arc leaves open is filed there, each item's text in `## BACKLOG detail` below. Every fact in §1
+and §7 was read off the tree at
 Fizzygum `f7aed9e0` / Fizzygum-tests `e78dc3e50` (471 SystemTests) on 2026-11-24, but the test names, counts and
 rig numbers §7 gives as U2 left them; §5 states the tool as built through U4. Line numbers drift:
 the quoted method or symbol name is authoritative, so grep it fresh before trusting a number.
@@ -928,7 +931,7 @@ Rename… is: `duplicatePropertyButton` between Add… and Rename…, enabled wi
 (`_reflectMemberSelection`); `duplicatePropertyPopout` prompts "name of the copy:" with the selected
 name as its default; `duplicateProperty(newName)` refuses `constructor` (`_refusesAsANewMemberName`) and
 any name my subject already ANSWERS, owned or inherited, the selected one's included (`_refusesAsAnAnsweredName`,
-the naming rule below: "<name> is a member already: a duplicate replaces no member"), calls the ref's `duplicate`,
+the naming rule below: `"<name>" is a member already: a duplicate replaces no member`), calls the ref's `duplicate`,
 footer band's least width is 371 (desired 372) and the toggles band's 364 (365): the member list's least and
 desired widths are 371 / 372, and 364 / 365 on a subject with no footer. Keeping the names is deliberate: the rigs and tests
 of §7 then change WHERE they find a member, not what it is called.
@@ -971,8 +974,10 @@ What changes inside it:
   (`_refusesAsANewMemberName`), which every subject answers and which has words of its own. Under an answered name a
   new member would overwrite an own one, or stand over an inherited one and change what my subject answers (an Add…
   of `color` on a rectangle: an own member holding nothing, so the rectangle paints no fill). Refused in ONE
-  sentence that names the gesture's member: "<name> is a member already: <noun> replaces no member", the noun "a new
-  member", "a duplicate" or "a rename"; nothing changes and the world is not told. A rename to the member's own name
+  sentence that names the gesture's member: `"<name>" is a member already: <noun> replaces no member`, the noun "a new
+  member", "a duplicate" or "a rename"; nothing changes and the world is not told. The name is quoted, as every
+  message that starts with a member's name quotes it: a pop-up shows its message with its first character a capital,
+  and a member's name is case-sensitive. A rename to the member's own name
   does nothing and says nothing, before any refusal is asked. An object's own version of an inherited member (or a
   class's over its superclass's) is made the one way that stays: choose that member (the Inherited filter lists it)
   and press Save. Measured through the real buttons: `color` and `toString` refused by Add…; Duplicate… and Rename…
@@ -1487,14 +1492,14 @@ As built:
 
 | Unit | What | Gate at its end | Done |
 |---|---|---|---|
-| U0 | Orient, decisions, a green baseline | `fg presuite` | [ ] |
+| U0 | Orient, decisions, a green baseline | `fg presuite` | [x] 2026-11-24 |
 | U1 | `MemberRef` / `ClassMemberRef` under the OLD inspectors: no pixel changes | `fg gauntlet` | [x] 2026-11-24 |
 | U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [x] 2026-11-24 |
-| U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [x] |
+| U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [x] 2026-11-25 |
 | U3 | Tests of what is new, each proven to bite | `fg presuite` | [x] 2026-11-25 |
 | U3b | The finger icon on the split button: candidates, then the owner's choice (D11) | `fg presuite` after the choice | [ ] |
 | U4 | Object-list views (Children, Instances, Subclasses) and the chooser (D12); the owner's A2, A5, A6, the naming rule, a taller window | `fg gauntlet` + `fg homepage` | [x] 2026-11-25 |
-| U5 | Docs, BACKLOG, churn set, close | `fg gauntlet` | [ ] |
+| U5 | Docs, BACKLOG, churn set, close | `fg gauntlet` | [x] 2026-11-25 |
 
 ### U0. Orient (0.5 hour)
 
@@ -2294,6 +2299,41 @@ checks changed:
    the owner, and its `docs/BACKLOG.md` section keeps U3b's line; the `git mv` to `docs/archive/`, its status
    stamp and its `archive/INDEX.md` line wait for U3b's close.
 
+**Landed 2026-11-25 (U5 of the inspector-overhaul loop).** The loop commits and pushes each unit under its grant, so
+step 4's wait for approval did not apply; the rest as the steps say:
+- **Docs:** every doc of §7.4 read against the tree U4 left, by a read-only pass that drafted exact replacements,
+  each read before it was applied: the two passages stale from before U2 (the checks index's [O] row and its
+  constants; the duplicate finder's `meta/*Inspector*`), `layout.md` (a member editor among an inspector's views),
+  `visual-design-system.md` (no "Own props only" toggle on a class's prototype; when a header holds a class chip),
+  `design-principles.md` (a count of classes, and "compiled in the browser at boot", true of the dev build only),
+  and one miss of U4's in `MACRO-PATTERNS.md` (a third inspector's widening still told as by the editor's least
+  width). The sweep of the living corpus for the names this arc deleted came back empty.
+- **The build explainer's partition figure**, re-measured whole (each part's own source, by `parts.json`'s `dirs`):
+  its labels were of 2026-08, and it drew 21 parts where the partition has 19. Its timeline says an inspector's
+  opening fetches the meta-tools part with the reflective layer, and gives no size.
+- **The churn set**, re-derived: the tests it held and the three of U3 and U4 whose pictures show a member list
+  (`macroInspectorDrillWidensItsWindow`, `macroInspectorSplitMovesByDividerAndByButton`,
+  `macroInspectorChildrenViewWalksTheWidgetTree`), the set predicted before the run; its prose, in three files,
+  says one tool.
+- **`docs/BACKLOG.md`:** what the arc leaves open is filed under this plan's section, each bold-titled line's text
+  in `## BACKLOG detail` below, the low items nobody reaches noted in the ledger. Two rulings on the draft: the Save
+  of a value whose shown text is not code is a ⛔ line of its own here (the draft had stretched an archived plan's
+  line to hold it); the engine's two divisions by zero are filed, not only noted.
+- **One defect the review page's pictures found, fixed here by the owner's word:** a refusal's bubble read "Color
+  is a member already…" for the name `color`: a pop-up shows its message with its first character a capital, and
+  a member's name is case-sensitive. The owner ruled the name quoted (2026-11-25), so the three messages of the
+  tool that start with a member's name quote it (the answered name's refusal, `constructor`'s, a class member's
+  copy refused for want of a source), and `macroInspectorDuplicateCopiesAMember` holds what the bubble shows,
+  seen failing under the sentence without its quotes. The one other message in the tree that starts with a value
+  ("Show selection"'s result) is filed.
+- **The owner's review page** (the loop's scratch, `review/review.html`): the built tool beside each frame of the
+  storyboard after the same gesture, by real presses, keys and touches, each difference with its reason; what the
+  storyboard did not show; what is for a second look; what is filed.
+- **The plan stays in `docs/plans/`:** U3b, the finger icon, waits for the owner.
+- **Evidence:** the churn set's derivation equal to its prediction; the fix's two tests green alone under both
+  pointers, its new line failing under each of its two plants; `fg gauntlet` OK on the whole (all 20 legs in wave,
+  1831 s), the failing set the predicted EMPTY one; `fg homepage` OK.
+
 ---
 
 ## 7. Touch-lists (complete as of 2026-11-24)
@@ -2637,6 +2677,194 @@ byte-identical-not-sacred-for-benign-inspector-recapture, fizzygum-macro-test-sy
 
 ---
 
+## BACKLOG detail (open items, moved from docs/BACKLOG.md)
+
+### "Pick up" of a cell of a plain holder's division stack leaves the other cells where they stood
+
+Measured 2026-11-25 during U3 (`Fizzygum-tests/.scratch/inspector-overhaul-loop/u3/probes/pickup-stale-layout-isolation-prelude.js`),
+a core defect older than this plan: a plain `RectangleWdgt` holding three division cells, "Pick up" fired from the
+middle cell's developer menu, keeps the third cell at +200 through `world.recalculateLayouts()`; only the holder's
+`_invalidateLayout()` moves it to +150 ("Destroy" of the same cell moves it at once). On an inspector it shows as the
+header's title standing at +52 beside a 44 px hole, between a split button's pick-up and the row's next reconcile.
+The cause, read in the source: `ActivePointerWdgt.grab` runs `aWdgt._beforeBeingGrabbed()` inside its settle, and
+`Widget._beforeBeingGrabbed` is `@_unlockFromPanels()` then `@_setLayoutSpec undefined`, which marks nothing; the
+hand's add (`Widget._addNoSettle`) then asks the old holder `_invalidateLayout(aWdgt)` with the widget already
+free-floating (its comment counts on reading the OLD spec there, which the grab has already cleared), and the
+free-floating skip returns unless the holder defines `_reLayoutChildren`: a stack panel, a window or a viewport
+re-lays, a plain holder's division stack or a band does not. `ActivePointerWdgt.grab`'s comment says the release
+"marks the widget AND the holder chain it is leaving"; the code does not. The fix: the holder marked in
+`_beforeBeingGrabbed` while the spec still says the widget takes space in it, in a core gesture path every pick-up
+runs, so the suite's pixels are predicted first. Reachable through any such cell's menu, medium-low. By the owner's
+ruling C1 (2026-11-25) it is its own piece of work, right after the inspector-overhaul loop.
+
+### A long list takes seconds to paint
+
+Measured 2026-11-25 by U4's browser probe: a press on `Widget.prototype`'s Instances view lists 1000 rows (the cut both
+lists share, `MemberListWdgt.MOST_ITEMS_LISTED`) and costs long tasks of about 7 s and 2 s, the painting of a
+1000-row list; a 1000-row member list re-filtered costs 4.4 s too, so the cost is a long list's, not the new view's.
+The ways out: a lower cut, or rows built as they scroll in. Reachable, medium.
+
+### A Save of a value whose shown text is not code fails with no word
+
+Met by U4's browser probe on 2026-11-25, and older than this plan: a member editor shows a VALUE by its printed
+form (`MemberRef.shownText`), a Color as `rgb(80,80,80)`, which is not code. Edited and Saved, nothing is saved and
+nothing says why: `Widget._savingTypedCode` reports compile errors only, and the run's `ReferenceError` reaches the
+console as an `INPUT_ERROR`. It is of one family with the ⛔ line "A function held with no kept source shows
+compiled JavaScript in an editable CoffeeScript pane" (what an editor shows is not always code its Save can take).
+Two ways out, the owner's to choose: a value shown as code that evaluates, or a Save that says why it failed.
+Reachable, medium.
+
+### A widget whose constructor throws stays registered in its classes' `instances`
+
+Read during U4, while its source review's finding about a view that cannot be built was fixed: `Widget`'s constructor registers the new widget in the `instances` of each class up its chain
+(`registerThisInstance`) before a subclass's constructor builds its children, so a widget whose build throws in a
+person's own code stays registered, alive and held by nothing. 29 classes build in their constructors, `ListWdgt`,
+`InspectorWdgt` and `InspectorRowWdgt` among them; it is reachable since U2 through a member whose value throws as it
+is shown. One rule of the base, for every constructor that builds its children, would answer it; `ObjectListWdgt`
+alone guards its own build, because a view switch recovers from it (§5.11). Reachable, medium-low.
+
+### A division row whose cells all desire 0 width divides by zero
+
+Read in the engine during U2 (the plan's risk R4) and not reached by anything the inspector builds: a division row
+whose elements all desire 0 width divides by zero in `StackLayoutEngine.arrange`'s third regime (`desC /
+totDesired`), and a row whose least widths sum to 0, laid out at width 0, does too in its first regime (`availMain /
+minMain`: a band holding only a spring, at width 0). Either would hand its cells NaN sizes (the suite's
+`NON_FINITE_GEOMETRY` token). A band of the inspector keeps an inset and a spring desires 1, so no band the tool
+builds gets there, and no person's way to either state was found; it is filed because the engine is core and every
+division stack runs it.
+
+### The run-sequence self-test reads its stuck-page case as NOT RUN under load
+
+Seen in two gauntlets of the inspector-overhaul loop (U3's and U4's second): under a loaded machine,
+`Fizzygum-tests/scripts/run-sequence-selftest-headless.js` reads its case "the page stopping answering as the
+sequence starts" (the `STUCK` plant, run with `completeSecs: 1`) as NOT RUN where the case plants INVALID, so the
+gauntlet's `selftests` leg fails in its wave and passes on its serial retry (a load-flake warning). A race in that
+self-test's own timing; the gate it proves is sound. The fix: the case waits for the state it plants instead of a
+time. Low by its reach; filed because a leg that flakes is filed whatever its reach.
+
+### "Edit layout" slots stay on an inspector row after a choice
+
+As built (§5.4, the row's reconcile): "Edit layout" on a row of inspectors puts the layout scaffold's adders around
+its cells (`Widget.editLayout`, `_addOrRemoveAdders`), and each choice leaves behind the adders that flanked an
+inspector it destroyed, the window widened by their width. By the owner's ruling A1 (2026-11-25) it is filed, not
+fixed in the inspector: the fix belongs to the "Edit layout" mechanism. Reachable in dev mode (a row's context
+menu), low.
+
+### A window does not honour its content's least size
+
+As built (§5.4): nothing stops a window being made narrower than its content's least width, by its grip or by a
+document's column cap (which the window keeps after it leaves the document). A row of inspectors then shrinks every
+cell below its own least (`StackLayoutEngine`'s under-min regime), buttons narrower than their labels. By the owner's
+ruling A3 (2026-11-25) the row leaves it so, and "a window honours its content's least size" is filed as a feature
+for every window, not as the inspector's own. Reachable.
+
+### A member editor has no visible "open the value" control
+
+As built (§5.6): the first click of a double-click chooses the member, whose editor narrows a lone full-width member
+list to 372 px, so a second click right of x 372 lands on the splitter or the editor, and the double-click shows the
+member's editor, not its value (a double-click on the NAME is unaffected). By the owner's ruling A4 (2026-11-25) it
+stays so, and a visible "open the value" control in the member editor's header is filed as an idea.
+
+### An object list's row does not highlight the widget it names
+
+An idea, filed with the owner's rulings of 2026-11-25 (U4's preparation): the widget a row of a Children or
+Instances list (`ObjectListWdgt`) names is not highlighted while the pointer is over that row; a hover highlight of
+it. Nothing is built.
+
+### A holder keeps no place for its slack taker
+
+Found by U2's first review (read): a header band whose title a person picks out (its developer menu's "Pick up")
+stretches its controls, and a member list whose list is picked out stretches its bands. A band's title is the text
+that gives (its spring), and a division stack hands all its spare to its cells by their desired sizes when none has
+a margin (`StackLayoutEngine.arrange`'s third regime), so once the cell that took the slack has left, the controls
+take it. An inspector keeps the place of a view a person takes out (`InspectorWdgt.viewsPlace`, a spring with the
+view's desired width and no least width); the same rule one level down, a holder keeping the place of its slack
+taker, would answer both. Reachable in dev mode.
+
+### An inspector attached into a row is not reconciled at once
+
+Found by U2's first review (read): an inspector a person attaches into a row of inspectors (its developer menu's
+"Attach") is not reconciled (the reconcile that stands a splitter between two inspectors and derives each one's split
+button, §5.4) until the row's next choice or until something leaves the row, and one attached free-floating counts as
+a cell. Reachable in dev mode, low.
+
+### A view attached back onto its inspector shares the height with its place
+
+Found by U2's first review (read): a view a person took out of its inspector and attaches back onto it stands beside
+the place the inspector kept for it (`InspectorWdgt.viewsPlace`, a spring of its stack), and the two share the
+column's height. Reachable in dev mode, low.
+
+### A row whose only inspector was picked up stays a blank window titled "Inspector"
+
+Found by U2's first review (read): "Pick up" of the one inspector of a row leaves its window holding an empty row,
+titled by the row's fallback name (`InspectorRowWdgt.colloquialName`: "Inspector"). Reachable in dev mode, low.
+
+### A split button in a header band a person rotates maps its pointer in another plane
+
+Found by U2's first review (read): a split button (`SplitGripWdgt`) whose header band a person rotates (a halo's
+rotate) maps its drag's pointer in another plane than the band's. Reachable in dev mode, low.
+
+### A double-click in a list standing in no row cannot complete
+
+Found by U2's first review (read): a member list a person picked out of its inspector stands in no row, so its first
+click opens the chosen member in a window of its own (`InspectorRowWdgt.showChoice`: a chooser in no row opens the
+subject in a window of its own), and a double-click there cannot complete. The family of the owner's A4 (a
+double-click a lone list's narrowing cuts short). Reachable in dev mode, low.
+
+### Unsaved typing that a re-filter takes away cannot be undone
+
+Found by U2's second review (read): a filter toggle of a member list rebuilds its list and removes the member editor
+standing on its right, so the member chosen again opens a fresh editor with a fresh undo history
+(`MemberEditorWdgt`'s header: another editor has a history of its own), and text typed there and not saved is gone
+with no undo. Ruled so in U2's preparation (the pane was emptied by a re-filter before U2 too, where its history
+survived), and stated in no doc. Reachable, low.
+
+### A split button dropped on the desktop takes no drag
+
+Found by U3's review: a split button a person picks out of its header and drops on the desktop takes no drag (it
+moves a split only for the inspector that holds it as its lead, §5.10, and is inert anywhere else), so only its
+developer menu removes it. Reachable in dev mode, low.
+
+### The scroll thumb of a 1000-row list is a dot about 3 px long
+
+Found by U3's review: a list cut at 1000 rows (a plain array of 1200 items; `Widget.prototype`'s Instances) shows a
+scroll thumb about 3 px long: a viewport's thumb has no least length. Reachable, low.
+
+### `CommandPanelWdgt.rowLabelsNaming` can number a row onto another widget's own name
+
+Found by U3's review (read): the house rule numbers alike rows ("Rectangle", "Rectangle 2"), and a third widget whose
+own name is "Rectangle 2" then reads like the numbered one: "Rectangle 2" twice. It reaches every hierarchy menu,
+chooser and Children list. An object list resolves a row by its place, so each such row still opens its own object;
+`SystemTest_macroInspectorChildrenViewWalksTheWidgetTree` asserts the two alike labels, so its line moves when the
+gap is closed. Reachable, low.
+
+### "Show selection" shows its result with a capital first letter
+
+Read on 2026-11-25, in the sweep that followed the refusal bubble's capitalised name (U5): `TextWdgt.showSelection`
+hands the value a person's typed code returns straight to `@inform`, and a pop-up shows its message as a sentence,
+its first character a capital (`FrameWdgt._titleDisplayCase`). A result that is a string in lower case, `color`,
+reads "Color": a value shown as if it were a sentence. The inspector's three messages that start with a member's
+name quote it (`MemberListWdgt._refusesAsAnAnsweredName` says the rule); a result is not a name, so what it should
+wear (quotes, or a message shown as it is) is a call of its own. `SliderWdgt`'s `@inform @value` shows a number,
+which has no capital. Reachable (any code pane's "Show selection"), low.
+
+### The refusal bubble's "new member" draws its space about 2 px wide
+
+Seen in U4's browser probe (a note on its look): the refusal bubble that Add…, Duplicate… and Rename… show for a name the subject already
+answers (owned or inherited, §5.6) draws the space of its "new member" about 2 px wide. Reachable, low.
+
+### An inspector keeps naming a part a person destroyed
+
+Found by U4's source review (read): an inspector's `chooser` and `viewToggles` keep naming the band and its toggles after a
+person destroys one (a toggle's developer menu, "Destroy"), as `header` and `classChip` do, so a world snapshot
+walks into the destroyed part. Reachable in dev mode, low.
+
+### A pinned "Add…" prompt outlives its member list
+
+Found by U4's source review by reading, not reproduced: an "Add…" prompt a person pins outlives the member list a view switch destroys (and,
+since U2, the one a choice on the inspector's left destroys); its OK then adds the member and builds a list into the
+destroyed view. Reachable, low.
+
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change — CLOSED 2026-11-24 (inspector-overhaul loop, U1): the two classes landed under the old inspectors, each inspector class choosing its ref (`_memberRefOf`); presuite's failing set empty as predicted, no reference changed.
@@ -2644,3 +2872,31 @@ byte-identical-not-sacred-for-benign-inspector-recapture, fizzygum-macro-test-sy
 - [x] U2: the switch — the row, the rewritten inspector, the member list and editor, the split button; 32 tests and the rigs ported; recapture — CLOSED 2026-11-25 (inspector-overhaul loop, U2): one tool, `InspectorRowWdgt`, a division row of `InspectorWdgt`s each with a `MemberListWdgt` or a `MemberEditorWdgt`, on `BandWdgt`s, with a splitter and a 44 × 44 split button (`SplitGripWdgt`) between two; `ClassInspectorWdgt`, the breadcrumb and the corner chain deleted; the 32 tests ported (six renamed) and the menu sweep, serialization, boot-smoke and parts rigs with them; the suite's failing set equalled the predicted one (16 tests, 46 shots) under mouse and finger, 184 references recaptured. Its Landed paragraph (§6 U2) has what changed against the plan's first text.
 - [x] U3: tests of what is new (a drill, the widening, the split by divider and by button, Duplicate, a copy and a snapshot) — CLOSED 2026-11-25 (inspector-overhaul loop, U3): six new SystemTests, 42 assertions, each seen failing first under a plant on its own line (46 plants: the split and taken-out tests' 22 under both pointers, the others under the mouse), four shots; the copy and the snapshot were already pinned by U2's ports and the serialization rig, so no test repeats them; the menu sweep sweeps each part of an inspector where it stands (twelve roots, its prompt floor 77); a split button taken out of its header comes back at its row's next reconcile (`InspectorWdgt.splitGrip`, read off the header: it shows while it leads).
 - [x] U4: object-list views (Children, Instances, Subclasses) and the view chooser — CLOSED 2026-11-25 (inspector-overhaul loop, U4): an inspector offers more than one view through a chooser band of toggles (a widget: Members, Children; a class: Members, Instances, Subclasses); `ObjectListWdgt` lists objects it derives and never carries; the default window 760 × 528; and the owner's rulings of that day: a new editor's normal width at a widening, a body behind a part taken out, a drill only into an object or a class, Add… / Duplicate… / Rename… refusing a name the subject already answers; 19 tests' 50 shots recaptured, the predicted set; three new tests and the rulings' lines, each seen failing under a plant.
+- [x] U5: architecture docs, the churn set, close — CLOSED 2026-11-25 (inspector-overhaul loop, U5): what the arc leaves open is filed under the plan's BACKLOG section, each bold-titled line's text in `## BACKLOG detail`; the Inherited-filter line re-worded for one inspector tool; the low items nobody reaches noted below; the architecture docs, the churn set and the owner's review page as §6 U5's Landed paragraph says.
+
+Noted, not queued (filed by the inspector-overhaul loop's U5 from U2's, U3's and U4's reviews):
+
+- A member reference (`MemberRef`) cannot be inspected as an object (U2's first review).
+- An old one-class inspector's record (a file saved before U2) loads as a shell whose old controls throw at a
+  press; saved-world compatibility is owed nothing (the Mandate).
+- No toolkit locator finds a member editor that is its row's first inspector (U2's first review).
+- The menu sweep's `POPOUT_BUTTON_UNSWEPT` scans the member list's buttons only (U2's second review).
+- The serialization rig's `world.inspector.survivesSnapshot` counts the list's placeholder row in its `rows > 0`
+  (so it did before U2); the same check's pixel equality holds the restored list.
+- The rigs open their rows in 560 × 410 windows, not the default window (760 × 528).
+- A lone view saved in a file (a member list or an editor a person took out of its inspector) is probed by no rig
+  or test.
+- A world snapshot taken between a split button's pick-out and its row's next reconcile carries the stray button
+  (the same interval a view or a header a person took out has); the file holds what stood where the person left it.
+- No test drives "Destroy" of a split button (the menu sweep's probe did).
+- A Children list read while a halo stands lists the halo's handles (`childrenCarriedByCopiesAndSaves` carries
+  them); a real press takes the halo down first.
+- The five holders that cast only their box each override
+  `_fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow` with the same few lines (the four parts that
+  paint a body standing alone, §5.12, and `WidgetHolderWithCaptionWdgt`); a question of the base shadow pass would
+  answer them, but it would stand in every widget's paint path.
+- A class a person or a test makes at run time leaves its definition string in `window.classDefinitionAsJS` after
+  the class is removed (`Class.coffee`); nothing reads a removed class's string.
+- `docs/architecture/build-and-packaging.md` (where it says a lazy part needs only the meta-system) gives the reflective layer as
+  ≈1.9 MB of a tree of ≈2.5 MB, measured in 2026-08; by the measure the build explainer's partition figure uses,
+  the tree's own source is 4.3 MB on 2026-11-25. For the next docs audit.
