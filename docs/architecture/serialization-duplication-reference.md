@@ -103,8 +103,8 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   Widget-branch prototype is `instanceof Widget`, so the external-widget rule below would read it
   as a widget, and a non-widget one would be copied into an object posing as its class's prototype.
   (A class FUNCTION rides a copy uncopied, as every function does but a widget's injected method,
-  which the copy compiles afresh — §5's Functions — and a save names it by its class too.) A class inspector's subject is one, whichever door opened it (a `__super__` row, Inspect
-  selection, a breadcrumb chip).
+  which the copy compiles afresh — §5's Functions — and a save names it by its class too.) An inspector on a class has one as its subject, whichever door opened it (a class chip, a
+  `__super__` row, Inspect selection), and a class member's reference holds one (`ClassMemberRef.holder`).
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
   keep a live pointer, so this is where the well-known / error policy applies (§4). That is
@@ -327,9 +327,9 @@ and MEMOIZES one instance per class
 window lives in the world's app-window registry (`world.appWindows`, keyed by class name), not on the app (§11).
 
 **The class keys.** A class, and its own prototype, belong to the PAGE rather than to the
-world: every page holding the class has them. A widget pointing at one (a class inspector's
-subject is a class's prototype, which a `__super__` row and Inspect selection open in it too; an
-object inspector can be opened on a class function) writes `"class:<Name>"` / `"prototype:<Name>"`, and the load
+world: every page holding the class has them. A widget pointing at one (an inspector on a class
+has its prototype as its subject, which a class chip, a `__super__` row and Inspect selection open; a class
+member's reference holds it, `ClassMemberRef.holder`; and an inspector can be opened on a class function too) writes `"class:<Name>"` / `"prototype:<Name>"`, and the load
 binds the key through `classNamed` to the LOADING page's class, with the file's class-scope edits
 replayed onto it first (§12). A record of the prototype's members
 would restore as a fake instance, and its methods have no source a file can carry.
@@ -346,8 +346,8 @@ would restore as a fake instance, and its methods have no source a file can carr
   record classes and both kinds of key, which the lazy-part pre-load reads too (§9), so a class a
   lazy part provides is loaded before the restore rather than refused.
 - A BUILT-IN class's prototype (a number's `Number`) is not a Fizzygum class, has no key, and is
-  refused like any other unrecognized value. So an inspector's breadcrumb chips hold class NAMES,
-  never the links.
+  refused like any other unrecognized value. So an inspector's class chip holds no
+  class at all: its face is the class's name, and its press asks for the class (`InspectorWdgt._classAbove`).
 
 The link is symbolic and reconstructable — it preserves identity, which a bare opaque
 `"$EXTERNAL"` marker cannot.
@@ -538,7 +538,7 @@ NAMED like one.
     function faithfully — a closure over a run's locals, a native, a class member's body — so this is
     where a function a person's RUN left in state (`@f = -> 42`, `Widget.evaluateString`) ends: the
     refusal names the widget holding it, and its remedy names the person's gestures first — for a
-    function held directly in a widget's field, an object inspector's Remove, or its Save as
+    function held directly in a widget's field, an inspector's Remove, or its member editor's Save as
     CoffeeScript, which keeps the source and rides as `{"$src"}`; for one held deeper (in an array,
     a Map, a Set or a plain object), the Remove of the field that follows the last widget its path
     names — then the class's (`@serializationTransients`, for a field its own code sets). A
@@ -715,8 +715,8 @@ for the next thing, for the door to RE-ENTER its load on, one thing per trip:
    fails the load, as one a widget needs does;
 2. then the reflective layer, when `Deserializer._needsTheReflectiveLayer` says the file needs it: it
    is absent but can load, and the file carries class-scope source edits (§12) or holds a
-   widget whose class declares `readsClassMemberMaps` — `InspectorWdgt`, which shows and edits a
-   member's recorded source, and before the layer would show compiled JS. That declaration is read off
+   widget whose class declares `readsClassMemberMaps` — an inspector and its views (`InspectorWdgt`,
+   `MemberListWdgt`, `MemberEditorWdgt`), which show and edit a member's recorded source, and before the layer would show compiled JS. That declaration is read off
    the resident class, which is why it is asked on the trip after the parts.
 A failed load rejects with a load `SerializationError` naming what did not arrive, which the file door
 reports (§10). `parts-snapshot-load-headless.js` holds the parts half on the dev `index.html`
@@ -875,7 +875,7 @@ source-edit notice):
      takes too), one bail-out-then-re-enter per thing: the LAZY PARTS owning the classes
      `Deserializer.classNamesIn` lists and the classes its class-scope source edits name
      (`SourceEditsRegistry.namesOfTheCodeEditedIn`), then the reflective layer when the file carries
-     class-scope source edits or holds an inspector (`readsClassMemberMaps`). It sits after the confirm
+     class-scope source edits or holds an inspector or one of its views (`readsClassMemberMaps`). It sits after the confirm
      so the user is asked exactly once (the re-entry passes `skipConfirm` for that reason and no
      other). A part that fails to load rejects with a load `SerializationError`, the desktop as it was,
      and the file door reports it (§10). A build that can NEVER load the layer (`sources: "none"`) does
@@ -973,33 +973,31 @@ gesture drives (a meta-object or a meta-verb edits, telling no one and recording
 once, by a world load: a member of the page it could not return to boot that the loaded world still runs is
 recorded as that member's edit would have been (`recordMembersStillRunning`, §11):
 
-- **instance** — the object inspector's Save (its member reference's step, `MemberRef.save`) records
+- **instance** — a member editor's Save on an object's member (its member reference's step, `MemberRef.save`) records
   `recordInstanceEdit(widget, name, txt)` when the value it saves is a function.
   `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
   (a paint surface taking up its tool, `CanvasGlassTopWdgt._takeUpToolInReach`) and a load re-injects each `{"$src"}` through
   it, none of them an edit a person made. Instance edits ALSO ride serialization on their own: the
   injected function keeps its source → `{"$src"}` → re-injected on restore (§5). The registry
   adds auditability.
-- **class** — the class inspector's class edit step (`ClassMemberRef._editClassMember`)
-  edits through `Class.applyMemberEdit` and records `recordClassEdit(prototype, name, txt)` (its
-  `holder`, the class inspector's subject, is the class prototype — the link of the inspected object's own prototype
-  chain whose constructor bears the chip's name, `InspectorWdgt._classChainLinks`), for EVERY
+- **class** — a class member's edit step (`ClassMemberRef._editClassMember`, which an inspector's Save, Add…,
+  Duplicate… and Rename… of a class's member reach) edits through `Class.applyMemberEdit` and records
+  `recordClassEdit(prototype, name, txt)` (its `holder` is the class prototype: `MemberRef.of` makes a
+  `ClassMemberRef` for a Fizzygum class's prototype and for nothing else), for EVERY
   member kind, methods and fields alike; its class removal step (`_removeClassMember`) removes
   through `Class.removeMember` and records `recordClassMemberRemoval(prototype, name)`, a
   `deleted: true` record. This is the ESSENTIAL case: a prototype edit mutates the live class
   but leaves no other serializable trace (§2.7).
 
-In the class scope an ADD is an edit whose source is `"undefined"`, and a RENAME is
-two records — an edit under the new name, then a removal of the old — so a renamed member is
-recompiled under its new name on replay as it was live. Each step makes the edit AND its record
-(`ClassMemberRef`, one step per operation), so no gesture of the class inspector
-changes a prototype unrecorded. And no other inspector changes one at all: every door that hands
-an inspector an arbitrary value opens a class's prototype in its class inspector
-(`InspectorWdgt.inspectorClassFor`: the member row's double-click, `Widget.spawnInspector`), and an
-object inspector that holds one anyway (built by code, or from a file) is read-only — a prototype
-answers the instance edit protocol only through inheritance (`InspectorWdgt._subjectIsEditable`), and
-its edit gestures ask that too, since a restored inspector keeps the buttons its file holds.
-The class inspector edits the prototype of ANY Fizzygum class, a value class's included. Replay is EXACT because the live state is a function of one store: each `Class`
+In the class scope an ADD is an edit whose source is `"undefined"`, a DUPLICATE one edit under the new
+name of the member's recorded source, and a RENAME is two records — an edit under the new name, then a removal of
+the old — so a renamed member is recompiled under its new name on replay as it was live. Each step makes the edit
+AND its record (`ClassMemberRef`, one step per operation), so no gesture changes a prototype unrecorded. And no
+gesture edits one as an object: which reference a member gets is decided by its holder, in one place
+(`MemberRef.of`: a Fizzygum class's prototype gets a `ClassMemberRef`, whatever door showed it), and every edit
+gesture asks whether its subject's members are edited at all (`MemberRef.canEdit`), since a restored list or editor
+keeps the buttons its file holds. A `ClassMemberRef` edits the prototype of ANY Fizzygum class, a value class's
+included. Replay is EXACT because the live state is a function of one store: each `Class`
 keeps the CURRENT source of every member it defines (an edit writes it, a removal deletes it),
 and its prototype holds the member its store defines; after a removal its instances read the
 member its superclass holds, if any, as if it had never defined it (`Class.removeMember`;
@@ -1023,7 +1021,7 @@ BEFORE deserialization** (`replayClassEdits`), so a shell (`Object.create(protot
 edited methods; an edit that no longer compiles is logged, not fatal. The return answers how many
 members it returned and which it left; the replay answers how many records it applied; and when any
 member returned or any record applied, the load tells the world its code changed
-(`WorldWdgt.noteCodeChanged`, the class inspector's own notification): a load KEEPS its world, and
+(`WorldWdgt.noteCodeChanged`, a class member edit's own notification): a load KEEPS its world, and
 with it every cache the old code filled — measured lines, line breaks, immutable back buffers,
 each keyed by content — so a page that already showed the edited class's widgets would otherwise
 re-show the old code's look, one file making two worlds. The return to boot and the replay are
@@ -1041,7 +1039,8 @@ member the load could not return that the loaded world still runs as the page ed
 deserialize, with the rest of the world. A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session by
 `serialization-roundtrip-headless.js`'s source-edit leg (`sourceEdits.*`): an `injectProperty`
-method edit, and the class inspector's add, save, rename and remove of a class's own member, and
+method edit, and the add, save, rename and remove of a class's own member (`ClassMemberRef`'s steps, which an
+inspector's gestures take), and
 of a body member never edited (its rename recompiled so `super` follows it), each hold in a fresh
 page exactly as the editing page left them; and a page that already showed a text before loading a file carrying a
 class edit of it shows exactly what the fresh page shows (`sourceEdits.warmLoadEqualsColdLoad`).

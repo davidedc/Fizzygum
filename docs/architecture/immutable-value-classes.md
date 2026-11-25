@@ -29,16 +29,16 @@ Consequences, all load-bearing:
   violation) and no grep-gate (plain `{x,y}` literals — e.g. `WorldWdgt.getCanvasPosition`'s
   deliberately-mutable result — are idiomatic and indistinguishable to grep).
 - **The CLASS is live-editable; its instances are not.** Immutability is about a value's
-  fields, not its class's code: a value class's members are edited in its class inspector as any
+  fields, not its class's code: a value class's members are edited in an inspector on its class, as any
   class's are (`Class.applyMemberEdit`, recorded and replayed by a world snapshot,
   `serialization-duplication-reference.md` §12), and its existing instances run the edited member
   at once, and every widget hears that code changed, as for any class edit
-  (`WorldWdgt.noteCodeChanged`, the class inspector's one notification), since any of them may paint with it. So a value
+  (`WorldWdgt.noteCodeChanged`, a class member edit's one notification), since any of them may paint with it. So a value
   keeps no copy of what its own code derives from its fields — `Color.toString` builds its string on
   every call — because a copy on the instance is out of the notification's reach: it would keep
   answering what the old code computed. A cache of such a derivation, if one is ever needed, is ONE
-  container the class holds and `noteCodeChanged` empties. An object
-  inspector on a value INSTANCE stays read-only: a value services no instance edit protocol.
+  container the class holds and `noteCodeChanged` empties. An
+  inspector on a value INSTANCE stays read-only: a value services no instance edit protocol (`MemberRef.canEdit`).
 
 ## 2. The shortcut rule (canonical instances)
 
@@ -149,8 +149,9 @@ immutable — inert strings, but they are METHOD NAMES resolved late against a l
 never stored, so nothing serializes or duplicates it, and it deliberately has no `equals`
 because the equality a value class usually needs is the dataflow cutoff's and this never rides
 an edge as a value), `MemberRef` and its subclass `ClassMemberRef` (SHALLOWLY immutable — `holder`
-is a live object, `name` a member's name; an inspector makes one for the gesture that needs it and
-drops it, so nothing serializes or duplicates it), `SheetError`
+is a live object, `name` a member's name; a member editor holds one, and an inspector on one member has it as its
+subject, so a copy and a save carry it as an ordinary object of its class: it declares no
+`keptByReferenceOnDeepCopy`, since a copy taken together with its holder must point at the COPIED holder), `SheetError`
 (spec §9.5 purity law), `Macro` (with one sanctioned lazy memo, `_linkedCode`, filled by
 `linkTo`), `Grid3D`/`PlaneGrid3D` (index arrays are built before
 construction), the `InputEvent` family (events are values; `WheelInputEvent.fromBrowserEvent`

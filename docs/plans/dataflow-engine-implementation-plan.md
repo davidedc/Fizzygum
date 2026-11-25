@@ -938,7 +938,7 @@ classify→present chain), `SheetCellRecord._cacheValue` (the reconcile trigger)
   `macroInspectorRejectsDrops`, `macroInspectorResizingOKEvenWhenTakenApart`,
   `macroInspectorScrollbarUnplugged`, `macroMovingSlidersSidewaysDoesntCauseContentToMoveSideways`,
   `macroMultilineTextInputScrollsWell`, `macroPickingUpPartsFromInspector`,
-  `macroResizingPristineInspector`, `macroSimpleDocumentHandlesOldInspector`,
+  `macroResizingPristineInspector`, `macroSimpleDocumentHandlesInspector`,
   `macroWrappingTextFieldResizesOK` recaptured (pixel-only; verified deterministic + eyeballed).
   **One test, `macroAddEditSaveRenameRemoveProperty`, also needed a test-logic fix** (NOT a source
   change): its `selectInspectorRow` scrolls the vBar by a fraction of `elements.length`, so the +5
@@ -1116,7 +1116,7 @@ fixes + benign recaptures**, not the "flip + recapture" scoped above (deviation,
   InspectorResizingOKEvenWhenTakenApart (also re-renders `_fireConnection`'s edited source),
   InspectorScrollbarUnplugged, MovingSlidersSidewaysDoesntCauseContentToMoveSideways,
   MultilineTextInputScrollsWell, PickingUpPartsFromInspector, ResizingPristineInspector,
-  SimpleDocumentHandlesOldInspector, WrappingTextFieldResizesOK. NO code contortion (calling
+  SimpleDocumentHandlesInspector, WrappingTextFieldResizesOK. NO code contortion (calling
   `world._editNoSettle` directly to dodge them was rejected: it drops `edit()`'s fit→inline /
   overflow→popup dispatch).
 - **Verification:** `fg build` 0 violations; `fg gauntlet` dpr1/dpr2/webkit **181/0** + apps +

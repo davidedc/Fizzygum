@@ -208,19 +208,16 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     else
       new Rectangle (new Point box.left() + endInset, box.bottom() - edgeInset - thickness), (new Point box.right() - spaceToLeaveOnOneSide - endInset, box.bottom() - edgeInset)
 
-  # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. A
-  # resizer over the corner takes the room IT names (its cornerFootprint: a naked inspector's handle
-  # its side; never less than a fat bar); failing that, my other bar takes its thickness where it
-  # crosses; with neither, the corner is free and the bar runs right to it. Both are asked of
-  # STRUCTURE, never of geometry or visibility, which the passes that read this are still laying
-  # out: the other bar by the overflow its showing derives from, the resizer by climbing the corner
-  # chain (_resizerOverMyCorner). The margin along my run is no part of the reserve: a thin bar gives
-  # it up at both ends of its run (_indicatorEndInsetFor), and a fat one keeps the run a press meets,
-  # so the two fat bars meet at my corner.
+  # How far a bar of mine stops short of my bottom-right corner: as far as what sits there needs. My
+  # other bar takes its thickness where it crosses; without it, the corner is free and the bar runs
+  # right to it. Asked of STRUCTURE, never of geometry or visibility, which the passes that read this
+  # are still laying out: the other bar by the overflow its showing derives from. A window's grip is
+  # no such occupant: it lies in the window's grip strip, below everything the window holds. The
+  # margin along my run is no part of the reserve: a thin bar gives it up at both ends of its run
+  # (_indicatorEndInsetFor), and a fat one keeps the run a press meets, so the two fat bars meet at my
+  # corner.
   _cornerReserveFor: (bar) ->
-    resizer = @_resizerOverMyCorner()
-    if resizer? then Math.max @_fullBarThickness(), resizer.cornerFootprint()
-    else if @_otherBarCrossesMyCorner bar then @_fullBarThickness()
+    if @_otherBarCrossesMyCorner bar then @_fullBarThickness()
     else 0
 
   # Does my OTHER bar cross my bottom-right corner? Whenever it is mine to place and my content
@@ -230,28 +227,6 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     other = if bar is @vBar then @hBar else @vBar
     return false  unless other? and other.parent is @ and other.isWiredTo?(@)
     @_scrollAxisOverflows other
-
-  # The RESIZER that sits over my bottom-right corner, or undefined when none does. Every container
-  # that runs a child out to its own bottom-right corner says which (bottomRightCornerReachedBy), so
-  # I climb for as long as I am, or am inside, such a child, and the first container on the way whose
-  # resizer would show answers with that resizer (HandleWdgt.wouldShow: what its showing derives
-  # from, not whether it shows yet). A container that names nobody ends the climb. I name nobody
-  # myself: what I show scrolls under my corner.
-  _resizerOverMyCorner: ->
-    child = @
-    container = @parent
-    while container?.bottomRightCornerReachedBy?(child)
-      return container.resizer  if container.resizer?.wouldShow?()
-      child = container
-      container = container.parent
-    undefined
-
-  # What occupies a corner I reach may have changed -- its resizer came or went
-  # (HandleWdgt.updateVisibility), which tells every host of scroll indicators down that corner chain
-  # (Widget.noteCornerChainChanged) -- so my bars must re-lay to the reserve the corner now asks of
-  # them: my arrange is where they are laid, so I schedule it.
-  noteCornerResizerChanged: ->
-    @_scheduleRelayoutRespectingPhase()
 
   # The SCREEN box in which a pointer ARRIVING at one of my bars finds that bar's button. A thin
   # indicator is intangible, and the arrival — a finger's own down, a mouse's approach — fattens it

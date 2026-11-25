@@ -59,8 +59,13 @@ class DivisionStackLayoutSpec extends LayoutSpec
   isDivisionElement: ->
     true
 
-  # Spreadability sugar: a preset distance between desired and max —
-  # setMinAndMaxBoundsAndSpreadability computes max = desired + spreadability·desired/100.
+  # Spreadability sugar: a preset distance between desired and max, as a percentage of the desired
+  # size: max = desired + spreadability·desired/100. maxFor is the ONE statement of that arithmetic:
+  # setMinAndMaxBoundsAndSpreadability writes what it answers into a box, and a holder that must know
+  # what a box it would give holds (an inspector's default most width) asks it, never a copy of it.
+  @maxFor: (desired, spreadability) ->
+    desired + spreadability * desired/100
+
   @SPREADABILITY_HANDLES: 1
   @SPREADABILITY_NONE: 10
   @SPREADABILITY_MEDIUM: 1000

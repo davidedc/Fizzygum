@@ -2,7 +2,7 @@
 
 # The FOOTER BAND -- the row of buttons a window's content ends in -- as ONE geometry, class-side
 # only, never instantiated. Its hosts (CodeAreaWdgt's family: the code prompt, the script window,
-# the console and the error log; and BinWdgt) each place their pane above the band and ask me for
+# the console, the error log and a member editor; and BinWdgt) each place their pane above the band and ask me for
 # the rest. The numbers are the draft's (docs/archive/redesign/desktop-canvas.html, the inspector's
 # footer), all of them Theme metrics.
 #
@@ -14,9 +14,8 @@
 #   - below the rule, every button at its own extent -- a button sizes itself (preferredExtent),
 #     and the band never shrinks or wraps one -- centred down the rest of the band, floored;
 #   - a LEFT group from footerInset in, footerGap apart, and a RIGHT group footerGap apart whose
-#     right edge lies footerInset short of the box's right edge, and further still by the clearance
-#     a host asks for when a resizer of its own stands over that corner (footerRightClearance, a
-#     naked inspector's). A window's grip asks for nothing: it lies in the grip strip below the band;
+#     right edge lies footerInset short of the box's right edge. A window's grip asks for nothing: it
+#     lies in the grip strip below the band;
 #   - when the box is too narrow for both, the right group starts footerGap after the left group
 #     ends (footerInset in, when there is no left group) instead of overlapping it, and whatever
 #     then runs past the box is clipped by the window.
@@ -37,10 +36,9 @@ class FooterBandLayout
     new Rectangle box.left(), top, box.right(), top + WorldWdgt.theme.footerRuleWidth
 
   # PURE: the bounds of every button in `box`, from the extents (Points) of the left group's
-  # buttons and of the right group's, each list in order, left to right, and the clearance the right
-  # group keeps past footerInset. Answers {left, right}: the two groups' bounds (Rectangles), in the
-  # same orders.
-  @buttonBoundsIn: (box, leftExtents, rightExtents, rightClearance) ->
+  # buttons and of the right group's, each list in order, left to right. Answers {left, right}: the
+  # two groups' bounds (Rectangles), in the same orders.
+  @buttonBoundsIn: (box, leftExtents, rightExtents) ->
     theme = WorldWdgt.theme
     rowTop = @topIn(box) + theme.footerRuleWidth
     rowHeight = theme.footerBandHeight - theme.footerRuleWidth
@@ -59,7 +57,7 @@ class FooterBandLayout
     rightWidth = 0
     rightWidth += extent.x for extent in rightExtents
     rightWidth += theme.footerGap * (rightExtents.length - 1) if rightExtents.length > 0
-    x = Math.max x, box.right() - theme.footerInset - rightClearance - rightWidth
+    x = Math.max x, box.right() - theme.footerInset - rightWidth
     right = []
     for extent in rightExtents
       right.push boundsAt x, extent
@@ -75,7 +73,7 @@ class FooterBandLayout
   @_arrange: (host, leftButtons, rightButtons) ->
     left = (button for button in leftButtons when button?.parent is host)
     right = (button for button in rightButtons when button?.parent is host)
-    bounds = @buttonBoundsIn host.bounds, (button.preferredExtent() for button in left), (button.preferredExtent() for button in right), (host.footerRightClearance?() ? 0)
+    bounds = @buttonBoundsIn host.bounds, (button.preferredExtent() for button in left), (button.preferredExtent() for button in right)
     for button, i in left
       button._reLayout bounds.left[i]
     for button, i in right

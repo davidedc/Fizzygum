@@ -331,7 +331,11 @@ not style. The family (`src/LayoutSpec.coffee` is the abstract base):
   which is what the divider's closed form rests on), axis-parameterized, one shared placement loop.
   LIFECYCLE: a per-widget KNOB (`Widget._divisionBox`, kept for the widget's whole life — a
   divider-tuned cell dragged out of its stack and back keeps its box), which doubles as the add-time
-  attachment: `holder.add w, layoutSpec: w.divisionBox('y')`.
+  attachment: `holder.add w, layoutSpec: w.divisionBox('y')`. A division stack runs ONE axis
+  (`Widget._divisionChildrenAxis`), so a widget attached into one ("Attach with horizontal layout",
+  `Widget.newParentChoiceWithHorizLayout`) joins it along the axis its cells already run, and starts an `'x'` row
+  only in a holder with no cell yet; a widget dropped on an "Edit layout" slot joins along that slot's axis
+  (`LayoutElementAdderOrDropletWdgt._reactToChildDropped`).
 - **`VerticalStackLayoutSpec`** — `desiredWidth` (the width wish, captured at placement) + `grow`
   (0..1 share of extra space) + `alignment`, with
   `width = round( min( availW, desiredWidth + grow·(availW − desiredWidth) ) )` — the content
@@ -412,9 +416,22 @@ family on `DivisionStackLayoutSpec`, `element` bound at `_ensureDivisionBox`; th
 like the "Layout in stack" submenu's, targets the cell and names its box by reader through
 `Widget.actOnLayoutKnobFromMenu`, so a copied pinned submenu drives the cell's real box), offered
 through the cell's own step, `Widget._addMyDivisionCellMenuEntries`, which the chrome
-(`LayoutChromeWdgt`: the size-adjusting divider, the spacer, the adder) overrides with nothing.
+(`LayoutChromeWdgt`: the size-adjusting divider, an inspector's split button, the spacer, the adder) overrides with
+nothing.
 A border layout is COMPOSITION, not an engine: a 'y' division stack whose middle cell is an 'x' row, dividers at the seams
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
+A TOOL is composition the same way. The inspector (`InspectorRowWdgt`) is an 'x' division row of inspectors with a
+splitter between each two, which the row derives from its inspectors itself
+(`InspectorRowWdgt._reconcileSplittersNoSettle`); each inspector (`InspectorWdgt`) a 'y' division stack of its header band over
+one view (a member list, a 'y' stack in turn: its bands around its list); each band (`BandWdgt`) an 'x' row of controls fixed at their own sizes, centred down it, with gaps
+(`BandSpaceWdgt`) and ONE piece that takes the slack, a spring or a text that gives. None of the three has a
+`_reLayout`: every cell is sized by its division box, and a holder's least width is its cells' (`getRecursiveMinDim`).
+Three rules such a row keeps: a piece meant to stay FIXED pins least = desired = max with spreadability 0
+(`SPREADABILITY_NONE` still leaves a tenth of the desired size to take slack, and a "fixed" piece would wobble a
+pixel as the row's width changes); a row whose cells all desire 0 along its axis divides by
+zero (`StackLayoutEngine.arrange`, its third regime), so a spring desires 1, never 0, and a band adds its pieces in
+ONE settle; and a widget's `minimumExtent` (5 × 5 by default) clamps what the stack hands it, so a piece that may be
+thinner — a gap, a spring, a splitter — sets its own to 0 × 0.
 
 **hug vs grow.** `grow 0` is a size-stability choice (a size-stable window content declares it in its
 `initialiseDefaultFrameContentLayoutSpec` override — e.g. the clock and `IconWdgt`; the spreadsheet is a grow-1

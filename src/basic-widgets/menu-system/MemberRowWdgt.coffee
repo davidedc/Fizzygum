@@ -1,5 +1,5 @@
 # A MEMBER row: a row of a MEMBER list -- a list of an object's members (a ListWdgt built with a
-# memberFactsQuery: the Object Inspector's) -- showing on one line what KIND of member it stands
+# memberFactsQuery: MemberListWdgt's) -- showing on one line what KIND of member it stands
 # for, and the member's NAME:
 #   - my KIND TAG (kindTag, a StringWdgt): a short word my builder chooses ("fn", "var"), in
 #     fonts.memberKindTag (10 px bold), memberRowSideInset in, in a memberRowTagColumnWidth column;

@@ -27,7 +27,7 @@
  *       rises, the run prints what the number holds back and when a raise is the answer
  *       (lib/gate-advice.js).
  *       Deliberate end-user API (Fizzygum is live-editable: a method can exist solely for a user
- *       to call from the in-world Object Inspector / scripting) goes in
+ *       to call from the in-world inspector / scripting) goes in
  *       buildSystem/public-api-allowlist.txt (name + reason — the dead-method-allowlist idiom), its
  *       reason naming that surface, never an internal method a layering rule refuses in its `_` form;
  *       an entry that is no longer a self-only public method FAILS as stale (STALE_ALLOWLIST_ENTRY).

@@ -212,7 +212,7 @@ class WorldWdgt extends IconGridPanelWdgt
     WorldWdgt.immutableBackBufferGeneration++
     @_fullChanged()
 
-  # PUBLIC notification: CODE changed under every widget -- a class inspector's gesture edited,
+  # PUBLIC notification: CODE changed under every widget -- an inspector's gesture edited,
   # added, renamed or removed a member of a class (its member reference's step, ClassMemberRef), or
   # a snapshot's load returned the page's own such edits to boot and replayed the file's
   # (loadWorldSnapshot). What layout and paint DERIVE from code then shows on the next frame, as a
@@ -1708,8 +1708,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # A person changed something, and it may have mended what made a widget's paint or step throw: every widget banned
   # for it gets another chance -- a hidden one shows again, a passed-by one is stepped again. The world cannot tell
   # which change is the mend, so each asks again. Two notices call me: a person's edit or run under one widget
-  # (Widget.sourceChanged: an object inspector's edits, a person's run of code -- a text's run rows, a script
-  # shortcut's press, Widget._runningAPersonsCode) and a change of code under every widget
+  # (Widget.sourceChanged: an inspector's edits of an object's members, a person's run of code -- a text's run
+  # rows, a script shortcut's press, Widget._runningAPersonsCode) and a change of code under every widget
   # (noteCodeChanged: a class's member edit; a load's replay calls it too, after the load's teardown
   # emptied both lists, so there it finds no one). A change that mended nothing has the widget throw once more, at a
   # throw's whole cost, and be banned again: the error log shown again, and brought to the front; for a paint, the
@@ -2205,8 +2205,8 @@ class WorldWdgt extends IconGridPanelWdgt
   #     stays with it rather than passing to the window behind for the length of the drag.
   #   - Otherwise the FRONTMOST visible top-level window (FrameWdgt.isTopLevelWindow): my children are
   #     back-to-front, so the walk starts at the last, looks through a transform island to the frame it
-  #     wraps, and passes over every non-frame (an icon, the clock, a naked inspector) and every frame
-  #     that is no top-level window (a transient menu or prompt).
+  #     wraps, and passes over every non-frame (an icon, the clock, an inspector with no window) and
+  #     every frame that is no top-level window (a transient menu or prompt).
   #   - Neither: undefined, and nothing is focused.
   _deriveFocusedFrame: ->
     for carried in (@hand?.children ? [])

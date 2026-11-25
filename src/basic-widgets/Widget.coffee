@@ -1034,22 +1034,6 @@ class Widget extends TreeNode
     # carrying several -- its own resizer and a halo's, or two attached -- has each follow.
     child.updateVisibility?() for child in @children
 
-  # MY CORNER CHAIN CHANGED: the resizer over my bottom-right corner came or went
-  # (HandleWdgt.updateVisibility). Every
-  # viewport down my corner chain -- the children that run out to my corner
-  # (bottomRightCornerReachedBy), and theirs -- re-lays what it keeps clear of that corner, its bars
-  # and, through its arrange, contents laid out to its far edges
-  # (ScrollIndicatorHostWdgt.noteCornerResizerChanged, which only MARKS layout, through the phase
-  # valve, so the flush that is coming lays each one once).
-  # A container that names no such child ends the walk.
-  noteCornerChainChanged: ->
-    visit = (container) ->
-      for child in container.children when container.bottomRightCornerReachedBy?(child)
-        child.noteCornerResizerChanged?()
-        visit child
-      return
-    visit @
-
 
   # What the world calls for me on each frame my fps is due, while I am in world.steppingWdgts and on
   # the world or the hand (WorldWdgt._stepsMember): taken off my holder, closed into the bin or onto the
@@ -2567,9 +2551,11 @@ class Widget extends TreeNode
     @_settleLayoutsAfter => @_setExtentNoSettle aPoint
 
   # Non-settling extent core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
-  # but do NOT flush -- so the mutation rides an OUTER settle. Two callers: the public setExtent (self-settles
-  # via _settleLayoutsAfter) and the _setExtentDeferredSettle (rides the ONE end-of-cycle flush). Feature
-  # code uses one of those PUBLIC entrypoints, never this core directly.
+  # but do NOT flush -- so the mutation rides an OUTER settle: the public setExtent's own (_settleLayoutsAfter),
+  # the ONE end-of-cycle flush _setExtentDeferredSettle declares, or one already open around a core that
+  # resizes a widget (a frame re-wrapping its payload as it is grabbed, a row of inspectors widening its
+  # window inside its choice's settle). Code at event time, inside no settle, reaches it only through
+  # those two entrypoints.
   # (The per-resize-step fractional remember that used to sit here recorded PRE-flush geometry -- the
   # staleness class the post-flush re-record drain fixed; the handle's release enqueue is the one
   # gesture record now, so the hook and its widgetStartingTheChange plumbing are deleted.)
@@ -3464,7 +3450,7 @@ class Widget extends TreeNode
   # alike. Deriving makes the default TRUE instead of merely present, and an override an editorial
   # improvement rather than the only way to avoid a lie.
   #   Lowercase words, because that is what every consumer wants: they drop it into a sentence ("drop
-  # it into the …?"), or follow a dash with it ("Object Inspector — analog clock", "Console —
+  # it into the …?"), or follow a dash with it ("Inspector — analog clock", "Console —
   # rectangle"); a title that STARTS with it capitalises it at display, never here. Override when the
   # derivation reads wrong — a programmer's word ("string", "viewport"), an inherited name that is
   # not mine ("circle-box" on a slider's knob), an acronym or a proper name lowercased ("usa",
@@ -3472,7 +3458,7 @@ class Widget extends TreeNode
   # "Bin", "Fizzytiles", "Docs Maker" — which keeps its capitals.
   # The BASE answer, derived from the class name; ~50 classes override this to state their own
   # (and some to ask a collaborator — a transform frame answers its sole content's name). The
-  # derivation itself lives in Utils because it is not a widget question: the object inspector is
+  # derivation itself lives in Utils because it is not a widget question: an inspector is
   # handed values that are not widgets at all, and a number cannot carry a method to ask. Widgets
   # answer through THIS method, arbitrary values through `Utils.colloquialNameOf`.
   colloquialName: ->
@@ -3950,7 +3936,7 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
-  # What the code I hold of my OWN -- functions I hold beside my class's: a person's (an object
+  # What the code I hold of my OWN -- functions I hold beside my class's: a person's (an
   # inspector's Save of a text's _drawTextLine, of a palette's fillPaletteBuffer), or plumbing's (a
   # patch node's compiled formula, which no key of its reads) -- adds to the keys of the shared caches
   # that read it, keyed by what I show: the immutable back buffers (StringWdgt and PaletteWdgt
@@ -3965,11 +3951,11 @@ class Widget extends TreeNode
   # copied with the code it describes, so a load or a copy keeps it without working it out again.
   _ownCodeKeySuffix: ""
 
-  # PUBLIC notification: a person edited code or state under me, through no setter of mine -- the
-  # object inspector's save, add, rename and remove, or a run of their code (_runningAPersonsCode: a
+  # PUBLIC notification: a person edited code or state under me, through no setter of mine -- an
+  # inspector's save, add, duplicate, rename and remove, or a run of their code (_runningAPersonsCode: a
   # text's run rows, which a console's buttons and a script window's "Try it" run through, and a script
   # shortcut's press, whose receiver is the world). The person's GESTURE tells me, once, after its edit.
-  # The edit verbs it drives -- injectProperty and its add, rename and remove twins, evaluateString --
+  # The edit verbs it drives -- injectProperty and its add, duplicate, rename and remove twins, evaluateString --
   # tell no one, as a class's meta-object tells no one (Class.applyMemberEdit): the product calls
   # them too, as plumbing (a patch node compiles its formula with evaluateString on every recompute, a
   # paint tool injects its handlers, a load re-injects each {"$src"}), where there is no edit of a
@@ -4262,7 +4248,7 @@ class Widget extends TreeNode
 
   # Give me the member `propertyName`, the value txt evaluates to (a function's txt holds its
   # parameters, its arrow and its body). The edit alone: it tells no one and records nothing, as a
-  # class's meta-object does not (Class.applyMemberEdit) -- the object inspector's Save, the
+  # class's meta-object does not (Class.applyMemberEdit) -- an inspector's Save, the
   # person's gesture, records the edit and tells me (its member reference's step, MemberRef.save),
   # while the product's own injections (a paint tool's handlers, a load's {"$src"}) are plumbing with nothing
   # to tell. A function the injection MAKES -- txt spells a function literal -- is kept with its source
@@ -4346,7 +4332,7 @@ class Widget extends TreeNode
   # compiles its own function from that source, as a load does (Duplicator._compileInjectedMethods), so
   # a fat arrow binds the copy; an alias of it (`@g = @f`) holds the same function, and so has it too.
   # undefined for any function no injection made -- a class member keeps its source on its
-  # meta-object (Class.applyMemberEdit). Read by the object inspector, the own-code key
+  # meta-object (Class.applyMemberEdit). Read by an inspector (MemberRef.shownText), the own-code key
   # (_sourceChangedNoSettle) and the save's {"$src"} (Serializer). The store is weak: it writes to no
   # function and keeps none alive.
   @_keptSources: new WeakMap
@@ -4442,17 +4428,17 @@ class Widget extends TreeNode
       lineStart = lineEnd + 1
     return
 
-  # The add, remove and rename twins of injectProperty, edits alone as it is: the gesture that drives
-  # one tells me (the object inspector's add, rename and remove go through MemberRef's steps, which
-  # end in sourceChanged).
+  # The add, remove, rename and duplicate twins of injectProperty, edits alone as it is: the gesture
+  # that drives one tells me (an inspector's add, duplicate, rename and remove go through MemberRef's
+  # steps, which end in sourceChanged).
   # the add twin: a new own member, undefined until a save gives it a value
   addOwnProperty: (propertyName) ->
     @[propertyName] = undefined
     return
 
-  # the remove twin ("Own" keeps these clear of InspectorWdgt's
+  # the remove twin ("Own" keeps these clear of MemberListWdgt's
   # same-named button actions, which would otherwise shadow them on
-  # inspectors -- inspectors are Widgets too): drops the member, and with its function the source the
+  # member lists -- member lists are Widgets too): drops the member, and with its function the source the
   # function keeps (keptSourceOf).
   removeOwnProperty: (propertyName) ->
     delete @[propertyName]
@@ -4462,6 +4448,21 @@ class Widget extends TreeNode
   renameOwnProperty: (oldName, newName) ->
     @[newName] = @[oldName]
     delete @[oldName]
+    return
+
+  # the duplicate twin: the member oldName, kept, and a copy of it under newName. A field's copy holds
+  # the SAME value -- the slot copied, not the thing it holds. A function injected with its source
+  # (keptSourceOf) is injected again under the new name from that source, so the copy is a function of
+  # its own keeping its own source, as a load or a copy of me compiles one from its {"$src"}; a function
+  # with no kept source (a run's) is copied as the slot, as the rename twin moves it. A member already
+  # under newName is overwritten, as the rename twin overwrites one: the gesture refuses a name I own
+  # before it gets here (MemberListWdgt.duplicateProperty).
+  duplicateOwnProperty: (oldName, newName) ->
+    keptSource = Widget.keptSourceOf @[oldName]
+    if keptSource?
+      @injectProperty newName, keptSource
+    else
+      @[newName] = @[oldName]
     return
 
   # Widget dragging (and dropping) /////////////////////////////////////////
@@ -4964,17 +4965,18 @@ class Widget extends TreeNode
 
   # the single inspector entry point. Every inspect path routes here:
   # the world menu and widget context-menu "Inspect" items, the "Dev -> Inspect"
-  # item (MenusHelper), and a text editor's "Inspect selection". This is the
-  # convenience wrapper that opens the inspector WINDOWED — its content fills a
-  # 560x410 FrameWdgt that supplies the chrome + background + resizer. The
-  # InspectorWdgt also renders and resizes correctly on its OWN now
-  # (`world.add new InspectorWdgt target`): when free-floating it paints its own
-  # background and is resized via its @resizer handle. This wrapper stays the
-  # default for the menu/inspect paths; the naked path is the additional mode.
-  # The inspectors are the LAZY `meta-tools` part, and these two methods are the only places core
-  # reaches them. Two consequences, both deliberate:
+  # item (MenusHelper), and a text editor's "Inspect selection". It opens the
+  # inspector as a TOOL: a ROW of inspectors (InspectorRowWdgt), its first on the
+  # inspectee, in a window of the row's own extent, which supplies the chrome and
+  # the resizer. Whatever the inspectee is, the row is the one door: its inspector
+  # asks the member reference how its subject is edited (MemberRef.of: a class's
+  # prototype is edited as its class, through the class's meta-object), so no door
+  # picks a kind of inspector. A row stands with no window too (`world.add new
+  # InspectorRowWdgt target`), and is then resized by the halo, as any widget.
+  # The inspector is the LAZY `meta-tools` part, and these two methods are the only places core
+  # reaches it. Two consequences, both deliberate:
   #
-  # ⚠⚠ 1. `if InspectorWdgt?` is GONE and must not come back. For an eager part that guard reads
+  # ⚠⚠ 1. `if InspectorRowWdgt?` must never stand here. For an eager part that guard reads
   # "this artifact does not have it, do nothing"; for a lazy one the class is equally undefined
   # merely because nobody has fetched it yet, so the guard would silently swallow the user's click
   # forever. The two cases need opposite responses, and only a PART-level question separates them:
@@ -5003,9 +5005,9 @@ class Widget extends TreeNode
         # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
         # layer) — one guard at the acting site covers both waits
         return if inspectee.destroyed
-        # the inspector the inspectee calls for: a class's prototype gets its class inspector
-        inspector = new (InspectorWdgt.inspectorClassFor inspectee) inspectee
-        world.openFrameWith inspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
+        # the row states its own opening extent, and its window opens at it
+        row = new InspectorRowWdgt inspectee
+        world.openFrameWith row, row.extent(), world.hand.position().subtract(new Point 50, 100)
       if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
   # The console does NOT read the class member maps, so it needs the part but not the reflective
@@ -5338,7 +5340,11 @@ class Widget extends TreeNode
     # this is what happens when "each" is
     # selected: we attach the selected widget
     # double-settle-sanctioned: deliberate SEQUENTIAL pair, exactly as newParentChoice above.
-    @add theWidgetToBeAttached, layoutSpec: theWidgetToBeAttached._ensureDivisionBox()
+    # It joins me as a DIVISION CELL, along the axis my cells already run: a division stack has ONE
+    # axis (_divisionChildrenAxis reports a mix on every pass), so a widget attached into a column --
+    # a border scaffold's, an inspector's bands -- becomes one more cell down it, whatever axis its
+    # own box last had. With no cell of mine yet it starts a horizontal row, as this row's name says.
+    @add theWidgetToBeAttached, layoutSpec: theWidgetToBeAttached.divisionBox(@_divisionChildrenAxis() ? 'x')
     # SELF-SETTLE my contents/scrollbar re-fit exactly as newParentChoice above (CONVERT, discrete menu action;
     # Viewport-only pre-guard; @add already self-settled the attach).
     @_settleLayoutsAfter(=> @_reFitContainer()) if @_reLayoutChildrenAndScrollbars?
@@ -5985,8 +5991,8 @@ class Widget extends TreeNode
     box.desiredWidth = desiredBounds.x
     box.desiredHeight = desiredBounds.y
 
-    box.maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
-    box.maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
+    box.maxWidth = DivisionStackLayoutSpec.maxFor desiredBounds.x, spreadability
+    box.maxHeight = DivisionStackLayoutSpec.maxFor desiredBounds.y, spreadability
 
     # ELIMINATE (end-of-cycle-flush-drawdown): every caller is a CONSTRUCTOR, so @ is an ORPHAN here -- the
     # widget is just sized now and re-fit TOP-DOWN when it is later added to the world (a self-settling add

@@ -33,12 +33,61 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # drag means what a mouse drag means — on a divider it never does (ruling I2).
   ownsDragsStartingOnMe: -> true
 
-  # Re-apportion the split so my left edge lands EXACTLY where the pointer says -- solved in closed
-  # form, not approached by an empirical gain.
+  # A drag on me: re-apportion the split so my left edge lands EXACTLY where the pointer says. The
+  # pointer is mapped into my plane on the line that reads it, my grab point taken off it, and the
+  # split this asks for is my query's (maxDimsPuttingMyLeadingEdgeAt, below), which the split button
+  # a finger drags asks too (SplitGripWdgt.nonFloatDragging): one solve, two handlers, each the mapper
+  # of its own pointer and the declared deferrer of its own stream.
   #
-  # WHY a closed form exists. A divider can only bite in _reLayout's THIRD width regime ("more space
-  # than needed or desired", Widget.coffee:4983-5008) -- regimes 1 and 2 hand out width from min/desired
-  # alone, so max widths are INERT there. In that regime each stack cell gets
+  # WHY ABSOLUTE, NOT INCREMENTAL. The old code integrated deltaDragFromPreviousCall, so every move
+  # rejected or halved at a limit discarded that mouse travel FOREVER: drag past the bound and back and
+  # the divider settled 91px away from the pointer, permanently. Taking the target from the absolute
+  # pointer position (the idiom HandleWdgt:307-315 and SliderButtonWdgt:75-84 already use) re-syncs
+  # perfectly instead. It also makes the split's landing place robust to the sub-pixel rounding in the
+  # placement loop, which used to knock this drag onto a wholly different trajectory
+  # (docs/archive/fractional-widget-bounds-investigation-plan.md).
+  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
+
+    # the user is in the process of dragging but didn't actually move the mouse yet. Kept for the "a
+    # plain click does nothing" contract -- and it costs nothing now: the solve is ABSOLUTE, so a
+    # skipped move's travel is recovered in full by the very next one.
+    if !deltaDragFromPreviousCall?
+      return
+
+    # MY division axis, as my query reads it: "left" reads as "before me along the axis".
+    horizontal = (@layoutSpec?.axis ? 'x') == 'x'
+    mainOf = (point) -> if horizontal then point.x else point.y
+
+    # Where the pointer says my LEADING EDGE should be, in MY plane. nonFloatDragPositionWithinWdgtAtStart
+    # is the grab grip, captured in my plane at drag start (ActivePointerWdgt.determineGrabs). An ABSOLUTE
+    # target maps as a point (screenPointToMyPlane), where a screen DELTA would have to be mapped as the
+    # difference of two plane-mapped points or the translation applies twice; off any mapped plane
+    # screenPointToMyPlane returns the point itself, so the dormant path needs no branch of its own.
+    targetLeft = mainOf(@screenPointToMyPlane pos) - mainOf(nonFloatDragPositionWithinWdgtAtStart)
+
+    split = @maxDimsPuttingMyLeadingEdgeAt targetLeft
+    return unless split?
+
+    # drag-move STREAM: the _-private deferred-settle entrypoint (restricted to stream handlers like this one by
+    # check-layering [O]), which DECLARES intentional per-move deferred settling onto the one end-of-cycle flush
+    # instead of reaching into the private _setMaxDimNoSettle core. Measured warranted here (~13 moves/frame
+    # -> ~26 muts/frame; see docs/tooling/coalescing-measurement.md); toggle world.deferredSettlingEnabled to
+    # self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for discrete callers.)
+    # (end-of-cycle-flush-drawdown -- CONVERT)
+    split.before._setMaxDimDeferredSettle split.beforeMax
+    split.after._setMaxDimDeferredSettle split.afterMax
+
+  # THE SPLIT that puts my LEADING EDGE at `targetLeft` (in MY plane, along my division axis): the two
+  # division cells flanking me and the max dims the split asks of them, as {before, beforeMax, after,
+  # afterMax} -- or undefined when the split cannot move: no cell on one side of me, a holder outside
+  # the third regime, or nothing to move once the move is clamped. A QUERY: it reads the cells' box
+  # FIELDS and changes nothing; each drag handler that moves a split (mine above, a split button's)
+  # makes the two max-dim writes itself. Solved in closed form, not approached by an empirical gain.
+  #
+  # WHY a closed form exists. A divider can only bite in the THIRD regime of the division arrange
+  # (StackLayoutEngine.arrange, "max-margin fill": the min and the desired both fit) -- regimes 1
+  # and 2 hand out width from min/desired alone, so max widths are INERT there. In that regime each
+  # stack cell gets
   #     w_C = des_C + extraSpace * (max_C - des_C) / maxMargin
   # with, over the holder's stack children, D = Σ des (getRecursiveDesiredDim), sumMax = Σ max
   # (getRecursiveMaxDim), extraSpace = W - D and maxMargin = sumMax - D. Children are then placed
@@ -54,14 +103,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # WHAT THIS REPLACED (~2015): a hand-fitted empirical gain constant that drifted mid-drag and blew up
   # around large max widths (measured max 44px / mean 7.4px error on a 150px drag; the closed form above is 0.00px).
   #
-  # WHY ABSOLUTE, NOT INCREMENTAL. The old code integrated deltaDragFromPreviousCall, so every move
-  # rejected or halved at a limit discarded that mouse travel FOREVER: drag past the bound and back and
-  # the divider settled 91px away from the pointer, permanently. Taking the target from the absolute
-  # pointer position (the idiom HandleWdgt:307-315 and SliderButtonWdgt:75-84 already use) re-syncs
-  # perfectly instead. It also makes the split's landing place robust to the sub-pixel rounding in the
-  # placement loop, which used to knock this drag onto a wholly different trajectory
-  # (docs/archive/fractional-widget-bounds-investigation-plan.md).
-  #
   # ⚠ WHY NOT THE OBVIOUS "read @left(), move it to the pointer". I defer settling, so ~13 pointer moves
   # are drained per frame against ONE end-of-cycle layout pass (docs/tooling/coalescing-measurement.md) -- my
   # @left() is STALE for every move but the last of a frame, so a @left()-based solve re-applies the
@@ -69,13 +110,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # reads only maxWidth/desired FIELDS, which update synchronously, and never the laid-out pixels -- so
   # it is exact at any cadence (0.00px at 1, 2, 5, 13 and 40 moves per layout). That trap is very likely
   # why this was incremental in the first place: deltas are immune to stale geometry too, they just drift.
-  nonFloatDragging: (nonFloatDragPositionWithinWdgtAtStart, pos, deltaDragFromPreviousCall) ->
-
-    # the user is in the process of dragging but didn't actually move the mouse yet. Kept for the "a
-    # plain click does nothing" contract -- and it costs nothing now: the solve is ABSOLUTE, so a
-    # skipped move's travel is recovered in full by the very next one.
-    if !deltaDragFromPreviousCall?
-      return
+  maxDimsPuttingMyLeadingEdgeAt: (targetLeft) ->
 
     # MY division axis: in an 'x' row I split widths dragging horizontally; in a 'y'
     # division stack I split heights dragging vertically. Same closed form, transposed —
@@ -90,13 +125,6 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       m.layoutSpec?.isDivisionElement?()
 
     return unless leftWidget? and rightWidget?
-
-    # Where the pointer says my LEADING EDGE should be, in MY plane. nonFloatDragPositionWithinWdgtAtStart
-    # is the grab grip, captured in my plane at drag start (ActivePointerWdgt.determineGrabs). An ABSOLUTE
-    # target maps as a point (screenPointToMyPlane), where a screen DELTA would have to be mapped as the
-    # difference of two plane-mapped points or the translation applies twice; off any mapped plane
-    # screenPointToMyPlane returns the point itself, so the dormant path needs no branch of its own.
-    targetLeft = mainOf(@screenPointToMyPlane pos) - mainOf(nonFloatDragPositionWithinWdgtAtStart)
 
     # ONE walk of the stack children: D/sumMax over the WHOLE stack, A/B up to me. (These are
     # the main components of @parent.getRecursiveDesiredDim() and .getRecursiveMaxDim(), inlined so the
@@ -136,7 +164,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # leaves it re-synced the moment the pointer comes back, where rejecting dropped the move's entire
     # travel. lo <= 0 <= hi always (getMaxDim >= getDesiredDim), so delta = 0 is always feasible -- and,
     # unlike the `until deltaX = deltaX/2` halving loop this replaces, it cannot spin: that loop never
-    # exited when a flanking cell was COLLAPSED (getMaxDim then returns 0,0 -- Widget.coffee:4677-4678),
+    # exited when a flanking cell was COLLAPSED (Widget.getMaxDim then returns 0,0),
     # because halving a negative underflows to -0 and `-0 > 0` is false forever. Dragging a divider
     # toward a collapsed neighbour used to hang the world.
     lmdd = leftWidget.getMaxDim()
@@ -148,39 +176,16 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # costs ZERO mutations, where the old predicate still paid two on an accepted-but-pointless move.
     return if delta == 0
 
-    # drag-move STREAM: the _-private deferred-settle entrypoint (restricted to stream handlers like this one by
-    # check-layering [O]), which DECLARES intentional per-move deferred settling onto the one end-of-cycle flush
-    # instead of reaching into the private _setMaxDimNoSettle core. Measured warranted here (~13 moves/frame
-    # -> ~26 muts/frame; see docs/tooling/coalescing-measurement.md); toggle world.deferredSettlingEnabled to
-    # self-settle-per-move and A/B it. (the plain setMaxDim self-settles, for discrete callers.)
-    # (end-of-cycle-flush-drawdown -- CONVERT)
+    # the two max dims, the left cell's raised by delta and the right cell's lowered by it, along my axis
     if horizontal
-      leftWidget._setMaxDimDeferredSettle new Point lmdd.x + delta, lmdd.y
-      rightWidget._setMaxDimDeferredSettle new Point rmdd.x - delta, rmdd.y
+      {before: leftWidget, beforeMax: (new Point lmdd.x + delta, lmdd.y), after: rightWidget, afterMax: (new Point rmdd.x - delta, rmdd.y)}
     else
-      leftWidget._setMaxDimDeferredSettle new Point lmdd.x, lmdd.y + delta
-      rightWidget._setMaxDimDeferredSettle new Point rmdd.x, rmdd.y - delta
+      {before: leftWidget, beforeMax: (new Point lmdd.x, lmdd.y + delta), after: rightWidget, afterMax: (new Point rmdd.x, rmdd.y - delta)}
 
-
-  # my plate's hover and press are my base's, read off the hand as I am painted (LayoutChromeWdgt);
-  # here, the resize cursor
-  hoverEntered: ->
-    cursor = if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
-    document.getElementById("world").style.cursor = cursor
-
-  # mid-drag the pointer routinely outruns this strip, so keep the resize
-  # cursor while THIS adjuster is the one being non-float dragged -- the
-  # endOfNonFloatDrag hook below restores it at the true end of the drag
-  hoverExited: ->
-    return if world.hand.nonFloatDraggedWdgt == @
-    document.getElementById("world").style.cursor = "auto"
-
-  # the drag can end with the pointer outside my bounds (that hoverExited was
-  # suppressed above), so restore the cursor here unless the pointer is back
-  # over me -- then the eventual hoverExited handles it
-  endOfNonFloatDrag: ->
-    if world.hand.topWdgtUnderPointer() != @
-      document.getElementById("world").style.cursor = "auto"
+  # my hover shows the resize cursor of my axis (LayoutChromeWdgt.hoverEntered): across a row's split,
+  # down a column's
+  _resizeCursor: ->
+    if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
 
 
   # MY MARK (LayoutChromeWdgt._gripDotsOnMyPlate; the plate and its states are my base's): the

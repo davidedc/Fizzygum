@@ -177,7 +177,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # wears ONE look, the PANE's: its fill is my class's (_defaultPaneFill: the generic panel's, a
   # list's, a text area's, a stack's, a document's), its border the generic panel's, or the window
   # content's while I am a window's whole content -- unless a BUILDER dresses me in roles of its own
-  # (wearPaneRoles: the Object Inspector's panes, a code area, a patch node's text box, the bin's
+  # (wearPaneRoles: an inspector's panes, a code area, a patch node's text box, the bin's
   # pane, a folder window's viewport). Those I keep by NAME, so I wear them, read at paint, wherever
   # I am taken; a plane that holds no colour of its own wears my pane's look (ScrolledPaneWdgt).
   color: undefined

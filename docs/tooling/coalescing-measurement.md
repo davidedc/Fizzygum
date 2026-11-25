@@ -63,6 +63,9 @@ exactly that shape today: `StackElementsSizeAdjustingWdgt.nonFloatDragging` call
 (`_`-private, restricted to `nonFloatDragging` by check-layering [O]'s `DEFERRED_SETTLE_CALLER_ALLOWLIST`), which
 *declares* the deferred settle so the end-of-cycle flush can tell an intentional deferred-settle mutation from a
 careless leak. The watch above still fires under it: the entrypoint bottoms out in the same `_setMaxDimNoSettle`.
+An inspector's split button drags that split the same way (`SplitGripWdgt.nonFloatDragging`: the splitter's own
+solve, `maxDimsPuttingMyLeadingEdgeAt`, then the same two `_setMaxDimDeferredSettle` writes, under the same
+allowlisted name).
 
 Side note the harness surfaced: ~half of those 718 mutations are **set-then-reverted within the same frame**
 (`nonFloatDragging`'s `if prev != newone` revert) — a separate efficiency question from coalescing.

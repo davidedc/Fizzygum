@@ -9,7 +9,7 @@
     "member maps would open onto nothing).",
     "",
     "⚠ WHAT THIS ARTIFACT CANNOT DO, stated plainly because it is a real loss and not a free win:",
-    "  - no InspectorWdgt / ClassInspectorWdgt / ConsoleWdgt, so no live editing of the system",
+    "  - no inspector (InspectorRowWdgt and its parts) and no ConsoleWdgt, so no live editing of the system",
     "  - a loaded snapshot's CLASS-scope source edits cannot be replayed: the load says",
     "    so once and restores the rest, never dropping them in silence (WorldWdgt.loadWorldSnapshot). Per-widget",
     "    `{\"$src\"}` function edits are UNAFFECTED -- those only need the compiler, which every",

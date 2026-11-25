@@ -1,4 +1,4 @@
-# The look of a resize / move / rotate HandleWdgt (a halo's five handles, a naked inspector's resizer,
+# The look of a resize / move / rotate HandleWdgt (a halo's five handles,
 # a demo handle): the design's button over my widget's WHOLE box (visual-design-system §4.3, "a
 # bordered rounded rectangle means press me"), with the handle's glyph on it --
 #   the PLATE  handlePlateFill inside a 1 px handlePlateStroke border at rest, handlePlateHoverFill

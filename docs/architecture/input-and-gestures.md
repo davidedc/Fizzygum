@@ -223,8 +223,8 @@ ANCESTRY, so a leaf of composed chrome (a bar's close button, a slider's thumb) 
 its owner:
 
 - **`ownsDragsStartingOnMe()`** — does a chrome surface own a press that starts on me? — answered
-  `true` by `HandleWdgt`, `PaletteWdgt`, `FrameBarWdgt`, `StackElementsSizeAdjustingWdgt`, and
-  `SliderWdgt` (whose thumb only answers while its indicator presentation is `'fat'` — a thin
+  `true` by `HandleWdgt`, `PaletteWdgt`, `FrameBarWdgt`, `StackElementsSizeAdjustingWdgt`, an
+  inspector's split button (`SplitGripWdgt`), and `SliderWdgt` (whose thumb only answers while its indicator presentation is `'fat'` — a thin
   indicator is intangible and can't be pressed at all).
 - **`claimsPlainDragsForScrolling()`** — would a plain drag here be claimed by a scroll surface? —
   answered by `ViewportWdgt`: `isScrollingByfloatDragging and isScrollableNow()`, the same three
@@ -314,9 +314,11 @@ byte-identically.
 
 The dissolution is the stroke's LAST act: the up (or the cancel) tells the press's audience its
 ending and clears the stroke's press and drag state FIRST, so the exit it delivers is final (and
-an ending's look never sees a finger resting: `restsOn` answers no for a touch stroke). Three `hoverExited` handlers defer to a live
-drag — a slider thumb keeps its pressed look while the pointer outruns it, a halo handle keeps its
-pressed plate, and a size adjuster keeps its resize cursor — and an exit delivered while the drag still stands is one they ignore.
+an ending's look never sees a finger resting: `restsOn` answers no for a touch stroke). A drag's looks outlast an exit
+delivered while the drag still stands: a slider thumb keeps its pressed look while the pointer outruns it and a halo
+handle its pressed plate (each asks `world.hand.pressesOn` as it paints, which answers yes while the hand drags it in
+place), and a split adjuster or an inspector's split button keeps its resize cursor (`LayoutChromeWdgt.hoverExited`
+ignores an exit while it is the dragged widget).
 That matters most for a thumb a finger dragged and let go of ON the thumb: the release is a click
 on it, and `SliderButtonWdgt.activated` lights it up, so the dissolution is the only thing left
 that can put it out.
@@ -412,7 +414,7 @@ places its children (a document's flow) would otherwise put the widget back, lea
 hand off by the threshold travel. Playback runs these exact rules: there is no Automator carve-out,
 so a replayed mouse drag waits out the threshold as a user's does, and a test cannot ask otherwise
 (`AutomatorPlayer._checkNoRetiredMetadataKeys` refuses the retired `grabDragThreshold` metadata key).
-Pinned by the value assertions of `SystemTest_macroSimpleDocumentHandlesOldInspector` (a window
+Pinned by the value assertions of `SystemTest_macroSimpleDocumentHandlesInspector` (a window
 dragged out of a document lands exactly where the drag puts it, on either pointer).
 
 A tool dragged out of a toolbar's cell is a CREATOR's product: the cell's lid answers the drag
@@ -477,9 +479,10 @@ own (`User.keyboardFamilyOfThisPage`: a Mac, an iPhone or an iPad is "mac", ever
   `ClipboardInputEvent.fromBrowserEvent`, which both clipboard listeners call, claims the browser's event
   (`preventDefault` + `setData`) only while the edited text has something selected, so otherwise the
   browser's default stands and the clipboard keeps what it held. A text its owner loads with ANOTHER
-  subject's text (a sheet's formula bar another edit's, an inspector's pane another member's source)
-  forgets its undo and redo history (`StringWdgt.forgetUndoHistory`). Reloaded with the SAME subject's text
-  (an inspector's member clicked again), it keeps the history and records the reload as one more undo step
+  subject's text (a sheet's formula bar another edit's) forgets its undo and redo history
+  (`StringWdgt.forgetUndoHistory`); an inspector shows another member in another member editor, whose text has a
+  history of its own. Reloaded with the SAME subject's text (an inspector's member chosen again,
+  `MemberEditorWdgt._reloadNoSettle`), it keeps the history and records the reload as one more undo step
   (`StringWdgt.pushUndoState`), so the undo chord brings back the typing the reload replaced.
 - ONE rule says whether a keystroke that is no verb may TYPE, `CaretWdgt.keystrokeMayType`, asked by
   the caret and by a spreadsheet's type-to-edit: with neither Ctrl nor Cmd held, or as AltGr on a PC.

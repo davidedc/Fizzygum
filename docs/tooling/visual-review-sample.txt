@@ -36,7 +36,7 @@ SystemTest_macroSaveAsPromptAboveTiltedWindow
 # lists and scrollbars
 SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
 SystemTest_macroScrollIndicatorFattensAndDrags
-# the Object Inspector
+# the inspector
 SystemTest_macroAddEditSaveRenameRemoveProperty
 SystemTest_macroNakedInspectorRendersResizesAndEdits
 # documents
@@ -48,8 +48,8 @@ SystemTest_macroAnalogClockInspectEdit
 SystemTest_macroSpreadsheetOpenGrid
 SystemTest_macroTwoEditsOnOneRingInOneCycle
 SystemTest_macroSampleDashboardPlots
-# W3: buttons in footer bands (error log, console), prompt buttons (number + colour prompts), the Inspector
-# re-layout (breadcrumb, toggles, member rows, footer, taken apart; an object and a class inspector side by side),
+# W3: buttons in footer bands (error log, console), prompt buttons (number + colour prompts), the inspector
+# (its header and class chip, toggles, member rows, footers, taken apart),
 # a two-button toggle fixture, and a mono patch node (fonts.code)
 SystemTest_macroErrorConsolePopsClean
 SystemTest_macroInspectorWorkAreaEvaluatesCoffeeScript
@@ -84,7 +84,7 @@ SystemTest_macroMultilineTextInputScrollsWell
 # W6 (wording): name headers in capitals (TARGET / TARGET PROPERTY choosers, a widget's own menu), a message
 # header in sentence case, value rows capitalised at the row (wallpapers), the text menu's pictograms and a wire
 # row with its direction glyph from the symbols atlas, a name row ("Desktop" in the target chooser, hierarchy
-# rows "Rectangle" / "Panel"), the fixed palette test (a bare palette, as it says), and the class inspector's
+# rows "Rectangle" / "Panel"), the fixed palette test (a bare palette, as it says), and an inspector's
 # title in sentence case (InspectorCodePaneRunsAgainstItsSubject, listed above)
 SystemTest_macroBindTwoSlidersAndUnbind
 SystemTest_macroUniqueTargetAndPropertyAreStillPresented

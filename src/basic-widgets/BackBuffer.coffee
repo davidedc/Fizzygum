@@ -1,6 +1,6 @@
 # A BACK BUFFER: an offscreen canvas holding one widget's own picture, its 2D context, and the
 # canvas's black-silhouette twin for the shadow pass. The picture is the widget's ALONE, never
-# composed with its children's: an inspector's would hold only its pane's background.
+# composed with its children's: an InspectorRowWdgt's would hold only its body's fill.
 #
 # A widget keeps one for one of two reasons:
 #   1) as a CACHE, which pays off for a widget that has a small extent, an expensive paint and

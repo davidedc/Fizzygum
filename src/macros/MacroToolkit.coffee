@@ -1603,7 +1603,7 @@ class MacroToolkit
   # [pressPoint, dropPoint] pair both handle-drag verbs push, in SCREEN coordinates.
   #
   # A handle reacts on the shape its appearance answers, and every handle answers its whole box (a
-  # halo's, a naked inspector's and a frame's grip alike), so the centre is deep inside the shape and
+  # halo's and a frame's grip alike), so the centre is deep inside the shape and
   # the centre IS the press point — including the rotate handle, whose gesture reads the RAW pointer's
   # angle about the target's anchor, so moving its press point would move the angle it measures.
   #
@@ -2295,16 +2295,6 @@ class MacroToolkit
 
   # Topmost widget matching either a class-name string (compared via
   # widgetClassString) or a class object (compared via instanceof).
-  # ⚠ InspectorWdgt is the LAZY 'meta-tools' part, and this class is the EAGER 'harness' one, so the
-  # bare name would be an unguarded reference into something a profile may not ship and a page may
-  # not yet have fetched. The bail-out is exact rather than defensive: this asks "is an inspector
-  # already OPEN", and without the part no inspector can exist, so undefined is the true answer.
-  # ⚠ It keeps the CLASS rather than the string "InspectorWdgt", because the string form matches an
-  # exact widgetClassString() and would quietly stop finding ClassInspectorWdgt, its subclass.
-  _findTopInspector: ->
-    return undefined unless InspectorWdgt?
-    @findTopWidgetByClassNameOrClass InspectorWdgt
-
   findTopWidgetByClassNameOrClass: (widgetNameOrClass) ->
     if typeof widgetNameOrClass == "string"
       world.topWdgtSuchThat (item) -> item.widgetClassString() == widgetNameOrClass
@@ -2343,10 +2333,10 @@ class MacroToolkit
   # is not: the pointer's arrival fattens it first (see sliderButtonPressPoint), so a press meets a
   # longer bar and a longer thumb than the ones drawn at rest — a 10px thumb where 4px show. For a
   # thumb at its minimum size the two looks give the same travel (the thin bar is the fat one less an
-  # end inset at each end, and its thumb is shorter by the same 6px: a member list measures 171/4 at
-  # rest and 177/10 pressed, 167px either way); a proportional thumb's thin travel is a little
-  # shorter. The travel is measured on the look the press meets all the same, so a drag carries the
-  # button as far as the verb means whatever either look becomes. Its viewport answers for that look.
+  # end inset at each end, and its thumb is shorter by the same 6px); a proportional thumb's thin
+  # travel is a little shorter. The travel is measured on the look the press meets all the same, so a
+  # drag carries the button as far as the verb means whatever either look becomes. Its viewport
+  # answers for that look.
   _sliderFrameAndButtonAsPressed: (slider) ->
     if slider.indicatorIsIntangible?()
       frame: slider.parent.barScreenFrameOnArrival slider
@@ -2364,18 +2354,18 @@ class MacroToolkit
     seenFrom = slider.button.localPointToScreen slider.button.center()
     @_dragSliderButtonFromTo_InputEvents slider, seenFrom, seenFrom.translateBy new Point 0, displacement
 
-  # Scroll an inspector member/property `list` by its bar's thumb so `itemString`'s row lands a couple
-  # of rows BELOW the pane's top edge, to within one thumb pixel of the bar's travel. It uses the REAL
-  # row pitch + visible pane height (not the plain index/(total-1) fraction, which lands the target at
-  # the pane's BOTTOM edge for large indices; adding a single inherited member then tips it out of view
-  # and a click on the clipped row selects the wrong property). Number of scroll positions = total -
-  # visibleRows (rows you can put at the top), so aiming (index - 2) at the top puts the target 2 rows
-  # down. That one thumb pixel is the drag's whole error, and on a long list it can be worth more than
-  # the pane is tall, so the row may still land clipped or out of the window: bringListItemInView
-  # corrects what is left with one wheel (wheelListTowardItem_InputEvents).
+  # Scroll a `list` (a ListWdgt: a member list's, or any other) by its bar's thumb so `itemString`'s
+  # row lands a couple of rows BELOW the pane's top edge, to within one thumb pixel of the bar's
+  # travel. It uses the REAL row pitch + visible pane height (not the plain index/(total-1) fraction,
+  # which lands the target at the pane's BOTTOM edge for large indices; adding a single inherited
+  # member then tips it out of view and a click on the clipped row chooses the wrong member). Number
+  # of scroll positions = total - visibleRows (rows you can put at the top), so aiming (index - 2) at
+  # the top puts the target 2 rows down. That one thumb pixel is the drag's whole error, and on a long
+  # list it can be worth more than the pane is tall, so the row may still land clipped or out of the
+  # window: bringListItemInView corrects what is left with one wheel (wheelListTowardItem_InputEvents).
   # A list whose rows all fit shows no vertical bar and has nothing to bring into view, so nothing is
-  # pressed (as bringcodeStringFromTopInspectorInView_InputEvents does for the code pane): a press
-  # where the bar would be lands on the pane beneath it.
+  # pressed (as bringcodeStringFromTopInspectorInView_InputEvents does for a member editor's code
+  # area): a press where the bar would be lands on the pane beneath it.
   scrollInspectorListItemIntoView_InputEvents: (list, itemString) ->
     return  unless list.vBar.visibleBasedOnIsVisibleProperty()
     index = list.elements.indexOf itemString
@@ -2412,10 +2402,60 @@ class MacroToolkit
   _listRowOf: (list, listItemString) ->
     list.topWdgtSuchThat (item) -> item.labelString is listItemString
 
-  # The member list of the topmost inspector — the list the `…FromTopInspector…` verbs act on, named
-  # by a public locator so macro source can hand it to the list verbs below.
+  # ── THE INSPECTOR'S TWO LOCATORS ───────────────────────────────────────────────────────────────
+  # "Inspect" opens a window whose content is a ROW of inspectors (InspectorRowWdgt): the first on
+  # the widget inspected, its view a MEMBER LIST (MemberListWdgt: its `list`, toggles and footer
+  # buttons); a member chosen in a member list puts an inspector on that member right of the list's
+  # own inspector, its view a MEMBER EDITOR (MemberEditorWdgt: its code area `tempPromptEntryField`,
+  # the `textWidget` in it, and its `saveButton`). The `…FromTopInspector…` verbs find both parts
+  # through the two locators below, which tests use too. Both ask what a part ANSWERS, never its
+  # class: those classes are the LAZY 'meta-tools' part's and this toolkit the EAGER 'harness'
+  # part's, so a class named here would be an unguarded reference into something a profile may not
+  # ship and a page may not yet have fetched. With no part, nothing answers, and undefined is the
+  # true answer: no inspector can be open.
+
+  # THE MEMBER LIST A PERSON WOULD PICK FROM: the frontmost widget that answers selectionFromList and
+  # holds a `list`, or undefined when no member list shows. The search visits the last child first
+  # and a widget's children before itself (topWdgtSuchThat), so this is the RIGHTMOST member list of
+  # the frontmost window holding one (a row with no window is found the same way), or a member list
+  # picked out of its row that stands in front of it.
+  topMemberList: ->
+    world.topWdgtSuchThat (w) -> w.selectionFromList? and w.list?
+
+  # THE MEMBER EDITOR `memberList` FEEDS, read off the row's STRUCTURE: a choice in a member list goes
+  # to the inspector standing next after the list's own inspector in their row
+  # (InspectorRowWdgt.showChoice), so the editor it feeds is that next inspector's view, while the
+  # view is a member editor (it holds a memberRef) standing in it, on a member of the list's own
+  # subject. undefined when there is none: no member is chosen (the list's inspector is its row's
+  # last), what stands next shows a value or a class (a member list), the editor stands outside its
+  # inspector (picked out of it), the editor shows another subject's member (an inspector between
+  # the two is gone from the row, picked out of it), or the list feeds no row (a list picked out of
+  # its inspector, or an inspector picked out of its row: a choice there opens a window of its own).
+  # Structural on purpose: a search for a code area with a Save would also meet a script's, a
+  # console's or a code prompt's, and "the topmost editor" would type into another window's editor
+  # whenever two are open. Public, so a test holding a list of its own (a copied window's, the second
+  # of two in one row) reaches the editor of THAT list.
+  #   An editor exists only once a member is chosen, and a choice of ANOTHER member replaces its
+  # inspector with a new one holding a new editor (the same member chosen again reloads the editor
+  # in place): ask again after every choice rather than keep an editor from before it.
+  memberEditorFedBy: (memberList) ->
+    inspector = memberList?.parent
+    row = inspector?.parent
+    return undefined  unless inspector?.showsSubject? and row?.inspectors?
+    inspectors = row.inspectors()
+    next = inspectors[inspectors.indexOf(inspector) + 1]
+    view = next?.view
+    view  if view?.memberRef? and view.parent is next and view.memberRef.holder is memberList.inspectedObject
+
+  # The member editor the top member list feeds (memberEditorFedBy of topMemberList), or undefined.
+  topMemberEditor: ->
+    @memberEditorFedBy @topMemberList()
+
+  # The `list` (a ListWdgt) of the top member list — the list the `…FromTopInspector…` list verbs act
+  # on, named by a public locator so macro source can hand it to the list verbs below; undefined when
+  # no member list shows.
   topInspectorList: ->
-    @_findTopInspector()?.list
+    @topMemberList()?.list
 
   # WHERE THE NAMED ROW SITS RELATIVE TO THE PANE'S VISIBLE WINDOW — the one place that geometry is
   # computed, shared by the wheel's correction, the in-view check, the nudge and the click itself. The row is
@@ -2504,10 +2544,10 @@ class MacroToolkit
     # AIM INTO THE ROW'S VISIBLE SLICE — the intersection of its label's box with the pane's
     # visible window. A list scrolled by a thumb drag alone is quantized to scrollbar pixels, so a
     # member-list length change can leave the found row EDGE-CLIPPED at the pane's top or
-    # bottom, and the aim must stay inside what is actually showing: a point above the window
-    # lands on the TOGGLE STRIP that sits directly above the pane, which flips a toggle
-    # (methods/fields/inherited) instead of selecting the row — a click that changes the
-    # inspector's mode and selects nothing, while looking like an ordinary settled state.
+    # bottom, and the aim must stay inside what is actually showing: in a member list, a point
+    # above the window lands on the TOGGLES band that sits directly above the list, which flips a
+    # toggle (methods/fields/inherited) instead of selecting the row — a click that changes the
+    # member list's filter and selects nothing, while looking like an ordinary settled state.
     # A slice too thin for the 2px insets is aimed at its middle; a row with NO visible slice
     # is not clicked blind — the scroll left it unreachable, which is a fault to raise, naming
     # the row, rather than a click to place somewhere arbitrary.
@@ -2527,38 +2567,54 @@ class MacroToolkit
       @moveToAndClick_InputEvents (v.label.localPointToScreen new Point (v.label.left() + 10), clickY), "left button", milliseconds, startTime
 
 
-  # Click into the top inspector's code text just before or after the Nth occurrence of `codeString`;
-  # verifies that the press lands on that text.
+  # THE CODE-PANE VERBS act on the member editor the top member list feeds (topMemberEditor): the
+  # view of the inspector right of that list's, on the member chosen in it. Each finds it afresh as it
+  # is called, since a choice of another member replaces it with a new one; reached while there is
+  # none -- no member chosen yet -- a verb throws NO MEMBER EDITOR, naming itself, rather than reading
+  # a code area of undefined.
+  _topMemberEditorFor: (verb) ->
+    editor = @topMemberEditor()
+    return editor  if editor?
+    unless (memberList = @topMemberList())?
+      throw new Error "NO MEMBER EDITOR: #{verb} acts on the editor the top member list feeds, and no member list shows — open an inspector first (bringUpInspector_InputEvents_Macro)"
+    throw new Error "NO MEMBER EDITOR: #{verb} acts on the editor #{memberList} feeds, and none stands beside it — choose a member in it first (bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro)"
+
+  # Click into the top member editor's code text just before or after the Nth occurrence of
+  # `codeString`; verifies that the press lands on that text.
   clickOnCodeBoxFromTopInspectorAtCodeString_InputEvents: (codeString, occurrenceNumber = 1, after = true,  milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @_findTopInspector()
+    textWidget = (@_topMemberEditorFor "clickOnCodeBoxFromTopInspectorAtCodeString").textWidget
 
-    slotCoords = inspectorNaked.textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
+    slotCoords = textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
 
-    # slotCoordinates is PLANE-local to the detail text — aim at its on-screen pixel
-    # (identity when the detail pane is unscrolled)
-    clickPosition = inspectorNaked.textWidget.localPointToScreen inspectorNaked.textWidget.slotCoordinates(slotCoords).translateBy new Point 3,3
+    # slotCoordinates is PLANE-local to the editor's text — aim at its on-screen pixel
+    # (identity when its code area is unscrolled)
+    clickPosition = textWidget.localPointToScreen textWidget.slotCoordinates(slotCoords).translateBy new Point 3,3
 
-    @_aimingAt inspectorNaked.textWidget, "clickOnCodeBoxFromTopInspectorAtCodeString", =>
+    @_aimingAt textWidget, "clickOnCodeBoxFromTopInspectorAtCodeString", =>
       @moveToAndClick_InputEvents clickPosition, "left button", milliseconds, startTime
 
+  # Press the top member editor's Save, at its footer band's right; verifies that the press lands on
+  # it. A member whose holder no Save edits (MemberRef.canEdit: a number, a Point, a plain object, a
+  # built-in class's prototype) gets an editor with no Save and no footer band, and a press asked of
+  # one throws NO SAVE BUTTON, naming the editor and its member.
   clickOnSaveButtonFromTopInspector_InputEvents: (milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    inspectorNaked = @_findTopInspector()
-    saveButton = inspectorNaked.saveButton
-    @moveToAndClick_InputEvents saveButton, "left button", milliseconds, startTime
+    editor = @_topMemberEditorFor "clickOnSaveButtonFromTopInspector"
+    unless editor.saveButton?
+      throw new Error "NO SAVE BUTTON: clickOnSaveButtonFromTopInspector presses the Save of #{editor}, and its member '#{editor.memberRef.name}' is edited by no Save (MemberRef.canEdit)"
+    @moveToAndClick_InputEvents editor.saveButton, "left button", milliseconds, startTime
 
-  # Scroll the top inspector's detail pane toward the Nth occurrence of `codeString`: drag its vertical
-  # bar to the share of its travel that the string's line is of the text's lines. A pane whose text
-  # fits it vertically shows no vertical bar and has nothing to bring into view, so nothing is pressed:
-  # a drag pressed where that bar would be lands on the pane itself, and a mouse drag there carries
-  # the whole inspector window away with it.
+  # Scroll the top member editor's code area toward the Nth occurrence of `codeString`: drag its
+  # vertical bar to the share of its travel that the string's line is of the text's lines. A code
+  # area whose text fits it vertically shows no vertical bar and has nothing to bring into view, so
+  # nothing is pressed: a drag pressed where that bar would be lands on the code area itself, and a
+  # mouse drag there carries away what holds it, its window (or a row with no window).
   bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
-    inspectorNaked = @_findTopInspector()
+    editor = @_topMemberEditorFor "bringcodeStringFromTopInspectorInView"
 
-    textScrollPane = inspectorNaked.topWdgtSuchThat (item) -> item.widgetClassString() == "TextAreaWdgt"
-    vBar = textScrollPane.vBar
+    vBar = editor.tempPromptEntryField.vBar
     return  unless vBar.visibleBasedOnIsVisibleProperty()
 
-    textWidget = inspectorNaked.textWidget
+    textWidget = editor.textWidget
     slotCoords = textWidget.text.getNthPositionInStringBeforeOrAfter codeString, occurrenceNumber, after
     index = textWidget.slotRowAndColumn(slotCoords)[0]
     total = textWidget.wrappedLines.length
@@ -2601,6 +2657,12 @@ class MacroToolkit
         @assertMenuRowInView row
     """
 
+    # THE INSPECTOR VERBS. bringUpInspector opens a widget's inspector as a person does, its menu's
+    # "Dev" then "Inspect": a window whose content is a row of inspectors, one on the widget, its view
+    # a member list. bringInViewAndClickOnListItemFromTopInspector chooses a member in the top member
+    # list (topInspectorList), which puts an inspector on that member beside the list, its view the
+    # member editor the code-pane verbs act on (topMemberEditor); bringUpInspectorAndSelectListItem is
+    # the two, one after the other.
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
         clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
@@ -2631,8 +2693,8 @@ class MacroToolkit
         # one thumb pixel, and on a long list that pixel is worth whole rows, so a row it leaves not
         # whole is centred by ONE wheel, which scrolls by content pixels (wheelListTowardItem_InputEvents).
         # A row still not whole after that is a fault, recorded (assertListItemInView), never a scroll to
-        # try again. It acts on the list it is GIVEN, so a test holding two inspectors names the one it
-        # means instead of arranging which one is on top.
+        # try again. It acts on the list it is GIVEN, so a test holding two member lists (two windows,
+        # or two in one row) names the one it means instead of arranging which one is on top.
         @scrollInspectorListItemIntoView_InputEvents list, whichItem
         yield "waitNoInputsOngoing"
         @wheelListTowardItem_InputEvents list, whichItem

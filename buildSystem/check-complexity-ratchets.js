@@ -220,7 +220,11 @@ const RECORDED = {
   'SimpleSpreadsheetWdgt#_reconcileViewportNoSettle': 24,
   'SimpleSpreadsheetWdgt#_reindexCellsNoSettle': 24,
   'SimpleSpreadsheetWdgt#scrolledBy': 24,
-  'StackElementsSizeAdjustingWdgt#nonFloatDragging': 19,
+  // the split's closed-form solve, recorded at 19 as StackElementsSizeAdjustingWdgt#nonFloatDragging. Re-keyed on
+  // 2026-11-24 and read at 18: the solve is a QUERY of its own (the split a wanted leading edge asks for), which
+  // the splitter's drag handler and an inspector's split button both ask, each mapping its own pointer and making
+  // the two deferred max-dim writes itself; the handler keeps the guard and the mapping, well under the ceiling
+  'StackElementsSizeAdjustingWdgt#maxDimsPuttingMyLeadingEdgeAt': 18,
   'StackLayoutEngine.arrange': 43,
   'StorageSorter#_auditStorageNoSettle': 27,
   'StringWdgt#activated': 17,

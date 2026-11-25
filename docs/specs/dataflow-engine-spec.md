@@ -422,8 +422,8 @@ cell).
 ### 9.5 Operations: the algebra is the value classes' method set
 - Operations on values are **methods of the value classes** (`Color.mixed` — promoted from
   its currently-unused status; `lighter`/`darker` as new Color methods) — automatically
-  exposed to formulas, discoverable, and **live-extensible** (a method injected via the
-  class inspector is available to the next recompute, since formulas compile from source).
+  exposed to formulas, discoverable, and **live-extensible** (a method added to the class
+  through an inspector on it is available to the next recompute, since formulas compile from source).
 - An optional **`FormulaHelpers`** veneer provides free-function style (`mix A1, B1`),
   bound by the identifier scan; helpers delegate to methods.
 - An **"operate" menu** on a cell enumerates the value class's methods via the meta

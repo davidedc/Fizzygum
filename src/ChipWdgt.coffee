@@ -1,6 +1,6 @@
 # The design's CHIP (visual-design-system §4.3 and §4.8; the draft's UI-guidelines §7, "Chip"): a
-# pill-shaped label control, one of a ROW of alternatives, whose look says which one is CURRENT -- a
-# class of the Object Inspector's breadcrumb. A press-me button in every other respect (I am a
+# pill-shaped label control, one of a ROW of alternatives, whose look says which one is CURRENT --
+# the class chip of an inspector's header. A press-me button in every other respect (I am a
 # SimpleButtonWdgt): a click dispatches my one action at my target, handing me in slot 1, the
 # current chip as much as any other, and a disabled chip catches the press and does nothing.
 #
@@ -26,8 +26,8 @@
 #
 # MY SIZE (preferredExtent): chipHeight tall, and as wide as my label plus chipPaddingX at each side
 # plus my 1 px border at each side, never narrower than a chrome target (§4.2). The 44 rule lets a
-# smaller control stand in a row at least 44 tall, and that is what my height leans on (the
-# Object Inspector's breadcrumb band is 44 tall for one row of chips); nothing stands in for my
+# smaller control stand in a row at least 44 tall, and that is what my height leans on (an
+# inspector's header band, where its class chip stands, is 44 tall); nothing stands in for my
 # WIDTH, so a label under 22 px ("Map", "Set") is padded out to 44 rather than drawn as a narrower
 # target. No label in the draft is that short, so the floor moves none of its pixels. My label never
 # changes, so my size never does.

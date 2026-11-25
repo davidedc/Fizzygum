@@ -27,6 +27,11 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   # Both gestures below are MODE-AWARE off my OWN active spec: as a DIVISION slot my
   # insertions join the division layout (a division box rides along), as a CONTENT-stack
   # slot they are inserted SPEC-LESS so the stack's arrange adopts them at that position.
+  # A division insertion joins along MY box's axis, the axis my holder's cells run (a slot is given
+  # it as it is inserted: Widget._insertAddersSuchThat, and here): a division stack has ONE axis
+  # (Widget._divisionChildrenAxis reports a mix on every pass), so a widget dropped on a slot of
+  # a column becomes one more cell down it, whatever axis its own box last had -- as
+  # Widget.newParentChoiceWithHorizLayout attaches one.
   activated: ->
     @bringToForeground()
     # if the adder/droplet is on its own, free floating, then
@@ -41,7 +46,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
 
     newAdder = new LayoutElementAdderOrDropletWdgt
     if @layoutSpec?.isDivisionElement?()
-      @addAsSiblingAfterMe newAdder, layoutSpec: newAdder._divisionBox
+      @addAsSiblingAfterMe newAdder, layoutSpec: newAdder.divisionBox(@layoutSpec.axis)
     else
       @addAsSiblingAfterMe newAdder
 
@@ -49,7 +54,7 @@ class LayoutElementAdderOrDropletWdgt extends LayoutChromeWdgt
   # and fullDestroy -> the non-settling core _fullDestroyNoSettle.
   _reactToChildDropped: (widgetBeingDropped) ->
     if @layoutSpec?.isDivisionElement?()
-      @addAsSiblingAfterMe widgetBeingDropped, layoutSpec: widgetBeingDropped._ensureDivisionBox()
+      @addAsSiblingAfterMe widgetBeingDropped, layoutSpec: widgetBeingDropped.divisionBox(@layoutSpec.axis)
     else
       @addAsSiblingAfterMe widgetBeingDropped
     @_fullDestroyNoSettle()

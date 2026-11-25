@@ -403,9 +403,9 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 // within the cycle, so it must use the self-settling setter, not the deferred-settle twin. Nothing else enforces this:
 // the _deferredSettleDeclarationDepth / auditUndeclaredEndOfCycle machinery (WorldWdgt :90-98, Widget :3713) enforces
 // the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *DeferredSettle call as auto-declared
-// regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (both
-// HandleWdgt and StackElementsSizeAdjustingWdgt name their drag handler nonFloatDragging, so the one name covers
-// both callers). @-self / .-receiver scoped -- the callers are always direct; a comment or a string mentioning one
+// regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (HandleWdgt,
+// StackElementsSizeAdjustingWdgt and an inspector's split button, SplitGripWdgt, each name their drag handler
+// nonFloatDragging, so the one name covers the three callers). @-self / .-receiver scoped -- the callers are always direct; a comment or a string mentioning one
 // is blanked (lib/coffee-mask.js). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
 // handler) adopts a *DeferredSettle entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
 // The allowlist is keyed by caller METHOD NAME in any class, so an entry that excuses no call this run FAILS as

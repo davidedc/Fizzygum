@@ -81,11 +81,6 @@ class HandleWdgt extends Widget
     pad = Math.max (target.padding ? 2), 2
     new Point pad, pad
 
-  # HOW MUCH OF MY TARGET'S BOTTOM-RIGHT CORNER I TAKE, along each axis: the length a viewport
-  # running out to that corner stops its bars short of it by (ScrollIndicatorHostWdgt._cornerReserveFor):
-  # my side.
-  cornerFootprint: -> @_cornerSide()
-
   # I corner-attach (the corner fixed by my @type) to whatever widget I am added to -- that widget becomes my
   # resize/move @target. Added to the WORLD or the HAND (a naked desktop handle, or while detached / picked
   # up) I am free-floating like any grabbed widget. Keying the placement off the destination is what lets
@@ -159,19 +154,14 @@ class HandleWdgt extends Widget
   # would also look better (rather than a hole with
   # nothing)
   updateVisibility: ->
-    showedBefore = @isVisible
     if @wouldShow()
       @show()
     else
       @hide()
-    # I came or went, so the viewports keeping my parent's bottom-right corner free for me re-lay
-    # what they keep clear of it: down my parent's corner chain (Widget.noteCornerChainChanged)
-    @parent?.noteCornerChainChanged()  unless @isVisible is showedBefore
 
   # The two questions above, as a query: what my showing derives from, asked without asking whether I
-  # show. A viewport that runs out to my parent's bottom-right corner keeps that corner free for me
-  # by this answer (ScrollIndicatorHostWdgt._resizerOverMyCorner), and a frame keeps a grip strip for its grip by
-  # it (FrameWdgt._gripStripSide) -- a visibility is never a layout input.
+  # show. A frame keeps a grip strip for its grip by it (FrameWdgt._gripStripSide) -- a visibility is
+  # never a layout input.
   wouldShow: ->
     @parent? and @parent.isFreeFloating() and (@parent.offersAResizeHandle?() ? true)
 

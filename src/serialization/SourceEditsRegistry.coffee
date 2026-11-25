@@ -6,12 +6,12 @@
 # drives (the product calls those verbs as plumbing too, which no one edited) -- and, once, by a world
 # LOAD: a member of the page it could not return to boot, which the loaded world still runs, is recorded
 # as that member's edit would have been (recordMembersStillRunning), so a save carries the code it runs:
-#   - "instance": a single widget's method rewritten by the object inspector's Save
+#   - "instance": a single widget's method rewritten by an inspector's Save
 #     (MemberRef.save). These ALSO ride the serializer for free — the injected function
 #     keeps its source (Widget.keptSourceOf), serialized as {"$src"} and re-injected on restore (§5). The
 #     registry's marginal value here is auditability (a durable record of what was edited).
 #   - "class": a class PROTOTYPE's member edited (Class.applyMemberEdit) or removed
-#     (Class.removeMember, record flagged `deleted: true`) through the class inspector's edit
+#     (Class.removeMember, record flagged `deleted: true`) through an inspector's edit
 #     steps (ClassMemberRef). This is the ESSENTIAL case: nothing else records it — a class
 #     edit mutates the live prototype but leaves no serializable trace (§2.7). The snapshot
 #     embeds it and REPLAYS it against the destination prototypes BEFORE deserialization, so
@@ -29,7 +29,7 @@ class SourceEditsRegistry
   constructor: ->
     @records = []
 
-  # record an instance-scope edit (from the object inspector's Save, MemberRef.save).
+  # record an instance-scope edit (from an inspector's Save, MemberRef.save).
   recordInstanceEdit: (widget, propertyName, source) ->
     return unless widget? and propertyName?
     @records.push
@@ -40,9 +40,9 @@ class SourceEditsRegistry
       source: source
     return
 
-  # record a class-scope edit (from ClassMemberRef's class edit step, _editClassMember: a class
-  # inspector's Save, Add… and Rename…; `classPrototype` is the prototype the edit was evaluated
-  # against — its constructor is the class).
+  # record a class-scope edit (from ClassMemberRef's class edit step, _editClassMember: an
+  # inspector's Save, Add…, Duplicate… and Rename…; `classPrototype` is the prototype the edit was
+  # evaluated against — its constructor is the class).
   recordClassEdit: (classPrototype, propertyName, source) ->
     return unless classPrototype? and propertyName?
     @records.push
@@ -53,7 +53,7 @@ class SourceEditsRegistry
     return
 
   # record a class-scope member REMOVAL (from ClassMemberRef's class removal step, _removeClassMember:
-  # a class inspector's Remove and Rename…; the prototype names the class, as above).
+  # an inspector's Remove and Rename…; the prototype names the class, as above).
   recordClassMemberRemoval: (classPrototype, propertyName) ->
     return unless classPrototype? and propertyName?
     @records.push
@@ -196,13 +196,13 @@ class SourceEditsRegistry
 
   # replay the CLASS-scope records IN ORDER against the live prototypes: an edit re-runs
   # Class.applyMemberEdit, a removal (deleted: true) Class.removeMember — the same choke
-  # points the live class inspector's steps use, so the replay compiles exactly what the
+  # points ClassMemberRef's live steps use, so the replay compiles exactly what the
   # session compiled (incl. the super rewrite). Called by loadWorldSnapshot BEFORE deserialization, so a restored
   # shell already sees the edited methods. Instance-scope edits are NOT replayed
   # here — they ride the normal {"$src"} path on their own widget. A class edit
   # that no longer compiles (the class changed, a typo) is logged, not fatal.
   # Answers how many records it applied: the load tells the world its code changed when any did
-  # (WorldWdgt.noteCodeChanged), as a class inspector's gesture does.
+  # (WorldWdgt.noteCodeChanged), as an inspector's edit of a class's member does.
   replayClassEdits: ->
     return 0 unless SourceEditsRegistry.canReplaySourceEdits()
     applied = 0

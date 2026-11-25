@@ -262,7 +262,7 @@ class Class
   # A rename is no edit of mine: it is an edit under the new name plus a removal of the old
   # (ClassMemberRef.rename), so the member is RECOMPILED and its `super` follows
   # the new name (_superOf).
-  # Callers: ClassMemberRef's edit steps (a class inspector's gestures), and a world-snapshot load's
+  # Callers: ClassMemberRef's edit steps (an inspector's gestures), and a world-snapshot load's
   # return to boot and replay (SourceEditsRegistry.returnThePageToBootSources, replayClassEdits).
   # I edit and tell no one: telling the widgets is my CALLER's business, and each caller ends in one
   # WorldWdgt.noteCodeChanged -- a gesture once it has made all its edits, a load once it has
@@ -631,9 +631,9 @@ class Class
     return
 
   # A FIELD's twin of the record kept with a function: a value has no identity to key a record by, so the VALUE each
-  # recorded field source made is kept with the PROTOTYPE it made it on (a prototype -> a Map of name -> value). A
-  # class inspector shows a field's recorded source only while its subject still reads that very value
-  # (fieldRecordHolds), never a source a run's write replaced (ClassMemberRef._fieldSource), and a rename
+  # recorded field source made is kept with the PROTOTYPE it made it on (a prototype -> a Map of name -> value). An
+  # inspector on a class's prototype shows a field's recorded source only while its subject still reads that very
+  # value (fieldRecordHolds), never a source a run's write replaced (ClassMemberRef._fieldSource), and a rename
   # carries a field's source only then too. Two ways a record is made:
   #   - keepFieldRecord: a class BODY's field (_keepMyMembersRecords), kept ONCE, as a function's record is -- the
   #     reflective layer's ingest of a class already made keeps the record it has, never a run's write since;

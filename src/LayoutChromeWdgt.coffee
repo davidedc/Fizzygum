@@ -1,11 +1,15 @@
 # Shared base for the small "layout-editing chrome" widgets -- the layout spacer
 # (LayoutSpacerWdgt), the element adder/droplet (LayoutElementAdderOrDropletWdgt),
-# and the stack-size adjuster (StackElementsSizeAdjustingWdgt). They all wear the
-# handles' look (LayoutChromeAppearance): the layoutChromePlate* plate over the
-# whole box, in the look of my pointer state (below), and each subclass's mark on
-# it (its glyph, _glyphOnMyPlate, or its grip dots, _gripDotsOnMyPlate).
+# and the stack-size adjuster (StackElementsSizeAdjustingWdgt) -- and of the split
+# button at the left end of an inspector's header, right of the adjuster standing
+# before that inspector (SplitGripWdgt, in the lazy 'meta-tools' part). They all
+# wear the handles' look (LayoutChromeAppearance): the
+# layoutChromePlate* plate over the whole box, in the look of my pointer state
+# (below), and each subclass's mark on it (its glyph, _glyphOnMyPlate, or its grip
+# dots, _gripDotsOnMyPlate). The two that drag a split show its resize cursor while
+# the pointer is over them or drags them (_resizeCursor, the hover trio below).
 #
-# The stack-size adjuster is the one of the three that is NOT layout-editing-only:
+# Of the first three, only the stack-size adjuster is NOT layout-editing-only:
 # the halo's resize/move affordance inserts it between division siblings on their
 # division axis -- either axis; the adjuster reads it off the neighbouring cell's spec
 # (Widget._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle) -- which is reachable
@@ -61,6 +65,33 @@ class LayoutChromeWdgt extends Widget
   # is read from them as I am painted, so I repaint.
   notePointerStateChanged: ->
     @_changed()
+
+  # THE RESIZE CURSOR my hover shows, a CSS cursor name, or undefined for none: what a drag on me
+  # does, said by the page's pointer while the pointer is over me or drags me. Default: none -- a
+  # spacer and an adder resize nothing; the split adjuster answers by its axis, the split button
+  # across.
+  _resizeCursor: -> undefined
+
+  # my plate's hover and press are read off the hand as I am painted (above); here, the resize cursor
+  hoverEntered: ->
+    cursor = @_resizeCursor()
+    document.getElementById("world").style.cursor = cursor  if cursor?
+
+  # mid-drag the pointer routinely outruns a strip or a button, so keep the resize
+  # cursor while THIS piece of chrome is the one being non-float dragged -- the
+  # endOfNonFloatDrag hook below restores it at the true end of the drag
+  hoverExited: ->
+    return unless @_resizeCursor()?
+    return if world.hand.nonFloatDraggedWdgt == @
+    document.getElementById("world").style.cursor = "auto"
+
+  # the drag can end with the pointer outside my bounds (that hoverExited was
+  # suppressed above), so restore the cursor here unless the pointer is back
+  # over me -- then the eventual hoverExited handles it
+  endOfNonFloatDrag: ->
+    return unless @_resizeCursor()?
+    if world.hand.topWdgtUnderPointer() != @
+      document.getElementById("world").style.cursor = "auto"
 
   # Does my plate show a press? While the hand presses me, where a press shows on my plate.
   _showsPressedPlate: ->

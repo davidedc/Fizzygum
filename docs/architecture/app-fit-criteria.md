@@ -93,7 +93,7 @@ it catches wire-vocabulary mismatch (facet 9) early.
 Programming available at every depth, required at none. Score the rungs the idea offers:
 (1) direct use — click the cells; (2) direct-manipulation authoring — rearrange,
 resize, recolour, duplicate; (3) wiring — pins and patch nodes; (4) formulas —
-spreadsheet; (5) source — class inspector. The best citizens have **no gaps**, so a
+spreadsheet; (5) source — the inspector, on its class. The best citizens have **no gaps**, so a
 user slides deeper one rung at a time. Doom offers rung 1 and rung 5 with a chasm
 between.
 

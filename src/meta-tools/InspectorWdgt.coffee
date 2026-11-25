@@ -1,850 +1,239 @@
-# The OBJECT INSPECTOR: a view of one object's members -- which ones it has, what each one holds
-# or does -- and, for a subject that can service an edit, the place to edit them. Windowed by default
-# (Widget.spawnInspector wraps me in a FrameWdgt), and also a first-class NAKED widget with a resizer
-# of its own.
-#
-# I paint my own BODY in both modes, the `panel` fill (inspectorBodyFill), and my SEAMS over it
-# (_seamRects, visual-design-system §4.1): my two panes are borderless and fill-less, and where
-# they or my bands meet I leave a 1 px gap that my appearance rules, so every line inside me is
-# mine. My box, top to bottom (_bandsIn):
-#   - the BREADCRUMB band (_breadcrumbIn): the "Class" caption, then a chip per class of my
-#     subject's chain, base class first, a drawn › between two chips, the last chip -- my subject's
-#     own class, or a class inspector's own class -- the CURRENT one; the pieces wrap to more rows
-#     where my width is less than they need, and the band's last row is its rule;
-#   - the TOGGLES band, toggleBandHeight tall, its rule included: my toggles at their own size,
-#     toggleBandInset in and toggleBandGap apart, centred down the band;
-#   - the BODY: the member list, inspectorListColumnWidth wide but never more than half my width,
-#     then a 1 px seam, then the code pane out to my right edge;
-#   - the FOOTER band (FooterBandLayout): Add… Rename… Remove at its left, Save -- the primary
-#     action -- at its right. A read-only inspector (a subject that cannot service my edits,
-#     _subjectIsEditable) has no footer band, and its body runs to my bottom.
-# A band keeps its controls at their own size: where my width is less than a band's controls need,
-# they run past my right edge -- the breadcrumb wraps instead, and only a piece wider than a whole
-# row runs past it -- and I clip them there, naked or windowed alike.
-#
-# My TOGGLES (LabelledToggleWdgt) show my member FILTER -- Methods, Fields, Inherited, Own props
-# only -- whose one truth is my showing* fields. A click on a toggle runs its action
-# (toggleShowing*), which flips that field and RE-FILTERS me (_refilterMembers): my member list is
-# rebuilt from the filter as it now stands, every other child of mine stays the same widget, and
-# every toggle is shown its field. Adding, renaming or removing a member re-filters me the same way.
-class InspectorWdgt extends ClippingWdgt
-
-  # I CLIP my children -- their paint and their pointer targeting -- to my rectangle, the house way
-  # (a ClippingWdgt, as every panel, viewport and frame is): a control my width leaves no room for is cut
-  # at my right edge, where it shows nothing and catches no press, the same naked as in a window (a
-  # target never extends beyond the widget that owns it, visual-design-system §4.2). In a window I lie
-  # flush against, it changes no pixel: the window clips at its own box already, and the one column
-  # of that box right of me is its border, which it strokes over its children. Opaque, my
-  # silhouette is my box, so my children add nothing to the shadow a naked inspector casts.
-
-  # I show what the class MEMBER MAPS record (a member's recorded source, which my member reference
-  # reads: MemberRef.shownText), and they exist only once
-  # the reflective layer has arrived, and on a `sources: "lazy"` build it has not until someone asks.
-  # Opening me asks first (Widget.spawnInspector); restoring me from a file asks because of this
-  # declaration (Deserializer._needsTheReflectiveLayer, which both file doors consult), so a restored
-  # inspector never shows compiled JS for a member or edits a class with no record. A class that does
-  # not read the maps declares nothing: the console needs this part, not the layer.
-  readsClassMemberMaps: true
+# AN INSPECTOR: one subject (inspectedObject), and one VIEW of it. In a row of inspectors
+# (InspectorRowWdgt) I am one column: my subject was chosen in the inspector to my left, and what is
+# chosen in me goes to the one on my right (InspectorRowWdgt.showChoice).
+#   Top to bottom, the elements of a vertical DIVISION stack (StackLayoutEngine), so I have no layout
+# of my own: my HEADER band (BandWdgt) -- my subject's name, and a chip naming the class it is made
+# by, whose press chooses that class -- and my VIEW, which takes the rest: a member's editor
+# (MemberEditorWdgt) when my subject is one member of an object (it answers editsAsAMember: a
+# MemberRef), the list of my subject's members (MemberListWdgt) for anything else. HOW a member is
+# edited is never mine to know: my views ask the member's reference (MemberRef.of), so an object, a
+# class's prototype and a value are each shown the one way.
+#   A view a person takes OUT of me leaves its PLACE in me (viewsPlace): a spring of my stack that
+# paints nothing (BandSpaceWdgt), desiring the width my view desired. A division stack hands ALL its
+# spare room to its cells, by their margins of most over desired, and by their desired sizes when
+# no cell has a margin (StackLayoutEngine, its third regime), and its least and desired widths are
+# the largest of its cells': with my pinned header my only cell, my header would stretch down my
+# whole height, and my row would lay me out at my header's width. The place takes my spare height as
+# my view did and keeps the width my view desired, so a row at least as wide as its inspectors desire
+# lays me out as it did while my view stood in me, my share of its spare unchanged (my own box keeps
+# the weight my view gave it). The place claims no LEAST width: a hole has nothing a narrow row could
+# cut, so my least width is my header's, and a narrower row gives up the hole's room before it
+# squeezes a control.
+#   My header opens with a SPLIT BUTTON (SplitGripWdgt) exactly while a splitter stands before me in
+# my row: the touch-sized way to move that split. The button is DERIVED from where I stand, never
+# told: my row reconciles it whenever its children change (_reconcileSplitGripNoSettle), and so do
+# a copy of me and a restore of me, which can stand in no row.
+#   I paint nothing: my bands paint their rules, and the row I stand in paints the body under all of
+# us (inspectorBodyFill).
+class InspectorWdgt extends Widget
 
   # the object I am a view OF, and deliberately not called `target`: `@target` elsewhere means
   # information flow (a dataflow consumer, a dispatch receiver) or a tracked reference edge, and
-  # reading one as the other is the hazard this name exists to remove
+  # reading one as the other is the hazard this name exists to remove. My FIRST own field, assigned
+  # before my base constructor writes any other, so every walk of me meets it first (a save's
+  # refusal names the path it took: `(InspectorWdgt#N) → .inspectedObject`).
   inspectedObject: undefined
-  # panes:
-  list: undefined
-  detail: undefined
-  # the detail pane's text widget, adopted from @detail once it is built
-  textWidget: undefined
-  # the member my code pane last loaded (selectionFromList), by name: the pane's undo history is that
-  # member's, so a load of it again is a step of that history, and a load of any other starts the
-  # history afresh. A re-filter, which empties the pane, leaves it as it is.
-  lastLoadedMember: undefined
-  # the free-floating resize handle. Stays undefined for the duration of its own add
-  # (see the note at its assignment), so it must declare undefined, not a value.
-  resizer: undefined
 
-  # my BREADCRUMB's pieces (_buildAndConnectBreadcrumb), each built once, with me: the "Class"
-  # caption; a ChipWdgt per class of my subject's chain, base class first, the last one current;
-  # and a BreadcrumbSeparatorWdgt after each chip but the last -- classSeparators[i] stands between
-  # classChips[i] and classChips[i + 1]
-  classCaption: undefined
-  classChips: undefined
-  classSeparators: undefined
+  # a file holding me needs the class member maps before I am restored, as my views do
+  # (Deserializer._needsTheReflectiveLayer, which both file doors consult)
+  readsClassMemberMaps: true
 
-  # my filter's TOGGLES (LabelledToggleWdgt), each ON exactly while the showing* field it stands for
-  # is true (_reflectFiltersOnToggles). A class inspector builds no own-props toggle, so that field
-  # stays undefined there.
-  showMethodsToggle: undefined
-  showFieldsToggle: undefined
-  showInheritedToggle: undefined
-  showOwnPropsOnlyToggle: undefined
+  # my header band, its title (my subject's name) and its class chip (undefined while my subject
+  # stands below no class of its own: _classAbove), each built once, with me
+  header: undefined
+  headerTitle: undefined
+  classChip: undefined
+  # the widget showing my subject: a member editor or a member list
+  view: undefined
+  # does my header open with a split button? Derived from where I stand (_reconcileSplitGripNoSettle):
+  # exactly while a splitter stands before me in my row. False as I am built.
+  showsSplitGrip: false
+  # the PLACE my view left in me (my header says why): built once, as my view leaves me
+  # (_reactToChildRemoved), and undefined while my view stands in me
+  viewsPlace: undefined
+  # am I being destroyed as a whole (_fullDestroyNoSettle)? Then my view leaving me is my teardown,
+  # and no place is kept for it (as my row's flag, InspectorRowWdgt)
+  _beingFullDestroyed: undefined
 
-  # my member FILTER (_filteredMemberNames), and the one place its state lives: my toggles show it,
-  # and a toggle's action flips it here (toggleShowing*).
-  showingFields: true
-  showingMethods: true
-  showingInherited: false
-  showingOwnPropsOnly: false
-
-  # my footer band's buttons (the edit row, _buildAndConnectEditRow). Rename and remove act on the
-  # selected member and are enabled exactly while one is selected; save is enabled exactly while
-  # the code pane holds an edit to save. A disabled button still catches a press and does nothing.
-  addPropertyButton: undefined
-  renamePropertyButton: undefined
-  removePropertyButton: undefined
-  saveButton: undefined
-
-  padding: undefined
-
-  # ⚠ Through the SERVICE, never `@inspectedObject.colloquialName()`: an inspector is handed
-  # whatever the user asked to inspect, and that is not always a widget — a text's "Inspect
-  # selection" run row hands it the VALUE of a snippet, so it can be a number, a string, a Point.
-  # Asking a number for a method is a category error; the service names it from its class instead.
-  # The subject's name follows the dash AS IT IS ("Object Inspector — analog clock", "Object
-  # Inspector — Docs Maker"): my window title's display case touches only its first character.
-  colloquialName: ->
-    "Object Inspector — " + Utils.colloquialNameOf @inspectedObject
-
-  # At most this many ITEMS of an indexed subject are listed: a person scrolls a list, and no list of a
-  # million rows is one -- a surface's pixel buffer, reached by drilling into a canvas, holds millions,
-  # and every row is a widget. A cut list is said in my code pane (_emptyPaneText).
-  @MOST_ITEMS_LISTED: 1000
-
-  # My subject's ITEMS -- an INDEXED subject's: an Array's (a subclass's too), a typed array's (a buffer
-  # view with a length; a DataView has none), a string's -- the first MOST_ITEMS_LISTED of them in index
-  # order, `itemCount` how many it holds; and the names of its other enumerable members, own and
-  # inherited (`named`). Any other subject has no items: every name is a member's.
-  #   A typed array's or a string's items are its indices below its length, and they are all its own
-  # names, so only its chain is walked for the others: a walk of its own names costs a key per item
-  # (a surface's pixels: millions, every time the list is built). An Array's items are the indices it
-  # HOLDS, read off the one walk of its names -- a sparse Array holds fewer than its length.
-  _subjectsItemsAndNames: ->
-    o = @inspectedObject
-    most = InspectorWdgt.MOST_ITEMS_LISTED
-    if typeof o is "string" or (NativeValueKinds.isBufferView(o) and typeof o.length is "number")
-      named = (property for property of Object.getPrototypeOf o)
-      return {items: (String i for i in [0...Math.min o.length, most]), itemCount: o.length, named}
-    items = []
-    named = []
-    itemCount = 0
-    holdsItems = o instanceof Array
-    for property of o
-      if holdsItems and InspectorWdgt._isAnIndex property
-        itemCount++
-        items.push property if items.length < most
-      else
-        named.push property
-    {items, itemCount, named}
-
-  # Is `name` an array index ("0", "1", ... below 2^32 - 1), as an indexed subject's items are named?
-  @_isAnIndex: (name) ->
-    /^(0|[1-9]\d*)$/.test(name) and Number(name) < 4294967295
-
-  # What my code pane shows while no member is selected: nothing -- or, when my list cuts an indexed
-  # subject's items, how many it lists of how many, so the list never reads as the whole collection,
-  # whichever way I was opened (a drilled-in inspector stands without a window and its title).
-  _emptyPaneText: ->
-    {items, itemCount} = @_subjectsItemsAndNames()
-    return "" unless itemCount > items.length
-    "The first " + items.length + " of " + itemCount + " items are listed."
-
-  # My toggles' ACTIONS, one per toggle (a toggle hands itself in slot 1; none of them needs it).
-  # Each flips the filter field its toggle stands for and re-filters me, in ONE settle: the field is
-  # the filter's truth, and the re-filter shows every toggle its field (_reflectFiltersOnToggles).
-  toggleShowingMethods: ->
-    @_settleLayoutsAfter =>
-      @showingMethods = !@showingMethods
-      @_refilterMembersNoSettle()
-
-  toggleShowingFields: ->
-    @_settleLayoutsAfter =>
-      @showingFields = !@showingFields
-      @_refilterMembersNoSettle()
-
-  toggleShowingInherited: ->
-    @_settleLayoutsAfter =>
-      @showingInherited = !@showingInherited
-      @_refilterMembersNoSettle()
-
-  toggleShowingOwnPropsOnly: ->
-    @_settleLayoutsAfter =>
-      @showingOwnPropsOnly = !@showingOwnPropsOnly
-      @_refilterMembersNoSettle()
-
+  # The subject is my identity, my one positional parameter.
+  #   MY OWN DIVISION BOX says how much of my row's SPARE width I take, and my VIEW decides it
+  # (rowSlackWeight): the weight times a spacer's spreadability, over a desired width of 1, is my most
+  # width, and a division row hands out its spare width in proportion to its cells' margins of most
+  # over desired (StackLayoutEngine, its third regime). Code is what wants width: a member editor asks
+  # a large weight and takes the spare, while a member list asks a small one and keeps the width its
+  # controls and names need, as a list column beside a code pane does. My least and desired widths are
+  # my cells' -- my header's and my view's, or my view's place's -- which the stack derives; my box's
+  # own are no input while I have cells.
+  #   The margin is also what lets the split beside me move: a division row moves a split by trading
+  # the most widths of the cells on either side of it (StackElementsSizeAdjustingWdgt), so a person who
+  # drags it changes the two most widths, and the row then keeps their spare in that proportion as its
+  # window grows or shrinks, and across the choices that keep a view of the same kind on the far side
+  # of that split (InspectorRowWdgt._showNextToNoSettle, which reads what I gave away,
+  # mostWidthGivenAway, and has me give width up, _giveUpMostWidthNoSettle). My default box
+  # (_defaultBox) is set once my view exists, before any row adds me.
   constructor: (@inspectedObject) ->
-    @classChips = []
-    @classSeparators = []
     super()
-
-    # A naked (chrome-less) inspector must establish its OWN usable extent.
-    # Without a FrameWdgt to size it, _reLayout would divide the Widget-default
-    # ~50x40 across three panes and collapse them. The windowed path
-    # (Widget::spawnInspector) overrides this via the window's setExtent, so
-    # setting it here is windowed-pixel-neutral.
-    @__commitExtent new Point 560, 410
-
-    # My body, the same naked and windowed: the panel fill, and my seams over it (_seamRects) --
-    # inside a window, the window's own paper never shows through me.
-    @color = WorldWdgt.theme.inspectorBodyFill
-    @appearance = new RectangularAppearance @
-
     @_buildAndConnectChildren()
+    {least, desired, spreadability} = @_defaultBox()
+    @setMinAndMaxBoundsAndSpreadability least, desired, spreadability
 
-  # Which of my children run out to my bottom-right corner, where my own resizer sits while I am naked.
-  # While I end in my footer band, none: the band keeps that corner clear for my resizer
-  # (footerRightClearance) and holds no viewport there, so the corner chain stops at me
-  # (ScrollIndicatorHostWdgt._resizerOverMyCorner). A read-only inspector has no footer band, and its code pane
-  # runs out to the corner, so the pane's bars keep the corner free; the resizer overlaps only the
-  # pane's lowest rows, and the pane keeps the whole reserve: the safe way to be wrong. The same query
-  # the footer band's build and layout ask (_subjectIsEditable). In a window my resizer is hidden, and
-  # the window's grip lies in its grip strip below me, so no corner of mine is covered.
-  bottomRightCornerReachedBy: (child) ->
-    child is @detail and !@_subjectIsEditable()
+  # MY DEFAULT BOX, its one statement: least and desired 1 px each way, so my cells' sizes are what my
+  # row reads, and my view's weight times a spacer's spreadability (my constructor says why).
+  _defaultBox: ->
+    one = new Point 1, 1
+    {least: one, desired: one, spreadability: @view.rowSlackWeight() * DivisionStackLayoutSpec.SPREADABILITY_SPACERS}
 
-  # How much more my footer band keeps clear at its right end (FooterBandLayout): my own resizer's
-  # corner, while I am naked and it shows. In a window nothing of a resizer lies over my band.
-  footerRightClearance: ->
-    if @resizer?.wouldShow() then WorldWdgt.theme.footerGripClearance else 0
+  # THE MOST WIDTH I GAVE AWAY across the splits beside me: the most width my default box gives me
+  # less the one my own box holds. A drag on a split trades most width between the two cells beside it
+  # (StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt), so this is my trades' sum, 0 when
+  # no split beside me was dragged, negative when I gained. The default is read through the box's own
+  # arithmetic (DivisionStackLayoutSpec.maxFor), never a second copy of it.
+  mostWidthGivenAway: ->
+    {desired, spreadability} = @_defaultBox()
+    (DivisionStackLayoutSpec.maxFor desired.x, spreadability) - @_divisionBoxOrDefaults().maxWidth
+
+  # MY MOST WIDTH LESS `width`: what I give up to the cell across a split from me, as a drag on it
+  # trades (InspectorRowWdgt._removeInspectorsNoSettle says which split and why). Only my width: a row
+  # divides its width, so my most height stays what my box holds, my default box's. A core: my row
+  # calls it inside its choice's settle.
+  _giveUpMostWidthNoSettle: (width) ->
+    box = @_divisionBoxOrDefaults()
+    @_setMaxDimNoSettle new Point (box.maxWidth - width), box.maxHeight
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
-  # settled). Built once, at construction: a filter change or a member add / rename / remove rebuilds
-  # only my member list (_refilterMembers), and every other child stays.
+  # settled): my header, then my view.
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
+    @_buildHeaderNoSettle()
+    @view = if @inspectedObject?.editsAsAMember?() then new MemberEditorWdgt @inspectedObject else new MemberListWdgt @inspectedObject
+    @_addNoSettle @view, layoutSpec: @view.divisionBox('y')
 
-    @_buildAndConnectBreadcrumb()
-
-    # my filter's toggles, each with its fixed label and the one action that flips its field; the
-    # state each shows is set from my filter once they all exist (_reflectFiltersOnToggles, below)
-    @showMethodsToggle = new LabelledToggleWdgt target: @, action: "toggleShowingMethods", face: "Methods"
-    @_addNoSettle @showMethodsToggle
-    @showFieldsToggle = new LabelledToggleWdgt target: @, action: "toggleShowingFields", face: "Fields"
-    @_addNoSettle @showFieldsToggle
-    @showInheritedToggle = new LabelledToggleWdgt target: @, action: "toggleShowingInherited", face: "Inherited"
-    @_addNoSettle @showInheritedToggle
-    @_buildAndConnectOwnPropsOnlyToggle()
-    @_reflectFiltersOnToggles()
-
-    @_buildAndConnectEditRow() if @_subjectIsEditable()
-
-    @_buildAndConnectMemberList()
-
-    # my CODE PANE: a TextAreaWdgt in the code role, its text born in fonts.code and the codeText
-    # ink, codePanePadding in from its edges -- so the code starts that far right of my list | code
-    # seam and that far below my body's top
+  # MY HEADER BAND: inspectorHeaderInset in, my title, my class chip when my subject has a class
+  # above it (current, as the one chip of its row; its action asks _classAbove when it is pressed, so
+  # it holds no class), and inspectorHeaderInset again; its rule along its bottom. It opens with no
+  # split button: my row's reconcile gives me one where a splitter stands before me.
+  #   My TITLE is my subject's name, one line of fonts.buttonLabel in inspectorHeaderTitle, a text
+  # that GIVES WAY (BandWdgt's `gives` item): it is my header's spring, so its box takes all the width
+  # my header's other pieces leave, running up to my chip, and my chip stands at my header's right. Its
+  # text is cropped with "…" where that box is narrower than it, and stands at the box's start where
+  # the box is wider. My header's least and desired widths are its other pieces' and the few px the
+  # title's box can shrink to, the same whatever the name: a long name widens no window, and holds no
+  # split beside me where it stands.
+  _buildHeaderNoSettle: ->
     theme = WorldWdgt.theme
-    @detail = new TextAreaWdgt @_emptyPaneText(), false, theme.codePanePadding, fontRole: theme.fonts.code, textColor: theme.codeText
-    @detail.disableDrops()
-    @detail.contents.disableDrops()
-    @_clearPaneLook @detail
-    # The pane opens EMPTY and UNMODIFIED (its empty text, _emptyPaneText, says a cut list): that text is
-    # the text it compares against until a selection loads a member's source (selectionFromList), so its
-    # modified-content indicator starts hidden and the content check below leaves save disabled.
-    @detail.textWdgt.considerCurrentTextAsReferenceText()
-    @detail.addModifiedContentIndicator()
+    @headerTitle = new StringWdgt (String @_subjectName()), fontRole: theme.fonts.buttonLabel, color: theme.inspectorHeaderTitle
+    items = [theme.inspectorHeaderInset, {gives: @headerTitle}]
+    if (classLink = @_classAbove())?
+      @classChip = new ChipWdgt target: @, action: "chooseMyClass", face: classLink.constructor.name, current: true
+      items.push @classChip
+    items.push theme.inspectorHeaderInset
+    @header = new BandWdgt theme.inspectorHeaderHeight, items, rule: "bottom"
+    @_addNoSettle @header, layoutSpec: @header.divisionBox('y')
 
-    # register this wdgt as one to be notified when the text
-    # changes/unchanges from "reference" content
-    # so we can enable/disable the "Save" button
-    @detail.widgetToBeNotifiedOfTextModificationChange = @
+  # Do I show `subject`? It is my subject, or -- a member chosen again, made again as a new
+  # reference -- it names the same member as mine (MemberRef.sameMemberAs); and my view stands in me
+  # to show it. A view a person took out of me shows my subject elsewhere, and I am left a header over
+  # its empty place: I show no subject then, so a choice of it replaces me with a fresh inspector, as
+  # a choice of another subject does, rather than reloading a view I do not hold.
+  showsSubject: (subject) ->
+    return false unless @view?.parent is @
+    subject is @inspectedObject or (@inspectedObject?.sameMemberAs? subject) is true
 
-    @textWidget = @detail.textWdgt
-    @textWidget.backgroundColor = theme.inspectorPaneFill
-    @textWidget.isEditable = false
+  # MY VIEW LEFT ME -- picked out, carried off by a drag, deleted into the bin, attached elsewhere,
+  # destroyed: heard here, the one seat every door reaches, inside the settle of the verb that took
+  # it. Its PLACE is kept (my header says why), once: a SPRING of my stack (BandSpaceWdgt), its
+  # desired width the one my view desired as my stack read it (getDesiredDim), its desired height
+  # 1 px and its spreadability a spacer's, so it takes my spare height; it stands where my view stood
+  # -- right after my header, or first when my header has left me too. A view destroyed whole
+  # answers after its own parts are gone, so a member list then desires only its own box's 1 px, and
+  # my width falls to my header's. Only a view that LEFT: one re-added to me, or wrapped in place (a
+  # transform island takes its slot and its spec), still stands for itself. Not once I am destroyed,
+  # nor while I am torn down whole (the flag): nothing is built into a dying inspector. Cores only: a
+  # space settles nothing as it is made, and the verb that took my view owns the settle.
+  _reactToChildRemoved: (child) ->
+    return if @destroyed or @_beingFullDestroyed
+    return unless child is @view and !@viewsPlace? and !@isAncestorOf child
+    @viewsPlace = new BandSpaceWdgt @view.getDesiredDim().x, 1, springs: true
+    @_addNoSettle @viewsPlace, atIndex: @children.indexOf(@header) + 1, layoutSpec: @viewsPlace.divisionBox('y')
+    return
 
-    @_addNoSettle @detail
-
-    # The inspector's own resize handle. It is shown ONLY when the inspector
-    # is free-floating (naked on the desktop) and hidden when it is FrameWdgt
-    # content (HandleWdgt::updateVisibility, driven by Widget::_setLayoutSpec),
-    # so a naked inspector is self-resizable while a windowed one defers to the
-    # window's resizer. Covered by
-    # SystemTest_macroNakedInspectorRendersResizesAndEdits.
-    # Attach the resizer, then record it -- @resizer stays undefined during its own add (byte-identical to the old
-    # `@resizer = new HandleWdgt @`, whose in-constructor add ran while @resizer was still undefined; see FrameWdgt).
-    resizer = new HandleWdgt
-    @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
-    @resizer = resizer
-
-    # my footer buttons' enabled states, from what my panes hold now: save from the code pane's text
-    # (its content check: unmodified, so disabled), rename and remove from the list's selection (a
-    # fresh list selects nothing, so disabled)
-    @detail.checkIfTextContentWasModifiedFromTextAtStart()
-    @_reflectMemberSelection()
-
-    # update layout
-    @_invalidateLayout()
-
-  # My BREADCRUMB's pieces, added in my paint and hit order, left to right: the "Class" caption,
-  # then a chip per class of my subject's chain (_classChainLinks), base class first, each but the
-  # last followed by its separator. The last chip is the CURRENT one. Every chip, the current one
-  # included, opens its class's ClassInspector: its action is openClassInspector, its class name in
-  # slot 3. The caption hugs its text, one line of fonts.buttonLabel tall (StringWdgt's box hug).
-  # Where each piece goes is _breadcrumbIn's.
-  _buildAndConnectBreadcrumb: ->
-    theme = WorldWdgt.theme
-    @classCaption = new StringWdgt "Class", fontRole: theme.fonts.buttonLabel, color: theme.inspectorBreadcrumbCaption
-    @classCaption._sizeToTextAndDisableFittingNoSettle()
-    @_addNoSettle @classCaption
-
-    @classChips = []
-    @classSeparators = []
-    names = (link.constructor.name for link in @_classChainLinks())
-    for name, i in names
-      # the NAME, never the link: a name is data, which openClassInspector resolves along my subject's
-      # chain when the chip is pressed. A link can be a BUILT-IN class's prototype (an inspector on a
-      # number names Number), which no file can carry: only a Fizzygum class's is named by its class
-      # (WellKnownObjects.classKeyFor)
-      chip = new ChipWdgt target: @, action: "openClassInspector", face: name, arg1: name, current: i is names.length - 1
-      @classChips.push chip
-      @_addNoSettle chip
-      if i < names.length - 1
-        separator = new BreadcrumbSeparatorWdgt
-        @classSeparators.push separator
-        @_addNoSettle separator
-
-  # The LINKS of the class chain my subject is made of, base class first: every object on its
-  # prototype chain, my subject itself included, that is a class's OWN prototype (it owns its
-  # constructor), up to Object. So an object inspector's chain ends in its subject's own class, a
-  # class inspector's -- whose subject IS a class's prototype -- in that class itself, and a value
-  # (a number, a string) ends in its built-in class. An own "constructor" member that holds no
-  # function (a property added to my subject under that name) is no link. ONE walk, two readers:
-  # the breadcrumb names a chip per link, and openClassInspector finds a chip's link again by name.
-  _classChainLinks: ->
-    links = []
-    link = @inspectedObject
-    while link? and link.constructor?.name isnt "Object"
-      if (Object::hasOwnProperty.call link, "constructor") and Utils.isFunction link.constructor
-        links.unshift link
-      link = link.__proto__
-    links
-
-  # My code pane tells me when its text comes to differ from the text last loaded or saved, and when
-  # it agrees with it again: save is enabled exactly while there is an edit to save. A read-only
-  # inspector has no save button.
-  textContentModified: ->
-    @saveButton?.setEnabled true
-
-  textContentUnmodified: ->
-    @saveButton?.setEnabled false
-
-  # Rename and remove act on the SELECTED member, so they are enabled exactly while my list has a
-  # selection they can act on (_selectedMemberCanBeRenamedOrRemoved): disabled as built, then
-  # following each selection (selectionFromList) until my next re-filter, whose fresh list selects
-  # nothing. The actions ask the same question, since other callers reach them directly. A
-  # read-only inspector has neither button.
-  _reflectMemberSelection: ->
-    offered = @_selectedMemberCanBeRenamedOrRemoved()
-    @renamePropertyButton?.setEnabled offered
-    @removePropertyButton?.setEnabled offered
-
-  # Rename and remove act only on a member my member reference can rename or remove: one my subject
-  # OWNS, and never `constructor` (MemberRef.canBeRenamedOrRemoved says why). Nor on anything, while
-  # my subject is no subject of my edits (_subjectIsEditable).
-  _selectedMemberCanBeRenamedOrRemoved: ->
-    name = @list?.selected?.labelString
-    name? and @_subjectIsEditable() and @_memberRefOf(name).canBeRenamedOrRemoved()
-
-  # My toggles show my filter: each is ON exactly while the showing* field it stands for is true.
-  # The build and every re-filter end here, and nothing else sets a toggle of mine, so a toggle and
-  # its field cannot disagree; a toggle taken out of me still stands for my field and follows it.
-  _reflectFiltersOnToggles: ->
-    @showMethodsToggle.setOn @showingMethods
-    @showFieldsToggle.setOn @showingFields
-    @showInheritedToggle.setOn @showingInherited
-    @showOwnPropsOnlyToggle?.setOn @showingOwnPropsOnly
-
-  # A RE-FILTER: my member set may have changed -- a toggle flipped my filter, or a member was added,
-  # renamed or removed -- so my member LIST is built again from my filter as it stands
-  # (_buildAndConnectMemberList), and nothing else is: my toggles, my breadcrumb, my code pane and
-  # my footer buttons stay the same widgets. What showed the old list's selection now shows none, as
-  # at my construction: no member is selected, my code pane is empty and read-only, and my footer's
-  # member buttons are disabled (_reflectMemberSelection). My toggles are then shown my filter.
-  _refilterMembers: ->
-    @_settleLayoutsAfter => @_refilterMembersNoSettle()
-
-  _refilterMembersNoSettle: ->
-    @_buildAndConnectMemberList()
-
-    # my code pane back to empty and read-only, its empty text the text it compares against, so its
-    # modified-content indicator hides and save disables. An edit in progress in it ends first, as
-    # it would if the pane were destroyed (Widget._destroyNoSettle).
-    world._stopEditingNoSettle() if world.caret? and @detail.isAncestorOf world.caret.target
-    @textWidget.isEditable = false
-    @textWidget._setTextNoSettle @_emptyPaneText()
-    @textWidget.considerCurrentTextAsReferenceText()
-    @detail.checkIfTextContentWasModifiedFromTextAtStart()
-
-    @_reflectMemberSelection()
-    @_reflectFiltersOnToggles()
-    @_invalidateLayout()
-
-  # The names of the members my filter lets through, in the order my list shows them. It starts
-  # from every enumerable property of my subject and of its whole prototype chain (a Fizzygum
-  # class's members are enumerable, its methods included) and keeps:
-  #   methods      only while showingMethods
-  #   fields       only while showingFields
-  #   inherited    while showingInherited; otherwise only the members my subject's own class
-  #                declares, and those stitched onto my subject that no class of its chain has
-  #   own props    while showingOwnPropsOnly, only my subject's own properties
-  # sorted -- after an INDEXED subject's items (an Array's, a typed array's), which come first in index
-  # order, whose order is their meaning, and at most MOST_ITEMS_LISTED of them.
-  _filteredMemberNames: ->
-    {items, named} = @_subjectsItemsAndNames()
-    attribs = (property for property in named when property)
-
-    if !@showingMethods
-      attribs = attribs.filter (prop) => !Utils.isFunction @inspectedObject[prop]
-
-    if !@showingFields
-      attribs = attribs.filter (prop) => Utils.isFunction @inspectedObject[prop]
-
-    # if we don't show inherited props, then we let through two types of props (each side of the "or"
-    # takes care of one type):
-    #   1) the ones that are defined in the immediate class of the object (i.e. are own properties of the prototype)
-    #   2) the ones that are just stitched to the object but are in none of the classes upwards i.e.
-    #      are not a reachable property from the prototype
-    if !@showingInherited and (classPrototype = @_subjectsClassPrototype())?
-      attribs = attribs.filter (prop) => Object::hasOwnProperty.call(classPrototype, prop) or (prop not of classPrototype)
-
-    if @showingOwnPropsOnly
-      attribs = attribs.filter (prop) => Object::hasOwnProperty.call @inspectedObject, prop
-
-    attribs.sort()
-    # an indexed subject's ITEMS first, in their order (each its own, so the inherited and own-props
-    # filters keep them all; an Array may hold functions, so the methods and fields toggles hold for
-    # them too)
-    items = items.filter((i) => !Utils.isFunction @inspectedObject[i]) if !@showingMethods
-    items = items.filter((i) => Utils.isFunction @inspectedObject[i]) if !@showingFields
-    items.concat attribs
-
-  # My member LIST, built from the names my filter lets through (_filteredMemberNames) and added to
-  # me, where my layout places it in my body (_reLayout). The build makes the first one; a re-filter
-  # makes it again: the list it replaces, while still mine, is destroyed, and the new one takes its
-  # place among my children (my paint and hit order). A list taken out of me is not mine to
-  # replace, so it stays where it is and the new one is added to me. A fresh list selects nothing
-  # and shows its first rows.
-  #   A MEMBER list: each row a kind tag and the member's name, as wide as the list (MemberRowWdgt),
-  # told what each member is by my memberFactsOf. Everything the list reaches me through is a method
-  # NAME -- a click selects a member (selectionFromList), a double-click opens one
-  # (inspectMemberValue) -- so a copy of me is reached by its own list, and the list holds no
-  # closure.
-  _buildAndConnectMemberList: ->
-    if @list?.parent is @
-      atIndex = @children.indexOf @list
-      @list._fullDestroyNoSettle()
-
-    @list = new ListWdgt @_filteredMemberNames(),
-      target: @
-      action: "selectionFromList"
-      doubleClickAction: "inspectMemberValue"
-      memberFactsQuery: "memberFactsOf"
-    @list.disableDrops()
-    @_clearPaneLook @list
-    @_addNoSettle @list, atIndex: atIndex
-
-  # WHAT MY LIST SHOWS OF A MEMBER beside its name (my list's memberFactsQuery, asked once per row
-  # as the list is built): its KIND TAG -- "fn" for a function, "var" for anything else, the split my
-  # methods and fields toggles filter by -- and whether its name is DIMMED: dimmed unless my subject's
-  # own class declares it, so a member inherited from a superclass, or stitched onto my subject with
-  # no class declaring it, reads muted, and a member of my subject's own class reads in ink.
-  #
-  # TODO show the static methods and variables in yet another color.
-  memberFactsOf: (memberName) ->
-    kindTag: if Utils.isFunction @inspectedObject[memberName] then "fn" else "var"
-    dimmed: !((classPrototype = @_subjectsClassPrototype())? and Object::hasOwnProperty.call classPrototype, memberName)
-
-  # The prototype my subject's class gives its instances, or undefined for a subject made with NO prototype
-  # (Object.create null -- a meta-object's record store, a run's own): no class declares any member of such a
-  # subject, so every one is its own, and its members are read with Object's methods, never its own.
-  _subjectsClassPrototype: ->
-    classPrototype = @inspectedObject?.constructor?.prototype
-    classPrototype if classPrototype? and typeof classPrototype is "object"
-
-  # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
-  # selected it): when the member's value is an object -- the only kind of value with members to show
-  # -- a NAKED inspector on it, at the pointer, of the kind its value calls for
-  # (InspectorWdgt.inspectorClassFor): so a class function's `__super__` opens its superclass's class
-  # inspector, and a class inspector's `constructor` an object inspector on the class function. Any
-  # other value opens nothing.
-  inspectMemberValue: (memberName) ->
-    value = @inspectedObject[memberName]
-    return unless Utils.isObject value
-    inspector = new (InspectorWdgt.inspectorClassFor value) value
-    inspector._applyMoveTo world.hand.position()
-    inspector._moveWithin world
-    world.add inspector
-
-  # WHICH INSPECTOR a value calls for, asked by every door that hands an inspector an arbitrary value
-  # (my row double-click, Widget.spawnInspector): a Fizzygum class's PROTOTYPE is its class, and gets
-  # the class inspector, whose edits go through the class's meta-object and are recorded; any other
-  # value gets the object inspector. So a class is viewed and edited in one place.
-  @inspectorClassFor: (value) ->
-    if isAClassPrototype value then ClassInspectorWdgt else InspectorWdgt
-
-
-  # Can this subject SERVICE an edit of mine? An inspector is handed whatever the user asked to
-  # inspect, and an object inspector edits an OBJECT through the instance edit protocol --
-  # `injectProperty` / `addOwnProperty` / `removeOwnProperty` / `renameOwnProperty` / `sourceChanged`,
-  # which arrive together on Widget. A number, a string, a Point cannot: you cannot inject a property
-  # into 42. ⚠ A CAPABILITY query, never `instanceof Widget` — the question is "does it service the
-  # protocol", so a future non-widget that implements the five should get an editable inspector. The
-  # five always co-occur, so one probe answers for the row. A class's PROTOTYPE answers the probe too,
-  # through inheritance, and is no object of mine to edit: its members are its class's, edited in its
-  # class inspector through the meta-object and recorded (ClassInspectorWdgt states that scope). The
-  # doors never hand me one (inspectorClassFor); one I hold anyway -- built by code, or from a file --
-  # is read-only, and my current chip opens its class inspector. Read-only means more than a missing
-  # footer: a restored inspector keeps the buttons its file holds, so my edit gestures ask this too
-  # (save, addProperty, and rename and remove through _selectedMemberCanBeRenamedOrRemoved).
-  _subjectIsEditable: ->
-    @inspectedObject.injectProperty? and !isAClassPrototype @inspectedObject
-
-  # What code typed in my code pane runs against (TextWdgt._codeReceiver): my subject, exactly while I
-  # edit it. Code run against a widget is an edit made under it (Widget.evaluateString), so my run
-  # scope is my edit scope; a subject I do not edit -- a number, an immutable Point, a plain object,
-  # a function, a class's prototype -- gets no run rows at all, rather than rows that throw, write
-  # to a value meant to stay as it is, or change a class unrecorded.
-  codeReceiver: ->
-    @inspectedObject if @_subjectIsEditable()
-
-  # The reference my edits and my code pane go through for the member `memberName` of my subject: an
-  # OBJECT's member, edited through the instance edit protocol (MemberRef). A class inspector's is a
-  # class's member (ClassInspectorWdgt._memberRefOf). Made for the one gesture that asks, never kept.
-  _memberRefOf: (memberName) ->
-    new MemberRef @inspectedObject, memberName
-
-  # The EDIT ROW -- my footer band's buttons -- as ONE unit: built, laid out and reached into
-  # together, so it exists or it does not, and my footer band with it. An inspector on a subject
-  # that cannot service an edit is a READ-ONLY inspector, which is the honest presentation rather
-  # than a degraded one; offering controls that could only refuse is worse than offering none (the
-  # same reasoning `createDesktop` uses to skip an app icon a profile cannot provide). Its layout
-  # twin is the guarded footer band in `_reLayout`. Save is the primary action; the build sets the
-  # enabled states (see the field declarations).
-  _buildAndConnectEditRow: ->
-    @addPropertyButton = new SimpleButtonWdgt target: @, action: "addPropertyPopout", face: "Add…"
-    @_addNoSettle @addPropertyButton
-    @renamePropertyButton = new SimpleButtonWdgt target: @, action: "renamePropertyPopout", face: "Rename…"
-    @_addNoSettle @renamePropertyButton
-    @removePropertyButton = new SimpleButtonWdgt target: @, action: "removeProperty", face: "Remove"
-    @_addNoSettle @removePropertyButton
-
-    @saveButton = new SimpleButtonWdgt target: @, action: "save", face: "Save", primary: true
-    @_addNoSettle @saveButton
-
-  # my last toggle, which a class inspector does not build (ClassInspectorWdgt)
-  _buildAndConnectOwnPropsOnlyToggle: ->
-    @showOwnPropsOnlyToggle = new LabelledToggleWdgt target: @, action: "toggleShowingOwnPropsOnly", face: "Own props only"
-    @_addNoSettle @showOwnPropsOnlyToggle
-
-  # A breadcrumb chip's class, in a class inspector. The chip's name came from my subject's chain
-  # (_classChainLinks), so it is resolved against those same links and never looked up as a global:
-  # a chip can name a BUILT-IN class (an inspector on a number names Number), which is no Fizzygum
-  # class, so classNamed rightly does not answer it, while window[name] would answer any global at
-  # all. A name on no link of the chain is a broken chip, and fails loudly.
-  openClassInspector: (ignored,ignored2,className) ->
-    classLink = (link for link in @_classChainLinks() when link.constructor.name is className)[0]
-    unless classLink?
-      throw new Error "openClassInspector: no class named '" + className + "' on the inspected object's prototype chain"
-    classInspector = new ClassInspectorWdgt classLink
-    world.openFrameWith classInspector, (new Point 560, 410), world.hand.position().subtract(new Point 50, 100)
-
-  selectionFromList: (selected) ->
-    if selected == undefined then return
-
-    cnts = @detail.textWdgt
-    cnts.setText @_memberRefOf(selected).shownText()
-    # the pane's undo history is the member's it was built in: a load of ANOTHER member starts it afresh,
-    # so no undo or redo brings back a text of the member selected before, which a save would write into
-    # this one; a RELOAD of the member it last loaded (its row clicked again: the saved source put back
-    # over unsaved typing) is a step of that history, so the undo chord brings the typing back
-    if selected is @lastLoadedMember
-      cnts.pushUndoState cnts.text.length
-    else
-      cnts.forgetUndoHistory()
-    @lastLoadedMember = selected
-    # `constructor`'s code is shown, never edited: it is my subject's class itself, which a save
-    # would replace (Class.refuseTheConstructor)
-    cnts.isEditable = selected isnt "constructor"
-    cnts.enableSelecting()
-    cnts.considerCurrentTextAsReferenceText()
-    @detail.checkIfTextContentWasModifiedFromTextAtStart()
-    @_reflectMemberSelection()
-
-  _reLayout: (newBoundsForThisLayout) ->
-
-    if @_handleCollapsedStateShouldWeReturn() then return
-
-    # Establish THIS layout pass's final bounds on OURSELVES first, before positioning the
-    # children below. The base Widget::_reLayout (our `super` at the end) is what normally
-    # applies newBoundsForThisLayout to @bounds — but we lay the children out manually from
-    # @left()/@width()/@bottom() BEFORE calling super, so without this they'd be sized to the
-    # PREVIOUS pass's extent and lag the inspector by one layout. During a resize that lag
-    # equals the last drag STEP, whose size depends on how many frames the drag spanned — so
-    # under variable cycle cadence (dpr2 + parallel test load) the bands' controls + the
-    # detail scrollbar settle to a nondeterministic 1px offset (the macroNakedInspector dpr2
-    # flake). Applying the bounds here makes the child layout read the FINAL extent, so the
-    # render is identical regardless of cadence. `super` re-applies the same bounds (idempotent).
-    newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout
-    @_applyBounds newBoundsForThisLayout.origin, newBoundsForThisLayout.extent()
-
-    @_repaintAsOneUnit =>
-      bands = @_bandsIn @bounds
-
-      @_layOutBreadcrumb bands.breadcrumb
-      @_layOutTogglesIn bands.toggles
-
-      # the body's two panes, each one only while it is still mine: a pane taken out of me is not
-      # mine to place
-      if @list.parent == @
-        @list._applyBounds bands.list.origin, bands.list.extent()
-      if @detail.parent == @
-        @detail._applyBounds bands.code.origin, bands.code.extent()
-
-      # The EDIT ROW's layout twin, my footer band: laid out exactly when it was built
-      # (`_subjectIsEditable`, the SAME query as the build and as _bandsIn — a second spelling would
-      # be a fact stated twice, and two facts will disagree). FooterBandLayout places every footer
-      # button that is my child, shown or not: visibility is not a layout input.
-      if @_subjectIsEditable()
-        FooterBandLayout._arrange @, @_footerLeftButtons(), @_footerRightButtons()
-
+  # Destroyed as a whole: flagged at entry, so my view, destroyed with me, finds me being torn down
+  # (_reactToChildRemoved) and no place is built into a dying inspector.
+  _fullDestroyNoSettle: ->
+    @_beingFullDestroyed = true
     super
-    @_markLayoutAsFixed()
 
-  # My BANDS in `box` -- my own box, in whatever coordinates the caller works in: my bounds for my
-  # layout, my local box (origin 0,0) for my seams -- as ONE pure answer, so where my layout places
-  # a pane and where my seams draw a line can never disagree. Answers:
-  #   breadcrumb                   my breadcrumb's pieces' places and the band's height
-  #                                (_breadcrumbIn): as many rows as its chips take at the box's width
-  #   toggles                      the toggles band above its rule
-  #   breadcrumbRule, togglesRule  each band's last row: its rule
-  #   list, code                   the body's two panes, the list column then the code pane
-  #   seam                         the line between them, the body's whole height
-  #   footerRule                   the footer band's rule (FooterBandLayout.ruleIn), or undefined for
-  #                                a read-only inspector, whose body runs to the box's bottom
-  # Where the box is too short for every band, the body is empty (zero tall) and the footer band
-  # overlaps the bands above it. Integer by construction: the box is, every metric is, and the list
-  # column is floored.
-  _bandsIn: (box) ->
-    theme = WorldWdgt.theme
-    rule = theme.inspectorRuleWidth
-    left = box.left()
-    right = box.right()
-    breadcrumb = @_breadcrumbIn box
-    breadcrumbRuleTop = box.top() + breadcrumb.height - rule
-    togglesTop = breadcrumbRuleTop + rule
-    togglesRuleTop = togglesTop + theme.toggleBandHeight - rule
-    bodyTop = togglesRuleTop + rule
-    hasFooter = @_subjectIsEditable()
-    bodyBottom = Math.max bodyTop, (if hasFooter then (FooterBandLayout.topIn box) else box.bottom())
-    listRight = left + Math.min theme.inspectorListColumnWidth, Math.floor(box.width() / 2)
-    codeLeft = Math.min right, listRight + rule
-
-    breadcrumb: breadcrumb
-    breadcrumbRule: new Rectangle left, breadcrumbRuleTop, right, togglesTop
-    toggles: new Rectangle left, togglesTop, right, togglesRuleTop
-    togglesRule: new Rectangle left, togglesRuleTop, right, bodyTop
-    list: new Rectangle left, bodyTop, listRight, bodyBottom
-    seam: new Rectangle listRight, bodyTop, codeLeft, bodyBottom
-    code: new Rectangle codeLeft, bodyTop, right, bodyBottom
-    footerRule: if hasFooter then (FooterBandLayout.ruleIn box) else undefined
-
-  # My seams, top to bottom: the breadcrumb band's rule, the toggles band's, the line between my
-  # list and my code pane, and my footer band's rule when I have one -- all from the one geometry my
-  # layout places my children by (_bandsIn), so each lies in a gap between them.
-  _seamRects: ->
-    bands = @_bandsIn new Rectangle 0, 0, @width(), @height()
-    seams = [bands.breadcrumbRule, bands.togglesRule, bands.seam]
-    seams.push bands.footerRule  if bands.footerRule?
-    seams
-
-  # My BREADCRUMB in `box` (my own box, in whatever coordinates the caller works in), as ONE pure
-  # answer: a function of the box's left, right and top and of my pieces' own sizes, so laying it
-  # out again moves nothing, and asking again at another width answers that width afresh.
-  #   ROWS: my pieces flow left to right in rows chipHeight tall. The first row is centred down the
-  # band's first breadcrumbBandHeight less its rule; each next row lies a chip's height and
-  # breadcrumbGap lower.
-  #   ACROSS A ROW: the caption starts breadcrumbInset in and the first chip breadcrumbCaptionGap
-  # after it; a later row starts where the first chip does, so the caption heads the whole chain. A
-  # chip and the separator after it travel together: the separator's INK, not its square, starts
-  # breadcrumbGap after the chip (ChevronRightIconAppearance.inkSpanX), and the next chip starts
-  # breadcrumbGap after the ink.
-  #   WRAPPING: a chip with its separator that would end past breadcrumbInset short of the box's
-  # right edge starts the next row instead -- unless it is the first piece of its row, which then
-  # runs on past that edge (where I clip it).
-  #   A chip takes its own size (preferredExtent), the caption its own one-line box, each centred
-  # down its row; a separator its glyph square, centred the same way. Only a piece still my child
-  # takes part, and a separator only while a later chip of mine follows it. Answers:
-  #   caption            a Rectangle, or undefined when the caption is not placed
-  #   chips, separators  Rectangles indexed as my classChips / classSeparators, undefined for a
-  #                      piece not placed
-  #   height             the band's height, its rule included: breadcrumbBandHeight, plus a chip's
-  #                      height and breadcrumbGap per row past the first
-  # Integer by construction: the box is, every metric is, every size is a whole number of px.
-  _breadcrumbIn: (box) ->
-    theme = WorldWdgt.theme
-    side = theme.breadcrumbSeparatorSize
-    [inkLeft, inkRight] = ChevronRightIconAppearance.inkSpanX side
-    rowHeight = theme.chipHeight
-    rowPitch = rowHeight + theme.breadcrumbGap
-    firstRowTop = box.top() + Math.floor (theme.breadcrumbBandHeight - theme.inspectorRuleWidth - rowHeight) / 2
-    limit = box.right() - theme.breadcrumbInset
-    row = 0
-    centredInRow = (extent, left) ->
-      top = firstRowTop + row * rowPitch + Math.floor (rowHeight - extent.y) / 2
-      new Rectangle left, top, left + extent.x, top + extent.y
-
-    caption = undefined
-    chips = []
-    separators = []
-
-    x = box.left() + theme.breadcrumbInset
-    if @classCaption?.parent is @
-      caption = centredInRow @classCaption.preferredExtent(), x
-      x = caption.right() + theme.breadcrumbCaptionGap
-    rowStart = x
-
-    myChips = (chip for chip in @classChips when chip.parent is @)
-    for chip in myChips
-      i = @classChips.indexOf chip
-      trails = chip isnt myChips[myChips.length - 1] and @classSeparators[i]?.parent is @
-      extent = chip.preferredExtent()
-      reach = extent.x + (if trails then theme.breadcrumbGap + inkRight - inkLeft else 0)
-      if x > rowStart and x + reach > limit
-        row++
-        x = rowStart
-      chips[i] = centredInRow extent, x
-      x += extent.x
-      if trails
-        separators[i] = centredInRow (new Point side, side), x + theme.breadcrumbGap - inkLeft
-        x += theme.breadcrumbGap + inkRight - inkLeft + theme.breadcrumbGap
-
-    caption: caption
-    chips: chips
-    separators: separators
-    height: theme.breadcrumbBandHeight + row * rowPitch
-
-  # My BREADCRUMB's pieces where `crumbs` places them (_breadcrumbIn, in my bounds' coordinates): each
-  # chip at its own size, the caption and the separators in their own boxes. A piece crumbs does
-  # not place -- one taken out of me -- is not mine to move.
-  _layOutBreadcrumb: (crumbs) ->
-    @classCaption._applyBounds crumbs.caption  if crumbs.caption?
-    for chip, i in @classChips when crumbs.chips[i]?
-      chip._reLayout crumbs.chips[i]
-    for separator, i in @classSeparators when crumbs.separators[i]?
-      separator._applyBounds crumbs.separators[i]
+  # MY SUBJECT CHOSEN AGAIN (InspectorRowWdgt.showChoice, which asks only while I show it, my view
+  # standing in me): my view takes it back -- a member editor puts its member's text back over what is
+  # typed, as one step of its undo history; a member list chooses no row of its own any more, since
+  # what stood on its right for its choice has gone. A core: the row calls it inside its one settle.
+  _reloadNoSettle: ->
+    @view._reloadNoSettle()
     return
 
-  # My TOGGLES in `band` (the toggles band above its rule, in my bounds' coordinates): each at its
-  # own size (its preferredExtent: a fixed label, so the same on and off), the first
-  # toggleBandInset in and each next one toggleBandGap after the one before, centred down the band,
-  # floored. Only a toggle that is still my child takes part: one taken out of me is not mine to
-  # place, and the others close up.
-  _layOutTogglesIn: (band) ->
+  # my window's title, and how a row names me: "Inspector — " and my subject's name, as it is
+  colloquialName: ->
+    "Inspector — " + @_subjectName()
+
+  # My subject's name: a class's PROTOTYPE by its class's name, as DATA ("AnalogClockWdgt": my subject
+  # IS that class, and the name is how a person finds it); anything else through the service, never by
+  # asking it -- an inspector is handed whatever the user asked to inspect, a number, a string, a Point
+  # among it, and the service names those from their class (Utils.colloquialNameOf). A member names
+  # itself (MemberRef.colloquialName).
+  _subjectName: ->
+    if isAClassPrototype @inspectedObject then @inspectedObject.constructor.name else Utils.colloquialNameOf @inspectedObject
+
+  # The class my subject is made by: the first link ABOVE it on its prototype chain that is a
+  # class's own prototype (it owns a `constructor` that is a function), unless that is Object. An
+  # object's is its class; a class's prototype's is its superclass; a number's is Number. A member
+  # has none: its holder's class is the inspector to my left's. undefined when there is none.
+  _classAbove: ->
+    return undefined  if @inspectedObject?.editsAsAMember?()
+    link = Object.getPrototypeOf Object @inspectedObject
+    until !link? or ((Object::hasOwnProperty.call link, "constructor") and Utils.isFunction link.constructor)
+      link = Object.getPrototypeOf link
+    link  if link? and link.constructor.name isnt "Object"
+
+  # MY CHIP's action: the class above my subject is my choice, and what stands on my right shows it.
+  # So my view drops its own choice first, if it shows one: that choice stands on my right no more.
+  chooseMyClass: ->
+    @view?.clearChoice?()
+    InspectorRowWdgt.showChoice @, @_classAbove()
+
+  # The splitter that stands before me in my row, or undefined: read off my row's children each time
+  # I am asked (InspectorRowWdgt.splitterBefore), never stored, so a split button never drags the
+  # splitter of a row I am not in. Only a row answers: anywhere else (a copy of me, standing alone; a
+  # transform island turning me) none stands before me.
+  splitterBeforeMe: ->
+    @parent?.splitterBefore? @
+
+  # MY SPLIT BUTTON, derived: my header opens with one exactly while a splitter stands before me
+  # (splitterBeforeMe). Nothing to do when that is what my header shows; else my header is RE-LED in
+  # place -- every piece of it before my title (BandWdgt._replacePiecesBeforeNoSettle) -- with a fresh
+  # split button and inspectorHeaderGap, or with inspectorHeaderInset alone. Only that lead changes:
+  # my title, my chip and my band stay the same widgets, and nothing made here settles as it is made,
+  # so my copy and restore hooks may run it as my row's reconcile does. A header or a title a person
+  # took out of me is theirs: I re-lead no band that is not mine.
+  _reconcileSplitGripNoSettle: ->
+    wanted = @splitterBeforeMe()?
+    return if wanted is @showsSplitGrip
+    return unless @header?.parent is @ and @headerTitle?.parent is @header
+    @showsSplitGrip = wanted
     theme = WorldWdgt.theme
-    x = band.left() + theme.toggleBandInset
-    for toggle in @_toggles() when toggle?.parent is @
-      extent = toggle.preferredExtent()
-      y = band.top() + Math.floor (band.height() - extent.y) / 2
-      toggle._reLayout new Rectangle x, y, x + extent.x, y + extent.y
-      x += extent.x + theme.toggleBandGap
+    lead = if wanted then [(new SplitGripWdgt()), theme.inspectorHeaderGap] else [theme.inspectorHeaderInset]
+    @header._replacePiecesBeforeNoSettle @headerTitle, lead
     return
 
-  # My toggles, in order, left to right. A class inspector builds no own-props toggle
-  # (_buildAndConnectOwnPropsOnlyToggle), so that field stays undefined and its band holds three.
-  _toggles: ->
-    [@showMethodsToggle, @showFieldsToggle, @showInheritedToggle, @showOwnPropsOnlyToggle]
-
-  # My footer band's two groups of buttons, each in order, left to right (FooterBandLayout): add,
-  # rename and remove at its left, save -- the primary action -- at its right. A read-only inspector
-  # has none of them.
-  _footerLeftButtons: ->
-    [@addPropertyButton, @renamePropertyButton, @removePropertyButton]
-
-  _footerRightButtons: ->
-    [@saveButton]
-
-  # A pane of mine paints nothing of its own -- neither the viewport nor the plane it scrolls has a
-  # fill or a border -- so my body and my seams show through it (visual-design-system §4.1): each is
-  # dressed in the inspector pane's roles (ViewportWdgt.wearPaneRoles; its plane wears them too),
-  # read as it paints and kept by name, so a pane taken out of me keeps them. Dressed on MY two panes
-  # as they are built: a ListWdgt or a TextAreaWdgt anywhere else keeps its own look.
-  _clearPaneLook: (pane) ->
-    pane.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
+  # The two notifications a widget built without its constructor gets (Duplicator, Deserializer: both
+  # ask them through ?(), and no class above me answers either): a copy of me, or a restore of me,
+  # stands where it stands -- alone, it is in no row and sheds a split button it was copied or saved
+  # with; inside a copied or restored row, its row's structure gives back what it had.
+  _reactToBeingCopied: ->
+    @_reconcileSplitGripNoSettle()
     return
 
-  #InspectorWdgt editing ops:
-  # Each of my four edit gestures -- Save, Add…, Rename…, Remove -- is one STEP of my member
-  # reference (_memberRefOf: its save, add, rename and remove), followed by my own re-filter where my
-  # member set changed. The step makes the edit, records it where a world snapshot needs it, and tells
-  # ONCE: an object's member through the Widget edit protocol's verbs (MemberRef), a class's through
-  # its meta-object (ClassMemberRef). Nothing here notifies again.
-  # My Save is the shared save scaffolding: it reads the typed text and the selected member, and the
-  # step is the one part that differs between an object's member and a class's. Either save step
-  # compiles before it changes anything, so an edit that is not code changes nothing: it is reported,
-  # and stays MODIFIED, Save still enabled (Widget._savingTypedCode). Answers whether it saved.
-  save: ->
-    return false unless @list.selected? and @_subjectIsEditable()
-    txt = @detail.contents.children[0].text.toString()
-    propertyName = @list.selected.labelString
-    return false unless @_savingTypedCode => @_memberRefOf(propertyName).save txt
-
-    @detail.textWdgt.considerCurrentTextAsReferenceText()
-    @detail.checkIfTextContentWasModifiedFromTextAtStart()
-    true
-
-  # the add, past the prompt (addPropertyPopout). Adding a member changes my member set, so it
-  # re-filters me (_refilterMembers).
-  addProperty: (prop) ->
-    if prop? and @_subjectIsEditable() and !@_refusesAsANewMemberName prop
-      @_memberRefOf(prop).add()
-      @_refilterMembers()
-
-  # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its
-  # class, what every `.constructor` read answers (Class.refuseTheConstructor), so Add… and Rename…
-  # refuse it, saying why. Answers whether it refused.
-  _refusesAsANewMemberName: (name) ->
-    return false unless name is "constructor"
-    @inform "constructor is the class\nitself: no member can\ntake its name"
-    true
-
-  addPropertyPopout: ->
-    # Chrome cannot handle empty strings (others do), hence the "property" default
-    @prompt "new property name:", @, "addProperty", defaultContents: "property"
-
-  # A rename, like a removal below, changes my member set, so it re-filters me (_refilterMembers).
-  # A rename to the name the member already has changes nothing, so it does nothing (each step's
-  # move would otherwise drop the member it moves onto itself); so does a rename of a member I do
-  # not offer to rename (_selectedMemberCanBeRenamedOrRemoved), as a click on my disabled button does.
-  # A rename to `constructor` is refused (_refusesAsANewMemberName).
-  renameProperty: (prop) ->
-    return unless @_selectedMemberCanBeRenamedOrRemoved()
-    propertyName = @list.selected.labelString
-    return if prop is propertyName
-    return if @_refusesAsANewMemberName prop
-    @_memberRefOf(propertyName).rename prop
-
-    @_refilterMembers()
-
-  renamePropertyPopout: ->
-    # nothing selected = nothing to rename: a fresh inspector has NO default selection
-    unless @list?.selected?
-      world.inform "select a\nproperty first"
-      return
-    return unless @_selectedMemberCanBeRenamedOrRemoved()
-    propertyName = @list.selected.labelString
-    @prompt "property name:", @, "renameProperty", defaultContents: propertyName
-
-  removeProperty: ->
-    # nothing selected = nothing to remove (see renamePropertyPopout), and a member I do not offer
-    # to remove stays (_selectedMemberCanBeRenamedOrRemoved)
-    unless @list?.selected?
-      world.inform "select a\nproperty first"
-      return
-    return unless @_selectedMemberCanBeRenamedOrRemoved()
-    propertyName = @list.selected.labelString
-
-    @_memberRefOf(propertyName).remove()
-
-    @_refilterMembers()
+  _afterDeserialization: ->
+    @_reconcileSplitGripNoSettle()
+    return

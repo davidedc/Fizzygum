@@ -339,7 +339,7 @@ class Serializer
       # Any other function is refused, never dropped: no text restores it faithfully (a closure over
       # a run's locals, a native, a class member's body). The usual way a WIDGET comes to hold one is
       # a person's run (`@f = -> 42`, Widget.evaluateString), so the remedy names the person's
-      # gestures first -- for a function held directly in a widget's field, an object inspector's
+      # gestures first -- for a function held directly in a widget's field, an inspector's
       # Remove, or its Save as CoffeeScript, which keeps the source; for one held deeper (in an
       # array, a Map, a Set or a plain object), the Remove of the field that follows the last widget
       # its path names -- and then the class's own, for a field its code sets. A function in a slot

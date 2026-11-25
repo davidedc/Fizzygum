@@ -18,7 +18,7 @@ class ListWdgt extends ViewportWdgt
     return element.toSource()  if element.toSource
     element.toString()
 
-  # a list IS its scrolling — cropping an inspector's property pane would hide
+  # a list IS its scrolling — cropping an inspector's member list would hide
   # entries with no cue (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
@@ -50,7 +50,7 @@ class ListWdgt extends ViewportWdgt
   # (_positionAndResizeChildren). Asked once per element, as my rows are built.
   memberFactsQuery: undefined
 
-  # The rows are the operand: every caller supplies them, while only the inspector
+  # The rows are the operand: every caller supplies them, while only a member list (MemberListWdgt)
   # supplies target/action — which as leading positionals made the other six sites
   # open with `undefined, undefined` just to reach the rows (R3).
   constructor: (@elements = [], opts = {}) ->
@@ -87,7 +87,7 @@ class ListWdgt extends ViewportWdgt
   # builds the list contents, via the _buildAndConnectChildren wrapper + NoSettle-core pattern. ListWdgt extends
   # ViewportWdgt, whose `add` is a CUSTOM override that redirects a non-frame child into @contents; the
   # non-settling twin of that redirect is `@contents._addNoSettle` (NOT the base `@_addNoSettle`, which would
-  # wrongly attach @listContents to the viewport itself and break every InspectorWdgt's property pane --
+  # wrongly attach @listContents to the viewport itself and break every member list (MemberListWdgt) --
   # the reason the orphan-settledness sweep left this unconverted). The core builds via @contents._addNoSettle
   # with the same default free-floating attachment the public redirect passes, so behaviour is byte-
   # identical and the wrapper settles once -- `new ListWdgt` still returns settled.
@@ -157,6 +157,15 @@ class ListWdgt extends ViewportWdgt
     @listContents.noteShownSelectionChanged()
     if @action? and @action != ""
       @target[@action].call @target, row.labelString
+    return
+
+  # NO ROW OF MINE IS SELECTED any more: my target says so when what it chose through me stopped being
+  # shown (a member list whose inspector's class chip was pressed, MemberListWdgt.clearChoice). My
+  # rows read the selection as they paint, so my rows panel is told it moved; nothing is dispatched,
+  # since nothing was chosen.
+  clearSelection: ->
+    @selected = undefined
+    @listContents.noteShownSelectionChanged()
     return
 
   # A row's DOUBLE-click dispatches here, the row again in slot 1 (ButtonWdgt.triggerDoubleClick), and

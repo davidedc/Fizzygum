@@ -114,7 +114,7 @@ window.allClassFunctions = ->
 # IS THIS VALUE A FIZZYGUM CLASS'S OWN PROTOTYPE? classNamed's inverse question for the object a
 # class's members live on: it OWNS a `constructor` (an instance owns none), that constructor is the
 # class classNamed answers for its name, and the class's prototype is this very object (an own
-# `constructor` member added to some other object is no link: cf. InspectorWdgt._classChainLinks).
+# `constructor` member added to some other object is no link: cf. InspectorWdgt._classAbove).
 # ⚠ Not `instanceof`: a Widget-branch prototype is `instanceof Widget`, so a walker that asks that
 # alone reads the prototype as a widget. Consumers: both graph walkers -- a prototype belongs to the
 # page, not to the world, so the Serializer names it by its class (WellKnownObjects.classKeyFor) and

@@ -29,7 +29,7 @@
 #     (FrameWdgt.smallestExtentKeepingMyControlsUsable). A strip with no title (a toolbar window's) asks
 #     no floor.
 #     This is the PERSON's gesture only: code can still force a frame to any extent.
-# A halo's handles, a naked inspector's resizer and the demo handles stay plain HandleWdgts, on a plate
+# A halo's handles and the demo handles stay plain HandleWdgts, on a plate
 # that casts the desktop shadow (HandleAppearance, HandleWdgt._castMyShadow).
 
 class FrameGripWdgt extends HandleWdgt

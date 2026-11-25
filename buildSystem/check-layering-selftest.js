@@ -230,6 +230,7 @@ proveGate({
         'authoring/StretchableWidgetContainerWdgt'].map((f) => [`${f}.coffee`, /^  add(\s*:)/m, '  addBiteProofRenamed$1']),
       ['HandleWdgt.coffee', /DeferredSettle\b/g, 'DeferredSettleBiteProofStale'],
       ['StackElementsSizeAdjustingWdgt.coffee', /DeferredSettle\b/g, 'DeferredSettleBiteProofStale'],
+      ['meta-tools/SplitGripWdgt.coffee', /DeferredSettle\b/g, 'DeferredSettleBiteProofStale'],
       ...['authoring/CalculatingPatchNodeWdgt', 'patch-programming-experimental/RegexSubstitutionPatchNodeWdgt',
         'patch-programming-experimental/DiffingPatchNodeWdgt'].map((f) => [`${f}.coffee`, /\._setTextConnector\b/g, '._setTextBiteProofStaleCall']),
       ['basic-widgets/Widget.coffee', /(\n  _applyExtent:[\s\S]*?)@_scheduleRelayoutRespectingPhase\(\)/, '$1@_biteProofRenamedValve()'],

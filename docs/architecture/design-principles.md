@@ -94,8 +94,8 @@ app assembled by direct manipulation, no code) reachable at all.
 ## Metacircular, within limits
 
 The system can inspect and modify itself from within: all ~470 classes ship as CoffeeScript
-source text, compiled in the browser at boot and paired with their running code, so the class
-inspector edits the actual system and every instance updates live (`src/meta/`; classes track
+source text, compiled in the browser at boot and paired with their running code, so an inspector on a
+class edits the actual system and every instance updates live (`src/meta/`; classes track
 their instances for exactly this). Two honest limits are acknowledged rather than papered
 over:
 

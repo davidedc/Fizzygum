@@ -3,7 +3,8 @@
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 **STATUS: IN EXECUTION since 2026-11-24** (authored and spiked that day; §6's table says which units have
 landed, and each landed unit's paragraph says what it corrected here). Every fact in §1 and §7 was read off the tree at
-Fizzygum `f7aed9e0` / Fizzygum-tests `e78dc3e50` (471 SystemTests) on 2026-11-24. Line numbers drift:
+Fizzygum `f7aed9e0` / Fizzygum-tests `e78dc3e50` (471 SystemTests) on 2026-11-24, but the test names, counts and
+rig numbers §7 gives as U2 left them; §5 states the target as U2 built it, and what U4 is to add. Line numbers drift:
 the quoted method or symbol name is authoritative, so grep it fresh before trusting a number.
 **The design was spiked the same day against the unmodified dev build** (§4): six page probes, no
 source change. What the spike measured is stated as measured; what it did not reach is stated as a
@@ -68,6 +69,8 @@ Workspace routing: the umbrella `CLAUDE.md` at `/Users/davidedellacasa/code/Fizz
 
 ### 0.3 ⭐ Critical reframes: read these before anything else
 
+*(Written before U2: "today" in this section is the tree the plan started from (§1); §5 is the tool as built.)*
+
 1. **Today's inspector is already a two-column pager with the columns welded together.** Its body is
    a member list and, beside it, the code of the member selected in the list. Unweld them and the
    list is one inspector (subject: the object) and the code is the next (subject: one member of it).
@@ -101,32 +104,35 @@ Workspace routing: the umbrella `CLAUDE.md` at `/Users/davidedellacasa/code/Fizz
    scroll bar's thumb beside a list's bar. So:
    - **the divider**, the mouse's control: slightly thicker, showing grip dots;
    - **the split button**, the finger's control: 44 × 44, at the left end of the header of the
-     inspector on the divider's right, a double arrow with a finger icon so it says what to do.
+     inspector on the divider's right, a double arrow (a finger icon on it, so it says what to do, is
+     U3b's, which the owner ruled on 2026-11-24 is not run in the loop that built U2: the button ships
+     with the double arrow alone).
    Both are present whatever pointer is in use, because some devices have both. Nothing in the
    layout reads the pointer, so "one geometry serves mouse and finger alike" (`Theme.coffee`,
    program ruling G1) holds as it stands (§5.10).
 
 ### 0.4 Owner decisions
 
-Ask the owner the OPEN ones at the start. On "go", use the defaults.
+Ask the owner the OPEN ones at the start. On "go", use the defaults. The inspector-overhaul loop took every
+default (its prompt: "use the defaults"), and each row below says how it stands now.
 
 | # | Decision | Status |
 |---|---|---|
 | D1 | One tool: "Inspect" opens the row of inspectors; the old inspectors are deleted | **LOCKED** (owner, 2026-11-24) |
 | D2 | Decompose into member list + member editor; the object/class split in a member reference | **LOCKED** (owner, 2026-11-24) |
 | D3 | The row (pager) is the core shape | **LOCKED** (owner, 2026-11-24) |
-| D4 | A drill that does not fit **widens the window**, no further than the desktop's right edge; past that the inspectors narrow. Nothing is dropped from the left | OPEN. Default: as stated (the alternative, horizontal scroll, needs new viewport code: §10) |
-| D5 | **One class chip per inspector** (an object's class; a class's superclass) in the header, in place of the whole breadcrumb. Walking up the chain is one click per class, each a new inspector | OPEN. Default: yes. A wrapping breadcrumb cannot be a stack band (its height would depend on its width), and each class is its own inspector anyway |
-| D6 | The four filter toggles (Methods, Fields, Inherited, Own props only) keep their meaning and their look, in the member list | OPEN. Default: unchanged. The parked BACKLOG question on what "Inherited" hides stays parked |
-| D7 | **Rename… and Remove sit with Add… under the member list**; Save sits under the editor | OPEN. Default: yes. The list then owns every gesture that changes the member set, and no inspector has to refresh another |
-| D8 | **No resizer of its own for a row with no window.** Its two hooks and their readers are deleted (§6 U2.2) | OPEN. Default: yes. Nothing in the product makes a windowless inspector any more (a drill used to); one picked out of its window resizes by the halo, as any widget |
-| D9 | Starting window **760 × 480** (today 560 × 410) | OPEN. Default: yes (two inspectors at their least widths, §4) |
-| D10 | One window title for every subject: **"Inspector — <name>"** (today "Object Inspector — …" / "Class Inspector — …") | OPEN. Default: yes |
-| D11 | **A split's two controls, both always present** (owner, 2026-11-24, final): the divider slightly thicker with grip dots, for a mouse; and a 44 × 44 button in the header of the inspector on its right, a double arrow with a finger icon, for a finger. Both are there at all times, because some devices have both a mouse and a touch screen (§5.10) | **LOCKED**. Open details, each with a default: the divider's width (12 px) and dot field (2 × 4); the finger icon, which does not exist yet and is drawn with the owner (U3b) |
-| D12 | Second phase (U4): the first object-list views, **Children**, **Instances**, **Subclasses**, and the view chooser they need | OPEN. Default: build. Senders, implementors and protocols stay out (§11) |
-| D13 | Commits | Per house rule, **ask before every commit and push**. At the start, ask whether this plan gets a standing grant ("commit and continue while gates pass; ask before push") |
-| D14 | The dotted divider is the look of **every** division stack's splitter (the halo's layout adjusters, "Edit layout"), not a look of the inspector's own | OPEN. Default: yes: one splitter class, one look. It recaptures the tests that show a splitter (five; the grep of U1b step 4 names 23 sources, ten of which build one) |
-| D15 | **Duplicate…** beside Add… Rename… Remove (owner, 2026-11-24): a copy of the selected member under a new name | **LOCKED** for members. Open detail, default: a duplicated field that holds an object holds the SAME object (a copy of the slot, not of the thing). Duplicating a class waits for class-level verbs (§11) |
+| D4 | A drill that does not fit **widens the window**, no further than the desktop's right edge; past that the inspectors narrow. Nothing is dropped from the left | **Default taken**, built (§5.4): the window widens by the missing least width, as far as the desktop's right edge (the alternative, horizontal scroll, needs new viewport code: §10) |
+| D5 | **One class chip per inspector** (an object's class; a class's superclass) in the header, in place of the whole breadcrumb. Walking up the chain is one click per class, each a new inspector | **Default taken**, built (§5.5). A wrapping breadcrumb cannot be a stack band (its height would depend on its width), and each class is its own inspector anyway |
+| D6 | The four filter toggles (Methods, Fields, Inherited, Own props only) keep their meaning and their look, in the member list | **Default taken**: unchanged (§5.6). The parked BACKLOG question on what "Inherited" hides stays parked |
+| D7 | **Rename… and Remove sit with Add… under the member list**; Save sits under the editor | **Default taken**, built, Duplicate… among them (D15; §5.6). The list then owns every gesture that changes the member set, and no inspector has to refresh another |
+| D8 | **No resizer of its own for a row with no window.** Its two hooks and their readers are deleted (§6 U2.2) | **Default taken**: U2.2 deleted the two hooks and their readers. Nothing in the product makes a windowless inspector any more (a drill used to); one picked out of its window resizes by the halo, as any widget |
+| D9 | Starting window **760 × 480** (before U2: 560 × 410) | **Default taken**: `InspectorRowWdgt`'s constructor states it (two inspectors at their least widths, 663 together, fit its 758 px row) |
+| D10 | One window title for every subject: **"Inspector — <name>"** (before U2: "Object Inspector — …" / "Class Inspector — …") | **Default taken**, built (`InspectorWdgt.colloquialName`; the window takes its row's first inspector's) |
+| D11 | **A split's two controls, both always present** (owner, 2026-11-24, final): the divider slightly thicker with grip dots, for a mouse; and a 44 × 44 button in the header of the inspector on its right, a double arrow (with a finger icon once U3b draws one), for a finger. Both are there at all times, because some devices have both a mouse and a touch screen (§5.10) | **LOCKED**. Details as built: the divider 12 px with a 2 × 4 dot field (U1b); the button shows the double arrow alone: the owner ruled on 2026-11-24 that U3b, the finger icon, is not run in the inspector-overhaul loop, so it stays this plan's open item and the plan stays in `docs/plans/` at U5 |
+| D12 | Second phase (U4): the first object-list views, **Children**, **Instances**, **Subclasses**, and the view chooser they need | **Default taken**: build (U4). Senders, implementors and protocols stay out (§11) |
+| D13 | Commits | Per house rule, **ask before every commit and push**. At the start, ask whether this plan gets a standing grant ("commit and continue while gates pass; ask before push"). The inspector-overhaul loop runs under its prompt's grant: commit and push each unit after its green gauntlet |
+| D14 | The dotted divider is the look of **every** division stack's splitter (the halo's layout adjusters, "Edit layout"), not a look of the inspector's own | **Default taken**, landed in U1b: one splitter class, one look. It recaptured the five tests that photograph a splitter (18 shots; the grep of U1b step 4 names 23 sources, ten of which build one) |
+| D15 | **Duplicate…** beside Add… Rename… Remove (owner, 2026-11-24): a copy of the selected member under a new name | **LOCKED** for members; built in U2 (§5.3 b, §5.6). Its detail as built, the default: a duplicated field that holds an object holds the SAME object (a copy of the slot, not of the thing). Duplicating a class waits for class-level verbs (§11) |
 | D16 | Packages, categories, families of members, and comments (owner, 2026-11-24) | **Wanted; a plan of its own, authored AFTER this plan's switch (U2) has landed** (owner, 2026-11-24). §11 says how they sit on what this plan builds, and what is missing underneath |
 
 ### 0.5 Cold-execution protocol (read and run in this order)
@@ -144,10 +150,13 @@ Ask the owner the OPEN ones at the start. On "go", use the defaults.
    - `build-and-packaging.md` §2 (the lazy door);
    - `constructor-and-parameter-conventions.md`; `immutable-value-classes.md` (for `MemberRef`).
    Then `Fizzygum/src/macros/CLAUDE.md` and, in the tests repo, `DETERMINISM.md` §1–§2.
-3. **Read the code this plan moves**, whole: `src/meta-tools/InspectorWdgt.coffee`,
-   `src/meta-tools/ClassInspectorWdgt.coffee`, `src/CodeAreaWdgt.coffee`, `src/ScriptWdgt.coffee`,
-   `src/ListWdgt.coffee`, `src/StackLayoutEngine.coffee`, `src/DivisionStackLayoutSpec.coffee`,
-   `src/PromptButtonsRowWdgt.coffee` (the house's model of a small row widget).
+3. **Read the code this plan built and builds on**, whole: every file in `src/meta-tools/` (the tool as
+   U2 built it, §5), `src/CodeAreaWdgt.coffee`, `src/ScriptWdgt.coffee`, `src/ListWdgt.coffee`,
+   `src/StackLayoutEngine.coffee`, `src/DivisionStackLayoutSpec.coffee`,
+   `src/StackElementsSizeAdjustingWdgt.coffee`, `src/PromptButtonsRowWdgt.coffee` (the house's model of a
+   small row widget), and the block "THE INSPECTOR'S TWO LOCATORS" of `src/macros/MacroToolkit.coffee`. The
+   two inspectors U2 deleted, which §1 and §12 read against, are at Fizzygum `f7aed9e0`
+   (`git -C <Fizzygum> show f7aed9e0:src/meta-tools/InspectorWdgt.coffee`, and `ClassInspectorWdgt.coffee`).
 4. **Ask the owner** the OPEN decisions of §0.4.
 5. **Run the units of §6 in order.** Each ends with its gate, then the commit per D13, then a tick in
    §6's table. Nothing is pushed without approval.
@@ -163,11 +172,12 @@ Ask the owner the OPEN ones at the start. On "go", use the defaults.
 
 ---
 
-## 1. Current state (verified 2026-11-24)
+## 1. The state the plan started from (verified 2026-11-24)
 
-This section describes the tree as it stood when the plan was authored. U1 has since moved the edit
-steps and a member's text out of the two inspectors into `MemberRef` / `ClassMemberRef` (§6 U1,
-"Landed"); everything else here stands until U2.
+This section describes the tree as it stood when the plan was authored (Fizzygum `f7aed9e0`), before U2
+replaced the two inspectors with the tool of §5 (U1 had moved the edit steps and a member's text into
+`MemberRef` / `ClassMemberRef`, §6 U1, "Landed"). It is kept as the record the move map (§12) reads
+against: the two inspectors of §1.1 exist no more, and the tool as built is §5.
 
 ### 1.1 The two inspectors
 
@@ -251,6 +261,8 @@ fifteen architecture docs describe it.
 
 ## 2. Why things are shaped this way
 
+*(Written before U2: "today" in this section is the tree the plan started from (§1); §5 is the tool as built.)*
+
 - **One class with a subclass, because the tool predates composition.** The inspector descends from
   Morphic.js's `InspectorMorph`: one widget that builds its panes and lays them out by hand. The
   class inspector was added as a subclass overriding the edit steps, which was the smallest change at
@@ -309,7 +321,7 @@ the raw probes.
 |---|---|
 | Can the row be a horizontal division stack? | **Yes, with no layout code.** Three panes with splitters as a window's content: panes divide the width, re-divide when the window is resized, a real mouse drag on a splitter moves the split, a pane added or destroyed at runtime re-divides the rest. No console error, integer bounds, and `row._invalidateLayout(); world.recalculateLayouts()` moved nothing |
 | Can an inspector be a vertical division stack of bands? | **Yes.** Header band, toggles band, member list, footer band, each a division element with `divisionBox('y')`; the list takes the slack |
-| Can a band be a horizontal division stack of its controls? | **Yes**, with three facts to respect: (1) **a band is as tall as its tallest child**, not as tall as its own box says (a container with division children derives its box from them, `Widget._getRecursiveStackDim`), so a band's GAPS are made as tall as the band; (2) controls are fixed at their own `preferredExtent()` with `crossAlign` 'center'; (3) a **spring** takes the slack |
+| Can a band be a horizontal division stack of its controls? | **Yes**, with three facts to respect: (1) **a band is as tall as its tallest child**, not as tall as its own box says (a container with division children derives its box from them, `Widget._getRecursiveStackDim`), so a band's GAPS are made as tall as the band; (2) controls are fixed at their own `preferredExtent()` with `crossAlign` 'center'; (3) a **spring** takes the slack. A fourth the spike did not reach, read off the engine by U2's research: a FIXED piece pins its MOST size too (least = desired = most, spreadability 0: `SPREADABILITY_NONE` still leaves a tenth of the desired size to take slack, and a piece that takes slack wobbles a px as the band's width changes), the band's own height included |
 | ⚠ Hazard | **A division row whose children's desired widths sum to 0 divides by zero** (`StackLayoutEngine.arrange`, the third regime: `desC / totDesired`), and the always-on guard prints `NON_FINITE_GEOMETRY`. Reached by a spring of desired width 0 added first to an empty band. A spring's desired width is **1** (as `LayoutSpacerWdgt`'s is), and a band's children are added inside ONE settle |
 | ⚠ Hazard | **A widget's `minimumExtent` defaults to 5 × 5** (`Widget.coffee:426`) and clamps what a stack hands it: a 1 px rule came out 5 px tall. A piece that must go below 5 px sets `minimumExtent` to 0 × 0 in its own constructor, as `StackElementsSizeAdjustingWdgt` and `LayoutSpacerWdgt` do |
 | What is an inspector's least width? | **Derived**: the widest band's controls and gaps. With today's four toggles and their 12/8 px gaps the member list's least width is **352 px**; an editor with only Save is far narrower, so the editor's code area carries a floor of its own (§5.6) |
@@ -333,19 +345,28 @@ the raw probes.
 
 All in `src/meta-tools/` (the lazy `meta-tools` part), one class per file, file name = class name.
 
-| Class | Is | Replaces | Size (guide) |
+| Class | Is | Replaces | Lines (as built, comments included) |
 |---|---|---|---|
-| `InspectorRowWdgt extends Widget` | the window's content: inspectors side by side, a splitter between two; where a choice goes; widening | the welded body, `inspectMemberValue`'s windowless inspector, `openClassInspector`'s window | ~90 lines |
-| `InspectorWdgt extends Widget` | ONE subject (`inspectedObject`): a header band (name, class chip), a chooser band when the subject has more than one view, the view | `InspectorWdgt` (rewritten whole), `ClassInspectorWdgt` | ~120 |
-| `MemberListWdgt extends Widget` | the view of an object's members: filter toggles, the list, Add… Rename… Remove | the inspector's left half | ~230, moved |
-| `MemberEditorWdgt extends CodeAreaWdgt` | the view of one member: its source or value as text, Save | the inspector's right half | ~80 |
-| `MemberRef` | one member of one holder: its text (`shownText`) and the edit steps | the inspector's edit hooks and `_paneTextOfMember` | ~130, moved (U1) |
-| `ClassMemberRef extends MemberRef` | a member of a class's prototype | `ClassInspectorWdgt`'s overrides | ~80, moved |
-| `BandWdgt extends Widget` | a row of controls at their own sizes, gaps between them, one spring, a rule along one edge | `_layOutTogglesIn`, the header's and the footer's hand placement | ~50 |
-| `BandSpaceWdgt extends Widget` | a band's gap or spring: paints nothing, may be 0 wide, hidden from the hierarchy menu | (new) | ~20 |
-| `SplitGripWdgt extends LayoutChromeWdgt` | a 44 × 44 grip in an inspector's header that drags the splitter before that inspector: the touch-sized way to move a split (D11) | (new) | ~35 |
+| `InspectorRowWdgt extends ClippingWdgt` | the tool: a window's content (or a widget with no window), inspectors side by side, a splitter between two, derived from them; where a choice goes, a split a person set kept across it; widening on the desktop; it clips its children to its box | the welded body, `inspectMemberValue`'s windowless inspector, `openClassInspector`'s window | 267 |
+| `InspectorWdgt extends Widget` | ONE subject (`inspectedObject`), one view: a header band (name, class chip; a split button while a splitter stands before it), the view (a chooser band when the subject has more than one view is U4's) | `InspectorWdgt` (rewritten whole), `ClassInspectorWdgt` | 239 |
+| `MemberListWdgt extends Widget` | the view of an object's members: filter toggles, the list, a cut notice, Add… Duplicate… Rename… Remove | the inspector's left half | 494, moved |
+| `MemberEditorWdgt extends CodeAreaWdgt` | the view of one member: its source or value as text, Save | the inspector's right half | 105 |
+| `MemberRef` | one member of one holder: its text (`shownText`), the edit steps, and three questions about a holder (`of`, `canEdit`, `codeReceiverOf`) | the inspector's edit hooks and `_paneTextOfMember` | 190, moved (U1) |
+| `ClassMemberRef extends MemberRef` | a member of a class's prototype | `ClassInspectorWdgt`'s overrides | 120, moved |
+| `BandWdgt extends Widget` | a row of controls at their own sizes, gaps between them, ONE taker of the slack (a spring, or a text that gives), a rule along one edge | `_layOutTogglesIn`, the header's and the footer's hand placement | 122 |
+| `BandSpaceWdgt extends Widget` | a band's gap or spring, or the place a view left in its inspector: paints nothing, may be 0 wide, hidden from the hierarchy menu | (new) | 39 |
+| `SplitGripWdgt extends LayoutChromeWdgt` | a 44 × 44 grip in an inspector's header that drags the splitter before that inspector: the touch-sized way to move a split (D11) | (new) | 76 |
 
-Deleted files: `ClassInspectorWdgt.coffee`, `BreadcrumbSeparatorWdgt.coffee`.
+Deleted files: `ClassInspectorWdgt.coffee`, `BreadcrumbSeparatorWdgt.coffee`. In core U2 added
+`Widget.duplicateOwnProperty`, `ListWdgt.clearSelection`, `CodeAreaWdgt._hasAFooterBand`, the splitter's solve as a
+query (`StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt`, §5.10), the resize-cursor hover trio on
+`LayoutChromeWdgt` (behind `_resizeCursor`), and `DivisionStackLayoutSpec.maxFor(desired, spreadability)`, the ONE
+statement of a division box's most-size arithmetic (`desired + spreadability·desired/100`), which
+`Widget.setMinAndMaxBoundsAndSpreadability` writes its two most sizes through and an inspector reads its default most
+width by (§5.5). A widget joins a division stack along the axis its cells already run, whether attached
+(`Widget.newParentChoiceWithHorizLayout`, "Attach with horizontal layout") or dropped on an "Edit layout" slot
+(`LayoutElementAdderOrDropletWdgt`: the dropped widget and the new slot beside it take the slot's axis): an inspector
+and a member list are columns.
 
 ### 5.2 The picture
 
@@ -369,20 +390,28 @@ window  "Inspector — analog clock"
 Structure (each indent is "a child of", `x`/`y` is the division axis):
 
 ```
-InspectorRowWdgt                         paints the body fill; x-division
+InspectorRowWdgt                         paints the body fill, clips its children; x-division
   InspectorWdgt                          y-division
-    BandWdgt (header)                    x-division: 12, title, SPRING, chip, 12; rule at bottom
+    BandWdgt (header)                    x-division: 12, title (gives: the band's spring), chip, 12; rule at bottom
     [BandWdgt (chooser)]                 only when the subject has more than one view (U4)
     MemberListWdgt                       y-division, takes the slack
-      BandWdgt (toggles)                 rule at bottom
+      BandWdgt (toggles)                 12, toggles 8 apart, SPRING, 12; rule at bottom
       ListWdgt                           takes the slack
-      [BandWdgt (cut notice)]            only when an indexed subject's items are cut
-      [BandWdgt (footer)]                only when the subject is editable; rule at top
-  StackElementsSizeAdjustingWdgt         the splitter
+      [BandWdgt (cut notice)]            12, notice (gives), 12; rule at top; only when an indexed subject's items are cut
+      [BandWdgt (footer)]                12, Add… Duplicate… Rename… Remove 8 apart, SPRING, 12; rule at top;
+                                         only when the subject's members are edited (MemberRef.canEdit)
+    [BandSpaceWdgt (viewsPlace)]         in the view's place, only while a person has taken the view out
+  StackElementsSizeAdjustingWdgt         the splitter, 12 across
   InspectorWdgt
-    BandWdgt (header)                    x-division: SplitGripWdgt, 8, title, SPRING[, chip], 12
-    MemberEditorWdgt                     a CodeAreaWdgt: code area + its own footer band
+    BandWdgt (header)                    x-division: SplitGripWdgt, 8, title (gives)[, chip], 12
+    MemberEditorWdgt                     a CodeAreaWdgt: code area + its own footer band (none when no Save edits the member)
 ```
+
+Measured on the built tool, dpr 1 and 2 alike: a member-list inspector's least / desired width is 371 / 372 (364 /
+365 on a subject with no footer), an editor's 280 / 280, the splitter 12. In the 760 × 480 window the row is
+758 × 391 and the default split 372 | 12 | 374; two member lists share the spare evenly (373 | 12 | 373); a
+list-and-editor row's least width is 663, a list alone 371. Every band keeps its height at any window size (header
+44, toggles 48, footer 52), and a change of the window's height goes all to the list or the code area.
 
 ### 5.3 The three protocols
 
@@ -393,22 +422,29 @@ InspectorRowWdgt                         paints the body fill; x-division
   # inspector right of the chooser's shows it. Chosen again, the subject already there is RELOADED
   # (a member's editor takes its saved text back, as one step of its undo history); any other
   # subject replaces it, and everything further right goes either way. No subject (undefined) only
-  # removes what stands right of the chooser: its view no longer stands for anything.
+  # removes what stands right of the chooser: what its view stood for has gone, or it chose a row
+  # that names no member (MemberListWdgt.selectionFromList).
   #   A chooser in no row -- an inspector or a view a person picked out of its window -- opens the
-  # subject in a window of its own.
+  # subject in a window of its own, a row of its own.
+  #   Every gesture asks me AFTER its own settle, never inside it (asked inside an open settle on a
+  # row in the world, a choice throws): my row settles once per choice.
   @showChoice: (chooser, subject) ->
 ```
 
 Who calls it: a member row's click (`MemberListWdgt.selectionFromList(name)` → the `MemberRef`), a
 row's double-click (`inspectMemberValue(name)` → the member's VALUE, when it is an object), the
-header's chip (→ the class's prototype), a re-filter or a view switch (→ undefined), and in U4 a row
-of an object list.
+header's chip (→ the class's prototype), a re-filter by a filter toggle or by an edit of the member set
+(→ undefined), and in U4 a view switch (→ undefined) and a row of an object list. A row that names no
+member (a list's placeholder "(empty)", or a member gone since the list was built: `MemberListWdgt._memberNamedBy`)
+is a choice of NO subject (→ undefined): what stood right of its list goes.
 
 "The same subject" is identity, except that two `MemberRef`s naming the same member of the same
-holder are the same subject (`MemberRef.sameMemberAs`). That exception is what keeps today's rule
+holder are the same subject (`MemberRef.sameMemberAs`). That exception is what keeps the rule
 "clicking the selected row again puts the saved source back over unsaved typing, and undo brings
 the typing back" (the test `macroFormulaBarUndoStaysInItsEdit`, and `input-and-gestures.md`, the
-keyboard family).
+keyboard family). An inspector shows a subject only while its view stands in it
+(`InspectorWdgt.showsSubject`): one whose view a person took out is replaced by a fresh inspector when its
+subject is chosen again.
 
 **(b) An edit.** Every edit is one step of a `MemberRef`, and each step makes the edit, records it
 where a snapshot needs it, and tells once:
@@ -417,17 +453,19 @@ where a snapshot needs it, and tells once:
 |---|---|---|
 | `add()` | `holder.addOwnProperty name` | `class.applyMemberEdit name, "undefined"` + `recordClassEdit` |
 | `save(text)` | `holder.injectProperty name, text`; a function is recorded with `recordInstanceEdit` | `class.applyMemberEdit name, text` + `recordClassEdit` |
-| `duplicate(newName)` | `holder.duplicateOwnProperty name, newName`: a NEW verb of the instance edit protocol, beside `renameOwnProperty` in `Widget.coffee` (read that one and mirror it): the new name holds the same value, and an injected method is compiled again under the new name from its kept source | an edit under the new name of the member's recorded source (`_editClassMember newName, source`): exactly the first half of today's class rename, refused the same way when the class holds no source for what the member is now |
-| `rename(newName)` | `holder.renameOwnProperty name, newName` | its own `duplicate(newName)`, then a removal of the old name: ONE path makes the copy; refused, with `world.inform`, when the class holds no source for what the member is now |
+| `duplicate(newName)` | `holder.duplicateOwnProperty name, newName`, the instance edit protocol's verb beside `renameOwnProperty` in `Widget.coffee`: the new name holds the same value, and an injected method is injected again under the new name from its kept source (a function with none is copied as the slot) | `_editCopyUnder newName, "duplicate"`: an edit under the new name of the member's recorded source (`_editClassMember newName, source`), refused through `world.inform` when the class holds no source for what the member holds now |
+| `rename(newName)` | `holder.renameOwnProperty name, newName` | the same copy (`_editCopyUnder newName, "rename"`), then `_removeClassMember name`: ONE path makes the copy; refused, with `world.inform`, when the class holds no source for what the member is now |
 | `remove()` | `holder.removeOwnProperty name` | `class.removeMember name` + `recordClassMemberRemoval` |
 | the one notice | `holder.sourceChanged()` | `world.noteCodeChanged()` |
 
-These are today's bodies, moved (§12 gives the map; U1 landed all but `duplicate`), plus `duplicate` (D15), which is what a class rename already did before it removed the old name. ⚠ A gesture tells ONCE (`macroInspectorEditTellsOnce` counts it): a class `rename` built on a PUBLIC, notifying `duplicate` would tell twice, so the copy the two share is a step of its own that does not notify, and each of `duplicate` and `rename` ends in the one notice. The widgets keep the gesture logic: prompts,
-refusals of `constructor`, enabling, re-filtering.
+These are the old inspectors' bodies, moved (§12 gives the map; U1 landed all but `duplicate`), plus `duplicate` (D15), which is what a class rename already did before it removed the old name. ⚠ A gesture tells ONCE (`macroInspectorEditTellsOnce` counts it): a class `rename` built on a PUBLIC, notifying `duplicate` would tell twice, so the copy the two share is a step of its own that does not notify (`ClassMemberRef._editCopyUnder`, which answers whether it made the copy), and each of `duplicate` and `rename` ends in the one notice. Every step ANSWERS whether it made its edit: an object's always answers true; a class's `duplicate` or `rename` that is refused answers false, changes nothing and tells no one. Nothing records an object member's duplicate or rename (a copied method rides a save as its own `{"$src"}`). The widgets keep the gesture logic: prompts,
+refusals of `constructor` and of a name the subject already owns (Duplicate…), enabling, re-filtering; and the
+gesture of a refused step neither re-filters nor drops its choice.
 
-**(c) Who refreshes.** Only the member list changes the member SET (add, rename, remove: D7), and it
-re-filters itself and tells the row there is no choice any more. A Save changes no set and refreshes
-nothing, as today. No inspector reaches into another.
+**(c) Who refreshes.** Only the member list changes the member SET (add, duplicate, rename, remove: D7,
+D15), and it re-filters itself and then, after its own settle, tells the row there is no choice any more; a
+filter toggle does the same, since a re-filter's fresh list selects nothing. A Save changes no set and
+refreshes nothing. No inspector reaches into another.
 
 ### 5.4 `InspectorRowWdgt`
 
@@ -437,10 +475,14 @@ nothing, as today. No inspector reaches into another.
 # "Inspect" opens me (Widget.spawnInspector).
 #   I have no layout of my own. My inspectors are the elements of a horizontal DIVISION row
 # (StackLayoutEngine), a splitter between two of them (StackElementsSizeAdjustingWdgt), so they
-# divide my width, a person drags a splitter to re-divide it, and my least width is theirs and my
-# splitters' together (Widget.getRecursiveMinDim). I paint the body every inspector of mine stands
-# on (inspectorBodyFill); they paint only their rules.
-class InspectorRowWdgt extends Widget
+# divide my width, a person drags a splitter -- or the split button right of it (SplitGripWdgt) --
+# to re-divide it, and my least width is theirs and my splitters' together
+# (Widget.getRecursiveMinDim). I paint the body every inspector of mine stands on
+# (inspectorBodyFill); they paint only their rules. I CLIP my children to my box, the house way (a
+# ClippingWdgt): squeezed below my least width, a member editor's footer still places its Save at
+# the button's own size, past an editor narrower than that, and I am what cuts it, in a window or
+# with none.
+class InspectorRowWdgt extends ClippingWdgt
 
   constructor: (subject) ->
     super()
@@ -449,9 +491,10 @@ class InspectorRowWdgt extends Widget
     @__commitExtent new Point 760, 480
     @color = WorldWdgt.theme.inspectorBodyFill
     @appearance = new RectangularAppearance @
-    @_buildAndConnectChildren subject        # shape per widget-authoring-guidelines §3
+    @_buildAndConnectChildren subject        # its core adds my first inspector
 
-  # my inspectors, left to right: my children that are inspectors (my other children are splitters)
+  # my inspectors, left to right: my children that are inspectors (my other children are splitters,
+  # or not mine to arrange)
   inspectors: ->
     (child for child in @children when child.showsSubject?)
 
@@ -460,96 +503,169 @@ class InspectorRowWdgt extends Widget
 
   @showChoice: (chooser, subject) ->
     inspector = chooser
-    inspector = inspector.parent until !inspector? or inspector.showsSubject?
+    inspector = inspector.parent  until !inspector? or inspector.showsSubject?
     row = inspector?.parent
     if row?.showNextTo?
       row.showNextTo inspector, subject
     else if subject?
       fresh = new InspectorRowWdgt subject
-      world.openFrameWith fresh, fresh.extent(), world.hand.position().subtract(new Point 50, 100)
+      world.openFrameWith fresh, fresh.extent(), world.hand.position().subtract new Point 50, 100
+    return
 
+  # one settle per choice, the widening inside it
   showNextTo: (inspector, subject) ->
+    @_settleLayoutsAfter => @_showNextToNoSettle inspector, subject
+
+  # THE SPLIT A PERSON SET stays across a choice. A drag TRADES most width between the two cells
+  # beside a split, their sum unchanged, so across the boundary a choice removes everything right of,
+  # exactly one trade stands: what the removed inspectors gave away, summed (their trades among
+  # themselves cancel). ONE heir settles it (_removeInspectorsNoSettle): a fresh inspector whose view
+  # asks the weight the first removed one's asked takes its default less that trade, and the split
+  # stands; otherwise the chooser gives it back, and the default returns; a subject chosen again, the
+  # kept neighbour.
+  _showNextToNoSettle: (inspector, subject) ->
     following = @_inspectorsAfter inspector
     if subject? and following[0]?.showsSubject subject
-      @_settleLayoutsAfter => @_removeInspectorsNoSettle following[1..]
-      following[0].reload()
-      return
-    @_settleLayoutsAfter =>
-      @_removeInspectorsNoSettle following
-      @_addInspectorNoSettle new InspectorWdgt subject  if subject?
-    @_widenMyWindowToFit()
+      @_removeInspectorsNoSettle following[1..], following[0]
+      following[0]._reloadNoSettle()
+    else
+      fresh = new InspectorWdgt subject  if subject?
+      sameKind = fresh? and fresh.view.rowSlackWeight() is following[0]?.view.rowSlackWeight()
+      @_removeInspectorsNoSettle following, (if sameKind then fresh else inspector)
+      @_addInspectorNoSettle fresh  if fresh?
+    @_widenMyWindowToFitNoSettle()
 ```
 
-The rest, in words (write them in the house voice, each with its comment):
+The rest, in words (each written in the house voice, with its comment):
 
-- **`_addInspectorNoSettle(inspector)`** adds it as my last child with
-  `layoutSpec: inspector.divisionBox()`, then reconciles my splitters.
-- **`_removeInspectorsNoSettle(inspectors)`** destroys each (`_fullDestroyNoSettle`), then reconciles.
-- **`_reconcileSplittersNoSettle()`** is the ONE rule, in two halves. **Splitters:** exactly one
-  between two consecutive inspectors, none anywhere else: walk `@children`; destroy a splitter that
-  is first, last, or follows another splitter; add one (`new StackElementsSizeAdjustingWdgt`,
-  `divisionBox()`, `atIndex:`) between two inspectors that touch. Identify a splitter by a
-  capability it already answers (`ownsDragsStartingOnMe`), never by `instanceof`. **Split buttons:**
-  then tell every inspector whether a splitter now stands before it, `inspector.wearSplitGrip
-  true|false` (false for my first), so an inspector carries a split button exactly while a splitter
-  stands on its left (§5.5, §5.10). Nothing here reads the pointer.
-- **`_reactToChildRemoved(child)`** tells an inspector that leaves it wears no split grip any more
-  (`child.wearSplitGrip? false`), then reconciles: an inspector leaves by another hand
-  through a person's "Pick up" or a destroy. ⚠ It also fires while I am being destroyed and while
-  my own removals run: read `FrameWdgt._reactToChildRemoved` and
-  `PromptButtonsRowWdgt._reactToChildRemoved` and mirror their guards (an orphan, a destroyed
-  holder) so a teardown builds nothing.
-- **`_widenMyWindowToFit()`** runs at EVENT time only (the end of `showNextTo`), never in a layout
-  pass: `missing = @getRecursiveMinDim().x - @width()`; if positive, and my parent is a window whose
-  content I am (`@parent?.isMyContents? @`) and which is free-floating, widen it by
-  `Math.min missing, Math.max(0, world.right() - @parent.right())` through its public `setExtent`.
-  In any other holder I am not widened and my inspectors narrow.
+- **`_addInspectorNoSettle(inspector)`** adds it right after my last inspector (`atIndex:`; a halo's handle or
+  a widget attached to me may stand after it) with `layoutSpec: inspector.divisionBox()`, then reconciles my
+  splitters.
+- **`_removeInspectorsNoSettle(inspectors, heir)`**: while they still stand, sums what they gave away
+  (`InspectorWdgt.mostWidthGivenAway`: each one's default most width less its own) and has `heir` give that up
+  (`_giveUpMostWidthNoSettle`), writing nothing when the sum is 0, as it always is with no drag; then destroys each
+  (`_fullDestroyNoSettle`), and each tells me it left (`_reactToChildRemoved`), which reconciles. **The split a
+  person set** follows (the comment above `_showNextToNoSettle`): it stays across every choice that puts a view of
+  the same kind (the same `rowSlackWeight`) right of it, and the default returns when another kind takes that
+  place, or none does. A "Pick up" or a Destroy of an inspector reaches no choice and re-boxes nothing: the
+  neighbour it leaves keeps its box. Measured, by mouse on the splitter and by touch on the split button alike:
+  372 | 12 | 374, a drag of +47 → 419 | 12 | 327, kept across other members chosen and the same member chosen
+  again; from there a double-click on an object-valued member puts its value's list there at 376 | 12 | 370 (the
+  default for a list beside a value's list); a member again, 372 | 12 | 374; a filter toggle then a member,
+  372 | 12 | 374.
+- **`_reconcileSplittersNoSettle()`** is the ONE rule. **Splitters:** exactly one between two consecutive
+  inspectors, none anywhere else, read over my CELLS (`_myCells`: my inspectors and my splitters, in order; any
+  other child, a halo's handle, a widget attached to me, an "Edit layout" adder, is left where it is): destroy a
+  splitter that is first, last, or follows another splitter (`_dropStraySplittersNoSettle`); add one
+  (`new StackElementsSizeAdjustingWdgt`, `divisionBox()`, `atIndex:`) between two inspectors that touch
+  (`_addMissingSplittersNoSettle`). A splitter of mine is recognised from STRUCTURE (`_isMySplitter`): a division
+  cell that answers the split's solve (`maxDimsPuttingMyLeadingEdgeAt?`, the one question its split button asks
+  of it); never by `instanceof`, nor by `nonFloatDragging?` or `ownsDragsStartingOnMe`, which handles, palettes,
+  frame bars, grips and slider buttons answer too (a row under "Resize/move…" has the halo's handles among its
+  children, and a palette dropped on an "Edit layout" slot of mine is a cell). **Split buttons:** then every inspector re-derives its own
+  (`InspectorWdgt._reconcileSplitGripNoSettle`, §5.5), so an inspector carries one exactly while a splitter stands
+  before it among my cells (**`splitterBefore(inspector)`**, which its split button asks). **Title:** last, when my
+  first inspector is another one than my name was last taken from (`_inspectorNamingMe`), the window whose content
+  I am re-titles itself from my name, my first inspector's (`FrameWdgt.noteContentsNameMayHaveChanged`): a "Pick
+  up" of my first inspector changes it; while it is the same one, a title something else gave that window (a
+  shortcut's) stands. The reconcile runs
+  under a flag (`_reconcilingSplitters`, in a try/finally): the splitters it destroys tell me they left, and must
+  not reconcile again inside it. Nothing here reads the pointer. "Edit layout" on a row puts adders around its
+  cells, and each choice leaves behind the adders that flanked a destroyed inspector, the window widened by their
+  width: as built, an open question for the owner.
+- **`_reactToChildRemoved(child)`** returns while I am destroyed, while I am destroyed whole
+  (`_beingFullDestroyed`, set at the entry of my `_fullDestroyNoSettle`, as `FrameWdgt`'s flag) and while my
+  reconcile runs; otherwise a child that LEFT me (neither destroyed nor back in me: a person's "Pick up", an
+  "Attach", a drop into another widget) re-derives its split button where it now stands
+  (`child._reconcileSplitGripNoSettle?()`), and my splitters are reconciled. A splitter a person destroys is put
+  back at once.
+- **`_widenMyWindowToFitNoSettle()`** runs inside the choice's one settle (the end of `_showNextToNoSettle`),
+  never in a layout pass: `missing = @getRecursiveMinDim().x - @width()` (division boxes are fields, so my least
+  width is current inside the settle that added an inspector); if positive, and my parent is a window whose content
+  I am (`@parent?.isMyContents? @`) and which stands on the desktop (its parent is the world, so its bounds are the
+  desktop's own px), widen it by
+  `Math.min missing, Math.max(0, world.right() - @parent.screenBounds().right())` through the frame's own core
+  (`_setExtentNoSettle`: a public `setExtent` would be a second settle). In any other holder (a window in a panel, a
+  document or a dock, a docked band, a transform island, no window) I am not widened and my inspectors narrow
+  (measured: a window in a panel stays 500 wide where the same window on the desktop widens by the missing 165). A
+  widening gives exactly the missing LEAST width, so a third inspector's editor lands at its least 280 even where
+  the desktop has room to spare, and the row then stands at its least width, below its desired, outside the regime
+  in which a split moves (§5.10), so every split of it is inert until the window is made wider: as built, an open
+  question for the owner. Nothing stops a window being made narrower than my least width (by its
+  grip, or by a document's column cap, which the window keeps after it leaves): the division row then shrinks
+  every cell below its own least, buttons narrower than their labels: as built, an open question for the owner.
 - **No `readsClassMemberMaps` here**: I read no member map. The classes that do declare it (§5.5–5.6).
 
 ### 5.5 `InspectorWdgt`
 
 ```coffee
-# AN INSPECTOR: one subject (inspectedObject), and one VIEW of it at a time. In a row of inspectors
-# (InspectorRowWdgt) I am one column; my subject was chosen in the inspector to my left, and what
-# is chosen in me goes to the one on my right (InspectorRowWdgt.showChoice).
+# AN INSPECTOR: one subject (inspectedObject), and one VIEW of it. In a row of inspectors
+# (InspectorRowWdgt) I am one column: my subject was chosen in the inspector to my left, and what is
+# chosen in me goes to the one on my right (InspectorRowWdgt.showChoice).
 #   Top to bottom, the elements of a vertical DIVISION stack: my HEADER band -- my subject's name,
-# and a chip naming the class it is made by, whose press chooses that class; my CHOOSER band, a
-# toggle per view, built only when my subject has more than one; and my view, which takes the rest.
+# and a chip naming the class it is made by, whose press chooses that class -- and my VIEW, which
+# takes the rest: a member's editor (MemberEditorWdgt) when my subject is one member of an object (a
+# MemberRef: it answers editsAsAMember), the list of my subject's members (MemberListWdgt) for
+# anything else.
 class InspectorWdgt extends Widget
 
+  # the object I am a view OF, and deliberately not called `target` (that means information flow or
+  # a tracked reference edge elsewhere). My FIRST own field, assigned before my base constructor writes any other, so every walk of
+  # me meets it first (a save's refusal names the path it took: `(InspectorWdgt#N) → .inspectedObject`)
+  inspectedObject: undefined
   # a file holding me needs the class member maps before I am restored (Deserializer._needsTheReflectiveLayer)
   readsClassMemberMaps: true
-
-  # the object I am a view OF, and deliberately not called `target` (see the old header: keep that note)
-  inspectedObject: undefined
   header: undefined
+  headerTitle: undefined
   classChip: undefined
-  chooser: undefined
-  viewToggles: undefined
-  # the widget showing my subject now, and the title of the view it is
+  # the widget showing my subject: a member editor or a member list
   view: undefined
-  shownViewTitle: undefined
-  # does my header open with a split button? My row says: while a splitter stands before me (wearSplitGrip)
+  # does my header open with a split button? Derived from where I stand (_reconcileSplitGripNoSettle)
   showsSplitGrip: false
+  # the PLACE my view left in me, while a person has taken it out (below)
+  viewsPlace: undefined
+  # am I being destroyed whole? Then my view leaving me is my teardown, and no place is kept
+  _beingFullDestroyed: undefined
 
+  # my own division box, stated ONCE (_defaultBox): least = desired = 1 x 1, and my view's WEIGHT of my
+  # row's spare width (rowSlackWeight) times a spacer's spreadability, which makes my most width
   constructor: (@inspectedObject) ->
-    @viewToggles = []
     super()
     @_buildAndConnectChildren()
+    {least, desired, spreadability} = @_defaultBox()
+    @setMinAndMaxBoundsAndSpreadability least, desired, spreadability
 
-  # THE VIEWS MY SUBJECT OFFERS, in order: [title, the name of my method that builds it].
-  # One table, read by my chooser and by showView.
-  _views: ->
-    return [["Source", "_newMemberEditor"]]  if @inspectedObject?.editsAsAMember?()
-    [["Members", "_newMemberList"]]
+  _defaultBox: ->
+    one = new Point 1, 1
+    {least: one, desired: one, spreadability: @view.rowSlackWeight() * DivisionStackLayoutSpec.SPREADABILITY_SPACERS}
 
-  _newMemberList: -> new MemberListWdgt @inspectedObject
-  _newMemberEditor: -> new MemberEditorWdgt @inspectedObject
+  # the most width I gave away across the splits beside me: my default box's less my own box's (0 with
+  # no drag, negative where I gained), read through the box's one arithmetic (DivisionStackLayoutSpec.maxFor)
+  mostWidthGivenAway: ->
+    {desired, spreadability} = @_defaultBox()
+    (DivisionStackLayoutSpec.maxFor desired.x, spreadability) - @_divisionBoxOrDefaults().maxWidth
 
+  # my most width less `width`, given up across a split as a drag trades it (my row's choice names ONE
+  # heir to do it: §5.4). Only my width: a row divides its width. A core my row calls inside its settle
+  _giveUpMostWidthNoSettle: (width) ->
+    box = @_divisionBoxOrDefaults()
+    @_setMaxDimNoSettle new Point (box.maxWidth - width), box.maxHeight
+
+  _buildAndConnectChildrenNoSettle: ->
+    @_buildHeaderNoSettle()
+    @view = if @inspectedObject?.editsAsAMember?() then new MemberEditorWdgt @inspectedObject else new MemberListWdgt @inspectedObject
+    @_addNoSettle @view, layoutSpec: @view.divisionBox('y')
+
+  # my subject, or the same member made again as a new reference -- and only while my view stands in me
   showsSubject: (subject) ->
+    return false unless @view?.parent is @
     subject is @inspectedObject or (@inspectedObject?.sameMemberAs? subject) is true
 
-  reload: -> @view.reload?()
+  # my subject chosen again: my view takes it back -- an editor puts its member's text back, a list drops
+  # its choice (both views answer). A core: my row calls it in its settle
+  _reloadNoSettle: ->
+    @view._reloadNoSettle()
+    return
 
   colloquialName: -> "Inspector — " + @_subjectName()
 
@@ -560,7 +676,7 @@ class InspectorWdgt extends Widget
   # The class my subject is made by: the first link ABOVE it on its prototype chain that is a
   # class's own prototype (it owns a `constructor` that is a function), unless that is Object. An
   # object's is its class; a class's prototype's is its superclass; a number's is Number. A member
-  # has none: its holder's class is the inspector to my left.
+  # has none: its holder's class is the inspector to my left's.
   _classAbove: ->
     return undefined  if @inspectedObject?.editsAsAMember?()
     link = Object.getPrototypeOf Object @inspectedObject
@@ -570,40 +686,73 @@ class InspectorWdgt extends Widget
 
   # my chip's action. My view's own choice, if it shows one, is no longer what stands on my right
   chooseMyClass: ->
-    @view.clearChoice?()
+    @view?.clearChoice?()
     InspectorRowWdgt.showChoice @, @_classAbove()
+
+  # the splitter that stands before me in my row, read off its cells each time; none anywhere else
+  splitterBeforeMe: ->
+    @parent?.splitterBefore? @
 ```
 
 Build (inside ONE settle, children added with the NoSettle tier):
 
-- header: `new BandWdgt theme.inspectorHeaderHeight, [theme.inspectorHeaderInset, title,
-  BandWdgt.SPRING, chip, theme.inspectorHeaderInset], rule: "bottom"` (the two metrics are today's
-  `breadcrumbBandHeight` 44 and `breadcrumbInset` 12 under the names §5.9 gives them), the chip only
-  when `_classAbove()` answers. The title is a `StringWdgt` in `theme.fonts.buttonLabel`, sized to
-  its text (`_sizeToTextAndDisableFittingNoSettle`, as the old "Class" caption was). The chip is
+- header, built by ONE core (`_buildHeaderNoSettle`): `new BandWdgt theme.inspectorHeaderHeight,
+  [theme.inspectorHeaderInset, {gives: @headerTitle}, chip, theme.inspectorHeaderInset], rule: "bottom"` (the two
+  metrics are the old `breadcrumbBandHeight` 44 and `breadcrumbInset` 12 under the names §5.9 gives them), the chip
+  only when `_classAbove()` answers. The title (`headerTitle`) is a `StringWdgt` of the subject's name in
+  `theme.fonts.buttonLabel`, its ink `theme.inspectorHeaderTitle`, written as a text that GIVES (§5.8): it IS its
+  header's spring, its box taking all the width the header's other pieces leave and running up to the chip, its
+  text cropped with "…" where the box is narrower than it and standing at the box's start where the box is wider.
+  Its length claims nothing, so there is no cap on a title: a header's least and desired widths are its other
+  pieces' and the title's 5 px floor, and a long name widens no window and holds no split. The chip is
   `new ChipWdgt target: @, action: "chooseMyClass", face: link.constructor.name, current: true`.
-- the split grip: the header is built by ONE method (`_buildHeaderNoSettle`), which the constructor
-  calls and **`wearSplitGrip(wanted)`** calls again. That public method keeps the answer in
-  a declared boolean field (`showsSplitGrip`, false as built), does nothing when the answer is the
-  one it has, and otherwise destroys my header band and builds it again in its place (index 0):
-  wearing one, the band opens `[new SplitGripWdgt, theme.toggleBandGap, title, …]` in place of the
-  left inset; wearing none (my row's first inspector, or an inspector in no row), as above. The header band is 44 tall and the grip 44 × 44, so
-  the grip fills the band's height and the band's left end.
-- **`splitterBeforeMe()`** answers the splitter itself, from STRUCTURE, each time it is asked: my
-  parent's child just before me, when that child is a splitter (the capability the row's reconcile
-  tests), else undefined. Nothing stores a splitter: a grip can then never drag a splitter of a row
-  its inspector is not in.
-- view: `@view = @[@_views()[0][1]]()`, added with `divisionBox('y')` and a box that takes the slack
-  (a large max on both axes, as §5.6's code floor).
-- The chooser band and `showView` are U4's (§6); in U1–U3 every subject has one view and no chooser.
+- the split grip, DERIVED from where I stand and never told: **`_reconcileSplitGripNoSettle()`** asks whether a
+  splitter stands before me (`splitterBeforeMe()?`); when `showsSplitGrip` (false as built) already says so, it
+  does nothing; otherwise it RE-LEADS my header in place (`BandWdgt._replacePiecesBeforeNoSettle @headerTitle,
+  lead`): every piece before the title gives way to `[new SplitGripWdgt, theme.inspectorHeaderGap]`, or to
+  `[theme.inspectorHeaderInset]` alone. The title, the chip and the band stay the same widgets, and nothing made
+  there settles as it is made. My row's reconcile runs it, and so do `_reactToBeingCopied` and
+  `_afterDeserialization` (no class above me defines either, so neither calls `super`): an inspector copied or
+  saved alone out of a row stands in none and sheds its grip; inside a copied or restored row the row's structure
+  gives it back. A header or a title a person took out of me is not re-led. The header band is 44 tall and the
+  grip 44 × 44, so the grip fills the band's height and its left end, over the band's rule.
+- **`splitterBeforeMe()`** answers the splitter itself, from STRUCTURE, each time it is asked: my row's
+  (`InspectorRowWdgt.splitterBefore`: the cell just before me, when it is one of the row's splitters), else
+  undefined. Nothing stores a splitter: a grip can then never drag a splitter of a row its inspector is not in.
+- view: built inline (U2 has no `_views` table: `editsAsAMember?()` decides), added with `divisionBox('y')`; its
+  own box takes my slack (a spacer's spreadability), and it answers **`rowSlackWeight`**, my weight of my row's
+  spare width: a member editor 100 (my most width 100,000,001 px), a member list 0.01 (10,001 px). So a list
+  beside an editor lays out at exactly its desired width and the editor takes the rest, two lists share the spare
+  evenly, and a split can move: a division row moves a split by trading the most widths of the cells on either
+  side of it, and the split a person set stays across a choice that puts a view of the same kind on its far side (§5.4:
+  the choice reads `mostWidthGivenAway`, and its one heir gives that up, `_giveUpMostWidthNoSettle`).
+- **the view's place** (`viewsPlace`): when my view leaves me (picked out, carried off, binned, attached
+  elsewhere, destroyed), `_reactToChildRemoved` keeps its PLACE, once: a `BandSpaceWdgt` spring desiring the width
+  my view desired as my stack read it and 1 px tall, with a spacer's spreadability, right after my header.
+  Without it my pinned header, alone in my stack, would take all my height (a division stack hands its spare by
+  desired size when no cell has a margin), and my width would fall to my header's. The place claims no least
+  width, so a row at least as wide as its inspectors desire lays out as it did with the view in, and a narrower
+  one gives up the place's room before it squeezes a control. Not while I am destroyed whole, and not for a view
+  that has not left (a transform island wraps it in place: `!@isAncestorOf child`). A member list destroyed whole (the dev
+  menu's Destroy) answers after its own cells are gone, so its place is 1 px wide (an editor's keeps its 280). While my view is out,
+  `showsSubject` is false, and a choice of my subject replaces me with a fresh inspector. A view picked out of me
+  stands on no body (only the row paints one; my panes are transparent), its own shadow showing through it: as
+  built, an open question for the owner.
+- The chooser band, `_views` and `showView` are U4's (§6), with the fields they need (`chooser`, `viewToggles`,
+  `shownViewTitle`); in U1–U3 every subject has one view and no chooser.
 
 ### 5.6 `MemberListWdgt` and `MemberEditorWdgt`
 
 **`MemberListWdgt extends Widget`** — `constructor: (@inspectedObject)`; `readsClassMemberMaps:
-true`. A vertical division stack of: the toggles band (`rule: "bottom"`), the list, the cut-notice
-band (only when `itemCount > items.length`: one `StringWdgt` saying today's `_emptyPaneText` wording,
-"The first N of M items are listed."), the footer band (`rule: "top"`, only when
-`MemberRef.canEdit @inspectedObject`).
+true`; its own box 1 × 1 with a spacer's spreadability (it takes its inspector's slack; its least and desired
+sizes are its cells'), and `rowSlackWeight: -> 0.01` (§5.5). A vertical division stack of: the toggles band
+(`theme.toggleBandHeight`, `rule: "bottom"`: `toggleBandInset`, the toggles `toggleBandGap` apart, a spring,
+`toggleBandInset`), the list, the cut-notice band (`cutNoticeBand`, only when `itemCount > items.length`:
+`theme.inspectorHeaderHeight` tall, `rule: "top"`, `inspectorHeaderInset` at each end of a `StringWdgt` in
+`fonts.buttonLabel` that gives, saying `_cutNoticeText()`: "The first N of M items are listed."), the footer band
+(`footerBand`: `theme.footerBandHeight`, `rule: "top"`, `footerInset`, the four buttons `footerGap` apart, a
+spring, `footerInset`; only when `MemberRef.canEdit @inspectedObject`). Every band ends with its inset, so its
+least width keeps that inset clear right of its last control.
 
 It keeps, under their present names, everything of §1.1's "Member set", "Filter" and the member
 gestures: the four `showing*` fields and `toggleShowing*`, the four toggles, `_filteredMemberNames`,
@@ -613,40 +762,75 @@ gestures: the four `showing*` fields and `toggleShowing*`, the four toggles, `_f
 `addProperty`/`addPropertyPopout`, `renameProperty`/`renamePropertyPopout`, `removeProperty`,
 `_refusesAsANewMemberName`, the three buttons. It gains **Duplicate…** (D15), shaped exactly as
 Rename… is: `duplicatePropertyButton` between Add… and Rename…, enabled with Rename… and Remove
-(`_reflectMemberSelection`); `duplicatePropertyPopout` prompts for the new name with the selected
-name as its default; `duplicateProperty(newName)` refuses the same name and `constructor`
-(`_refusesAsANewMemberName`), refuses a name my subject already owns (say so with `@inform`: a
-duplicate must not overwrite), calls the ref's `duplicate`, re-filters and tells the row there is
-no choice. With four buttons the footer's controls need about 364 px, a little more than the
-toggles band's 352: that becomes the member list's least width. Keeping the names is deliberate: the rigs and tests
+(`_reflectMemberSelection`); `duplicatePropertyPopout` prompts "name of the copy:" with the selected
+name as its default; `duplicateProperty(newName)` refuses `constructor` (`_refusesAsANewMemberName`) and
+any name my subject already OWNS, the selected one's included (it says "<name> is a member already: a
+duplicate replaces no member" with `@inform`: a duplicate must not overwrite), calls the ref's `duplicate`,
+and, when the step answers true, re-filters and tells the row there is no choice. With four buttons the
+footer band's least width is 371 (desired 372) and the toggles band's 364 (365): the member list's least and
+desired widths are 371 / 372, and 364 / 365 on a subject with no footer. Keeping the names is deliberate: the rigs and tests
 of §7 then change WHERE they find a member, not what it is called.
 
 What changes inside it:
 
-- `selectionFromList(name)`: `_reflectMemberSelection()`, then
-  `InspectorRowWdgt.showChoice @, MemberRef.of(@inspectedObject, name)`.
-- `inspectMemberValue(name)`: when the value is an object (`Utils.isObject`),
-  `InspectorRowWdgt.showChoice @, value`.
-- **`clearChoice()`**: no row of mine is selected any more (my inspector's chip was pressed, so the
-  inspector on my right no longer shows my selected member). `ListWdgt` has no way to drop its
-  selection today: give it a small public `clearSelection` (`@selected = undefined`, then
-  `@listContents.noteShownSelectionChanged()`, the two lines `select` ends in), call it, then
-  `_reflectMemberSelection()`. The storyboard's frame 5 shows what happens without it: the row
-  stays highlighted beside an inspector on something else.
-- the four edits call the ref's step (`MemberRef.of(@inspectedObject, name).add()` …), then
-  `_refilterMembers()`, then `InspectorRowWdgt.showChoice @, undefined`.
-- a class's prototype builds no "Own props only" toggle: ask `isAClassPrototype @inspectedObject`
+- `selectionFromList(name)`: it reflects the selection on my buttons (`_reflectMemberSelection()`), then tells my
+  row the choice: `InspectorRowWdgt.showChoice @, MemberRef.of(@inspectedObject, name)`, or, for a label that names
+  no member of my subject (`_memberNamedBy`: the list's "(empty)" placeholder row, or a member gone since the list
+  was built), NO subject: what stood on my right goes, and my buttons show nothing to act on. Every reader of a
+  label of mine asks `_memberNamedBy`, the member buttons through `_selectedMemberName()`. (A clicked placeholder
+  still wears the list's selection fill, `ListWdgt.select`'s own.)
+- `inspectMemberValue(name)`: when the member's value is an object (`Utils.isObject`),
+  `InspectorRowWdgt.showChoice @, value`. The first click of a double-click chooses the member, whose editor
+  narrows a lone full-width list to 372 px, so a second click right of x 372 lands on the splitter or the editor
+  and the double-click shows the member's editor, not its value (a double-click on the NAME is unaffected): as
+  built, an open question for the owner. A function is an object too, so a double-click on a METHOD's row replaces
+  its editor with an inspector on the function, a member list whose one row is "(empty)" (a click on the row
+  brings the editor back): as built, an open question for the owner.
+- **`clearChoice()`** and the list's **`_reloadNoSettle()`** are ONE act, "drop my choice": what stands on my
+  right shows something other than my choice, or nothing, so `@list?.clearSelection()` (`ListWdgt.clearSelection`:
+  `@selected = undefined`, then `@listContents.noteShownSelectionChanged()`, the two lines `select` opens with),
+  then `_reflectMemberSelection()`. Two doors reach it: my inspector's chip pressed (`chooseMyClass` asks
+  `clearChoice`, at the press) and my subject chosen again (my inspector's `_reloadNoSettle`, inside my row's
+  settle, which removes what stood right of me), so the chip pressed again leaves the class's list on its right
+  with no selection. Paint only, so a core both doors reach. The storyboard's frame 5 shows what happens without
+  it: the row stays highlighted beside an inspector on something else.
+- the four edits (`addProperty`, `duplicateProperty`, `renameProperty`, `removeProperty`) call the ref's step
+  (`MemberRef.of(@inspectedObject, name).add()` …); when it answers true, `_refilterMembers()`, then, after that
+  settle, `InspectorRowWdgt.showChoice @, undefined`. A step that answers false (a class's member with no source to
+  copy) changed nothing, so the list keeps its selection and the row its choice.
+- each `toggleShowing*` flips its field and re-filters inside ONE settle, then, after it,
+  `InspectorRowWdgt.showChoice @, undefined`: a re-filter's fresh list selects nothing. Every gesture asks the row
+  after its own settle, never inside it.
+- a class's prototype builds no "Own props only" toggle: the build asks `isAClassPrototype @inspectedObject`
   where `ClassInspectorWdgt` overrode the builder.
-- `_refilterMembersNoSettle` no longer touches a code pane (there is none here).
-- the list wears the inspector's pane roles as today (`wearPaneRoles fill: "inspectorPaneFill",
-  stroke: "inspectorPaneStroke"`), and it and its contents reject drops as today.
+- `_refilterMembersNoSettle` touches no code pane (there is none here): it builds the list again
+  (`_buildAndConnectMemberList`: the old list, while still mine, destroyed and the new one in its place; a list a
+  person took out stays where it is, and the new one stands before the cut-notice and footer bands), then reflects
+  the selection and the toggles; every other child stays the same widget.
+- the list wears the inspector's pane roles (`wearPaneRoles fill: "inspectorPaneFill",
+  stroke: "inspectorPaneStroke"`), takes no drops (`disableDrops`; its contents neither), and has a box of its own
+  (least `theme.minimumTargetSize` square, a spacer's spreadability: my stack's slack is its).
 
-**`MemberEditorWdgt extends CodeAreaWdgt`** — `constructor: (@memberRef)`; `readsClassMemberMaps:
-true`. Model it on `ScriptWdgt`:
+**`MemberEditorWdgt extends CodeAreaWdgt`** — `constructor: (@memberRef)`; fields `memberRef`, `saveButton`;
+`readsClassMemberMaps: true`. Modelled on `ScriptWdgt`:
 
 ```coffee
+  constructor: (@memberRef) ->
+    super()
+    theme = WorldWdgt.theme
+    # my division box: a floor of my own, since I have no division children to derive one from
+    least = new Point theme.inspectorEditorLeastWidth, theme.footerBandHeight
+    @setMinAndMaxBoundsAndSpreadability least, least, DivisionStackLayoutSpec.SPREADABILITY_SPACERS
+    @_buildAndConnectChildren()
+
+  # my inspector's weight of its row's spare width (§5.5): nearly all of it, since code is what wants width
+  rowSlackWeight: -> 100
+
   _buildAndConnectChildrenNoSettle: ->
     @_buildEditableCodeAreaNoSettle @memberRef.shownText()
+    # dressed in the inspector's pane roles, so the row's body shows through me as through a member list
+    @tempPromptEntryField.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
+    @textWidget.backgroundColor = WorldWdgt.theme.inspectorPaneFill
     # `constructor`'s code is shown, never edited: it is the class itself (Class.refuseTheConstructor)
     @textWidget.isEditable = @memberRef.name isnt "constructor"
     if MemberRef.canEdit @memberRef.holder
@@ -665,35 +849,39 @@ true`. Model it on `ScriptWdgt`:
   codeReceiver: -> MemberRef.codeReceiverOf @memberRef.holder
 
   # Answers whether it saved. An edit that does not compile changes nothing, is reported beside the
-  # hand, and stays modified, Save still enabled (Widget._savingTypedCode).
+  # hand, and stays modified, Save still enabled (Widget._savingTypedCode). It asks MemberRef.canEdit
+  # too, not only my build: a restored editor keeps the button its file holds.
   save: ->
-    return false  unless @saveButton?
+    return false  unless @saveButton? and MemberRef.canEdit @memberRef.holder
     return false  unless @_savingTypedCode => @memberRef.save @textWidget.text.toString()
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
     true
 
   # my member's text again, over whatever is typed: one step of my undo history, so the undo chord
-  # brings the typing back (InspectorRowWdgt.showChoice, the subject chosen again)
-  reload: ->
-    @textWidget.setText @memberRef.shownText()
+  # brings the typing back (InspectorRowWdgt.showChoice, the subject chosen again). A core: the row
+  # calls it inside its one settle.
+  _reloadNoSettle: ->
+    @textWidget._setTextNoSettle @memberRef.shownText()
     @textWidget.pushUndoState @textWidget.text.length
     @textWidget.considerCurrentTextAsReferenceText()
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    return
 ```
 
-Three things to settle while writing it:
+Three things it settles:
 
-- **A read-only member has no footer band.** `CodeAreaWdgt` always keeps a band today, because each
-  of its four subclasses has buttons. Give the base ONE derived question, "do I have a footer band:
-  is any button of my two groups my child", read by `_layOutOwnContents` (the code area runs to my
-  bottom without one) and `_seamRects` (no rule without one). No subclass changes, and the four
-  existing ones must stay byte-identical (presuite says).
-- **The code area's floor.** In a division row the editor's inspector derives no width from an
-  editor with one button, so give the editor a division box of its own: least width **280**, a large
-  max on both axes.
-- **Its look.** Dress the code area in the inspector's pane roles after the build (as
-  `InspectorWdgt._clearPaneLook` does today), so it stands on the row's body fill like the list.
+- **A read-only member has no footer band.** `CodeAreaWdgt` always kept a band, because each of its four other
+  subclasses has buttons. The base has ONE derived question, `_hasAFooterBand`: did my build make a footer button
+  at all (a button of my two groups, whether or not it is still my child: a band a person emptied by picking its
+  buttons out stays), read by `_layOutOwnContents` (the code area runs to my bottom without one) and `_seamRects`
+  (no rule without one). No subclass changed, and the four others keep their 52 px band.
+- **The code area's floor.** In a division row an editor with one button derives no width of its own, so its own
+  division box states one: least `theme.inspectorEditorLeastWidth` (280) wide and `theme.footerBandHeight` tall,
+  a spacer's spreadability.
+- **Its look.** The code area wears the inspector's pane roles, and its text the pane fill as its background,
+  from the build on (the old `InspectorWdgt._clearPaneLook` is gone), so it stands on the row's body fill like the
+  list.
 
 ### 5.7 `MemberRef` and `ClassMemberRef`
 
@@ -735,15 +923,22 @@ class MemberRef
     (other?.editsAsAMember?() is true) and other.holder is @holder and other.name is @name
 ```
 
-**What U1 landed** (read the two files; they are the base U2 builds on): `holder`, `name`,
+**What U1 landed**: `holder`, `name`,
 `@_recordedStaticSourceOf`, `shownText()` (the old `_paneTextOfMember`; not `text()`, which is a FIELD
 of every text widget), `_fieldSource()` (the old `_sourceForFieldMember`), `canBeRenamedOrRemoved()`
 (the old `_selectedMemberCanBeRenamedOrRemoved` without the selection read), `add()`, `save(txt)`,
 `rename(newName)`, `remove()`, `_notifyOfEdit()`. `ClassMemberRef` overrides `_fieldSource`, the four
 steps and `_notifyOfEdit`, with `_editClassMember` and `_removeClassMember` as its two helpers,
-exactly as `ClassInspectorWdgt` had them. **What U2 adds**, each with its first reader: the three
-statics above (`of`, `canEdit`, `codeReceiverOf`), `editsAsAMember`, `colloquialName`, `sameMemberAs`,
-and `duplicate(newName)` on both classes (§5.3 b's warning: the copy is a step that does not notify).
+exactly as `ClassInspectorWdgt` had them. **What U2 added**, each with its first reader: the three statics
+above (`of`: the member list's choice and its gestures; `canEdit`: the list's and the editor's builds and every
+edit gesture; `codeReceiverOf`: `MemberEditorWdgt.codeReceiver`), `editsAsAMember` and `sameMemberAs`
+(`InspectorWdgt`: its view, `_classAbove`, `showsSubject`), `colloquialName` (the header's title, through
+`Utils.colloquialNameOf`), and `duplicate(newName)` on both classes, with `ClassMemberRef._editCopyUnder(newName,
+verb)` the copy its `duplicate` and `rename` share (§5.3 b's warning: the copy is a step that does not notify).
+Every step answers whether it made its edit (§5.3 b). A member reference IS held now: by a member editor
+(`memberRef`) and, as its `inspectedObject`, by the inspector the editor stands in, so a copy and a world save
+carry it as an ordinary object of its class (a snapshot restores each editor's `memberRef.holder` as the restored
+subject).
 
 ⚠ No comment line of `MemberRef.coffee` may read ` extends <ClassName>`: the boot dependency scanner
 (`src/boot/dependencies-finding.coffee`) reads that phrase anywhere on a line, a comment's included, as
@@ -757,28 +952,34 @@ the tier-naming audit reads as a geometry corner: §7.3, `tier-naming-prelude.js
 ### 5.8 `BandWdgt` and `BandSpaceWdgt`
 
 ```coffee
-# A BAND: one row of controls across the widget that holds me -- a header, a row of toggles, a row
-# of buttons. I am `height` tall, my rule included, and as wide as I am given; my controls keep
-# their own sizes, centred down me, in the order written, with the gaps written between them, and
-# my spring takes the slack.
-#   I have no layout of my own: every item is an element of a horizontal DIVISION row
-# (StackLayoutEngine). So my least width is my controls' and gaps' together, which the stack derives
+# A BAND: one row of controls across the widget that holds me -- an inspector's header, a member
+# list's row of toggles, its row of buttons. I am `height` tall, my rule included, and as wide as I
+# am given; my controls keep their own sizes, centred down me, in the order written, with the gaps
+# written between them, and my spring -- or a text that gives, in its place -- takes the slack.
+#   I have no layout of my own: every piece is an element of a horizontal DIVISION row
+# (StackLayoutEngine). So my least width is my pieces' together, which the stack derives
 # (Widget.getRecursiveMinDim), and the least width of whatever holds me follows from it.
 #   An item is a widget (a control, fixed at its own preferredExtent, centred down me), a number (a
-# gap that many px wide), or BandWdgt.SPRING. ⚠ A gap is as TALL as I am, and that is what makes me
-# that tall: a division row is as tall as its tallest element, whatever its own box says. A band
-# written with no spring gets one at its end: without one the slack would stretch my controls.
-#   I paint nothing but my rule (SeamRulesAppearance): a line along my top or bottom edge.
+# gap that many px wide), BandWdgt.SPRING, or `{gives: aText}` (a line of text that gives way: it IS
+# my spring). ⚠ A gap is as TALL as I am, and that is what makes me that tall: a division row is as
+# tall as its tallest element, whatever its own box says; my own box pins my height too. A band
+# written with neither a spring nor a text that gives gets a spring at its end: without one the slack
+# would go to my controls. One written with both is refused at its build.
+#   I paint nothing but my rule (SeamRulesAppearance): a line along my top or bottom edge, inside my height.
 class BandWdgt extends Widget
   @SPRING: "spring"
   # the edge my rule lies along -- "top" or "bottom" -- or undefined for none
   ruleEdge: undefined
+  # my height, my rule included: what my box pins, and how tall my gaps and my spring stand
+  bandHeight: undefined
 
   constructor: (height, items, opts = {}) ->
     super()
+    @bandHeight = height
     @ruleEdge = opts.rule
     @appearance = new SeamRulesAppearance @
-    ...                                   # ONE settle; every child added with the NoSettle tier
+    @setMinAndMaxBoundsAndSpreadability (new Point 0, height), (new Point 0, height), 0
+    @_buildAndConnectChildren items        # ONE settle; every piece added with the NoSettle tier
 
   _seamRects: ->
     return []  unless @ruleEdge?
@@ -789,39 +990,58 @@ class BandWdgt extends Widget
       [new Rectangle 0, @height() - thickness, @width(), @height()]
 ```
 
-- A control: `control.setMinAndMaxBoundsAndSpreadability extent, extent,
-  DivisionStackLayoutSpec.SPREADABILITY_NONE` with `extent = control.preferredExtent()`, and a
-  division box whose `crossAlign` is 'center' (set it the way `DivisionStackLayoutSpec` offers for a
-  widget not yet added; read its setters first).
+- A control: `control.setMinAndMaxBoundsAndSpreadability extent, extent, 0` with
+  `extent = control.preferredExtent()`: spreadability 0, never `SPREADABILITY_NONE`, which still leaves a tenth of
+  the desired size to take slack (a "fixed" control would wobble a px as the band's width changes); and
+  `control.divisionBox()._setCrossAlignNoSettle "center"` (the spec's public setters settle, and the band's build
+  is a core).
+- A text that gives (`{gives: aText}`): that `StringWdgt` itself as my spring, least = desired = its box's least
+  width (`getMinimumExtent().x`, 5 px) by its one line's height (`linePitch` at the size it is set in), a spacer's
+  spreadability: it takes all the width my fixed pieces leave, and its own fitting crops its text with "…" or
+  stands it at the box's start. Its length is in none of my widths.
 - A gap: `new BandSpaceWdgt px, height`. A spring: `new BandSpaceWdgt 1, height, springs: true`.
-- **`BandSpaceWdgt`**: no appearance (it paints nothing, as `PromptButtonsRowWdgt` paints nothing);
-  `@minimumExtent = new Point 0, 0` in its constructor; its box is least = desired = the size
-  given, spreadability NONE for a gap; for a spring least width 0, desired width **1** (never 0:
-  §4's first hazard), spreadability `SPREADABILITY_SPACERS`; `hiddenFromHierarchyMenu: -> true`.
-- A band and its spaces reject drops.
+- **`_replacePiecesBeforeNoSettle(piece, items)`** re-leads me: every piece before `piece` destroyed and the
+  pieces `items` write put in their place (gaps and controls: my one taker of the slack was written at my build).
+  A core that settles nothing, for a holder's re-lead (an inspector's split button, §5.5).
+- **`BandSpaceWdgt`** `constructor: (width, height, opts = {})`: no appearance (it paints nothing, as
+  `PromptButtonsRowWdgt` paints nothing); `@minimumExtent = new Point 0, 0` in its constructor; a gap's box is
+  least = desired = most = the size given, spreadability 0; a spring's least width 0, desired width **1** (never 0:
+  §4's first hazard), spreadability `SPREADABILITY_SPACERS` (an inspector's view's place is the same spring down
+  its stack: 1 px desired there, the view's desired width across); `hiddenFromHierarchyMenu: -> true`.
+- A band and its spaces take no drops: `Widget`'s own answer, with no call (only the member list's `ListWdgt`
+  needs `disableDrops`).
 
 ### 5.9 Theme, door, part
 
-- **Theme (`src/Theme.coffee`).** Delete what loses its last reader: `inspectorBreadcrumbCaption`,
-  `inspectorBreadcrumbSeparator`, `breadcrumbCaptionGap`, `breadcrumbGap`,
-  `breadcrumbSeparatorSize`, `inspectorListColumnWidth`, and `footerGripClearance` (with D8). Rename
-  the two that keep a reader under a name that would now lie: `breadcrumbBandHeight` →
-  `inspectorHeaderHeight`, `breadcrumbInset` → `inspectorHeaderInset`. Rewrite the comments above
-  each inspector metric to say what reads it now. Colours stay Theme roles (`raw-chrome-color` is
-  held at 0).
+- **Theme (`src/Theme.coffee`).** Deleted, each with its last reader: `inspectorBreadcrumbCaption`,
+  `inspectorBreadcrumbSeparator`, `breadcrumbGap`, `breadcrumbSeparatorSize`, `inspectorListColumnWidth`, and
+  `footerGripClearance` (with D8). Renamed under names that say what reads them now: `breadcrumbBandHeight` →
+  `inspectorHeaderHeight` (44), `breadcrumbInset` → `inspectorHeaderInset` (12; a member list's cut-notice band
+  reads both too), `breadcrumbCaptionGap` → `inspectorHeaderGap` (8: the gap after the split button). New:
+  `inspectorEditorLeastWidth` (280, a member editor's floor) and the role `inspectorHeaderTitle` (`ink`: the
+  header title's). The comment above each inspector metric says what reads it. Colours stay Theme roles
+  (`raw-chrome-color` is held at 0).
 - **Door (`Widget.spawnInspector`).** Inside the same two awaits:
   `row = new InspectorRowWdgt inspectee` then
   `world.openFrameWith row, row.extent(), world.hand.position().subtract(new Point 50, 100)`.
   `inspectorClassFor` is gone: `MemberRef.of` makes the one decision it made.
-- **Part.** No partition change: every new class lives in `src/meta-tools`. Update the `//` comment
-  of the `meta-tools` entry in `buildSystem/parts.json` to name the classes it holds now.
+- **Part.** No partition change: every new class lives in `src/meta-tools`. The `//` comment of the
+  `meta-tools` entry in `buildSystem/parts.json` names the classes it holds, and `profiles/lean.json`'s prose the
+  tool it leaves out.
 
 ### 5.10 The split's two controls (D11)
 
 The splitter (`StackElementsSizeAdjustingWdgt`, core) stays the division element between two
-inspectors and keeps the solve that moves a split (`nonFloatDragging`: a closed form over the row's
-division boxes, exact at any event cadence; read its long comment before touching anything near
-it). A split gets two controls, both always present, one look whatever the pointer:
+inspectors and keeps the solve that moves a split, a closed form over the row's division boxes, exact at any event
+cadence (read its long comment before touching anything near it). The solve is a QUERY,
+`maxDimsPuttingMyLeadingEdgeAt(targetLeft)`: the two cells flanking the splitter and the most sizes the split asks
+of them (`{before, beforeMax, after, afterMax}`), or undefined when nothing can move (no cell on one side, the row
+outside its third regime, or nothing left once the move is clamped). Each drag handler that moves a split (the
+splitter's own `nonFloatDragging`, the split button's) maps the raw pointer into its own plane on the line that
+reads it, asks the query, and makes the two `_setMaxDimDeferredSettle` writes itself: one solve, two handlers, each
+the mapper of its own pointer and the declared deferrer of its own stream. The solve clamps each neighbour at its
+DESIRED width, so from the default split (a member list at its desired 372) a split moves right only, as far as the
+editor's least 280. A split gets two controls, both always present, one look whatever the pointer:
 
 **The divider, for a mouse** (U1b, landed). The splitter is `theme.layoutAdjusterThickness` across
 (12) and its mark is a small field of the house's grip dots: the ones a toolbar band's strip shows
@@ -833,31 +1053,39 @@ splitter answers `layoutAdjusterGripDotsAlong`, 4), so the field reads as a grip
 D14 this is the look of every splitter, a change to the core class with no inspector in it.
 
 **The split button, for a finger** (U2). A `SplitGripWdgt` in the header band of the inspector on
-the divider's right RELAYS its own drag to that splitter, so there is no second solve. An inspector
-wears one exactly while a splitter stands before it (§5.4). A mouse may use it too.
+the divider's right asks that splitter's solve for the split its own drag means, so there is no second solve. An
+inspector wears one exactly while a splitter stands before it (§5.4). A mouse may use it too. Measured: the divider
+by mouse and the button by mouse and by touch each move the split by exactly the travel after the first move (a
+chrome drag has no threshold), the button's left edge is the splitter's right edge after every layout, the window
+never moves, and the cursor reads `col-resize` over both.
 
-**The finger icon** (U3b). The button's face is a double arrow with a finger on it, so it says what
-to do. No finger or hand icon exists in `src/icons/`. Draw one as a size-aware icon with the
+**The finger icon** (U3b; by the owner's ruling not run in the loop that built U2: §0.4 D11). The
+button's face is to be a double arrow with a finger on it, so it says what to do; until then it shows the double
+arrow alone. No finger or hand icon exists in `src/icons/`. Draw one as a size-aware icon with the
 `/convert-icon-size-aware` skill of the umbrella (its probe, preview and owner-review loop), and
 compose it with the double arrow in the grip's glyph. Until the owner has approved the icon the
 button shows the double arrow alone; do not ship a stand-in drawing.
 
 ```coffee
-# A SPLIT GRIP: the FINGER's way to move a split. I am a 44 x 44 piece of layout chrome (the
-# 44 rule, visual-design-system §4.2: a target that must be big is drawn big) standing at the
-# left end of an inspector's header band, right of the splitter that stands before that inspector.
-# The splitter itself is the mouse's way; we are both always there, since a device can have both.
-# A drag on me is a drag on that splitter: I hand it my drag, moved by the distance between us, so
-# its leading edge follows the pointer exactly as if the press had landed on it. The split's
-# arithmetic stays the splitter's own (StackElementsSizeAdjustingWdgt.nonFloatDragging).
+# A SPLIT GRIP: the FINGER's way to move a split. I am a 44 x 44 piece of layout chrome (the 44
+# rule, visual-design-system §4.2: a target that must be big is drawn big) standing at the left end
+# of an inspector's header band, right of the splitter that stands before that inspector. The
+# splitter itself is the mouse's way; we are both always there, since a device can have both. A drag
+# on me moves that splitter's split exactly as a drag on the splitter does: the split's arithmetic is
+# the splitter's own (StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt), and I only say
+# where its leading edge should be.
 #   I hold no splitter: I ask the inspector I stand in which one stands before it, as I am dragged
-# (InspectorWdgt.splitterBeforeMe, read off the row's children), so a copy of me, or my inspector
+# (InspectorWdgt.splitterBeforeMe, read off its row's children), so a copy of me, or my inspector
 # taken out of its row, drags nothing that is not its own.
 class SplitGripWdgt extends LayoutChromeWdgt
 
+  # my box is a chrome target's side square, fixed: my band holds me at my own size
   constructor: ->
     super()
-    ...                                     # my box: minimumTargetSize square, fixed
+    side = WorldWdgt.theme.minimumTargetSize
+    extent = new Point side, side
+    @__commitExtent extent
+    @setMinAndMaxBoundsAndSpreadability extent, extent, 0
 
   # I am CHROME, as the splitter is: a drag that starts on me moves my split, at once, for a
   # finger as for a mouse (ActivePointerWdgt._touchPressArmsAtOnce), and it never lifts me out
@@ -865,11 +1093,13 @@ class SplitGripWdgt extends LayoutChromeWdgt
   detachesWhenDragged: -> false
   grabsToParentWhenDragged: -> false
 
-  # MY GLYPH: the double arrow across, as a layout spacer's (LayoutChromeWdgt._glyphOnMyPlate), and,
-  # once it is drawn, the finger on it
+  # MY GLYPH: the double arrow across, as a layout spacer's (LayoutChromeWdgt._glyphOnMyPlate)
   _glyphOnMyPlate: ->
     theme = WorldWdgt.theme
     [(new DoubleArrowIconAppearance @, theme.layoutChromeGlyph), theme.layoutSpacerGlyphSize]
+
+  # my hover shows the cursor a row's splitter shows (LayoutChromeWdgt.hoverEntered)
+  _resizeCursor: -> "col-resize"
 
   # the splitter before the inspector I stand in: the nearest container of mine that can say
   _mySplitter: ->
@@ -877,40 +1107,46 @@ class SplitGripWdgt extends LayoutChromeWdgt
     holder = holder.parent  until !holder? or holder.splitterBeforeMe?
     holder?.splitterBeforeMe()
 
-  # The splitter reads where its LEADING EDGE should be as the pointer less the grab point inside
-  # ITSELF. My grab point is inside ME, so it is moved by how far right of the splitter I stand.
-  # That distance is a difference of two laid-out positions that move TOGETHER through a drag, so
-  # it is the same number on every move of a frame, whichever of them the frame has laid out.
+  # The split moves so that the splitter's LEADING EDGE lands where the pointer, less where I was
+  # grabbed, less the splitter's own width says: I stand flush after it. That width is the one its
+  # division BOX states (getDesiredDim), never the width it was laid out at (12, or 13 by the rounding
+  # of the last layout pass, which would move the wanted edge by a px with how many moves a frame
+  # drained: DETERMINISM.md's class). I read no laid-out position at all. A row divides its width,
+  # so only x moves.
   nonFloatDragging: (grabPointInMe, pos, deltaDragFromPreviousCall) ->
+    return unless deltaDragFromPreviousCall?
     splitter = @_mySplitter()
-    return  unless splitter?
-    grabPointInSplitter = new Point grabPointInMe.x + (@left() - splitter.left()), grabPointInMe.y
-    splitter.nonFloatDragging grabPointInSplitter, pos, deltaDragFromPreviousCall
+    return unless splitter?
+    wantedLeadingEdge = (@screenPointToMyPlane pos).x - grabPointInMe.x - splitter.getDesiredDim().x
+    split = splitter.maxDimsPuttingMyLeadingEdgeAt wantedLeadingEdge
+    return unless split?
+    # a drag-move STREAM, as the splitter's own: the deferred-settle entrypoint check-layering [O] allows here
+    split.before._setMaxDimDeferredSettle split.beforeMax
+    split.after._setMaxDimDeferredSettle split.afterMax
 ```
 
-Notes for writing it:
+Notes, as built:
 
 - This is the spike's variant C made a class (§4): there the relay was an instance override on a
-  second `StackElementsSizeAdjustingWdgt`; here it is a class of its own, so nothing holds a
-  function. Read `StackElementsSizeAdjustingWdgt` whole first: it also sets the resize cursor on
-  hover and restores it at the end of a drag (`hoverEntered`, `hoverExited`, `endOfNonFloatDrag`);
-  give the grip the same three, or lift them where both can share them.
-- If `check-layering.js` rule [O] (the callers allowed to defer a settle through a drag stream) or
-  the call-separation gate objects to one widget calling another's drag handler, the answer is a
-  PUBLIC, intent-named method on the splitter that both its own handler and the grip call (the
-  body of `nonFloatDragging` from `targetLeft` on, taking the wanted leading edge), never a second
-  copy of the solve.
-- A row is horizontal, so the relay shifts `x`. Do not generalise it to a vertical stack before a
-  vertical client exists.
-- The grip, like a band and its spaces, rejects drops.
-- **One case to decide while writing:** an inspector COPIED alone out of a row (the context menu's
-  Duplicate) is built with `showsSplitGrip` true and stands in no row, so its grip shows and does
-  nothing. `Widget._reactToBeingCopied` is the hook a copy gets once it is whole (read
-  `ToolbarWdgt`'s and `ViewportWdgt`'s for what it may do, and call `super`): if it can clear the
-  field and rebuild the header cleanly, do that; if it cannot, leave the idle grip and write one
-  "noted, not queued" line in this plan's ledger at the close.
+  second `StackElementsSizeAdjustingWdgt`; here it is a class of its own, so nothing holds a function. The
+  splitter's resize cursor on hover and its restore at the end of a drag (`hoverEntered`, `hoverExited`,
+  `endOfNonFloatDrag`) are lifted to `LayoutChromeWdgt` behind one hook, `_resizeCursor` (undefined by default;
+  the splitter answers by its axis, the grip `"col-resize"`): one copy of the cursor logic.
+- The first shape, a one-line relay handing the raw `pos` on to `splitter.nonFloatDragging`, reads a raw pointer
+  unmapped (`check-plane-discipline` C2, held at zero), and its fallback, a public method on the splitter making
+  the deferred writes, puts `*DeferredSettle` calls outside a stream handler (`check-layering` [O]). The shape
+  inside both rules is the shared QUERY above. [O]'s allowlist is keyed by the handler's name, `nonFloatDragging`,
+  which covers three callers (`HandleWdgt`, the splitter, the grip), and its self-test's stale-allowlist plant
+  covers `meta-tools/SplitGripWdgt.coffee`; the complexity record follows the solve
+  (`'StackElementsSizeAdjustingWdgt#maxDimsPuttingMyLeadingEdgeAt': 18`, recorded at 19 as `#nonFloatDragging`).
+- A row is horizontal, so only x moves. Do not generalise it to a vertical stack before a vertical
+  client exists.
+- The grip takes no drops, as every plain widget.
+- An inspector COPIED alone out of a row (the context menu's Duplicate), or saved alone, stands in no row:
+  `InspectorWdgt._reactToBeingCopied` and `_afterDeserialization` re-derive its split button from where it
+  stands, so it sheds the grip (§5.5).
 - `SplitGripWdgt` lives in `meta-tools` while the inspector is its only client. Every OTHER
-  division stack's splitter gets the dotted look (D14) and no finger's way to move it: U5 files
+  division stack's splitter has the dotted look (D14) and no finger's way to move it: U5 files
   that.
 - A mouse can still press the 12 px divider a finger cannot take reliably; that is intended. The
   divider stays a pointer target for every pointer (a finger that does land on it moves the split).
@@ -924,7 +1160,7 @@ Notes for writing it:
 | U0 | Orient, decisions, a green baseline | `fg presuite` | [ ] |
 | U1 | `MemberRef` / `ClassMemberRef` under the OLD inspectors: no pixel changes | `fg gauntlet` | [x] 2026-11-24 |
 | U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [x] 2026-11-24 |
-| U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [ ] |
+| U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [x] |
 | U3 | Tests of what is new, each proven to bite | `fg presuite` | [ ] |
 | U3b | The finger icon on the split button: candidates, then the owner's choice (D11) | `fg presuite` after the choice | [ ] |
 | U4 | Object-list views (Children, Instances, Subclasses) and the chooser (D12) | `fg gauntlet` | [ ] |
@@ -1220,6 +1456,103 @@ finding, not noise. A test filed *needs-a-fix* is a ported macro that is wrong: 
 restores an inspector there), then `fg build` again (a plain dev build, so the tree is the suite's).
 Expected churn: only the tests of §7.1 and any test that shows an inspector window.
 
+**Landed 2026-11-25 (U2 of the inspector-overhaul loop).** Built in the checkpoints above, in this order as it
+turned out: the source (U2.1), the corner hooks (U2.2), the menu sweep's port BEFORE the first build could pass
+(once `ClassInspectorWdgt` was gone, `check-hand-lists` failed the build on the sweep's marker), the first build
+(U2.3), three probe rounds in a browser (U2.4), the toolkit (U2.5), the 32 tests in four batches (U2.6), the other
+rigs (U2.7), the suites and the recapture (U2.8). §5 states the tool AS BUILT; what follows is how it came to
+differ from this plan's first text, measured:
+- **What the research corrected before a line was written:** the one-line relay from the split button to the
+  splitter's handler reads a raw pointer unmapped (`check-plane-discipline` C2) and its fallback seam defers a
+  settle outside a stream handler (`check-layering` [O]), both invariants, so the splitter's solve became a QUERY
+  (`maxDimsPuttingMyLeadingEdgeAt`) that each of the two drag handlers asks, mapping its own pointer and making its
+  own deferred writes; a splitter is recognised from STRUCTURE (handles, palettes, frame bars and sliders answer
+  `ownsDragsStartingOnMe` too, and a windowless row under "Resize/move…" has the halo's handles as children); a
+  fixed piece of a band pins its MOST size (spreadability 0: `SPREADABILITY_NONE` still leaves a tenth to take
+  slack); an inspector needs a most width of its own or its split cannot move; a class `rename` built on a
+  notifying `duplicate` would tell twice (one non-notifying copy serves both); `_resizerOverMyCorner` and
+  `HandleWdgt.cornerFootprint` went WHOLE with the corner chain; the scanner needs no variable around `new X` in a
+  method.
+- **What the read of the first source diff changed, before it ran:** the split button's wanted edge reads the
+  splitter's BOX width, never its laid-out one (12 or 13 by the rounding of the last pass); and the row's spare
+  width goes by the VIEW (a member list keeps its desired width, an editor takes the rest: `rowSlackWeight`).
+- **What three probe rounds changed (seven fixes, each measured again):** the row CLIPS (a `ClippingWdgt`:
+  squeezed with no window it painted and took presses outside its box); every band ends with its inset (the
+  footer's last button stood flush on the edge); an inspector whose view was taken out shows no subject (the
+  same choice left a husk); the row tells its window its name may have changed; a list's placeholder row names no
+  member; a long title no longer widened the window; and, in the second round, a header's title became its band's
+  SPRING, a text that gives (a title that claimed its text's width as desired pushed the row out of the regime in
+  which a split moves: a 70-character member froze the split; there is no title cap).
+- **Two defects other units' tools found, fixed at their cause:** the menu sweep's first run wrote 1088
+  `MIXED_DIVISION_AXES` errors: the dev row "Attach with horizontal layout" added its widget along x into a
+  parent whose cells run y, a gap older than this unit that an inspector left open by an earlier row now
+  exposed; `Widget.newParentChoiceWithHorizLayout` joins along the axis the parent's cells already run. And a
+  ported test pinned a view-less inspector's header band stretching to the inspector's full height at its next
+  layout, its width falling to its header's (a division stack hands ALL its spare room to its cells, and the
+  pinned band was alone): the place a view stood keeps the view's claim (`viewsPlace`, a spring with the view's
+  desired width and no least width), so a gutted row lays out as the intact one did (measured 372 | 12 | 374 with
+  both views out; 294 | 12 | 217 at 525 wide; headers 44 at the top).
+- **The toolkit:** three locators that ask what a part ANSWERS, never its class (the toolkit is the eager harness
+  part, the tool a lazy one): `topMemberList`, `memberEditorFedBy(memberList)` (read off the row's structure: the
+  editor stands IN the next inspector, on a member of the list's own subject), `topMemberEditor`; every verb keeps
+  its name and parameters; the code-pane verbs throw `NO MEMBER EDITOR` when no member is chosen.
+- **The tests:** all 32 ported, six renamed (§7.1). One assertion was LOST in the ports and given back after the
+  review found it (a read-only member's editor has no Save: the old helper read the Save, the ports read only the
+  member list's footer); no other was lost without a successor asserted; one found
+  VACUOUS and made real (`list.contents.children` counted the list's one rows container); one RESTORED
+  (`macroAddEditSaveRenameRemoveProperty`'s first and last shots are byte-identical again, at both densities and
+  pointers); value checks added beside the pictures. The five re-purposed tests pin the successors of what they
+  lost (the same chip pressed again reloads the same inspector; a row built by code on a prototype is edited as a
+  class; a choice in a picked-out list opens exactly one new window; the windowless row has no handle of its own
+  and is resized by the halo; a gutted row keeps its shape).
+- **The rigs:** the menu sweep (two row fixtures, three popout buttons per fixture, three member-editor roots;
+  82 prompt OKs driven; its first run found the axis defect below, and it is green since that fix), the
+  serialization rig (every expectation name and refusal regex untouched; three fixture translations where the thing
+  judged was a type that is gone, each keeping the judged fact; risk R6 retired: the first save and load of a member
+  reference held by a widget was refused by nothing), the boot smoke and the parts rig, each of these three green on
+  its first run after its port, with its self-test (the boot smoke's restored-inspector probe is judged only on a
+  production tree, by `fg homepage`).
+- **Pixels:** the predicted set was written before the first suite run (16 tests, 46 shots; the other 16 ported
+  tests and every test outside the 32 unchanged); the failing set EQUALLED it under mouse and under finger; every
+  changed shot was looked at before the recapture (and each dpr-2 render measured against its dpr-1 one: the
+  same layout at both densities); 184 references recaptured (46 × 2 densities × 2 pointers).
+- **Ratchets (each a budget, dated beside its number):** `BASELINE_PROLOGUE_COPIES` 8 → 7 (the inspector has no
+  `_reLayout`); the splitter's complexity record re-keyed to its solve, 19 → 18; `PROMPTS_DRIVEN_FLOOR` 53 → 55;
+  `check-layering-selftest`'s stale-allowlist plant covers the split button's file. `BASELINE_U_QUERY` stays 101.
+  The doc ceiling of `Fizzygum-tests/CLAUDE.md` is banked 12 bytes lower (66434 → 66422). No rule of any gate
+  changed, no allowlist grew.
+- **Docs:** 78 passages of the living docs made true (the visual design system's band rule and two-controls rule,
+  the serialization reference, the viewports doc's corner reserve, `layout.md`'s tool-as-composition paragraph, the
+  citizenship acid test, the macro-authoring skill among them) and 34 core comments that still named the old
+  tools.
+- **What the two independent reviews changed** (one of the source, one of the tests, rigs and docs; both asked first
+  whether any shape was chosen for a number or to quiet a gate, and found none): a split a person DRAGGED was lost
+  at the next member choice (the fresh inspector took its default most width beside a neighbour that kept its
+  dragged one: 419 landed at 403): a choice now has ONE heir give up the most width the removed inspectors had given
+  away across its boundary, so the split stays beside a view of the same kind and the default returns beside
+  another kind or none (§5.4; measured by mouse and by touch); a splitter is recognised by the solve its split
+  button asks (`maxDimsPuttingMyLeadingEdgeAt?`), not by a drag handler palettes and handles also have; the chip
+  pressed again and a label naming no member no longer leave a selection with nothing on its right; only a window
+  on the desktop is widened; the window is re-titled only when the row's first inspector changes; a drop on an
+  "Edit layout" slot joins along the slot's axis (the twin of the attach defect); the box's max arithmetic has one
+  statement (`DivisionStackLayoutSpec.maxFor`). In the tests: the lost assertion above; two sentences that claimed
+  an owner's approval of the picked-out views' look that was not given (it is an open question); and BITE-PROOFS:
+  no new assertion of the ports had been seen failing, so each got a plant through `--prelude` and was seen failing
+  on its own line.
+- **Left open, each stated in §5 where it applies as "an open question for the owner":** "Edit layout" adders
+  left behind a choice; a widening that gives a new editor only its least 280; a window narrower than its row's
+  least width; a double-click on the right part of a lone list's row; a view picked out of its inspector standing
+  on no body (darker than the old panes did); a double-click on a method's row replacing its editor with an empty
+  list on the function. And, as built and unfiled: a clicked "(empty)" row wears the
+  list's selection fill; a member's footer buttons follow the choice, not a Save that makes the member the
+  widget's own (as before this unit); a whole-widget Destroy of a member list leaves its place 1 px wide.
+- **Not run:** U3b (the owner, 2026-11-24): the split button shows the double arrow alone.
+- **Evidence:** `fg gauntlet` OK, all 20 legs in wave with no retry, twice: on the unit before the reviews' fixes
+  (1667 s) and after them (1561 s), the second with an empty predicted failing set; `fg homepage` OK, where the
+  boot smoke's restored-inspector check ran for the first time on a production tree (a row on a class's prototype
+  restored from a widget file and from a world file: each door waited for the reflective layer, and the member
+  editor a row click opens shows the member's CoffeeScript).
+
 ### U3. Tests of what is new (1 day)
 
 Write each with the `/author-macro-test` skill of the tests repo. Each is proven to bite: plant the
@@ -1228,21 +1561,33 @@ plant, watch it pass. Each is proven clean with a follower on both pointers:
 `node scripts/run-sequence-headless.js SystemTest_<new> SystemTest_macroAnalogClockInspectEdit`, zero
 `WORLD_INVENTORY_` lines, then again with `--pointer=finger`.
 
-| Test | Proves | Plant that must fail it |
-|---|---|---|
-| `macroInspectorMemberClickOpensItsEditorBesideTheList` | a click adds the second inspector; another row REPLACES it (still two); the same row again RELOADS it (typed text gone, undo brings it back) | `showNextTo` always appends |
-| `macroInspectorDrillWidensItsWindow` | a double-click on an object-valued field shows the value beside the list; a third inspector widens the window by the missing width; the first inspector is still there | `_widenMyWindowToFit` a no-op |
-| `macroInspectorSplitMovesByDividerAndByButton` | the divider shows its dots and the second inspector's header opens with the split button, the first inspector's does not; a drag on the DIVIDER moves the split by the drag's travel and nothing else; a drag on the BUTTON does the same. The test runs on both pointer axes: the finger run is the proof D11 asks for (its button drag is a touch drag) | the button's relay a no-op |
-| `macroInspectorTakenOutLeavesNoStraySplitter` | "Pick up" of the second inspector leaves one inspector and NO splitter; a choice made in the picked-out one opens a window of its own | `_reactToChildRemoved` a no-op |
-| `macroInspectorRowSurvivesACopyAndASnapshot` | a duplicate of a two-inspector row drives its own editor; a snapshot round trip restores both inspectors and the member's source | (assert only; the serialization leg is the gate) |
-| `macroInspectorReadOnlyMemberHasNoFooter` | on a Point: the list has no footer band, the editor no Save and no band | the derived footer question answering true |
-| `macroInspectorDuplicateCopiesAMember` | on a widget: Duplicate… of an injected method under a new name gives a second member with the same source that runs, the original untouched; of a field, a second field holding the same value; a name the subject already owns is refused and nothing changes. On a class: the copy is recorded (a snapshot replays it) and `rename` leaves exactly what duplicate-then-remove leaves | `duplicate` writing under the OLD name |
-| `macroInspectorCutListSaysSo` | an array of 1200 items: the list shows 1000 and the notice band says "The first 1000 of 1200 items are listed." | the notice band never built |
+U2's 32 ported tests (§7.1) and two rigs already pin part of what this unit was to prove: the third column says
+which test pins what, so a new test need prove only what is left. Find the tool's parts with the toolkit's
+locators (`@topMemberList()`, `@memberEditorFedBy memberList`, `@topMemberEditor()`; `src/macros/CLAUDE.md`, "One
+inspector tool"), and re-locate an editor after every choice. Geometry of the built tool, its window at (x, y): the
+row at (x+1, y+46), 758 × 391; the member list's list at (x+1, y+138), 372 × 247; the editor's code area at
+(x+385, y+90), 374 × 295; with no member chosen the one inspector and its list run the full 758. From the default
+split a split moves right only (§5.10). Picture nothing below a row's least width (§5.4: an open question).
 
-Add to `serialization-roundtrip-headless.js` (and `lib/serialization-expectations.js`) an
-expectation that a snapshot holding a row whose second inspector's subject is a `MemberRef` restores
-with that ref naming the restored holder. `MemberRef` is the first non-widget, non-value class a
-widget of this tool holds: this is where a serializer rule about it would show.
+| Test | Proves | Already pinned by U2's ports | Plant that must fail it |
+|---|---|---|---|
+| `macroInspectorMemberClickOpensItsEditorBesideTheList` | a click adds the second inspector; another row REPLACES it (still two); the same row again RELOADS it (typed text gone, undo brings it back) | the reload and its undo, and another member's NEW editor beside the list: `macroFormulaBarUndoStaysInItsEdit`; the same subject chosen again reloads the same inspector, and a choice further left removes what stands right of it: `macroInspectorClassChipShowsTheClassBesideIt`. Unpinned: the count "still two" after another member | `_showNextToNoSettle` always appends |
+| `macroInspectorDrillWidensItsWindow` | a double-click on an object-valued field shows the value beside the list; a third inspector widens the window by the missing width; the first inspector is still there | the drill to a second and a third inspector: `macroInspectorEditsAClassPrototypeAsAClass`; a three-inspector window 1048 wide, by its PIXELS only: `macroInspectorCodePaneRunsAgainstItsSubject` image_3. Unpinned: the widening by the missing least width as a value, and its stop at the desktop's right edge | `_widenMyWindowToFitNoSettle` a no-op |
+| `macroInspectorSplitMovesByDividerAndByButton` | the divider shows its dots and the second inspector's header opens with the split button, the first inspector's does not; a drag on the DIVIDER moves the split by the drag's travel and nothing else; a drag on the BUTTON does the same. The test runs on both pointer axes: the finger run is the proof D11 asks for (its button drag is a touch drag) | the second inspector's split button (`showsSplitGrip`): `macroPickingUpPartsFromInspector`, `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: every drag; that the first inspector carries none; a dragged split kept across a member choice, and its return to the default after a kind change (a drill to a value) or a filter toggle (measured in a browser, §5.4; pinned by no test) | `SplitGripWdgt.nonFloatDragging` a no-op |
+| `macroInspectorTakenOutLeavesNoStraySplitter` | "Pick up" of the second inspector leaves one inspector and NO splitter; a choice made in the picked-out one opens a window of its own | a picked-out VIEW's choice opening exactly one new window, the row left as it was: `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: a whole inspector picked out, the splitter it leaves, the grip it sheds, and the window's title following the row's new first inspector | `InspectorRowWdgt._reactToChildRemoved` a no-op |
+| `macroInspectorRowSurvivesACopyAndASnapshot` | a duplicate of a two-inspector row drives its own editor; a snapshot round trip restores both inspectors and the member's source | the copy: `macroDuplicatedInspectorDrivesCopiedTargetOnly` (the copy's editor saves into the copied subject only), `macroDuplicatedInspectorsCloseIndependently` and `macroDuplicateComplexWidgetPaintsCleanly` (a row of its own); the snapshot: the serialization rig's `world.inspector.classSubjectsSurviveSnapshot` (rows with a member chosen restore with the same pixels, each editor on its member of the restored subject, a Save still editing). Nothing is left unpinned | (assert only; the serialization leg is the gate) |
+| `macroInspectorReadOnlyMemberHasNoFooter` | on a Point: the list has no footer band, the editor no Save and no band | PARTLY: the list's missing footer band on a number, a string and a Point, and, given back after U2's review found it lost in the port, a member's editor there with no Save, no Save child and no band, its code area to its bottom: `macroInspectorOnNonWidgetIsReadOnly`; the same of a class function's member, beside a prototype's `constructor` editor with its Save and its 52 px band: `macroInspectorEditsAClassPrototypeAsAClass`. Unpinned: the plant seen failing those assertions | `CodeAreaWdgt._hasAFooterBand` answering true |
+| `macroInspectorDuplicateCopiesAMember` | on a widget: Duplicate… of an injected method under a new name gives a second member with the same source that runs, the original untouched; of a field, a second field holding the same value; a name the subject already owns is refused and nothing changes. On a class: the copy is recorded (a snapshot replays it) and `rename` leaves exactly what duplicate-then-remove leaves | Duplicate… enabled by Rename…'s rule and refused to `constructor`: `macroInspectorOffersOnlyWhatItsSubjectOwns`; its prompt's OK dispatched with no throw: `fg menusweep`. Unpinned: every copy, the owned-name refusal, the record, and that a duplicate tells once (`macroInspectorEditTellsOnce` counts add, save, rename and remove) | `duplicate` writing under the OLD name |
+| `macroInspectorCutListSaysSo` | an array of 1200 items: the list shows 1000 and the notice band says "The first 1000 of 1200 items are listed." | the serialization rig's `inspector.onAnIndexedSubjectListsItsItemsInOrderBounded`: a typed array and a string of 3000 list `MOST_ITEMS_LISTED` items, and the cut-notice band's text says so. Unpinned: a plain Array, in a SystemTest | the notice band never built |
+
+The rig expectation this unit was to add (a snapshot holding a row whose second inspector's subject is a
+`MemberRef` restores with that ref naming the restored holder) landed in U2.7, in
+`world.inspector.classSubjectsSurviveSnapshot` (`serialization-roundtrip-headless.js`, held by
+`lib/serialization-expectations.js`): the plan's risk R6, met (§8).
+
+`fg menusweep` has no ROOT for an inspector PART's own menus (a header's, a band's, a view's, a splitter's: the
+division stack's "Layout in row/column", "Cross: …" and "Edit layout" rows on them were fired once by a scratch
+probe, 494 rows, no throw). U3 adds one, a nested root as the sweep's member-editor roots are.
 
 ### U3b. The finger icon (0.5 day of work, then the owner)
 
@@ -1266,14 +1611,22 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
    - It dispatches the ELEMENT, not the row's label, to `target[action]` and
      `target[doubleClickAction]`. A row's element is the one at the row's index. For a list of
      strings the element IS the label, so the member list and every other caller are unchanged
-     (only the inspector passes a target today: grep to confirm).
+     (only a member list, `MemberListWdgt`, passes a target: grep to confirm). A list with no
+     elements shows its placeholder "(empty)" AS its one element, so its target is handed that
+     string: an object list's takes it as no choice (as `MemberListWdgt._memberNamedBy` does for a
+     label that names no member).
    - A new option **`labelQuery`**: the name of the target's method that answers an element's label
      (the same shape as `memberFactsQuery`: a method name, no closure). Without it,
      `ListWdgt.labelOf` as now.
 2. **`InspectorWdgt`: more than one view.**
-   - `_views` gains rows, each guarded by a capability of the subject, never `instanceof`:
-     `["Children", "_newChildrenList"]` for a widget (it answers the widget tree's own questions;
-     pick the narrowest existing one), `["Instances", "_newInstancesList"]` and
+   - Add the table U2 did not need, `_views`: THE VIEWS MY SUBJECT OFFERS, in order, each [title, the name
+     of my method that builds it], read by the chooser and by `showView`. Its first rows are the choice
+     U2's `_buildAndConnectChildrenNoSettle` makes inline (§5.5): `[["Source", "_newMemberEditor"]]` for a
+     subject that answers `editsAsAMember`, `[["Members", "_newMemberList"]]` otherwise, with
+     `_newMemberList` / `_newMemberEditor` and the fields `chooser`, `viewToggles`, `shownViewTitle` declared
+     at class level; the build then shows `_views()[0]`. Then rows, each guarded by a capability of the
+     subject, never `instanceof`: `["Children", "_newChildrenList"]` for a widget (it answers the widget
+     tree's own questions; pick the narrowest existing one), `["Instances", "_newInstancesList"]` and
      `["Subclasses", "_newSubclassesList"]` for a class's prototype.
    - The queries are one line each: `@inspectedObject.children`; the class's `instances` set as an
      array (`Class.coffee` emits one per class; widgets only register); the prototypes of the classes
@@ -1281,13 +1634,26 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
    - One builder serves all three: `new ListWdgt objects, target: @, action: "chooseRow",
      labelQuery: "labelOfRow"`, with `chooseRow: (object) -> InspectorRowWdgt.showChoice @, object`
      and `labelOfRow` answering `_subjectName`'s rule for the object.
-   - The chooser band (`theme.toggleBandHeight`, `rule: "bottom"`): one `LabelledToggleWdgt` per
+   - What every view answers, as U2's two do: `rowSlackWeight` (the inspector's constructor sets its own most
+     width from its view's, unguarded, through `_defaultBox`: §5.5), so an object list answers one (a list's, 0.01: it
+     keeps the width its rows need), and the weight is also the view's KIND to a choice's split rule (§5.4: an object
+     list replacing a member list keeps a dragged split); `clearChoice` (`chooseMyClass` asks it through `?.`), so an
+     object list's drops its list's selection (`ListWdgt.clearSelection`); and `_reloadNoSettle`, which the
+     inspector's reload asks of its view unguarded (a list's drops its choice, as `MemberListWdgt`'s does).
+   - The chooser band (`theme.toggleBandHeight`, `rule: "bottom"`, written as the toggles band is:
+     `toggleBandInset`, the toggles `toggleBandGap` apart, `BandWdgt.SPRING`, `toggleBandInset`), between the
+     header and the view: one `LabelledToggleWdgt` per
      view, `action: "showViewNamed", arg1: title`, ON exactly for the shown view
      (`_reflectViewOnToggles`, the shape of `_reflectFiltersOnToggles`). Built only when `_views()`
      has more than one row.
-   - `showViewNamed(ignored, ignored2, title)` → `showView(title)`: destroy the view, build the
-     named one in its place (same index), reflect the toggles, and
-     `InspectorRowWdgt.showChoice @, undefined`.
+   - `showViewNamed(ignored, ignored2, title)` → `showView(title)`, in ONE settle: build the named view,
+     make it `@view` and add it at the old view's index, THEN destroy the old one (a view that leaves while
+     it is still `@view` leaves its PLACE: `viewsPlace`, `InspectorWdgt._reactToChildRemoved`), re-box the
+     inspector through `_defaultBox` for the new view, keeping the trade its box holds with its left neighbour
+     (less what `mostWidthGivenAway` read before the switch: a dragged split stands, §5.4), and reflect the toggles; then,
+     after that settle, `InspectorRowWdgt.showChoice @, undefined` (a gesture asks the row after its own
+     settle, never inside it: §5.3 a). A view's place stands right after the header
+     (`@children.indexOf(@header) + 1`): with a chooser band, it must stand after the chooser.
 3. **Tests** (with bite-proofs and followers as U3): `macroInspectorChildrenViewWalksTheWidgetTree`
    (a window: Children, choose a child, choose its child: three inspectors, each titled with its
    widget); `macroInspectorClassViewsListInstancesAndSubclasses`;
@@ -1297,14 +1663,25 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
 
 ### U5. Docs, BACKLOG, close (0.5 day)
 
-1. **Architecture docs** (§7.4), present tense, no "was"/"no longer". The one that owns the new
-   mechanism is `widget-citizenship.md` (the inspector as an assembly of ordinary widgets) plus a
-   new short section in `layout.md` §4.2 naming `BandWdgt` as the division stack's first product
-   client, with §4's two hazards as rules.
+1. **Architecture docs** (§7.4), present tense, no "was"/"no longer". U2 made §7.4's docs true of the
+   tool it built, the two that own the mechanism among them: `widget-citizenship.md` (the inspector as an
+   assembly of ordinary widgets) and `layout.md` §4.2's paragraph naming the tool as composition, with the
+   three rules a band keeps (§4's two hazards and the fixed-piece rule). U5 re-verifies every §7.4 doc
+   against the tree U3 and U4 leave (U4's views and chooser, U3's tests by name), and corrects two passages
+   stale from before U2: the checks index's [O] row (`lint-and-static-checks.md` ~:941) names
+   `*Coalesced` / `COALESCED_CALLER_ALLOWLIST` where `check-layering.js` says `*DeferredSettle` /
+   `DEFERRED_SETTLE_CALLER_ALLOWLIST`; `docs/tooling/duplicated-code-detection.md` (~:121) gives
+   `meta/*Inspector*` for files in `src/meta-tools/`. And one label U2 left as it was: the build explainer's
+   part-size bar (`docs/explainers/build-and-packaging.html`, "meta-tools (lazy) — 47.7 KB") was measured before
+   the tool's rewrite; re-measure it the way that bar's other labels were measured (a production build's parts:
+   `fg fingerprint homepage`), or all of them together.
 2. **`Fizzygum-tests/scripts/inspector-churn-set.json`:**
    `node scripts/derive-inspector-churn-set.js --write` (from `Fizzygum-tests/`), and read its diff.
    The script plants a member and sees which tests' pictures move; it assumes `_filteredMemberNames`
-   and `showingInherited`, which `MemberListWdgt` keeps.
+   and `showingInherited`, which `MemberListWdgt` keeps. U2 renamed `macroSimpleDocumentHandlesOldInspector` to
+   `macroSimpleDocumentHandlesInspector` in the json with its test; the prose still names the old tools: the json's `why` ("an object inspector's or a
+   class inspector's"), the deriver's header (`InspectorWdgt._filteredMemberNames`, "class inspectors") and
+   `lib/inspector-churn-set.js`'s header. Say what is true.
 3. **`docs/BACKLOG.md`.** The inspector's open lines stay open and keep their wording where it is
    still true; correct any that names a deleted method or class. They are (search "inspector"):
    the Inherited filter (⛔ owner), "Is an inspector's subject always a page object?" (⛔ owner),
@@ -1314,24 +1691,62 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
    under this plan's section, what this arc leaves open:
    - every OTHER division stack's splitter has no finger's way to move it (the halo's layout
      adjusters, "Edit layout"): a general stack has no header band to stand a grip in;
-   - a division row whose elements desire 0 width in all divides by zero (`StackLayoutEngine`);
+   - a division row whose elements desire 0 width in all divides by zero (`StackLayoutEngine`, its third
+     regime), and one whose least widths sum to 0 laid out at width 0 does too (its first regime: a
+     spring-only band at width 0);
    - two footer-band mechanisms stand: `FooterBandLayout` (the code-area family, the bin) and
      `BandWdgt`; one should serve both;
    - the talk plan's U3 is superseded by this plan (one line, so the owner's plan and this one do
-     not both claim the explorer).
-4. **Close the arc** with the `/close-arc` skill: final `fg gauntlet`, the plan `git mv`-ed to
-   `docs/archive/` with its status stamp and its `archive/INDEX.md` line, the commit messages
-   proposed, and the wait for approval.
+     not both claim the explorer);
+   - U3b, the finger icon on the split button, not run in the inspector-overhaul loop by the owner's
+     ruling (§0.4 D11): its line stays open under this plan's section;
+   - the questions parked for the owner at U2, each where §5 states it as built ("an open question for
+     the owner"): "Edit layout" adders left behind a choice (§5.4); a widening that gives a new editor only its
+     least width and leaves every split of the row inert (§5.4); a window narrower than its row's least width
+     (§5.4); a double-click on the right part of a lone list's row (§5.6); a view picked out of its inspector
+     standing on no body (§5.5); a double-click on a METHOD's row replacing its editor with an empty list on the
+     function (§5.6). Each is filed, built or dropped as the owner answers;
+   - a holder keeps the place of its slack taker: a header whose title a person picks out stretches its
+     controls, and a member list whose list is picked out stretches its bands (the engine rule `viewsPlace`
+     answers for a view, one level down: a division stack hands all its spare to its cells by their desired
+     sizes when none has a margin);
+   - Add… with a name the subject already owns replaces that member with undefined, silently (as before U2),
+     beside a Duplicate… that refuses the same name;
+   - and, filed or kept as ledger lines by the house bar (a reachable or medium item is queued), the low lines
+     U2's two reviews listed: an inspector ATTACHED into a row is not reconciled until something leaves the row,
+     and one attached free-floating counts as a cell; a view attached back onto its inspector shares the height
+     with its place; a row whose only inspector was picked up stays a blank window titled "Inspector"; a split
+     button whose header band a person rotates maps its pointer in another plane; a member reference cannot be
+     inspected as an object; an old one-class inspector's record loads as a shell whose old controls throw at a
+     press (no compatibility is owed); no toolkit locator finds an editor that is its row's first inspector; a
+     double-click in a list standing in no row cannot complete (the fourth question's family); the menu sweep's
+     `POPOUT_BUTTON_UNSWEPT` scans the member list only; `world.inspector.survivesSnapshot`'s `rows > 0` counts the
+     placeholder row too; the rigs open rows in 560 × 410 windows; a lone view saved in a file is probed nowhere;
+     unsaved typing a re-filter takes away cannot be undone (ruled in U2's preparation, stated in no doc);
+     `docs/BACKLOG.md`'s Inherited-filter line still says "An object inspector's…".
+4. **Close the arc** with the `/close-arc` skill: final `fg gauntlet`, the commit messages proposed,
+   and the wait for approval. The plan STAYS in `docs/plans/`: U3b, the finger icon, is still open by the
+   owner's ruling (§0.4 D11), so the status line at its top says which units landed and that U3b waits for
+   the owner, and its `docs/BACKLOG.md` section keeps U3b's line; the `git mv` to `docs/archive/`, its status
+   stamp and its `archive/INDEX.md` line wait for U3b's close.
 
 ---
 
 ## 7. Touch-lists (complete as of 2026-11-24)
 
+U2 worked §7.1–§7.3 through. What they name is of 2026-11-24, so a member or a line a row names may be
+gone (§12 says where it went); a row says where U2 left it when a later unit still acts on it. §7.4 is
+what U5 verifies.
+
 ### 7.1 The 32 SystemTests that drive the inspector
 
-All are under `Fizzygum-tests/tests/SystemTest_macro<Name>/`. "Shots" is the number of screenshot
-names; every shot of every one is recaptured at dpr 1 and 2, mouse and finger. Sixteen tests are
-assertion-only.
+All are under `Fizzygum-tests/tests/SystemTest_macro<Name>/`, named as U2 left them: six were renamed
+because their names named something gone, each row giving the old name after the new. "Shots" is the
+number of screenshot names; the two middle columns say what each test did and read before U2 (its port
+reads them through §12's map). Seventeen tests have pictures and fifteen are assertion-only. Sixteen of
+the seventeen change in U2 (46 shots, each recaptured at dpr 1 and 2, mouse and finger):
+`ClassEditShowsOnTheNextFrame`'s eleven shots show no inspector and match unchanged, as does
+`DuplicatedInspectorsCloseIndependently`'s image_3, which shows only the string.
 
 | Test (`macro…`) | What it does today | Inspector internals it reads | Shots |
 |---|---|---|---|
@@ -1339,18 +1754,18 @@ assertion-only.
 | AnalogClockInspectEdit | edits `drawSecondsHand`, saves | none (verbs only) | 1 |
 | AStepThatThrowsStopsStepping | edits `step`; Save un-bans | `showInheritedToggle`, `detail.textWdgt.setText`, `saveButton` | 0 |
 | ClassEditShowsOnTheNextFrame | 3 class + 3 object inspectors built in code | `showInheritedToggle`, `detail.textWdgt.text` | 11 |
-| ClassInspectorSaveRefusesCodeThatDoesNotCompile | a bad class save is refused | `detail.textWdgt.setText`, `saveButton(.isEnabled)` | 0 |
+| InspectorSaveOfAClassMemberRefusesCodeThatDoesNotCompile (was ClassInspectorSaveRefusesCodeThatDoesNotCompile) | a bad class save is refused | `detail.textWdgt.setText`, `saveButton(.isEnabled)` | 0 |
 | DuplicateComplexWidgetPaintsCleanly | duplicates the inspector window | none | 2 |
 | DuplicatedInspectorDrivesCopiedTargetOnly | each copy's save hits its own rectangle | `showInheritedToggle`, `list.selected`, `detail.textWdgt.setText`, `saveButton` | 3 |
 | DuplicatedInspectorsCloseIndependently | closes each copy | none | 3 |
 | EveryCodeChangeGivesBannedWidgetsAnotherChance | class add/remove in code | `addProperty`, `removeProperty`, `list.listContents`, `list.select` | 0 |
 | FormulaBarUndoStaysInItsEdit | the code pane's undo history | `detail.textWdgt` | 0 |
-| InspectorBreadcrumbChipOpensClassInspector | chips open class inspectors | `classChips`, `inspectedObject`, `colloquialName()`, `parent` | 0 |
+| InspectorClassChipShowsTheClassBesideIt (was InspectorBreadcrumbChipOpensClassInspector) | chips open class inspectors | `classChips`, `inspectedObject`, `colloquialName()`, `parent` | 0 |
 | InspectorCodePaneRunsAgainstItsSubject | run rows of the pane menu | `list`, `detail`, `detail.textWdgt`, `classChips`, `inspectedObject` | 3 |
 | InspectorEditTellsOnce | counts how often each edit tells | `addProperty`, `save()`, `renameProperty`, `removeProperty`, `list.select`, `detail.textWdgt.setText` | 0 |
 | InspectorOffersOnlyWhatItsSubjectOwns | Rename/Remove enabling | the buttons' `isEnabled`, `detail.textWdgt.isEditable`, `list.select`, `renameProperty`, `addProperty`, `toggleShowingInherited` | 0 |
 | InspectorOnNonWidgetIsReadOnly | 42, a string, a Point, a widget | presence of the four buttons, `list.contents.children`, `colloquialName()` | 0 |
-| InspectorOpensAClassInItsClassInspector | row double-click, `spawnInspector` on a prototype | `list.listContents/select`, `inspectedObject`, `saveButton?`, `colloquialName()`, the four edits, `constructor.name` | 0 |
+| InspectorEditsAClassPrototypeAsAClass (was InspectorOpensAClassInItsClassInspector) | row double-click, `spawnInspector` on a prototype | `list.listContents/select`, `inspectedObject`, `saveButton?`, `colloquialName()`, the four edits, `constructor.name` | 0 |
 | InspectorRejectsDrops | drops a box over both panes | `list`, `detail` (geometry) | 3 |
 | InspectorResizingOKEvenWhenTakenApart | `pickUp` of list and detail; resizes | `list`, `detail` | 4 |
 | InspectorSaveRefusesCodeThatDoesNotCompile | a bad value save is refused | `detail.textWdgt`, `saveButton.isEnabled` | 0 |
@@ -1359,22 +1774,23 @@ assertion-only.
 | MovingSlidersSidewaysDoesntCauseContentToMoveSideways | drags the list bar sideways | `list.vBar`, `list.getScrollX/Y` | 3 |
 | MultilineTextInputScrollsWell | types into the code pane | `detail.textWdgt`, `detail.vBar` | 2 |
 | NakedInspectorRendersResizesAndEdits | no window; edit, save, own resize | `resizer` | 3 |
-| ObjectInspectorOnAClassShowsItsStaticsSource | an inspector on a class function | `list.selected`, `detail.textWdgt.text` | 0 |
-| ObjectInspectorShowsTheFunctionItsSubjectHolds | 5 object + 1 class inspector | `list.selected`, `detail.textWdgt`, `saveButton`, `removePropertyButton.isEnabled`, `showInheritedToggle`, `renameProperty` | 0 |
+| InspectorOnAClassShowsItsStaticsSource (was ObjectInspectorOnAClassShowsItsStaticsSource) | an inspector on a class function | `list.selected`, `detail.textWdgt.text` | 0 |
+| InspectorShowsTheFunctionItsSubjectHolds (was ObjectInspectorShowsTheFunctionItsSubjectHolds) | 5 object + 1 class inspector | `list.selected`, `detail.textWdgt`, `saveButton`, `removePropertyButton.isEnabled`, `showInheritedToggle`, `renameProperty` | 0 |
 | PaletteBufferKeyNamesItsOwnCode | saves then removes a member | `list`, `detail.textWdgt.setText`, `saveButton`, `removePropertyButton` | 0 |
 | PickingUpPartsFromInspector | `pickUp` of detail, then list | `detail`, `list` | 3 |
 | ResizingPristineInspector | resizes the window | `instanceof InspectorWdgt` | 2 |
-| SimpleDocumentHandlesOldInspector | embeds the window in a document, drags it out | none | 3 |
+| SimpleDocumentHandlesInspector (was SimpleDocumentHandlesOldInspector) | embeds the window in a document, drags it out | none | 3 |
 | TextOwnCodeKeysTheCachesItRunsIn | saves/removes two members | `showInheritedToggle`, `list`, `detail.textWdgt.setText`, `saveButton`, `removePropertyButton` | 0 |
 | WrappingTextFieldResizesOK | soft wrap; resizes | `detail.textWdgt` | 3 |
 
 Also: `macroTextRunRowsReflectSelection` asserts the "Inspect selection" row's label (unchanged).
-`macroInspectorWorkAreaEvaluatesCoffeeScript` drives `ConsoleWdgt` only (unchanged). Twenty-three
-more tests name the inspector in a comment or a provenance string only; sweep them for a name that
+`macroInspectorWorkAreaEvaluatesCoffeeScript` drives `ConsoleWdgt` only (unchanged). The other
+tests that name the inspector do so in a comment or a provenance string only; sweep them for a name that
 has become false (`grep -l -i inspector tests/*/*.js`, skipping `automation-assets/`).
 
-**Predicted outcome of the first suite run after U2.6:** exactly these 32 fail on pixels or pass on
-assertions; any other failure is a finding.
+**Predicted outcome of the first suite run after U2.6:** exactly the sixteen tests whose pictures change
+fail, on pixels only (46 shots), under mouse and finger, at dpr 1 and 2; the other sixteen pass with no
+reference touched; no test outside the 32 changes. Any other failure is a finding.
 
 ### 7.2 Source outside the two inspector files
 
@@ -1385,7 +1801,7 @@ assertions; any other failure is a finding.
 | `src/WorldWdgt.coffee` | comments (:215, :703, :763, :1710–1716, :2207, :2854, :3146, :3485, :3535, :3600, :3664) | correct what names a deleted class or method |
 | `src/basic-widgets/menu-system/MenusHelper.coffee` | comment :9 | check |
 | `src/serialization/` | `Deserializer` :246 comment; `SourceEditsRegistry` comments (:9–15, :32, :43, :54, :198, :204) naming the writers; `Serializer` remedy strings (:349, :352, :400) and `SerializationError` :93 naming "an inspector's Remove/Save"; `WellKnownObjects` :26; `NativeValueKinds` :62 | writers are now `MemberRef.save` / `ClassMemberRef`; the remedy strings stay true (the buttons exist) but check their wording against the serialization rig's regexes |
-| `src/ListWdgt.coffee`, `CommandPanelWdgt.coffee`, `MemberRowWdgt.coffee`, `MenuItemWdgt.coffee` | member mode: unchanged in U1–U3; comments say "the Object Inspector's" | say "a member list's (MemberListWdgt)" |
+| `src/ListWdgt.coffee`, `CommandPanelWdgt.coffee`, `MemberRowWdgt.coffee`, `MenuItemWdgt.coffee` | member mode: unchanged in U1–U3 but for `ListWdgt.clearSelection`, which U2 added; comments say "the Object Inspector's" | say "a member list's (MemberListWdgt)" |
 | `src/ChipWdgt.coffee`, `LabelledToggleWdgt.coffee` | comments name the breadcrumb and the filter | to the new shape |
 | `src/FooterBandLayout.coffee` | `footerRightClearance` (:78), comments :6, :18–19 | U2.2 |
 | `src/basic-widgets/ScrollIndicatorHostWdgt.coffee`, `src/HandleWdgt.coffee` :173 | the corner hooks | U2.2 |
@@ -1400,7 +1816,7 @@ assertions; any other failure is a finding.
 
 | File | What reaches the inspector | Do |
 |---|---|---|
-| `Fizzygum-tests/scripts/menu-click-sweep-headless.js` | roots `InspectorWdgt` / `ClassInspectorWdgt` and the popout-button section (:806–904: `INSPECTOR_BUTTON_OF`, `inspectedObject`, `list.select`, `faceWidget.text`, `MenuSweepOwnWdgt`); three code-pane roots (:1127–1200); `PROMPTS_DRIVEN_FLOOR = 53` counting two prompts per inspector class (:79, :190–195) | two fixtures stay (a widget subject, a class subject), now rows; the popout buttons are the member list's, and there are THREE per fixture now (`INSPECTOR_BUTTON_OF` gains `duplicatePropertyPopout: duplicatePropertyButton`); the code-pane roots are member editors. The floor rises by the two new prompts: move it with its dated reason |
+| `Fizzygum-tests/scripts/menu-click-sweep-headless.js` | roots `InspectorWdgt` / `ClassInspectorWdgt` and the popout-button section (:806–904: `INSPECTOR_BUTTON_OF`, `inspectedObject`, `list.select`, `faceWidget.text`, `MenuSweepOwnWdgt`); three code-pane roots (:1127–1200); `PROMPTS_DRIVEN_FLOOR = 53` counting two prompts per inspector class (:79, :190–195) | ported in U2: two fixtures, `InspectorRowWdgt[widget]` and `InspectorRowWdgt[class]` (a rectangle; a class of the sweep's own); the popout buttons are each row's member list's, THREE per fixture (`INSPECTOR_BUTTON_OF` gains `duplicatePropertyPopout: duplicatePropertyButton`); the three code-pane roots are member editors, each checked to stand on the member it means; the `hand-list-sanctioned` marker over the two class names deleted (once `ClassInspectorWdgt` was gone, `check-hand-lists` failed the build on it, `SANCTION_STALE`, so the sweep is ported before any build passes); `PROMPTS_DRIVEN_FLOOR` 53 → 55, dated |
 | `…/menu-click-sweep-selftest-headless.js` | plants on every `InspectorWdgt`, strips "…" off the two popout buttons (:118–154, :190) | plant on `MemberListWdgt` |
 | `…/smoke-boot-headless.js` | `inPageInspectorState` counts `constructor.name === 'InspectorWdgt'` (:485–493); the restored-inspector probe builds a `ClassInspectorWdgt`, calls `selectionFromList`, reads `detail.textWdgt.text` (:550–630); rules at :735–766; `world.spawnInspector(world)` judged `inspectors === 1` (:860–871, :966–980) | the count still holds (one `InspectorWdgt` after an open); port the probe to a row on a class's prototype, its member list's `selectionFromList`, its editor's `textWidget.text` |
 | `…/smoke-boot-selftest-headless.js` (:17, :173) | expects `RESTORED_INSPECTOR_VACUOUS` | re-run; fix the plant if the probe's shape moved |
@@ -1408,15 +1824,15 @@ assertions; any other failure is a finding.
 | `…/staleness-census.js` :156 | the `inspector-window` extra | unchanged; it now arranges the row: `fg census` must stay clean |
 | `…/parts-snapshot-load-headless.js` :436 | `{$wk:'class:ClassInspectorWdgt'}` as a class of the lazy part | another class of the part (`InspectorRowWdgt`) |
 | `…/serialization-roundtrip-headless.js` + `lib/serialization-expectations.js` | about twenty expectations: `world.saveRefusal.*` (:1205–1244), `inspector.onABuffer*` / `onAPaneRuntimeValue*` (:1250–1350; a regex on `(InspectorWdgt#N) → .inspectedObject`), `onAnUnrecognizedValue…`, `onAPrototypeLessObject…` (:1473–1504), `onAnIndexedSubjectListsItsItemsInOrderBounded` (:1600–1652), `aClassFieldRowShowsItsRecordOnlyWhileItsValueHolds` (:1670–1698), `onACanvasContext*` (:1724–1739), `world.inspector.survivesSnapshot` (:2642–2681), `world.inspector.classSubjectsSurviveSnapshot` (:2701–2801), `sourceEdits.class*` (:4818–4904), the load checks (:4940–5000), `valueClassEditReachesLiveValues` (:5175–5189) | port each with §12's map; **keep every expectation's name** (a name no backend reports is itself a mismatch). The `.inspectedObject` path in refusal texts still holds: an inspector still holds its subject under that name |
-| `…/derive-inspector-churn-set.js`, `inspector-churn-set.json`, `lib/inspector-churn-set.js`, `classify-diff.js`, `classify-diff-selftest.js` | the 16 tests `fg recapture-inspector` recaptures | U5 step 2; a renamed test is renamed in the json |
+| `…/derive-inspector-churn-set.js`, `inspector-churn-set.json`, `lib/inspector-churn-set.js`, `classify-diff.js`, `classify-diff-selftest.js` | the 16 tests `fg recapture-inspector` recaptures | U5 step 2; a renamed test is renamed in the json in the same change (U2 renamed `macroSimpleDocumentHandlesInspector` there: `classify-diff-selftest.js` reads it on every build) |
 | `…/aim-census.js` :314–320, :377 | table rows for seven inspector verbs, held to the toolkit | names unchanged; re-run on build |
 | `…/tier-naming-audit/tier-naming-prelude.js` :59–62 | `NON_GEOMETRY` names three `_applyProperty*` | U1 step 4 |
 | Standard-test users of `macroAnalogClockInspectEdit`: `lib/gate-bite-proof.js` :37, `preludes-install-selftest-headless.js` :34, `check-refs-selftest.js` :16 (reads its real `image_0` files on every build), `run-macro-test-headless.js` :123, `notification-settle-audit/cache-oracle-selftest-headless.js` :22, and six plants (`audit-preludes/revisit-plant.js`, `unobserved-bucket-plant.js`, `end-of-cycle-audit/careless-push-plant.js`, `paint-time-plant.js`, `notification-settle-audit/callback-flush-plant.js`, `tier-naming-audit/leaf-react-plant.js`) | the test's name and its `image_0` | keep both; after the recapture run `npm run selftest` in the tests repo and the gauntlet's `selftests` leg |
 | `Fizzygum/buildSystem/fg-verbs.js` (:83–87, :282–319, :365–375) | `fg recapture-inspector` | unchanged |
-| `Fizzygum/buildSystem/check-complexity-ratchets.js` | `'MemberRef#shownText': 20` (re-keyed by U1 from `'InspectorWdgt#_paneTextOfMember'`) | done in U1; nothing for U2 unless the body changes |
-| `…/check-layering.js` :327–348 | two `settling-call-sanctioned` markers of 18 | U1 |
-| `…/check-call-separation.js` :77 | `BASELINE_U_QUERY = 101` | U2.3 |
-| `…/census-widget-conformance.js` :42–52 | `BASELINE_PROLOGUE_COPIES = 8` | U2.3 |
+| `Fizzygum/buildSystem/check-complexity-ratchets.js` | `'MemberRef#shownText': 20` (re-keyed by U1 from `'InspectorWdgt#_paneTextOfMember'`) | done in U1. U2 re-keyed the splitter's `'StackElementsSizeAdjustingWdgt#nonFloatDragging': 19` to its solve, `'StackElementsSizeAdjustingWdgt#maxDimsPuttingMyLeadingEdgeAt': 18`, dated (§5.10) |
+| `…/check-layering.js` :327–348 | two `settling-call-sanctioned` markers of 18 | U1; U2 kept the ceiling at 18, and the split button became a third caller of rule [O]'s allowlisted handler name `nonFloatDragging`: the gate's comment names the three, and `check-layering-selftest.js`'s stale-allowlist plant covers `meta-tools/SplitGripWdgt.coffee` |
+| `…/check-call-separation.js` :77 | `BASELINE_U_QUERY = 101` | unchanged: no inspector method was among its candidates (it read 104 only while the toolkit's three locators had no test caller) |
+| `…/census-widget-conformance.js` :42–52 | `BASELINE_PROLOGUE_COPIES = 7` (8 before U2) | done in U2.3 |
 | `…/check-relayout-bounds-first.js` | the inspector as a reference shape | U2.3 |
 | `…/parts.json` :152–156, `profiles/homepage.json` (:11, :21, :57), `profiles/lean.json` (:7, :12), `profiles/dev-precompiled.json` :23, `lib/profile.js` :236 | prose naming the part's classes | name what exists |
 
@@ -1443,19 +1859,19 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 
 | # | Risk | Mitigation |
 |---|---|---|
-| R1 | Another arc is uncommitted in the same trees | §0.5 step 1: stop and ask |
-| R2 | The edit semantics change in the move (which source a member shows; what a rename records) | U1 moves them alone under the 32 tests and about twenty serialization expectations, with zero pixel change allowed |
-| R3 | A band's derived height or width surprises (§4's facts) | `BandWdgt` is ~50 lines and is the only place the rules live; U2.4's probe shows it before any test is ported |
-| R4 | `NON_FINITE_GEOMETRY` from a row of zero desired width | springs desire 1; one settle per band; the token fails every suite leg, so a miss is loud |
-| R5 | `_reactToChildRemoved` reconciling during a teardown builds a splitter into a dying row, or the row's own removals re-enter it | mirror the two existing holders' guards (§5.4); `fg vmtruth` and the `WORLD_INVENTORY_` followers of U3 catch a leak; `fg revisits` catches a re-visit |
-| R6 | `MemberRef` in a snapshot: a serializer or deserializer rule about a non-widget, non-value class refuses it | U3's added expectation, run first thing in U2.7 by hand: save and reload a world holding a two-inspector row. If refused, read the refusal: the answer is a declaration the class makes (§5 of the serialization reference), never a transient that loses the subject |
-| R7 | Widening a window from inside its content surprises a frame (a docked band, a window in a document) | widened only when my parent is a free-floating window whose content I am; anything else narrows the inspectors; U3 tests the plain case and `macroSimpleDocumentHandlesOldInspector` the embedded one |
-| R8 | The corner-hook cleanup (U2.2) breaks a scroll bar's reserve | read all three readers before deleting; presuite's scroll-indicator tests are many; stop if a second definer exists |
-| R9 | Recapture hides a real break: a ported macro that passes for the wrong reason | each `intent` re-read against the port (U2.6); `fg diffpage` on three kinds; U3's bite-proofs |
-| R10 | The inspector's pictures no longer match the owner's 2026-10 design | the bands, the list and the footer keep their metrics and looks (§4, picture 1); what moves is stated in D5, D7, D9, D10. Show the owner `fg diffpage` of `macroAnalogClockInspectEdit` at the end of U2 |
-| R11 | A gate's baseline moves and is "fixed" by bending the code | §0.5 step 8; §6 names each expected baseline move and its answer |
-| R14 | The splitter's new look (D14) moves the pixels of every test showing a division stack, and a test that drags a splitter presses where it now stands | Its own unit (U1b), its predicted set written down before the suite, the failing set held equal to it |
-| R12 | The split grip's relay (one widget handing its drag to another's handler) trips a layering or call-separation rule, or drifts from the splitter's solve | §5.10's second note: one public method on the splitter that both callers use, never a second solve. U3's grip test asserts the split moves by exactly the drag, by mouse and by finger |
+| R1 | Another arc is uncommitted in the same trees | §0.5 step 1: stop and ask. **U2:** met (both trees clean and level at its start) |
+| R2 | The edit semantics change in the move (which source a member shows; what a rename records) | U1 moves them alone under the 32 tests and about twenty serialization expectations, with zero pixel change allowed. **U2:** met: no reference moved in U1, and each step tells exactly once on a widget and on a class (U2.4's probe, `macroInspectorEditTellsOnce`) |
+| R3 | A band's derived height or width surprises (§4's facts) | `BandWdgt` is ~50 lines and is the only place the rules live; U2.4's probe shows it before any test is ported. **U2:** met: the research read off the engine that a fixed piece pins its most size, and three probe rounds found what neither it nor the spike had reached (every band ends with its inset, a title's desired width froze the split), each fixed before a test was ported; 0 wobble over 421 window heights and 541 widths |
+| R4 | `NON_FINITE_GEOMETRY` from a row of zero desired width | springs desire 1; one settle per band; the token fails every suite leg, so a miss is loud. **U2:** no band the tool builds reaches it (each has an inset); a spring-only band set to width 0 still lays its spring NaN wide (the engine's FIRST regime dividing 0 by 0: least 0 into width 0), a second engine item beside the third regime's, both filed by U5 |
+| R5 | `_reactToChildRemoved` reconciling during a teardown builds a splitter into a dying row, or the row's own removals re-enter it | mirror the two existing holders' guards (§5.4); `fg vmtruth` and the `WORLD_INVENTORY_` followers of U3 catch a leak; `fg revisits` catches a re-visit. **U2:** the guards are built (the row's `_beingFullDestroyed` and `_reconcilingSplitters`, §5.4; the inspector's own `_beingFullDestroyed` for its view's place, §5.5) |
+| R6 | `MemberRef` in a snapshot: a serializer or deserializer rule about a non-widget, non-value class refuses it | U3's added expectation, run first thing in U2.7 by hand: save and reload a world holding a two-inspector row. If refused, read the refusal: the answer is a declaration the class makes (§5 of the serialization reference), never a transient that loses the subject. **U2:** retired: the first save and load of a member reference held by a widget (`world.inspector.classSubjectsSurviveSnapshot`, U2.7) was refused by nothing, and each restored editor's `memberRef.holder` is the restored subject |
+| R7 | Widening a window from inside its content surprises a frame (a docked band, a window in a document) | widened only when my parent is a free-floating window whose content I am; anything else narrows the inspectors; U3 tests the plain case and `macroSimpleDocumentHandlesInspector` the embedded one. **U2:** built tighter: only a window standing on the desktop (its parent the world) is widened, and one free in a panel narrows its inspectors as a docked or nested one does (§5.4); a document caps a window nested in it at its column, even below its row's least width (§5.4, an open question) |
+| R8 | The corner-hook cleanup (U2.2) breaks a scroll bar's reserve | read all three readers before deleting; presuite's scroll-indicator tests are many; stop if a second definer exists. **U2:** met: no second definer in either repo; `ScrollIndicatorHostWdgt._resizerOverMyCorner` went whole and `HandleWdgt.cornerFootprint` with it, the other-bar branch of `_cornerReserveFor` kept |
+| R9 | Recapture hides a real break: a ported macro that passes for the wrong reason | each `intent` re-read against the port (U2.6); `fg diffpage` on three kinds; U3's bite-proofs. **U2:** each port's `intent` re-read; one vacuous assertion made real (`list.contents.children` counted the one rows container); U2's review found ONE lost with no successor (a read-only member's editor has no Save), given back in `macroInspectorOnNonWidgetIsReadOnly` and `macroInspectorEditsAClassPrototypeAsAClass`, and has each new assertion of U2's proven to bite by a plant through `--prelude=` |
+| R10 | The inspector's pictures no longer match the owner's 2026-10 design | the bands, the list and the footer keep their metrics and looks (§4, picture 1); what moves is stated in D5, D7, D9, D10. Show the owner `fg diffpage` of `macroAnalogClockInspectEdit` at the end of U2. **U2:** U2.4's probe matched the storyboard band for band; its two differences: Duplicate… in the footer is the owner's (D15), and a band's rule lying inside its height is the loop's own ruling, argued from the storyboard, for the owner's second look. The loop ran unattended, so the owner is shown the diff page on its review page (U5) |
+| R11 | A gate's baseline moves and is "fixed" by bending the code | §0.5 step 8; §6 names each expected baseline move and its answer. **U2:** each move class C, dated beside its number: `BASELINE_PROLOGUE_COPIES` 8 → 7, the splitter's complexity record re-keyed to its solve (19 → 18), `PROMPTS_DRIVEN_FLOOR` 53 → 55; `BASELINE_U_QUERY` stays 101; the doc ceiling of `Fizzygum-tests/CLAUDE.md` banked 12 bytes lower |
+| R14 | The splitter's new look (D14) moves the pixels of every test showing a division stack, and a test that drags a splitter presses where it now stands | Its own unit (U1b), its predicted set written down before the suite, the failing set held equal to it. **U1b:** retired: the failing set equalled the predicted one under mouse and finger (five tests, 18 shots) |
+| R12 | The split grip's relay (one widget handing its drag to another's handler) trips a layering or call-separation rule, or drifts from the splitter's solve | §5.10's second note: one public method on the splitter that both callers use, never a second solve. U3's grip test asserts the split moves by exactly the drag, by mouse and by finger. **U2:** met: the relay would trip `check-plane-discipline` C2 and the public seam `check-layering` [O], so the solve became a query both handlers ask (§5.10); the probe measured the split moving by exactly the travel, by divider and by button, mouse and touch, and a split a person set, by either control, staying across a choice that puts a view of the same kind on its far side (§5.4) |
 
 ---
 
@@ -1549,8 +1965,8 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
   the test suite or a folder). The seam is `_views`: it would append what
   `@inspectedObject.inspectorViews?()` answers, each a title and the name of a method of the
   SUBJECT that answers a widget. Build it with its first real client, not before.
-- **One footer-band mechanism** (`CodeAreaWdgt` and `BinWdgt` on `BandWdgt`, `FooterBandLayout`
-  deleted).
+- **One footer-band mechanism** (the `CodeAreaWdgt` family, the member editor among it, and `BinWdgt` on
+  `BandWdgt`, `FooterBandLayout` deleted).
 - **A touch-sized way to move every division stack's split**, not only the inspector's: a
   general stack has no header band to stand a grip in, so the shape there is still to design.
 - **The parked owner questions** in BACKLOG (the Inherited filter; whether a subject is always a
@@ -1560,7 +1976,7 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 
 ## 12. The move map (old member → new home)
 
-`I` = `InspectorWdgt`, `CI` = `ClassInspectorWdgt` (line numbers of 2026-11-24).
+`I` = `InspectorWdgt`, `CI` = `ClassInspectorWdgt`, as they stood before U2 (line numbers of Fizzygum `f7aed9e0`, 2026-11-24: `git show f7aed9e0:src/meta-tools/InspectorWdgt.coffee`).
 
 | Old | New |
 |---|---|
@@ -1570,15 +1986,16 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 | `I.textWidget`, `I.detail.textWdgt` | `MemberEditorWdgt.textWidget` |
 | `I.saveButton` | `MemberEditorWdgt.saveButton` |
 | `I.addPropertyButton`, `renamePropertyButton`, `removePropertyButton` | `MemberListWdgt`, same names |
-| `I.showMethodsToggle` … `showOwnPropsOnlyToggle`, `showing*`, `toggleShowing*` (:153–171), `_reflectFiltersOnToggles` (:355), `_toggles` (:807) | `MemberListWdgt`, same names (`_toggles` only if still read) |
+| `I.showMethodsToggle` … `showOwnPropsOnlyToggle`, `showing*`, `toggleShowing*` (:153–171), `_reflectFiltersOnToggles` (:355), `_toggles` (:807) | `MemberListWdgt`, same names; `_toggles` deleted (no reader: the toggles stand in their band); `I._buildAndConnectOwnPropsOnlyToggle` and `CI`'s empty one became the build's `isAClassPrototype` question |
 | `I.classCaption`, `classChips`, `classSeparators`, `_buildAndConnectBreadcrumb` (:285), `_classChainLinks` (:314), `_breadcrumbIn` (:736), `_layOutBreadcrumb` (:782) | deleted; one `InspectorWdgt.classChip` and `_classAbove` |
 | `I.openClassInspector` (:552) | `InspectorWdgt.chooseMyClass` |
-| `I.@MOST_ITEMS_LISTED` (:110), `_subjectsItemsAndNames` (:120), `@_isAnIndex` (:139), `_filteredMemberNames` (:396), `_buildAndConnectMemberList` (:436), `memberFactsOf` (:457), `_subjectsClassPrototype` (:464), `_refilterMembers` (:367, :370), `_reflectMemberSelection` (:337), `_selectedMemberCanBeRenamedOrRemoved` (:348) | `MemberListWdgt`, same names; the last one's body is `MemberRef.of(@inspectedObject, name).canBeRenamedOrRemoved()` |
-| `I._emptyPaneText` (:145) | `MemberListWdgt`'s cut-notice band text |
-| `I.selectionFromList` (:604) | `MemberListWdgt.selectionFromList` (the choice); the load is the editor's build and `reload` |
+| `I.@MOST_ITEMS_LISTED` (:110), `_subjectsItemsAndNames` (:120), `@_isAnIndex` (:139), `_filteredMemberNames` (:396), `_buildAndConnectMemberList` (:436), `memberFactsOf` (:457), `_subjectsClassPrototype` (:464), `_refilterMembers` (:367, :370), `_reflectMemberSelection` (:337), `_selectedMemberCanBeRenamedOrRemoved` (:348) | `MemberListWdgt`, same names (`MOST_ITEMS_LISTED` and `_isAnIndex` its statics); the last one's body is `name? and (MemberRef.canEdit @inspectedObject) and MemberRef.of(@inspectedObject, name).canBeRenamedOrRemoved()`, `name` the selected member's (`_selectedMemberName`, through `_memberNamedBy`) |
+| `I._emptyPaneText` (:145) | `MemberListWdgt._cutNoticeText`, the text of its cut-notice band (`cutNoticeBand`) |
+| `I.selectionFromList` (:604) | `MemberListWdgt.selectionFromList` (the choice); the load is the editor's build and `_reloadNoSettle` |
 | `I.lastLoadedMember` | deleted (`InspectorRowWdgt.showChoice` knows a subject chosen again) |
 | `I.inspectMemberValue` (:474) | `MemberListWdgt.inspectMemberValue` (the choice of the value) |
-| `I.@inspectorClassFor` (:496) | deleted; `MemberRef.of` |
+| `I._buildAndConnectEditRow` (:531) | `MemberListWdgt._buildAndConnectEditRow`: the footer band's Add… Duplicate… Rename… Remove (the Save is the member editor's) |
+| `I.@inspectorClassFor` (:496), and U1's `I._memberRefOf` / `CI._memberRefOf` | deleted; `MemberRef.of` |
 | `I._subjectIsEditable` (:513), `CI._subjectIsEditable` | `MemberRef.canEdit(holder)` |
 | `I.codeReceiver` (:521), `CI.codeReceiver` | `MemberEditorWdgt.codeReceiver` → `MemberRef.codeReceiverOf(holder)` |
 | `I._paneTextOfMember` (:568) | `MemberRef.shownText()` (moved by U1) |
@@ -1597,7 +2014,22 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 | `I.colloquialName` (:104), `CI.colloquialName` | `InspectorWdgt.colloquialName` ("Inspector — …"), `InspectorRowWdgt.colloquialName` |
 | `I.readsClassMemberMaps` (:46) | `InspectorWdgt`, `MemberListWdgt`, `MemberEditorWdgt` |
 | `new InspectorWdgt(x)` / `new ClassInspectorWdgt(proto)` in a test or rig | `new InspectorRowWdgt(x)` (a class's prototype needs no other class) |
-| `insp.list.select(row)` then reading `insp.detail.textWdgt.text` | `row.inspectors()[0].view.list.select(…)` then `row.inspectors()[1].view.textWidget.text` |
+| `insp.list.select(row)` then reading `insp.detail.textWdgt.text` | `row.inspectors()[0].view.list.select(…)` then `row.inspectors()[1].view.textWidget.text`; in a macro, hold the member list (`row.inspectors()[0].view`, or `@topMemberList()`) and read its editor after each choice (`@memberEditorFedBy memberList`) |
+| `MacroToolkit._findTopInspector` | deleted; the toolkit's locators `topMemberList()`, `memberEditorFedBy(memberList)` and `topMemberEditor()` (`src/macros/MacroToolkit.coffee`, "THE INSPECTOR'S TWO LOCATORS"); every verb keeps its name |
+
+New in U2, the home of no old member: all of `InspectorRowWdgt` (`_inspectorNamingMe` among it), `BandWdgt`,
+`BandSpaceWdgt` and `SplitGripWdgt`; in `InspectorWdgt`, `header`, `headerTitle`, `view`, `showsSplitGrip`, `viewsPlace`,
+`_defaultBox`, `mostWidthGivenAway`, `_giveUpMostWidthNoSettle`, `_buildHeaderNoSettle`, `showsSubject`,
+`_reloadNoSettle`, `_subjectName`, `splitterBeforeMe`, `_reconcileSplitGripNoSettle`, `_reactToChildRemoved`,
+`_fullDestroyNoSettle`, `_reactToBeingCopied`, `_afterDeserialization`; in `MemberListWdgt`, `rowSlackWeight`,
+`cutNoticeBand`, `footerBand`, `_addCellNoSettle`, `_memberNamedBy`, `_selectedMemberName`, `clearChoice`,
+`_reloadNoSettle`, `duplicatePropertyButton`, `duplicatePropertyPopout`, `duplicateProperty`; in `MemberEditorWdgt`,
+`memberRef` and `rowSlackWeight`; `MemberRef.of` / `canEdit` / `codeReceiverOf`, `editsAsAMember`, `colloquialName`,
+`sameMemberAs`, `duplicate`, and `ClassMemberRef._editCopyUnder` and `duplicate`; in core, `Widget.duplicateOwnProperty`,
+`ListWdgt.clearSelection`, `CodeAreaWdgt._hasAFooterBand`, `DivisionStackLayoutSpec.maxFor`,
+`StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt` (the solve its `nonFloatDragging` held) and
+`LayoutChromeWdgt._resizeCursor` with the hover trio lifted from the splitter; in the toolkit, `_topMemberEditorFor`
+(the code-pane verbs' NO MEMBER EDITOR).
 
 ---
 
@@ -1632,3 +2064,4 @@ byte-identical-not-sacred-for-benign-inspector-recapture, fizzygum-macro-test-sy
 
 - [x] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change — CLOSED 2026-11-24 (inspector-overhaul loop, U1): the two classes landed under the old inspectors, each inspector class choosing its ref (`_memberRefOf`); presuite's failing set empty as predicted, no reference changed.
 - [x] U1b: every division stack's splitter 12 px wide with grip dots — CLOSED 2026-11-24 (inspector-overhaul loop, U1b): `Theme.layoutAdjusterThickness` 12, the house's grip dots from one routine (`Appearance._paintGripDots`) shared with a band's strip; five tests' 18 shots recaptured, the predicted set.
+- [x] U2: the switch — the row, the rewritten inspector, the member list and editor, the split button; 32 tests and the rigs ported; recapture — CLOSED 2026-11-25 (inspector-overhaul loop, U2): one tool, `InspectorRowWdgt`, a division row of `InspectorWdgt`s each with a `MemberListWdgt` or a `MemberEditorWdgt`, on `BandWdgt`s, with a splitter and a 44 × 44 split button (`SplitGripWdgt`) between two; `ClassInspectorWdgt`, the breadcrumb and the corner chain deleted; the 32 tests ported (six renamed) and the menu sweep, serialization, boot-smoke and parts rigs with them; the suite's failing set equalled the predicted one (16 tests, 46 shots) under mouse and finger, 184 references recaptured. Its Landed paragraph (§6 U2) has what changed against the plan's first text.

@@ -10,7 +10,7 @@
 // @bottomLeft() @bottomRight() @center(), or a bare @bounds read -- must be PRECEDED, in the same method,
 // by a SELF-bounds application:
 //     @_applyGrantedBounds <newBounds>              -- the common form (base Widget re-commits idempotently via super)
-//   | @_applyMoveTo … AND @_applyExtent …    -- position + size, the InspectorWdgt form
+//   | @_applyMoveTo … AND @_applyExtent …    -- position + size, applied as two
 //   | super / super <newBounds> / Widget::_reLayout.call …   -- base applies bounds, the super-at-TOP form
 // The `@_` prefix is what distinguishes a SELF apply from a child apply (`child._applyGrantedBounds` does NOT count).
 //
@@ -43,8 +43,9 @@
 // EXEMPTION: a `# relayout-bounds-first-exempt: <reason>` marker (non-empty reason) in the comment block
 // directly above the `_reLayout` header. The base `Widget::_reLayout` (the applier itself) is skipped.
 //
-// Reference FIXED shapes: FanoutWdgt._reLayout (@_applyGrantedBounds near the top) and InspectorWdgt._reLayout
-// (@_applyMoveTo + @_applyExtent near the top). This is the DEF-side companion to that fix arc.
+// Reference FIXED shape: ButtonWdgt._reLayout (@_applyGrantedBounds near the top; SwitchButtonWdgt's and
+// ColorPickerWdgt's are the same). A widget positioning its OWN contents takes the template instead
+// (_reLayoutWithOwnContents, e.g. FanoutWdgt). This is the DEF-side companion to that fix arc.
 
 // It reads the compiled sources (lib/source-files.js compiledFiles: src/ and the tests repo's harness).
 //
@@ -182,7 +183,7 @@ if (violations.length) {
   console.error('\nFIX: apply own bounds FIRST -- e.g. right after the collapse guard:');
   console.error('       newBoundsForThisLayout = @__calculateNewBoundsWhenDoingLayout newBoundsForThisLayout');
   console.error('       @_applyGrantedBounds newBoundsForThisLayout');
-  console.error('     (see FanoutWdgt._reLayout / InspectorWdgt._reLayout for the fixed shapes; the trailing super re-commits idempotently).');
+  console.error('     (see ButtonWdgt._reLayout for the fixed shape; the trailing super re-commits idempotently).');
   console.error('Or, if this is a widget positioning its OWN contents, take the template shape instead:');
   console.error('       _reLayout: (newBoundsForThisLayout) ->');
   console.error('         @_reLayoutWithOwnContents newBoundsForThisLayout');

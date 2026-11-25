@@ -1,7 +1,7 @@
 # Public-API allowlist for buildSystem/check-call-separation.js (rule [U]).
 # A method listed here is PUBLIC ON PURPOSE despite being referenced only by @-self calls in
 # code: it is deliberate end-user surface (Fizzygum is live-editable — a method can exist solely
-# for a user to call from the in-world Object Inspector or scripting), so rule [U] must not push
+# for a user to call from the in-world inspector or scripting), so rule [U] must not push
 # it to _-tier. One name per line, with a trailing  # <reason>.  Owner-triaged (plan §6 T4/§7-1).
 # Delete an entry when the method gains real external callers or gets renamed/deleted.
 

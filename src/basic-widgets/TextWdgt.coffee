@@ -683,9 +683,9 @@ class TextWdgt extends StringWdgt
   # The object code typed in me runs against, asked of the place I stand in rather than kept in a
   # field: the nearest container of mine that DEFINES codeReceiver answers, and its answer stands
   # even when it is nothing. The world answers itself, at the root of every climb; a tool that
-  # names a receiver answers on the way up (ConsoleWdgt: its target; InspectorWdgt: its subject
-  # while it edits it; ClassInspectorWdgt: nothing). A text no container of which answers -- one
-  # outside the world and every tool -- has none.
+  # names a receiver answers on the way up (ConsoleWdgt: its target; MemberEditorWdgt: its member's
+  # holder, while that holder's members are edited as an object's, and nothing otherwise). A text no
+  # container of which answers -- one outside the world and every tool -- has none.
   _codeReceiver: ->
     container = @parent
     while container?

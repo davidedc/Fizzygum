@@ -19,7 +19,7 @@ class BinWdgt extends Widget
   constructor: ->
     super()
     # a naked (chrome-less) bin — WidgetFactory.underTheCarpet builds one — must
-    # establish its OWN usable extent (the InspectorWdgt idiom); the windowed path
+    # establish its OWN usable extent (the InspectorRowWdgt idiom); the windowed path
     # (BinOpenerWdgt) overrides this via the window's bounds.
     @__commitExtent new Point 340, 270
     # my only paint: my footer band's rule, my one seam (_seamRects)

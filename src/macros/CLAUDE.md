@@ -317,8 +317,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `bringUpInspectorAndSelectListItem`, `bringInViewAndClickOnListItemFromTopInspector`,
   `bringListItemInView` (a list's named row brought in view WHOLE: the bar's thumb for reach, then one wheel for
   precision only if the row does not show whole, then `assertListItemInView` — a fault, never a retry),
-  `bringInViewAndClickOnListItem` (that, then the click, on a list you NAME — a test holding two inspectors passes
-  the one it means; the top-inspector verb is this one applied to `topInspectorList()`),
+  `bringInViewAndClickOnListItem` (that, then the click, on a list you NAME — a test holding two member lists passes
+  the one it means; the top-inspector verb is this one applied to `topInspectorList()`, the `list` of the
+  `topMemberList()` locator: the inspector entry below has both locators),
   `bringMenuRowIntoView row` (a menu row the locators answered, brought into view through the input queue: ONE wheel
   over the pop-up's rows by the delta that CENTRES the row — the list wheel's rule, `_centringDelta`; a finger run
   swipes the rows — then `assertMenuRowInView`, never a retry; a row already showing takes no wheel and no cycle. Hold
@@ -387,13 +388,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   wording itself (`assertTopMenuItemStrings ["Desktop"]`) only where the wording is the point. A label carries no mark
   of where its row leads either: a row that opens a submenu states it (`opensSubmenu: true`) and DRAWS a chevron, so a
   test reads the row's `opensSubmenu`, never a typed arrow. `findTopWidgetByClassNameOrClass` and `instanceof`, by
-  contrast, use the REAL class name (`"TextWdgt"`); and the inspector HIERARCHY diagram shows the real name too.
+  contrast, use the REAL class name (`"TextWdgt"`); and an inspector's class chip shows the real name too.
 - **Menu items and magnets are label buttons** — their base is **`LabelButtonWdgt`** (a flat label-bearing button):
   `Widget → ButtonWdgt → LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
   `target`/`action`/`trigger` machinery and the pointer look `_shownState` reads off the hand from `ButtonWdgt` but paints its own
   state fill from fields its builder sets (`LabelButtonAppearance`): menu rows a `desk` hover / `chrome` press plate of radius 6
   on a paper box, plain list rows a 40 px `desk` hover plate (a flag of their own: their highlighted state is their
-  selection) and an `accentTint` plate while selected, on no fill, and a member row (the Object Inspector's list,
+  selection) and an `accentTint` plate while selected, on no fill, and a member row (a member list's,
   `MemberRowWdgt`) a 40 px `accentTint` plate while selected; a magnet wears the button look (its own `MagnetAppearance`), its `label` a cropping
   `StringWdgt`.
   Use `instanceof MenuItemWdgt`, and reach a
@@ -402,31 +403,58 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `SimpleButtonWdgt` (the design's button: radius 6, its look derived from the theme by state, its one-line
   `StringWdgt` face centred in its box and cropped on `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
-- **One inspector — windowed by default, but ALSO a first-class NAKED widget:** there is a single `InspectorWdgt` (the
-  old `InspectorMorph` was deleted; `InspectorMorph2`→`InspectorWdgt`), opened by the single method `Widget.spawnInspector`
-  (the "Dev → Inspect" item routes through `inspect`/`spawnInspector` too). The menu/inspect paths wrap it WINDOWED — `spawnInspector` puts it in a
-  `FrameWdgt` (560×410) — but it now ALSO renders + functions + self-resizes **NAKED**: `world.add new InspectorWdgt
-  target` paints its own `panel` body (`inspectorBodyFill`, a `RectangularAppearance`, naked and windowed alike) and shows its own `@resizer` HandleWdgt (visible only when
-  free-floating). To drive a naked resize, press THAT handle: `@syntheticEventsMouseMovePressDragRelease_InputEvents
-  insp.resizer.center(), dest` — NOT `@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle", …`, which grabs the
-  TOPMOST handle by type (a save raises the desktop's own resizer above the inspector's). Two naked gotchas (learned in
-  `SystemTest_macroNakedInspectorRendersResizesAndEdits`): (1) a drag pressed where a FITTING pane's vBar would be lands on
-  the pane itself and float-drags the inspector — windowed or naked — instead of scrolling, so only drag a bar that SHOWS
-  (`@bringcodeStringFromTopInspectorInView` checks this itself: on a pane with no vertical overflow it presses nothing); (2) shrinking the HEIGHT so a pane newly
-  overflows makes its alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep
-  the detail fitting) for a deterministic resize shot. Find the inspector with `@findTopWidgetByClassNameOrClass
-  InspectorWdgt`; the `*FromTopInspector*` helpers target it (windowed or naked). Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's
-  **"Dev → Console"** menu, which opens a `ConsoleWdgt` (an editable code area + a "Run all" button → its text's `runContents`, runs the
-  text with `@`=the console's target); its detail pane is a `SimpleTextWdgt` (a `TextWdgt`) in a text area nested in the inspector, so
-  a press in it — synthetic or a person's — opens dev mode's HIERARCHY menu, whose row standing for the text area opens the area's own
-  menu with the text's rows, its run rows among them (MACRO-PATTERNS.md, "An inspector's code pane runs against its subject"); it
-  defaults to NON-wrapping (call `detailText.toggleSoftWrap()` to wrap), and
-  it is only editable after a list-row is selected; it HIDES inherited properties by default (toggle
-  `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first rows);
-  property editing is via the "Add…"/"Rename…"/"Remove"/"Save" footer buttons ("Save" → `save` → `injectProperty` on
-  the inspected object); and
-  to nest it into a document/panel, drag it by its title and linger past `dwellToArmMs` (the dwell-to-arm embed — there is no
-  internal/external gate any more; a window's skin is derived from its parentage, `FrameWdgt.isInternal`).
+- **One inspector tool — a ROW of inspectors, in a window by default, and a widget like any other with none:** "Dev →
+  Inspect" (`inspect` → `Widget.spawnInspector`, the one door) opens a 760 × 480 window whose content is an
+  `InspectorRowWdgt` (a `ClippingWdgt`), titled by its first inspector ("Inspector — analog clock").
+  `row.inspectors()` are its `InspectorWdgt`s, left to right, a splitter between two: each has its `inspectedObject`,
+  a `header` (`headerTitle`, and a `classChip` naming the class its subject is made by) and ONE `view`. The first's
+  view is a **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s, the footer's `addPropertyButton` /
+  `duplicatePropertyButton` / `renamePropertyButton` / `removePropertyButton`, `cutNoticeBand`, `footerBand`). A
+  CHOICE in an inspector replaces whatever stands right of it: a click on a member row (`selectionFromList`) puts an
+  inspector on THAT member there, its view a **member editor** (`MemberEditorWdgt`: `.memberRef`, the code area
+  `.tempPromptEntryField`, its `.textWidget`, `.saveButton`); a double-click on a row whose value is an object
+  (`inspectMemberValue`) puts one on the value, and the class chip one on the class it names (its prototype), each a
+  member list; a choice that needs width widens a free-floating window. ⚠ An editor exists only once a member is
+  chosen; ANOTHER member REPLACES its inspector with a new one holding a new editor (the same member chosen again
+  reloads the editor in place: its text put back, as one step of its undo history), and a filter toggle, a footer
+  edit or the class chip takes it away — re-locate the editor after EVERY choice, never keep one from before it. The
+  list's placeholder row "(empty)" names no member and chooses nothing. **Find the parts with the toolkit's two
+  locators**, not a search of the world (one for "an editor" also meets a script's, a console's or another window's):
+  `@topMemberList()` — the frontmost widget answering `selectionFromList` with a `list`: the rightmost member list of
+  the frontmost window holding one — and `@memberEditorFedBy memberList` — STRUCTURAL: the view of the inspector
+  standing next after that list's own in its row, while it holds a `memberRef` on a member of the list's subject
+  (else undefined) — with
+  `@topMemberEditor()` that of `topMemberList()`. The `*FromTopInspector*` verbs ride them: `topInspectorList()` is
+  `topMemberList()`'s `list`, and the three code-pane verbs act on `topMemberEditor()`, throwing NO MEMBER EDITOR when
+  no member is chosen (NO SAVE BUTTON for a member no Save edits). A test holding a list of its own (a copied window's,
+  the second of two) hands THAT list to `memberEditorFedBy`. An inspector's `parent` is its row and the row's the
+  window: move the WINDOW, never an inspector (a cell of its row's division). A part picked out of its row stands
+  alone: an inspector whose view is picked out of it shows no subject, and a choice in a list in no row opens a
+  window of its own.
+  **With no window** (`world.add new InspectorRowWdgt target`) the row paints its own body (`inspectorBodyFill`) and
+  chooses and edits the same way, found by the same locators; it has NO resizer of its own, and a choice that needs
+  width narrows its inspectors instead. Resize it as any widget, by the halo its "Resize/move…" gives it
+  (`@resizeWidgetBy_InputEvents row, delta`). Two gotchas (learned in
+  `SystemTest_macroNakedInspectorRendersResizesAndEdits`): (1) a drag pressed where a FITTING code area's vBar would be
+  lands on the code area itself and float-drags what holds it — the window, or the row with none — instead of
+  scrolling, so only drag a bar that SHOWS (`@bringcodeStringFromTopInspectorInView` checks this itself: on a code area
+  with no vertical overflow it presses nothing); (2) shrinking the HEIGHT so a code area newly overflows makes its
+  alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep the code
+  fitting) for a deterministic resize shot.
+  Gotchas for re-authoring its tests: it has NO "work"/eval pane — eval is via each widget's **"Dev → Console"** menu,
+  which opens a `ConsoleWdgt` (an editable code area + "Run selection"/"Run all" buttons → its text's
+  `runSelection`/`runContents`, run with `@`=the console's target); the editor's text is a `SimpleTextWdgt` (a
+  `TextWdgt`) in a text area nested in the editor, so a press in it — synthetic or a person's — opens dev mode's
+  HIERARCHY menu, whose row standing for the text area opens the area's own menu with the text's rows, its run rows
+  among them (none for a class's member: `MemberEditorWdgt.codeReceiver`; MACRO-PATTERNS.md, "An inspector's code pane
+  runs against its subject"); it defaults to NON-wrapping (`textWidget.toggleSoftWrap()` wraps it — on each editor, a
+  new member being a new editor), and `constructor`'s code is shown, never edited; the list HIDES inherited members by
+  default (toggle `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first
+  rows); members are edited by the list's "Add…"/"Duplicate…"/"Rename…"/"Remove" footer buttons and the editor's
+  "Save" (`save` → `MemberRef.save`: an object's member through `injectProperty`, a class's through its meta-object; a
+  subject no step edits, `MemberRef.canEdit`, gets no footer band, and neither do its members' editors); and to nest
+  the window into a document/panel, drag it by its title and linger past `dwellToArmMs` (the dwell-to-arm embed — there
+  is no internal/external gate; a window's skin is derived from its parentage, `FrameWdgt.isInternal`).
 
 ## Composing macros (args, return values, DRY for code AND assets)
 

@@ -47,9 +47,10 @@ const BASELINE_UNDECLARED_FIELDS  = 0;
 // W5 floor: classes still repeating the _reLayout prologue instead of taking Widget's own-contents
 // template. ButtonWdgt + ColorPickerWdgt (no _repaintAsOneUnit unit, and ButtonWdgt's pass reads the
 // granted bounds); SimpleSpreadsheetWdgt, SpeechBubbleWdgt, StretchableCanvasWdgt,
-// StretchablePanelWdgt, SwitchButtonWdgt (five genuinely different shapes — plan §2.5's table);
-// InspectorWdgt (collapse guard before the bounds calc, and _applyBounds rather than the granted twin).
-const BASELINE_PROLOGUE_COPIES = 8;
+// StretchablePanelWdgt, SwitchButtonWdgt (five genuinely different shapes — plan §2.5's table).
+// Lowered 8 -> 7 on 2026-11-24: InspectorWdgt, the eighth, has no _reLayout at all (an inspector is a
+// division stack of bands and a view).
+const BASELINE_PROLOGUE_COPIES = 7;
 
 const args = process.argv.slice(2);
 const GATE = args.includes('--gate');

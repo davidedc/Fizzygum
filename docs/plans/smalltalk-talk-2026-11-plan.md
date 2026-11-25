@@ -270,13 +270,13 @@ against the current tree. This plan is its executable distillation.
   - **Doors on `world`:** the comment at `Widget.buildBaseWidgetClassContextMenu`'s "Test menu" line
     explains why doors are put on `world` and not on `Widget`: every public member added to `Widget`
     is listed by the inspector and churns references.
-- **Inspector SystemTests (16):** AnalogClockInspectEdit, ClassInspectorSaveRefusesCodeThatDoesNotCompile,
+- **Inspector SystemTests (16):** AnalogClockInspectEdit, InspectorSaveOfAClassMemberRefusesCodeThatDoesNotCompile,
   DuplicatedInspectorDrivesCopiedTargetOnly, DuplicatedInspectorsCloseIndependently,
-  ErrorConsolePopsClean, InspectorBreadcrumbChipOpensClassInspector, InspectorOnNonWidgetIsReadOnly,
+  ErrorConsolePopsClean, InspectorClassChipShowsTheClassBesideIt, InspectorOnNonWidgetIsReadOnly,
   InspectorRejectsDrops, InspectorResizingOKEvenWhenTakenApart,
   InspectorSaveRefusesCodeThatDoesNotCompile, InspectorScrollbarUnplugged,
   InspectorWorkAreaEvaluatesCoffeeScript, NakedInspectorRendersResizesAndEdits,
-  PickingUpPartsFromInspector, ResizingPristineInspector, SimpleDocumentHandlesOldInspector (each with
+  PickingUpPartsFromInspector, ResizingPristineInspector, SimpleDocumentHandlesInspector (each with
   the `SystemTest_macro` prefix).
   - `fg recapture-inspector` recaptures the member-list churn set.
   - One test file names the `"Dev"` menu item.

@@ -1,15 +1,17 @@
 # Shared base for the "code/text area + footer band of buttons" widget family:
 # ConsoleWdgt ("dev -> console"), ScriptWdgt (a standalone script on the desktop),
-# CodePromptWdgt (the code-entry popup) and ErrorsLogViewerWdgt (the error log).
+# CodePromptWdgt (the code-entry popup), ErrorsLogViewerWdgt (the error log) and
+# MemberEditorWdgt (an inspector's view of one member).
 # It carries what is common to the family: the code-area fields + the padding, the build
 # settle-wrapper, the two code-area builder variants (the EDITABLE panel with
-# modified-content tracking -- Script/CodePrompt -- and the plain mono panel -- Console/ErrorsLog,
-# both in the code pane's roles),
+# modified-content tracking -- Script/CodePrompt/MemberEditor -- and the plain mono panel --
+# Console/ErrorsLog, both in the code pane's roles),
 # my look, and my ARRANGEMENT: the code area on top, then my footer band (FooterBandLayout), whose
-# rule is my one seam. Everything that differs per class stays on the subclass: the constructor
-# signature, the buttons, which of them sit in the footer's left group and which in its right
-# (_footerLeftButtons / _footerRightButtons), and what their actions DO (CodePromptWdgt alone
-# carries a target/callback pair, delivered through its deliverValue pair).
+# rule is my one seam -- or, when my build made no footer button at all (_hasAFooterBand), the code
+# area alone, down to my bottom, and no seam. Everything that differs per class stays on the
+# subclass: the constructor signature, the buttons, which of them sit in the footer's left group and
+# which in its right (_footerLeftButtons / _footerRightButtons), and what their actions DO
+# (CodePromptWdgt alone carries a target/callback pair, delivered through its deliverValue pair).
 class CodeAreaWdgt extends Widget
 
   tempPromptEntryField: undefined
@@ -84,8 +86,17 @@ class CodeAreaWdgt extends Widget
   _footerRightButtons: ->
     []
 
-  # My one seam: my footer band's rule, between the code area and the buttons.
+  # Do I have a FOOTER BAND at all? Exactly when my build made a footer button: a button of my two
+  # groups, whether or not it is still my child -- a band a person has emptied by picking every button
+  # out stays, so my band never comes or goes with a button. Every class of my family
+  # builds one but a member editor whose member no Save edits (MemberEditorWdgt), whose code area then
+  # runs down to my bottom. Read by my arrangement and my seam, so the two cannot disagree.
+  _hasAFooterBand: ->
+    (@_footerLeftButtons().concat @_footerRightButtons()).some (button) -> button?
+
+  # My one seam: my footer band's rule, between the code area and the buttons -- none without a band.
   _seamRects: ->
+    return [] unless @_hasAFooterBand()
     [FooterBandLayout.ruleIn new Rectangle 0, 0, @width(), @height()]
 
   _reLayout: (newBoundsForThisLayout) ->
@@ -93,12 +104,13 @@ class CodeAreaWdgt extends Widget
 
   # position my contents against my CURRENT frame (already committed by
   # _reLayoutWithOwnContents, so the @-geometry read below is the frame this layout grants me):
-  # the code area from externalPadding in at my top and sides, flush down to my footer band, then
-  # the band's buttons. The code area's height is clamped at 0: a transient degenerate height mid
-  # window-negotiation must not invert its rect.
+  # the code area from externalPadding in at my top and sides, flush down to my footer band (to my
+  # bottom when I have none, _hasAFooterBand), then the band's buttons. The code area's height is
+  # clamped at 0: a transient degenerate height mid window-negotiation must not invert its rect.
   _layOutOwnContents: ->
     codeAreaTop = @top() + @externalPadding
-    codeAreaHeight = Math.max 0, (FooterBandLayout.topIn @bounds) - codeAreaTop
+    codeAreaBottom = if @_hasAFooterBand() then FooterBandLayout.topIn @bounds else @bottom()
+    codeAreaHeight = Math.max 0, codeAreaBottom - codeAreaTop
 
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField._applyBounds (new Point @left() + @externalPadding, codeAreaTop), new Point @width() - 2 * @externalPadding, codeAreaHeight

@@ -443,7 +443,7 @@ before `@_reLayoutChildren()` reads it. Use that shape whenever it fits — it i
 nothing to keep in step with the base.
 
 ⚠ **Adding any named method to `Widget` is not pixel-free.** The meta-system installs class-body
-members with a plain `@::[key] = value`, so they are ENUMERABLE, and `InspectorWdgt.showingMethods`
+members with a plain `@::[key] = value`, so they are ENUMERABLE, and `MemberListWdgt.showingMethods`
 defaults to **true** — so a test that turns `showingInherited` on lists the whole chain's methods and
 gains a row per addition. That is why the hook above cost one recapture. (§4.1's rule about which
 class a test *opens* covers the `showingInherited: false` default; this is its exception.)
@@ -658,7 +658,7 @@ mark after `add` + `setExtent` adds nothing.
   the derivation reads wrong (an acronym or digit the camelCase split mangles — `Plot3DCreatorButtonWdgt`)
   or when the thing has a **name** rather than a description (*"Desktop"*, *"Bin"*, *"Fizzytiles"*,
   *"Docs Maker"*). Lowercase unless it is a proper noun: consumers drop it into a sentence or after a
-  dash (*"Object Inspector — folder panel"*); a title or a menu header that starts with it shows it in its
+  dash (*"Inspector — folder panel"*); a title or a menu header that starts with it shows it in its
   display case, capitalised at display, never stored (visual-design-system.md §4.9).
   ⚠ **An override SHADOWS the derivation for every descendant**, which is how `CanvasWdgt` and
   `StringFieldWdgt` both used to answer *"panel"*. Before adding one to a class that has subclasses, <!-- narration-ok: the warning IS that two classes once collided on one name; the collision is the thing to avoid -->
@@ -964,7 +964,7 @@ so a `step` needs no guard for being detached.
 A step that THROWS bans its widget from stepping: the world shows the error once in the error console
 (which says so), soft-resets, and passes the widget by — it stays a member of the set — until code
 changes give it another chance (`WorldWdgt._stepWidget`, `giveBannedWidgetsAnotherChance`, which both
-change notices call — `Widget.sourceChanged`, a person's edit or run under one widget, an object inspector's or a
+change notices call — `Widget.sourceChanged`, a person's edit or run under one widget, an inspector's member edit or a
 text's run row, and `WorldWdgt.noteCodeChanged`, a class's member edit): the step twin of a widget
 whose paint throws, which is hidden until then. A change that mends nothing has the widget throw once more and be
 banned again, the error log shown again (and, for a step, the world soft-reset).
@@ -1002,7 +1002,10 @@ guards the rebuild with a `_beingFullDestroyed` flag its `_fullDestroyNoSettle` 
 until it is empty never meets a fresh part. Both such holders rebuild in `_reactToChildRemoved`, the one seat every
 door reaches (every re-home and destroy of the holder's own child, inside the settle of the verb that took it):
 `FrameWdgt` (a window's content, keeping the window's size and, for a Maker, its mode) and
-`StretchableWidgetContainerWdgt` (a page). `_reactToChildRemoved` hears only a DIRECT child's departure.
+`StretchableWidgetContainerWdgt` (a page). A holder whose parts are DERIVED from its other children re-derives them
+in the same seat, under the same flag: a row of inspectors its splitters, one between two inspectors and none
+elsewhere (`InspectorRowWdgt._reconcileSplittersNoSettle`), touching no child it does not derive them from and
+building nothing when nothing is out of place. `_reactToChildRemoved` hears only a DIRECT child's departure.
 
 ---
 
@@ -1063,8 +1066,8 @@ gate ([`lint-and-static-checks.md`](lint-and-static-checks.md) §6b). There is n
 
 **Moving a member up to a base class** changes exactly these lookups, and nothing else: the class's own
 same-named members still win; (a) a `super` in a member that shadows a moved one now reaches the base's member;
-(b) the member is inherited, no longer the prototype's own, so an inspector's default member list and its class
-chips show it there; (c) a class copies its parent's own statics when it is defined (`extend`,
+(b) the member is inherited, no longer the prototype's own, so an inspector's default member list shows it there,
+on the base's prototype; (c) a class copies its parent's own statics when it is defined (`extend`,
 `src/boot/globalFunctions.coffee`), so a class defined after boot (a lazy part's) starts its instance counters from
 the base's. A class that had another parent restates what that parent contributed. Prove such a move by resolving
 every member of every class before and after, not by the suite: the suite sees only the classes a test exercises.

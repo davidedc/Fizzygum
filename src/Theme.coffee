@@ -108,7 +108,7 @@ class Theme
     @listRowHoverFill = @desk
     @listRowSelectedFill = @accentTint
     @listRowText = @ink
-    # a MEMBER row (MemberRowWdgt: a row of a member list, the Object Inspector's -- a kind tag, then
+    # a MEMBER row (MemberRowWdgt: a row of an inspector's member list, MemberListWdgt -- a kind tag, then
     # the member's name): its fill at rest, none, so whatever its list stands on shows; and the PLATE
     # it wears while it is its list's selection, and while pressed, the accent's translucent tint ...
     @memberRowFill = Color.TRANSPARENT
@@ -237,12 +237,12 @@ class Theme
     # are its lines.
     @codePaneFill = @paper
     @codePaneStroke = undefined
-    # the ink of SOURCE CODE: in a code pane -- the Object Inspector's, a script's, a code prompt's, a
+    # the ink of SOURCE CODE: in a code pane -- a member editor's, a script's, a code prompt's, a
     # console's and an error log's -- which also takes fonts.code and codePanePadding, and in a patch
     # node's text boxes, which take fonts.code at their own padding.
     @codeText = @code
     # the MODIFIED MARK of a code pane (ModifiedTextTriangleAnnotationWdgt: the triangle in the
-    # top-left corner of a script's, a code prompt's or the Object Inspector's code pane, shown while
+    # top-left corner of a script's, a code prompt's or a member editor's code pane, shown while
     # its text differs from the text it started with), read as the mark paints while it holds no
     # colour of its own (its _surfaceFill, which UpperRightTriangleAppearance asks).
     @codePaneModifiedMark = @muted3
@@ -340,8 +340,8 @@ class Theme
     @toggleOnFill = @accentTint
     @toggleOnStroke = @accent
     @toggleOnText = @accent
-    # a CHIP (ChipWdgt; visual-design-system §4.3, §4.8), one of a row of alternatives -- a class of
-    # the Object Inspector's breadcrumb. Any chip but the CURRENT one: no fill at all (whatever lies
+    # a CHIP (ChipWdgt; visual-design-system §4.3, §4.8), one of a row of alternatives -- the class
+    # chip of an inspector's header. Any chip but the CURRENT one: no fill at all (whatever lies
     # behind the chip shows), its 1 px border and the ink of its label ...
     @chipFill = Color.TRANSPARENT
     @chipStroke = @chip
@@ -368,7 +368,7 @@ class Theme
     @rectangularButtonStroke = @line
 
     # a plain resize / move / rotate HANDLE (HandleWdgt, painted by HandleAppearance: a halo's handles,
-    # a naked inspector's resizer, a demo handle), the button's look (visual-design-system §4.3) over
+    # a demo handle), the button's look (visual-design-system §4.3) over
     # its whole box, rounded at handlePlateRadius: its PLATE's fill and 1 px border at rest, its fill
     # hovered (its border stays handlePlateStroke), its fill and darker border pressed, and the ink of
     # the glyph on it, the same in every state.
@@ -505,19 +505,18 @@ class Theme
     # ... and the ink of the pencil on it.
     @editMarkInk = @ink
 
-    # the Object Inspector's BODY, which it paints itself, naked and windowed alike: under its bands
-    # and panes, the draft's panel ...
+    # the BODY of a row of inspectors (InspectorRowWdgt paints it, in a window or with none): under
+    # every inspector's bands and panes, the draft's panel ...
     @inspectorBodyFill = @panel
-    # ... and its two panes' fill (the member list and the code pane, viewports and planes alike, and
-    # the background of the code pane's text) and their border (InspectorWdgt._clearPaneLook dresses
-    # each pane in them, and a pane taken out of the inspector keeps them): none, so the body and the
-    # inspector's seams show through them.
+    # ... and an inspector's panes' fill (a member list's list and a member editor's code area,
+    # viewports and planes alike, and the background of the code area's text) and their border
+    # (MemberListWdgt and MemberEditorWdgt dress each pane in them as they build it, and a pane taken
+    # out keeps them): none, so the row's body and the bands' rules show through them.
     @inspectorPaneFill = Color.TRANSPARENT
     @inspectorPaneStroke = undefined
-    # the inspector's BREADCRUMB band (its class chips wear the chip roles, above): the ink of its
-    # "Class" caption, and of the drawn › separating two chips.
-    @inspectorBreadcrumbCaption = @muted2
-    @inspectorBreadcrumbSeparator = @muted3
+    # the ink of an inspector's TITLE, its subject's name in its header (InspectorWdgt; its class chip
+    # wears the chip roles, above).
+    @inspectorHeaderTitle = @ink
 
     # the analog CLOCK (AnalogClockAppearance paints its face and marks, AnalogClockWdgt's hand
     # methods its hands and centre dot): its FACE, an opaque disc with no border ...
@@ -679,7 +678,7 @@ class Theme
       menuRow: {family: "Arial, sans-serif", size: 15, bold: false}
       # a plain list row's label (a MenuItemWdgt in a plain ListWdgt), a menu row's size
       listRow: {family: "Arial, sans-serif", size: 15, bold: false}
-      # a member row's name (MemberRowWdgt: a member list, the Object Inspector's), in mono ...
+      # a member row's name (MemberRowWdgt: an inspector's member list, MemberListWdgt), in mono ...
       memberName: {family: StringWdgt::monoFontStack, size: 13, bold: false}
       # ... and its kind tag ("fn", "var"), the draft's weight 600
       memberKindTag: {family: "Arial, sans-serif", size: 10, bold: true}
@@ -692,7 +691,7 @@ class Theme
       # focus flip never changes which characters a title shows
       focusedWindowTitle: {family: "Arial, sans-serif", size: 13, bold: true}
       # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
-      # save + close labels, the Object Inspector's breadcrumb caption, a patch
+      # save + close labels, an inspector's title and a member list's cut notice, a patch
       # node's field labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
       # every StringWdgt / TextWdgt built without a role
@@ -708,7 +707,7 @@ class Theme
       # a desktop icon's caption, each line on the draft's 16 px line box: the plate's line height,
       # which the icon's height takes for a plate of the most lines (desktopIconHeight)
       desktopCaption: {family: "Arial, sans-serif", size: 12, bold: false, lineHeight: 16}
-      # the text of a CODE PANE, in mono -- source code: the Object Inspector's code pane, a script's
+      # the text of a CODE PANE, in mono -- source code: a member editor's code pane, a script's
       # and a code prompt's editor -- and of the mono text panels: a console's, an error log's and a
       # patch node's text boxes. Its lines stand on the draft's 18 px line boxes, source code's line
       # height.
@@ -760,10 +759,10 @@ class Theme
     # side / inter-cell gap / outer margin / row count, a tool cell's rounding and the overflow
     # chevron's glyph square, a text field's rounding, a button's height, paddings and rounding,
     # a toggle's height, padding and rounding, a chip's height, padding and rounding, a Fizzytiles
-    # magnet's rounding, the least side of a chrome target, a footer band's height, rule, inset,
-    # button gap and grip clearance, and the Object Inspector's bands: its breadcrumb band's height, inset, gaps
-    # and separator square, its toggles band's height, inset and gap, its list column's width and
-    # its seams' width, a code pane's padding, the text caret's width and the gap it stands after
+    # magnet's rounding, the least side of a chrome target, a footer band's height, rule, inset and
+    # button gap, and an inspector's bands: their rule's width, its header band's
+    # height, inset and gap, a member list's toggles band's height, inset and gap, and a member
+    # editor's least width, a code pane's padding, the text caret's width and the gap it stands after
     # its slot, the drop outline's and the selection outline's widths, a document's item spacing and
     # its text items' rounding and padding, and a desktop icon's tile, glyph, plate and cell (all
     # from one knob, desktopIconTile), the icon grid's gaps and origin, the bin's corner insets, the
@@ -781,13 +780,12 @@ class Theme
     # instead -- a window's centres its title by it.
     @titleBarTextHeight = 16
 
-    # the side of a plain HANDLE (HandleWdgt: a halo's resize / move / rotate handles, a naked
-    # inspector's resizer, a demo handle). A handle is a TARGET (G3) drawn as big as it is: its plate
+    # the side of a plain HANDLE (HandleWdgt: a halo's resize / move / rotate handles, a demo
+    # handle). A handle is a TARGET (G3) drawn as big as it is: its plate
     # covers its whole square, and its whole square is what a pointer hits, the corner resizer's
     # included, so there is one dial and no invisible band. The same side is the side of a text's
     # corner triangle badges and the pen demo's arrow unit. A frame's own resizer is its grip, sized
-    # by frameGripSize below, never by this; and a naked inspector's footer band keeps
-    # footerGripClearance free at its right end, never this.
+    # by frameGripSize below, never by this.
     @handleSize = 44
     # ... the rounding of a handle's plate (HandleAppearance), and the side of the glyph square
     # centred on it: the arrows' (the four-way arrow of the move handle, the double arrows of the
@@ -1075,54 +1073,47 @@ class Theme
     @minimumTargetSize = 44
 
     # a FOOTER BAND, the row of buttons a window's content ends in (FooterBandLayout: a code
-    # prompt's, a script's, a console's, an error log's, a bin's, an Object Inspector's): its
+    # prompt's, a script's, a console's, an error log's, a member editor's, a bin's; and a member
+    # list's, a band of its own, BandWdgt): its
     # height, its top rule included, and that rule's thickness (a seam its host owns,
     # visual-design-system §4.1) ...
     @footerBandHeight = 52
     @footerRuleWidth = 1
-    # ... how far in from the band's left edge its left group starts and from its right edge its
+    # ... and how far in from the band's left edge its left group starts and from its right edge its
     # right group ends, and the gap between two buttons of a group (and between two buttons of a
-    # prompt's row, PromptButtonsRowWdgt) ...
+    # prompt's row, PromptButtonsRowWdgt). A window's grip asks the band for nothing: it lies in the
+    # grip strip, below the band.
     @footerInset = 12
     @footerGap = 8
-    # ... and how much more its right group keeps clear at the band's right end when its host's own
-    # resizer stands over that corner (a naked inspector's, InspectorWdgt.footerRightClearance). A
-    # window's grip is no such case: it lies in the grip strip, below the band.
-    @footerGripClearance = 44
 
-    # the OBJECT INSPECTOR's bands (InspectorWdgt._bandsIn; its footer band is a footer band, above):
-    # the breadcrumb and the toggles band each end in a rule along their bottom, included in their
-    # height, a seam the inspector owns (visual-design-system §4.1). The width of those two rules
-    # and of the line between its list and its code pane ...
+    # an INSPECTOR's bands (BandWdgt: a row of controls at their own sizes, centred down the band):
+    # the width of the RULE a band draws inside its height, along its bottom (an inspector's header, a
+    # member list's toggles band) or its top (a member list's cut-notice band and its footer band,
+    # which is footerBandHeight tall and keeps footerInset and footerGap, above) ...
     @inspectorRuleWidth = 1
-    # ... the BREADCRUMB band (InspectorWdgt._breadcrumbIn): its height while its chips take one row,
-    # its rule included, the row's chips centred down the rest -- each further row of chips adds a
-    # chip's height and breadcrumbGap to it; how far in from the band's left edge its "Class"
-    # caption starts, which is also how far short of its right edge its chips end; the gap after
-    # the caption; the gap between a chip and the INK of the separator on either side of it (the
-    # draft's "all 4 apart", the ink standing where the draft's › glyph advances), which is also the
-    # gap between two rows of chips; and the side of a separator's glyph square, whose chevron is
-    # the size of the draft's 12 px › (its ink 4 px wide, the glyph's advance) ...
-    @breadcrumbBandHeight = 44
-    @breadcrumbInset = 12
-    @breadcrumbCaptionGap = 8
-    @breadcrumbGap = 4
-    @breadcrumbSeparatorSize = 8
-    # ... the TOGGLES band's height, how far in from its left edge its first toggle starts, and the
-    # gap between two toggles ...
+    # ... an inspector's HEADER band (InspectorWdgt): its height, its rule included, a chrome target's
+    # (the split button stands in it whole); how far in from its left edge its title starts, which is
+    # also how far short of its right edge its class chip ends, and how tall a member list's
+    # cut-notice band stands and how far in its notice starts; and the gap between the split button
+    # and the title, where an inspector a splitter stands before opens with one ...
+    @inspectorHeaderHeight = 44
+    @inspectorHeaderInset = 12
+    @inspectorHeaderGap = 8
+    # ... a member list's TOGGLES band (MemberListWdgt): its height, how far in from its left edge its
+    # first toggle starts, and the gap between two toggles ...
     @toggleBandHeight = 48
     @toggleBandInset = 12
     @toggleBandGap = 8
-    # ... and the width of the body's member-list column (the draft's: a 230 row and 4 at each side),
-    # which never takes more than half the inspector's width; the code pane takes the rest.
-    @inspectorListColumnWidth = 238
+    # ... and the least width of a member editor (MemberEditorWdgt), its code area's floor: in a row of
+    # inspectors an editor with one button would derive almost no width of its own.
+    @inspectorEditorLeastWidth = 280
 
-    # a CODE PANE (a TextAreaWdgt in the code role, with fonts.code and codeText: the Object
-    # Inspector's, a script's, a code prompt's, a console's, an error log's; and Fizzytiles' code
-    # pane, a bordered text): how far in from the pane's edges its text stands, on every side -- so
-    # the inspector's code starts this far right of its list | code seam and this far below its
-    # body's top, and Fizzytiles' stands this far in from its outer edge, clear of its 1 px border. A
-    # patch node's text boxes keep their own.
+    # a CODE PANE (a TextAreaWdgt in the code role, with fonts.code and codeText: a member editor's,
+    # a script's, a code prompt's, a console's, an error log's; and Fizzytiles' code pane, a bordered
+    # text): how far in from the pane's edges its text stands, on every side -- so a member editor's
+    # code starts this far right of the splitter before its inspector and this far below its header's
+    # rule, and Fizzytiles' stands this far in from its outer edge, clear of its 1 px border. A patch
+    # node's text boxes keep their own.
     @codePanePadding = 12
 
     # the text CARET (CaretWdgt), one look for every caret: its width -- the draft's 2 px cursor,

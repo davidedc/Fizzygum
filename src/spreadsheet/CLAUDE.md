@@ -186,7 +186,7 @@ the SAME cycle as the Enter event (deterministic, spec §10). `@` inside a formu
   the sheet: `Color.mixed` (promoted from its old homepage-excluded, unused state — now shipped, and
   routed through the immutable `Color.create` factory), plus new `Color.lighter` / `Color.darker`.
   `FormulaHelpers.mix` is a thin free-function veneer that delegates to `Color.mixed`. Adding a
-  method to a value class (even live, via the class inspector) makes it available to the next
+  method to a value class (even live, in an inspector on the class) makes it available to the next
   recompute, since formulas compile from source.
 - **Classify → present (spec §9.4), in `SimpleSpreadsheetWdgt`.** Per recompute, `_cacheValue` calls
   `_reconcileCellNoSettle`, which routes the value into the cell's (always-present) `CellWdgt`: a value

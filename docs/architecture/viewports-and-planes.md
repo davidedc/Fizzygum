@@ -177,7 +177,7 @@ much the content overflows, when its frame has no room for its thumb
 (`_barFrameHasRoomForThumb`: the frame a press meets, at full thickness and the run's
 whole length, less the plane margin at both ends for a bar the viewport presents, must be at least
 as long as the thumb a press meets is wide; the shorter frame the thin look is drawn in is not the
-one asked). Under a resizer (a naked inspector's), a viewport
+one asked). A viewport
 shorter than the corner reserve has a frame whose length is not even positive, and the bar would be
 a 1px sliver no pointer can work. The pane still scrolls, since scrollability is asked of overflow.
 
@@ -208,30 +208,16 @@ LINE at the viewport's edge, and short of its side's ends.
 
 The CORNER RESERVE is what occupies the bottom-right corner, and nothing more
 (`_cornerReserveFor`, read by `_barFrameAt`):
-- a resizer over the corner takes the room it names (`HandleWdgt.cornerFootprint`), never less
-  than a bar: a naked inspector's handle its side (`handleSize`). A window's grip is no such case:
-  it lies in the window's grip strip, below everything the window holds. The climb that finds a
-  resizer (`_resizerOverMyCorner`) answers the resizer itself;
-- failing that, the other bar, where it crosses, takes `scrollBarsThickness`;
-- with neither, the run is its side's full length.
+- the other bar, where it crosses, takes `scrollBarsThickness`;
+- without it, the run is its side's full length.
 
-Each answer comes from STRUCTURE, because the passes that read it are still laying out geometry
-and visibility:
-- **The other bar** is read from the overflow its showing derives from, without its own
-  room-for-thumb check, so neither bar's length waits on whether the other one shows.
-- **The resizer** is found by climbing the corner chain. A container that runs a child out to its
-  own bottom-right corner under a resizer of its own names it (`bottomRightCornerReachedBy`): a
-  read-only inspector its code pane (an inspector that ends in its footer band names none). The
-  first container on the climb whose resizer would show answers (`HandleWdgt.wouldShow`, what
-  showing derives from, never `isVisible`).
-- **A container that names nobody ends the climb**, and a viewport names nobody: its contents
-  scroll under its corner.
-- **When the corner chain changes** — a resizer comes or goes (`HandleWdgt.updateVisibility`) —
-  `Widget.noteCornerChainChanged` tells the viewports down that corner chain
-  (`noteCornerResizerChanged`), and each re-lays its bars.
+A window's grip is no occupant: it lies in the window's grip strip, below everything the window
+holds.
 
-A container that runs a viewport into its corner WITHOUT naming it leaves that viewport's bar
-running under the resizer, so a new container of that shape names its corner child.
+The answer comes from STRUCTURE, because the passes that read it are still laying out geometry
+and visibility: the other bar is read from the overflow its showing derives from, without its own
+room-for-thumb check, so neither bar's length waits on whether the other one shows.
+
 No activity stamps, no clock,
 no stepping registration: a capture taken a second after a scroll shows the same pixels as one
 taken at rest, so the indicator carries no determinism question.
@@ -401,7 +387,7 @@ turns the normalization off), and its `tight: false` height AGREES with grow-to-
 construction. ⚠ `ListWdgt` keeps the interposed-pane shape deliberately: its design sizes
 the rows panel PAST the hug (anti-vacant-space, `ListWdgt._applyExtent`), so the panel's
 unconditional hug self-write and the list's committed frame structurally disagree — there
-the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — the Object Inspector's —
+the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — an inspector's member list's —
 does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` / `CommandPanelWdgt._myArrangedWidth`.)
 
 ## Naming

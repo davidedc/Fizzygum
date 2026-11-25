@@ -135,8 +135,12 @@ Take the clock, the inspector, a paint app: each should be — at least in princ
 assembly of simpler citizens plus small scripts, not a sealed special-case. The converse
 test is disassembly: a good-citizen application can be taken apart and its parts recombined
 into things its author never anticipated (mashups). The tools pass their own test: the
-inspectors (`InspectorWdgt`, `ClassInspectorWdgt`) are themselves assemblies of ordinary
-widgets, and can in turn be manipulated, inspected, and recomposed.
+inspector is itself an assembly of ordinary widgets — a division row of inspectors (`InspectorRowWdgt`) with a
+splitter between each two, each inspector (`InspectorWdgt`) a division stack of a header band over one view, a member list or a code area
+(`MemberListWdgt`, itself a stack of bands around its list; `MemberEditorWdgt`), every band a row of plain controls
+(`BandWdgt`: a chip, toggles, buttons), and none of
+the row, the inspectors or the bands with a layout of its own — and each part can in turn be picked out,
+inspected, copied and recomposed.
 
 The acid test is expanded into per-facet admission criteria for candidate widgets/apps
 in [`app-fit-criteria.md`](app-fit-criteria.md).

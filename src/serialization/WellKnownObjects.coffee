@@ -23,8 +23,8 @@
 # `wellKnownKey: -> "app:" + @constructor.name`).
 #
 # THE CLASS KEYS. A class, and its own prototype, belong to the PAGE, not to the world: every page
-# holding the class has them, and a widget can point at one (a class inspector's subject is a class's
-# prototype; an object inspector can be opened on a class function). Such a pointer is named by its
+# holding the class has them, and a widget can point at one (an inspector's subject can be a class's
+# prototype; an inspector can be opened on a class function). Such a pointer is named by its
 # class, "class:<Name>" or "prototype:<Name>", and bound through classNamed in the loading page -- a
 # record of the prototype's members would restore as a fake instance, and its methods have no source
 # a file can carry. They are answered BEFORE the singleton table and the marker (classKeyFor), because
