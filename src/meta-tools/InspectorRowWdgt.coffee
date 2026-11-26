@@ -1,49 +1,44 @@
-# The ROW OF INSPECTORS a window holds: the first on the subject a person asked to inspect, each
-# next one on a subject chosen in the one to its left (showChoice). I am the inspector as a tool:
-# "Inspect" opens me (Widget.spawnInspector).
-#   I have no layout of my own. My inspectors (InspectorWdgt) are the elements of a horizontal
-# DIVISION row (StackLayoutEngine), a splitter between two of them (StackElementsSizeAdjustingWdgt),
-# so they divide my width, a person drags a splitter -- or the split button standing right of it in
-# the next inspector's header (SplitGripWdgt) -- to re-divide it, and my least width is theirs and my
-# splitters' together (Widget.getRecursiveMinDim). I paint the BODY every inspector of mine stands
-# on (inspectorBodyFill), and say so to my parts (laysTheInspectorBodyUnderItsParts); a part of the
-# tool standing anywhere else paints a body of its own (InspectorBodyAppearance).
-#   A CHOICE replaces whatever stands right of the inspector it was made in, in ONE settle: the
-# subject that inspector's neighbour already shows is reloaded there, any other subject gets a new
-# inspector, and no subject only removes what stands right of the chooser. A split a person moved
-# stays where they put it while a view of the same kind takes the place right of it, and is undone
-# when another kind takes that place or none does (_showNextToNoSettle: one rule, from what a drag on
-# a split trades). A choice that leaves me narrower than my inspectors' least widths WIDENS my window
-# when it stands on the desktop, toward the NORMAL width of the inspector the choice added (a list
-# its desired width, an editor the width the default window gives it: _normalWidthOf), as far as the
-# desktop's right edge; past that, or in any other holder, my inspectors narrow. Nothing is ever
-# dropped from my left.
-#   My SPLITTERS are derived from my inspectors, never placed by hand: exactly one between two
-# inspectors that stand side by side, none anywhere else (_reconcileSplittersNoSettle), re-derived
-# at every choice and whenever a child of mine leaves me, however it leaves -- a choice's removal, a
-# person's "Pick up" or "Destroy" of an inspector or of a splitter -- and each inspector then
+# THE SET of an inspector browser (InspectorBrowserWdgt): the ROW OF COLUMNS its inspectors stand in,
+# in the order of its sequence, and the column dividers between them. The browser owns the sequence and
+# the rule of choice, and places each inspector it adds at my end (_addColumnNoSettle); I own the set's
+# STRUCTURE. Built empty (`new InspectorRowWdgt()`): a subject is an inspector's, never mine.
+#   I am the PLANE of my browser's set viewport (InspectorRowViewportWdgt), which clips me and scrolls
+# me sideways. My columns, inspectors (InspectorWdgt), are the elements of a horizontal DIVISION row
+# (StackLayoutEngine), a column divider between two of them (InspectorColumnDividerWdgt), and that
+# arrange is all the layout I have. My viewport commits my MEASURE as my frame
+# (scrolledContentMeasure), read from fields only: every column at the width it answers
+# (InspectorWdgt.getDesiredDim: what its cells desire, or the width a person stated), every divider
+# at its own, the whole never narrower than my viewport and exactly as tall; only my LAST column
+# takes more than its own width (takesMySlack): the room my viewport has to spare and, while my
+# columns overflow my viewport, as much more as stands the end of my scroll on a column's left edge
+# (columnLefts). So no column narrows to fit my viewport: I overflow it, and it scrolls me. A
+# divider's drag SIZES the one column on its left (states its width) and the columns right of it
+# shift: nothing trades width between two columns, and in me a column's width is its own answer. A
+# drag on a divider is measured in the plane my scroll leaves still (planeItsScrollLeavesStill). I
+# paint nothing: my browser paints the BODY every inspector of mine stands on, and I say so to my parts
+# (laysTheInspectorBodyUnderItsParts); a part of the tool standing anywhere else paints a body of its
+# own (InspectorBodyAppearance).
+#   My COLUMNS are my inspectors that are cells of my division row (columns): the ones its arrange
+# lays out, and the only ones my measure, my rest points and my slack count. An inspector a person
+# attaches to me free-floating (its developer menu's "Attach") stands where it was put, over my
+# columns: no column of mine, in no sequence of my browser's, its choices opening a window of their own
+# (InspectorBrowserWdgt.showChoice).
+#   My DIVIDERS, my splitters, are derived from my columns, never placed by hand: exactly one
+# between two columns that stand side by side, none anywhere else (_reconcileSplittersNoSettle),
+# re-derived at every choice and whenever a child of mine leaves me, however it leaves -- a choice's
+# removal, a person's "Pick up" or "Destroy" of an inspector or of a divider -- and each column then
 # re-derives its split button from them, a button a person took out of its header (or put back after
 # its title) included. A child a person attaches to me is no moment of its own: it waits for the next
-# of those, an inspector attached to me standing with no splitter until then. My
-# CELLS, the only children that reconcile reads or touches, are my inspectors
-# (every child of mine that answers showsSubject) and my splitters (my division cells that answer the
-# split's solve, maxDimsPuttingMyLeadingEdgeAt); any other child of mine (a halo's handle, an "Edit
-# layout" slot, a widget attached to me that is neither) is left where it is. My name is my first
-# inspector's, so when a reconcile finds another first inspector than the one my name was last taken
-# from, the window whose content I am re-titles itself (FrameWdgt.noteContentsNameMayHaveChanged); a
-# title something else gave that window (a shortcut's) stands until then.
-class InspectorRowWdgt extends ClippingWdgt
-
-  # I CLIP my children -- their paint and their pointer targeting -- to my rectangle, the house way
-  # (a ClippingWdgt, as every panel, viewport and frame is): a control my width leaves no room for is
-  # cut at my edge, where it shows nothing and catches no press, the same with no window as in one (a
-  # target never extends beyond the widget that owns it, visual-design-system §4.2). Squeezed below my
-  # least width, my division row shrinks my cells, but a member editor's footer band places its Save
-  # at the button's own size, past the edge of an editor narrower than that: I am what cuts it. In a
-  # window I lie flush against, it changes no pixel: the window clips its content at the box it gives
-  # it, which is my box, and nothing of mine stands outside my box while I am at least my least
-  # width. Opaque, my silhouette is my box, so my children add nothing to the shadow I cast with no
-  # window.
+# of those, an inspector attached to me as a cell of my row ("Attach with horizontal layout") standing
+# as my last column with no divider until then. My CELLS, the only children that reconcile reads or
+# touches, are my columns and my dividers (my division cells that answer a column divider's solve,
+# columnWidthDraggedTo); any other child of mine (a halo's handle or its trading adjuster, an "Edit
+# layout" slot, an inspector attached to me free-floating, a widget attached to me that is neither) is
+# left where it is. Every reconcile ends by
+# telling my browser, whose name is its first inspector's, that its first inspector may be another one
+# (InspectorBrowserWdgt._noteFirstInspectorMayHaveChangedNoSettle): a person's "Pick up" of my first
+# column reaches only me.
+class InspectorRowWdgt extends Widget
 
   # am I being destroyed as a whole (_fullDestroyNoSettle)? Then a child of mine leaving me is my
   # teardown, and nothing of mine is reconciled or rebuilt on the way out (as FrameWdgt's flag)
@@ -51,199 +46,164 @@ class InspectorRowWdgt extends ClippingWdgt
   # is my reconcile running? Its own splitter removals tell me a child left, and must not reconcile
   # again inside it. True only inside one synchronous call, so no copy or save carries it true.
   _reconcilingSplitters: false
-  # the inspector my name was last taken from (my first: colloquialName), so my reconcile has my window
-  # re-title itself only when my first inspector is another one. Set by the reconcile my build runs,
-  # which tells no one: I stand in no window yet, and a window reads my name itself as it opens me.
-  _inspectorNamingMe: undefined
 
-  # THE DEFAULT EXTENT, its one statement: a row built with no window gives itself this extent, a
-  # window opened on a fresh row opens at it (Widget.spawnInspector, showChoice), and the widening
-  # reads the width an editor has in it (_normalWidthOf). Tall enough that a widget's or a class's
-  # member list, under a header, a chooser, its toggles and its footer, shows five whole rows. A
-  # method, never a class-level Point: a class constant may not name another class.
-  @defaultExtent: ->
-    new Point 760, 528
-
-  constructor: (subject) ->
-    super()
-    @__commitExtent InspectorRowWdgt.defaultExtent()
-    @color = WorldWdgt.theme.inspectorBodyFill
-    @appearance = new RectangularAppearance @
-    @_buildAndConnectChildren subject
-
-  # I lay the inspector's body under my parts (my appearance paints it, under all of them), so an
-  # inspector of mine paints none of its own (InspectorBodyAppearance asks, as it paints).
+  # I lay the inspector's body under my parts: my browser paints it, under me and so under all of
+  # them, so an inspector of mine paints none of its own (InspectorBodyAppearance asks, as it paints).
   laysTheInspectorBodyUnderItsParts: -> true
 
-  # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
-  # settled). The subject is handed to the build rather than read from a field of mine, where the
-  # canonical pair reads one: it is my first inspector's subject, held by that inspector
-  # (InspectorWdgt.inspectedObject), and a field of mine holding it would go on naming it after that
-  # inspector is gone.
-  _buildAndConnectChildren: (subject) ->
-    @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle subject
+  # my COLUMNS, left to right: my children that are columns of mine (_isMyColumn: my other children
+  # are splitters, or not mine to arrange). The one statement of my columns as my row lays them: my
+  # browser's sequence is read from them (InspectorBrowserWdgt.inspectors), and so are where they stand
+  # (columnLefts, in their order), which takes my slack (takesMySlack) and where a new one goes
+  # (_addColumnNoSettle).
+  columns: ->
+    (child for child in @children when @_isMyColumn child)
 
-  _buildAndConnectChildrenNoSettle: (subject) ->
-    @_addInspectorNoSettle new InspectorWdgt subject
+  # Is `child` a COLUMN of mine: an inspector (it answers showsSubject) that is a cell of my division
+  # row, which its arrange lays out (its spec a division element's)? An inspector standing free-floating
+  # in me is none.
+  _isMyColumn: (child) ->
+    child.showsSubject? and (child.layoutSpec?.isDivisionElement?() is true)
 
-  # my inspectors, left to right: my children that are inspectors (my other children are splitters,
-  # or not mine to arrange)
-  inspectors: ->
-    (child for child in @children when child.showsSubject?)
+  # MY MEASURE, which my viewport commits as my frame (it is content-sizing: InspectorRowViewportWdgt),
+  # read from FIELDS and my viewport's own size only, never from where a cell of mine lies laid out (a
+  # rule reading a size its own effect changes flip-flops). My CONTENT is my cells' desired widths
+  # summed, the sum my division row's arrange lays out (Widget.getRecursiveDesiredDim), and
+  # `viewWidth` is my viewport's width. I am the wider of the two; while my content is the wider, I am
+  # widened to the first of my columns' left edges at or past the scroll that shows my content's end,
+  # plus `viewWidth`, so the end of my scroll is that column's left edge and my last column takes the
+  # extra room (takesMySlack). A last column wider than my viewport leaves no such edge, and I am then
+  # my content wide. As tall as my viewport, at my own origin, which the commit never moves.
+  scrolledContentMeasure: (viewWidth) ->
+    content = Math.ceil @getRecursiveDesiredDim().x
+    width = Math.max content, viewWidth
+    if content > viewWidth
+      end = (left for left in @columnLefts() when left >= content - viewWidth)[0]
+      width = end + viewWidth  if end?
+    new Rectangle @left(), @top(), @left() + width, @top() + @parent.height()
 
-  # my window's title: my first inspector's
-  colloquialName: ->
-    @inspectors()[0]?.colloquialName() ? "Inspector"
+  # My measure is my WHOLE frame, committed verbatim (the scrolled-content contract, read by
+  # ViewportWdgt._positionAndResizeChildren): it stands at my origin, at least my viewport's width and
+  # exactly its height, so the commit's width floor and grow-to-fill have nothing to add.
+  scrolledContentMeasureIsMyFrame: -> true
 
-  # WHERE A CHOICE GOES. `chooser` -- an inspector, or a view inside one -- chose `subject`: the
-  # inspector right of the chooser's shows it (showNextTo). Chosen again, the subject already there
-  # is RELOADED (a member's editor takes its saved text back, as one step of its undo history); any
-  # other subject replaces it, and everything further right goes either way. No subject (undefined)
-  # only removes what stands right of the chooser: what its view stood for has gone, or it chose a
-  # row that names no member (MemberListWdgt.selectionFromList).
-  #   A chooser in no row -- an inspector or a view a person picked out of its window -- opens the
-  # subject in a window of its own, a row of its own.
-  #   Every gesture asks me AFTER its own settle, never inside it: my row settles once per choice.
-  @showChoice: (chooser, subject) ->
-    inspector = chooser
-    inspector = inspector.parent  until !inspector? or inspector.showsSubject?
-    row = inspector?.parent
-    if row?.showNextTo?
-      row.showNextTo inspector, subject
-    else if subject?
-      fresh = new InspectorRowWdgt subject
-      world.openFrameWith fresh, fresh.extent(), world.hand.position().subtract new Point 50, 100
-    return
+  # IS MY PLACE MY HOLDER'S, though no layout spec of mine says so? While I am my viewport's plane
+  # (isMyContentsPanel, its role query): it commits my measure as my whole frame at its every arrange,
+  # at my own origin, so a handle that moved me would leave me shifted inside it. The halo's climb asks
+  # it (Widget._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle): a column's "Resize/move…" goes on
+  # past me and my viewport, to my browser's window, or to my browser standing with none. Standing
+  # anywhere else I am free-floating as any widget, and the halo is mine.
+  _placedByMyHolder: ->
+    @parent?.isMyContentsPanel?(@) is true
 
-  # THE MEMBER `name` CHOSEN IN MY FIRST INSPECTOR, as a person's click on its row chooses it: the
-  # door that opens me ON a member (Widget.spawnInspector's opts.member). My first inspector's view
-  # chooses it when it lists members (MemberListWdgt.chooseMember); an inspector on one member (a
-  # MemberRef subject: a lone editor) lists none and chooses nothing. No settle of my own: each step
-  # the choice takes settles itself, one after the other.
-  chooseMember: (name) ->
-    @inspectors()[0]?.view?.chooseMember? name
-    return
+  # My cells are placed in MY OWN layout pass, my division row's arrange, so a frame committed onto me
+  # owes my re-lay: my viewport commits my measure silently and schedules my re-lay only for a plane
+  # that says so (ViewportWdgt._positionAndResizeChildren), and my columns would otherwise stay placed
+  # for my old width whenever my viewport is itself sized inside my browser's arrange. My own pass
+  # lands on the box I hold, the one my viewport committed, so the two writers of my frame agree. Its
+  # two other readers: a stack sizing me re-lays me at once (Widget._setWidthSizeHeightAccordingly),
+  # and a holder merging its children's bounds takes my box, which my cells stand inside
+  # (Widget.subWidgetsMergedFullBounds).
+  implementsDeferredLayout: -> true
 
-  # `subject` shown right of `inspector`, mine, as one settle (showChoice says what that means).
-  showNextTo: (inspector, subject) ->
-    @_settleLayoutsAfter => @_showNextToNoSettle inspector, subject
+  # WHERE MY COLUMNS STAND, left to right: each one's left edge, from my own left, as my division row's
+  # arrange lays it -- the desired widths of my cells before it, summed and rounded as the arrange
+  # rounds a boundary (StackLayoutEngine). At my measure that arrange hands every cell but my last
+  # column its desired width (a divider's box, as a column's, has no most beyond it: my last column
+  # takes the whole spare), so the two agree. Read from fields only: my measure reads it for the end
+  # of my scroll, and my viewport for the rest points its scroll comes to rest at
+  # (InspectorRowViewportWdgt._restOffsets). One left per column of mine (_isMyColumn), in the order
+  # of my columns, so the n-th left is the n-th column's.
+  columnLefts: ->
+    lefts = []
+    sum = 0
+    for cell in @children when cell.layoutSpec?.isDivisionElement?()
+      lefts.push Math.round sum  if @_isMyColumn cell
+      sum += cell.getDesiredDim().x
+    lefts
 
-  # Every inspector right of `inspector` is destroyed but the next one, when that one already shows
-  # the subject: it is reloaded instead. A new subject gets a new inspector at my end.
-  #   THE SPLIT A PERSON SET follows from what a drag does. A drag on a split TRADES most width between
-  # the two cells beside it, their sum unchanged (StackElementsSizeAdjustingWdgt's
-  # maxDimsPuttingMyLeadingEdgeAt). So across the BOUNDARY a choice removes everything right of,
-  # exactly ONE trade stands: what the cell left of it took from the cell right of it. The removed
-  # cells may have traded among themselves too, but those trades cancel in their sum, so what they gave
-  # away, summed (InspectorWdgt.mostWidthGivenAway: each one's default most width less its own), is
-  # that one trade -- 0 where the split at the boundary was never dragged, negative where the cell left
-  # of it gave width away. One HEIR settles it (_removeInspectorsNoSettle). A new inspector whose view
-  # asks the weight the first removed one's asked (an editor where an editor stood, a list where a list
-  # stood) takes its default less that trade: the split stands where the person put it, the cell left
-  # of the boundary is untouched, and any trade the removed cell had made further right goes with the
-  # cells it was made with. Otherwise -- another kind of view takes that place, or none does -- the
-  # trade is UNDONE: the cell left of the boundary gives it back, the chooser, or, when the subject is
-  # chosen again, the kept neighbour, the removed cells being the ones right of it. Its trade with its
-  # own left neighbour is untouched, so this holds in a row of any length, and an inspector a choice
-  # leaves alone is back at its default. A "Pick up" or a "Destroy" of an inspector is no choice, and
-  # re-boxes nothing: my reconcile, which also runs inside layout passes, writes no box, so the
-  # neighbour such a departure leaves keeps the box it had.
-  #   Then my structure is reconciled, whatever the choice removed or added -- a reload or a choice of
-  # no subject may do neither -- so a split button a person took out of a header of mine, or put back
-  # after its title, leads that header again after every choice, and a child a person attached to me
-  # is reconciled too (InspectorWdgt._reconcileSplitGripNoSettle; with nothing out of place it changes
-  # nothing). Then my window is widened if my inspectors do not fit it, the header that button opens
-  # counted, toward the normal width of the inspector this choice added, if it added one: inside this
-  # same settle, never in a layout pass.
-  _showNextToNoSettle: (inspector, subject) ->
-    following = @_inspectorsAfter inspector
-    if subject? and following[0]?.showsSubject subject
-      @_removeInspectorsNoSettle following[1..], following[0]
-      following[0]._reloadNoSettle()
-    else
-      fresh = new InspectorWdgt subject  if subject?
-      sameKind = fresh? and fresh.view.rowSlackWeight() is following[0]?.view.rowSlackWeight()
-      @_removeInspectorsNoSettle following, (if sameKind then fresh else inspector)
-      @_addInspectorNoSettle fresh  if fresh?
-    @_reconcileSplittersNoSettle()
-    @_widenMyWindowToFitNoSettle fresh
+  # Does `column` take my spare width? Exactly when it is my last column (columns: a cell of my
+  # division row, never an inspector standing free-floating in me), whose most width then outgrows its
+  # desired (InspectorWdgt.getMaxDim asks), so my division row's arrange hands it all the room my
+  # measure gives beyond my cells' own widths. Read off my structure each time, never stored.
+  takesMySlack: (column) ->
+    column is @columns().pop()
 
-  # my inspectors right of `inspector`, in order; none when it is no inspector of mine
-  _inspectorsAfter: (inspector) ->
-    mine = @inspectors()
-    at = mine.indexOf inspector
-    return [] if at < 0
-    mine[at + 1..]
-
-  # `inspector` added after my last inspector, as an element of my row, then my splitters reconciled:
-  # a splitter between it and the inspector before it, and its split button.
-  _addInspectorNoSettle: (inspector) ->
-    last = @inspectors().pop()
+  # `inspector` added after my last column, as an element of my row, then my splitters reconciled: a
+  # divider between it and the column before it, and its split button. My browser places every
+  # inspector it adds here (InspectorBrowserWdgt._placeNoSettle).
+  _addColumnNoSettle: (inspector) ->
+    last = @columns().pop()
     atIndex = if last? then @children.indexOf(last) + 1 else undefined
     @_addNoSettle inspector, atIndex: atIndex, layoutSpec: inspector.divisionBox()
     @_reconcileSplittersNoSettle()
 
-  # `inspectors`, all of them right of one boundary of mine, destroyed, each telling me it left
-  # (_reactToChildRemoved), which reconciles my splitters every time: the one before each goes with
-  # it. First, while they still stand, the one trade across that boundary -- what they gave away,
-  # summed -- is given up by `heir`, the cell that keeps it or gives it back (_showNextToNoSettle says
-  # which, and why the sum is that trade). Nothing is written when there is nothing to settle.
-  _removeInspectorsNoSettle: (inspectors, heir) ->
-    trade = 0
-    trade += each.mostWidthGivenAway() for each in inspectors
-    heir._giveUpMostWidthNoSettle trade  unless trade is 0
-    each._fullDestroyNoSettle() for each in inspectors
-    return
-
-  # MY CELLS: my children that are an inspector or one of my splitters, in order -- the only children
-  # my reconcile reads or touches
+  # MY CELLS: my children that are a column of mine or one of my splitters, in order -- the only
+  # children my reconcile reads or touches
   _myCells: ->
-    (child for child in @children when child.showsSubject? or @_isMySplitter child)
+    (child for child in @children when @_isMyColumn(child) or @_isMySplitter(child))
 
-  # Is `child` a SPLITTER of mine? Asked of the capability its users need, never of a type: a cell of
-  # my division row that answers the split's solve (maxDimsPuttingMyLeadingEdgeAt), the one question
-  # a split button asks of the splitter before its inspector (SplitGripWdgt). Another cell that takes a
-  # drag in place (a palette or a slider's button dropped on an "Edit layout" slot of mine) answers no
-  # such solve, so it is never destroyed as a stray splitter nor dragged as one; an "Edit layout" slot
-  # is a cell that answers none either; a halo's handle and a widget attached to me stand free.
+  # Is `child` a SPLITTER of mine, a column divider? Asked of the capability its users need, never of a
+  # type: a cell of my division row that answers a column divider's solve (columnWidthDraggedTo), the
+  # seam a split button asks of the divider before its inspector (SplitGripWdgt). Another cell that
+  # takes a drag in place (a palette or a slider's button dropped on an "Edit layout" slot of mine)
+  # answers no such solve, and neither does a trading adjuster the halo's "Resize/move…" adds beside an
+  # inspector of mine (StackElementsSizeAdjustingWdgt), so neither is ever destroyed as a stray divider
+  # nor dragged as one; an "Edit layout" slot is a cell that answers none either; a halo's handle and a
+  # widget attached to me stand free.
   _isMySplitter: (child) ->
-    (child.layoutSpec?.isDivisionElement?() is true) and child.maxDimsPuttingMyLeadingEdgeAt?
+    (child.layoutSpec?.isDivisionElement?() is true) and child.columnWidthDraggedTo?
 
-  # The splitter standing before `inspector` among my cells, or undefined: what its split button drags
-  # (InspectorWdgt._splitterBeforeMe asks). An "Edit layout" slot between the two is no cell of mine,
-  # so it does not stand between them.
-  splitterBefore: (inspector) ->
+  # THE CELL JUST BEFORE `cell` among my cells, or undefined (first, or no cell of mine): an "Edit
+  # layout" slot between the two is no cell of mine, so it does not stand between them
+  _cellBefore: (cell) ->
     cells = @_myCells()
-    before = cells[cells.indexOf(inspector) - 1]
+    cells[cells.indexOf(cell) - 1]
+
+  # The divider standing before `inspector` among my cells, or undefined: what its split button drags
+  # (InspectorWdgt._splitterBeforeMe asks).
+  splitterBefore: (inspector) ->
+    before = @_cellBefore inspector
     before  if before? and @_isMySplitter before
 
-  # THE ONE RULE of my splitters: exactly one between two of my inspectors that stand side by side,
-  # none anywhere else -- then each inspector re-derives its split button from it. My name is my first
-  # inspector's (colloquialName), and what changed my children may have changed which inspector is
-  # first (a person's "Pick up" of it): when it is another than the one my name was last taken from
-  # (_inspectorNamingMe), the window whose content I am re-derives its title from my name, through its
-  # label's NoSettle cores, settling nothing; while it is the same, that window's title is left as it
-  # stands. Run under a flag, in a try/finally: the splitters it destroys tell me they left, and that
-  # must not reconcile again inside this run. Builds nothing when nothing is out of place, so a child
-  # leaving me in the middle of a layout pass (an "Edit layout" slot the pass takes away) finds nothing
-  # to do; a split button a person took out is out of place, and its inspector rebuilds it only outside
-  # a pass (InspectorWdgt._reconcileSplitGripNoSettle).
+  # THE COLUMN `divider` SIZES, splitterBefore's twin: the cell just before it among my cells, when
+  # that cell is a column of mine, or undefined. Asked by the divider as a drag on it, or on its split
+  # button, begins and goes on (InspectorColumnDividerWdgt.columnDragAnchorAt, columnWidthDraggedTo).
+  columnBefore: (divider) ->
+    before = @_cellBefore divider
+    before  if before?.showsSubject?
+
+  # THE PLANE MY SCROLL LEAVES STILL: my viewport's while I am its plane (isMyContentsPanel, its role
+  # query) -- its own plane excludes the scroll that translates me, so a point mapped into it stays put
+  # as my scroll moves me -- or my own while I stand in no viewport (turned in a transform island, which
+  # maps into me). A drag on a divider of mine is measured in it (InspectorColumnDividerWdgt.dragPlane):
+  # at my scroll's far end a drag that narrows a column lets my viewport's clamp slide me under the
+  # pointer, which a drag measured in my own plane would read as more travel.
+  planeItsScrollLeavesStill: ->
+    if @parent?.isMyContentsPanel?(@) then @parent else @
+
+  # THE ONE RULE of my splitters: exactly one between two of my columns that stand side by side,
+  # none anywhere else -- then each column re-derives its split button from it, and my browser is
+  # told that its first inspector may be another one (what changed my children may have changed which
+  # column is first: a person's "Pick up" of it), which is the browser's to judge, settling nothing.
+  # Run under a flag, in a try/finally: the splitters it destroys tell me they left, and that must not
+  # reconcile again inside this run. Builds nothing when nothing is out of place, so a child leaving me
+  # in the middle of a layout pass (an "Edit layout" slot the pass takes away) finds nothing to do; a
+  # split button a person took out is out of place, and its inspector rebuilds it only outside a pass
+  # (InspectorWdgt._reconcileSplitGripNoSettle).
   _reconcileSplittersNoSettle: ->
     @_reconcilingSplitters = true
     try
       @_dropStraySplittersNoSettle()
       @_addMissingSplittersNoSettle()
-      mine = @inspectors()
-      inspector._reconcileSplitGripNoSettle() for inspector in mine
-      unless mine[0] is @_inspectorNamingMe
-        @_inspectorNamingMe = mine[0]
-        @parent.noteContentsNameMayHaveChanged()  if @parent?.isMyContents?(@) and @parent.noteContentsNameMayHaveChanged?
+      inspector._reconcileSplitGripNoSettle() for inspector in @columns()
+      InspectorBrowserWdgt.holding(@)?._noteFirstInspectorMayHaveChangedNoSettle()
     finally
       @_reconcilingSplitters = false
     return
 
-  # every splitter of mine that does not stand between two inspectors destroyed: one first among my
-  # cells, one following another splitter, and one after my last inspector
+  # every splitter of mine that does not stand between two columns destroyed: one first among my
+  # cells, one following another splitter, and one after my last column
   _dropStraySplittersNoSettle: ->
     kept = []
     for cell in @_myCells()
@@ -255,12 +215,12 @@ class InspectorRowWdgt extends ClippingWdgt
     last._fullDestroyNoSettle()  if last? and @_isMySplitter last
     return
 
-  # a splitter added between two of my inspectors that stand side by side among my cells
+  # a column divider added between two of my columns that stand side by side among my cells
   _addMissingSplittersNoSettle: ->
     previous = undefined
     for cell in @_myCells()
       if cell.showsSubject? and previous?.showsSubject?
-        splitter = new StackElementsSizeAdjustingWdgt()
+        splitter = new InspectorColumnDividerWdgt()
         @_addNoSettle splitter, atIndex: @children.indexOf(cell), layoutSpec: splitter.divisionBox()
       previous = cell
     return
@@ -270,13 +230,13 @@ class InspectorRowWdgt extends ClippingWdgt
   # left (my own reconcile's removals and my teardown included), is told so first, and parts from the
   # split button joined to it (StackElementsSizeAdjustingWdgt.noteLeftMyStack): it divides nothing of
   # mine. The rest not while I am destroyed or being destroyed as a whole, and not while my own
-  # reconcile is removing it: an inspector that LEFT -- not destroyed, not back in me -- re-derives
-  # its split button where it stands; then my splitters are reconciled, which joins each inspector's
-  # button to the splitter before it.
+  # reconcile is removing it: an inspector that is no column of mine -- it LEFT me, not destroyed, or
+  # came back into me free-floating -- re-derives its split button where it stands; then my splitters
+  # are reconciled, which joins each column's button to the splitter before it.
   _reactToChildRemoved: (child) ->
     child.noteLeftMyStack?()
     return if @destroyed or @_beingFullDestroyed or @_reconcilingSplitters
-    child._reconcileSplitGripNoSettle?()  unless child.destroyed or child.parent is @
+    child._reconcileSplitGripNoSettle?()  unless child.destroyed or child in @columns()
     @_reconcileSplittersNoSettle()
 
   # Destroyed as a whole: flagged at entry, so every child my teardown destroys finds me being torn
@@ -284,43 +244,3 @@ class InspectorRowWdgt extends ClippingWdgt
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true
     super
-
-  # A choice that leaves me narrower than my cells' least widths together WIDENS my WINDOW: that is
-  # the trigger, so a window a person narrowed, but kept at least that wide, keeps its width. By how
-  # much: when the choice ADDED an inspector, up to my width with that one at its NORMAL width
-  # (_normalWidthOf) and every other cell at its desired width, the default window's own layout of
-  # them; when it added none, by what my least width lacks. Never further than the desktop's right
-  # edge: past that, my inspectors narrow (the stack's first regimes), and the added one takes what the
-  # room gives, between its least and its normal width. Only a window whose whole content I am, and
-  # which stands on the desktop (its parent is the world), where its bounds are the desktop's own px; a
-  # window in any other holder -- a panel, a document, a dock, a transform island -- is that holder's
-  # to place and size, and my inspectors narrow in it. The frame's own core, inside my choice's settle:
-  # a public setExtent here would be a second settle. My least and desired widths read division boxes,
-  # which are fields, so they are current inside the very settle that added an inspector; my width is
-  # the one I was given.
-  _widenMyWindowToFitNoSettle: (added) ->
-    least = @getRecursiveMinDim().x
-    return unless least > @width() and @parent?.isMyContents?(@) and @parent.parent is world
-    wanted = if added? then @getRecursiveDesiredDim().x + (@_normalWidthOf added) - added.getDesiredDim().x else least
-    room = Math.max 0, world.right() - @parent.screenBounds().right()
-    widening = Math.min wanted - @width(), room
-    return unless widening > 0
-    @parent._setExtentNoSettle @parent.extent().add new Point widening, 0
-    return
-
-  # THE NORMAL WIDTH of an inspector a choice added: a list's, its desired width; an editor's (its
-  # subject a member, the question InspectorWdgt builds an editor by), the width the DEFAULT window
-  # gives it -- that window's row width (defaultExtent less my window's chrome across, the frame's own
-  # statement: extentWrappingPayloadAt) less what stands left of the editor there, the inspector it was
-  # chosen in at its desired width and the splitter between them: 758 - 372 - 12 = 374 beside a
-  # widget's member list. Never less than its desired width. Asked by the widening, while my window
-  # holds me.
-  _normalWidthOf: (added) ->
-    desired = added.getDesiredDim().x
-    return desired unless added.inspectedObject?.editsAsAMember?()
-    mine = @inspectors()
-    left = mine[mine.indexOf(added) - 1]
-    splitter = @splitterBefore added
-    return desired unless left? and splitter?
-    defaultRowWidth = InspectorRowWdgt.defaultExtent().x - @parent.extentWrappingPayloadAt(new Point 0, 0).x
-    Math.max desired, defaultRowWidth - left.getDesiredDim().x - splitter.getDesiredDim().x

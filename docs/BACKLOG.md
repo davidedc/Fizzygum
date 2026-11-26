@@ -280,7 +280,7 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 - [ ] **A view attached back onto its inspector shares the height with its place** — a view a person took out and attached back stands beside the place kept for it (`InspectorWdgt.viewsPlace`) — reachable in dev mode, low.
 - [ ] **A row whose only inspector was picked up stays a blank window titled "Inspector"** — "Pick up" of the one inspector leaves its window holding an empty row — reachable in dev mode, low.
 - [ ] **A split button in a header band a person rotates maps its pointer in another plane** — found by reading in U2's review — reachable in dev mode, low.
-- [ ] **A double-click in a list standing in no row cannot complete** — a member list a person picked out opens its first click's choice in a window of its own (`InspectorRowWdgt.showChoice`), the family of the owner's A4 — reachable in dev mode, low.
+- [ ] **A double-click in a list standing in no row cannot complete** — a member list a person picked out opens its first click's choice in a window of its own (`InspectorBrowserWdgt.showChoice`), the family of the owner's A4 — reachable in dev mode, low.
 - [ ] **Unsaved typing that a re-filter takes away cannot be undone** — a filter toggle removes the editor, so the member chosen again opens a fresh editor with a fresh undo history (ruled in U2's preparation, stated in no doc) — reachable, low.
 - [ ] **A split button dropped on the desktop takes no drag** — picked out of its header and dropped there, only its developer menu removes it — reachable in dev mode, low.
 - [ ] **The scroll thumb of a 1000-row list is a dot about 3 px long** — a viewport's thumb has no least length (`Widget.prototype`'s Instances) — reachable, low.
@@ -294,7 +294,6 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 
 ### `plans/inspector-browser-plan.md`
 AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; NOTHING BUILT. The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
-- [ ] U1: the set of columns scrolls sideways and stops on a column, and the tool is a browser that owns the rule of choice; the window widening itself and the trading of width between columns deleted (§5.3, §5.4).
 - [ ] U2: the body below the lists as a setting of the browser, the where-you-are band, the default window, the class named by a plain button (§5.4 to §5.6, §5.13).
 - [ ] U3: every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule; the four marks are placeholders (§5.7).
 - [ ] U4: "Open in a new inspector" by a menu row and by Cmd-click (§5.8).
@@ -306,6 +305,9 @@ AUTHORED 2026-11-26 after five prototype rounds on the real build and four spike
 - [ ] U10: finding a class or a member by name: two candidates on a review page for the owner to choose between (decision D7); the build follows the choice.
 - [ ] U11: close: the docs, the churn set, this file, the review page.
 - [ ] §11: writing an edit back to a `.coffee` file; duplicate and rename of a class; a class's statics as a second face of its column; the rest of the tree's categories (the gate's budget, falling); the final icons of the four verbs.
+- [ ] **The set can rest off a column edge after its edges move** — a window narrowed while the set stands at an end no column edge marks, a divider's drag, or a view picked out of a column left of the view leaves it starting mid-column until the next notch or stroke — reachable, low.
+- [ ] **A double-click on a member in the set's rightmost column can miss** — while the body stands beside the lists, the editor a first click adds can make the set scroll to show it, so the second click meets what slid under the pointer and nothing drills; the body below (U2) removes the cause — reachable, low.
+- [ ] **A trackpad's sideways swipe moves the set a column per wheel event** — a swipe is many small wheel events and a notch moves one rest point whatever its size, as a sheet's does, so a gentle swipe races across the columns — reachable on a trackpad, low.
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.

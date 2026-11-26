@@ -184,7 +184,7 @@ part at all" — a `lean` build did not ship the inspectors, and there is genuin
 `_isLoaded` (private; `whenAllLoaded` is its only caller) asks "is it here YET". A class-existence
 test answers NEITHER for a lazy part: an undefined class means both at once, and they want opposite
 responses. That is why `Widget.spawnInspector` asks `world.parts.isAvailable "meta-tools"` and then
-awaits, rather than guarding on `InspectorRowWdgt?`.
+awaits, rather than guarding on `InspectorBrowserWdgt?`.
 
 ⚠⚠ **REQUIRED versus OPTIONAL is a real decision at every door, and getting it wrong is SILENT.**
 Two await idioms, and the difference is what should happen on a profile that ships none of the parts

@@ -1,6 +1,7 @@
-# AN INSPECTOR: one subject (inspectedObject), and one VIEW of it at a time. In a row of inspectors
-# (InspectorRowWdgt) I am one column: my subject was chosen in the inspector to my left, and what is
-# chosen in me goes to the one on my right (InspectorRowWdgt.showChoice).
+# AN INSPECTOR: one subject (inspectedObject), and one VIEW of it at a time. In an inspector browser
+# (InspectorBrowserWdgt) I am one of its sequence, a column of its set (InspectorRowWdgt): my subject
+# was chosen in the inspector to my left, and what is chosen in me goes to the one on my right
+# (InspectorBrowserWdgt.showChoice).
 #   Top to bottom, the elements of a vertical DIVISION stack (StackLayoutEngine), so I have no layout
 # of my own: my HEADER band (BandWdgt) -- my subject's name, and a chip naming the class it is made
 # by, whose press chooses that class --, my CHOOSER band when my subject offers more than one view,
@@ -13,31 +14,31 @@
 # value are each shown the one way.
 #   My CHOOSER is a band of toggles (LabelledToggleWdgt), one per view, the shown one ON: a press on
 # another shows that view in place of mine, a press on the lit one has my view read its list again,
-# and either then closes what stands on my right (showViewNamed). A switch keeps my WIDTH: the view it
-# builds states the least and desired width I had (_showViewNoSettle), so the splits beside me do not
-# move because of it.
+# and either then closes what stands on my right (showViewNamed). A switch writes no width of mine:
+# a width a person stated stands as it is, and with none I take my natural width, my new view in it.
 #   A view a person takes OUT of me leaves its PLACE in me (viewsPlace): a spring of my stack that
-# paints nothing (BandSpaceWdgt), desiring the width my view desired. A division stack hands ALL its
-# spare room to its cells, by their margins of most over desired, and by their desired sizes when
-# no cell has a margin (StackLayoutEngine, its third regime), and its least and desired widths are
-# the largest of its cells': with my pinned header my only cell, my header would stretch down my
-# whole height, and my row would lay me out at my header's width. The place takes my spare height as
-# my view did and keeps the width my view desired, so a row at least as wide as its inspectors desire
-# lays me out as it did while my view stood in me, my share of its spare unchanged (my own box keeps
-# the weight my view gave it). The place claims no LEAST width: a hole has nothing a narrow row could
-# cut, so my least width is my header's, and a narrower row gives up the hole's room before it
-# squeezes a control.
-#   My header opens with a SPLIT BUTTON (SplitGripWdgt) exactly while a splitter stands before me in
-# my row: the touch-sized way to move that split, a tab joined to that splitter, the two of them
-# painted as one piece. The button is DERIVED from where I stand, never told: my row reconciles it at
+# paints nothing (BandSpaceWdgt), 1 px each way, as a band's spring is. A division stack hands ALL
+# its spare room to its cells, by their margins of most over desired, and by their desired sizes
+# when no cell has a margin (StackLayoutEngine, its third regime): with my pinned header my only
+# cell, my header would stretch down my whole height. The place takes my spare height as my view
+# did, and claims none of my width, so my natural width is then my bands'.
+#   MY WIDTH IN A SET is my own answer (getDesiredDim, getMaxDim), never my division box's: my
+# NATURAL width, what my cells desire (my header's, my chooser's, my view's), or the width a person
+# STATED (statedWidth) by dragging the column divider on my right, never below my least; and as my
+# most width that same width, unless my set says I take its spare room (InspectorRowWdgt.takesMySlack:
+# its last column does).
+#   My header opens with a SPLIT BUTTON (SplitGripWdgt) exactly while a column divider stands before
+# me in my set (InspectorColumnDividerWdgt, which sizes the column on MY left): the touch-sized control
+# of that divider, a tab joined to it, the two of them painted as one piece, a drag on either sizing
+# that column. The button is DERIVED from where I stand, never told: my row reconciles it at
 # every choice (an inspector a choice adds among them) and whenever a child leaves the row
 # (_reconcileSplitGripNoSettle, which also introduces the button to that splitter) -- a widget a
 # person attaches is no moment of its own, and waits for the next of those -- and so do a copy of me
 # and a restore of me, which can stand in no row. A button a person took out of my header comes back
 # at my row's next reconcile.
-#   In a row I paint nothing: my bands paint their rules, and the row paints the body under all of us
-# (inspectorBodyFill). Picked out of my row I paint that body myself, and my views stand on it either
-# way (InspectorBodyAppearance, laysTheInspectorBodyUnderItsParts).
+#   In a row I paint nothing: my bands paint their rules, and the browser my row stands in paints the
+# body under all of us (inspectorBodyFill). Picked out of my row I paint that body myself, and my views
+# stand on it either way (InspectorBodyAppearance, laysTheInspectorBodyUnderItsParts).
 class InspectorWdgt extends Widget
 
   # the object I am a view OF, and deliberately not called `target`: `@target` elsewhere means
@@ -77,33 +78,28 @@ class InspectorWdgt extends Widget
   # am I being destroyed as a whole (_fullDestroyNoSettle)? Then my view leaving me is my teardown,
   # and no place is kept for it (as my row's flag, InspectorRowWdgt)
   _beingFullDestroyed: undefined
+  # THE WIDTH A PERSON STATED for me, in whole px, or undefined: my natural width then, what my cells
+  # desire (getDesiredDim). Written only by a drag of the column divider on my right, or of its split
+  # button (_setColumnWidthDeferredSettle). Mine for my whole life, a person's choice nothing derives, so
+  # a copy and a save carry it, and a switch of my view, a reload and a "Pick up" out of my set leave it
+  # as it is.
+  statedWidth: undefined
 
   # The subject is my identity, my one positional parameter.
-  #   MY OWN DIVISION BOX says how much of my row's SPARE width I take, and my VIEW decides it
-  # (rowSlackWeight): the weight times a spacer's spreadability, over a desired width of 1, is my most
-  # width, and a division row hands out its spare width in proportion to its cells' margins of most
-  # over desired (StackLayoutEngine, its third regime). Code is what wants width: a member editor asks
-  # a large weight and takes the spare, while a member list asks a small one and keeps the width its
-  # controls and names need, as a list column beside a code pane does. Every view a chooser of mine
-  # offers asks one weight, so a switch leaves my box as it is. My least and desired widths are my
-  # cells' -- my header's, my chooser's, and my view's or my view's place's -- which the stack derives;
-  # my box's own are no input while I have cells.
-  #   The margin is also what lets the split beside me move: a division row moves a split by trading
-  # the most widths of the cells on either side of it (StackElementsSizeAdjustingWdgt), so a person who
-  # drags it changes the two most widths, and the row then keeps their spare in that proportion as its
-  # window grows or shrinks, and across the choices that keep a view of the same kind on the far side
-  # of that split (InspectorRowWdgt._showNextToNoSettle, which reads what I gave away,
-  # mostWidthGivenAway, and has me give width up, _giveUpMostWidthNoSettle). My default box
-  # (_defaultBox) is set once my view exists, before any row adds me.
+  #   MY OWN DIVISION BOX, which my set adds me by, is no input to my width in a set (my header says
+  # what is), and its least and desired sizes are no input while I have cells: it is the plain box
+  # every part of the tool wears, least and desired 1 x 1, with a spacer's spreadability, because
+  # out of a set only a division stack a person puts me in (an "Edit layout" slot) reads my most
+  # width -- on the desktop, where a "Pick up" puts me, none does -- and there I take that stack's
+  # spare room as each view of mine takes the spare room of my own stack.
   constructor: (@inspectedObject) ->
     super()
     @appearance = new InspectorBodyAppearance @
     @_buildAndConnectChildren()
-    {least, desired, spreadability} = @_defaultBox()
-    @setMinAndMaxBoundsAndSpreadability least, desired, spreadability
+    @setMinAndMaxBoundsAndSpreadability (new Point 1, 1), (new Point 1, 1), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
 
-  # I lay the inspector's body under my views: the row I stand in paints it under me, and with no row
-  # I paint it myself (InspectorBodyAppearance), so a view of mine paints none of its own.
+  # I lay the inspector's body under my views: the browser of the row I stand in paints it under me,
+  # and with no row I paint it myself (InspectorBodyAppearance), so a view of mine paints none of its own.
   laysTheInspectorBodyUnderItsParts: -> true
 
   # MY SHADOW IS THE BODY'S BOX, my parts' silhouettes left out (my views' with them), while I paint the
@@ -115,28 +111,49 @@ class InspectorWdgt extends Widget
     else
       super
 
-  # MY DEFAULT BOX, its one statement: least and desired 1 px each way, so my cells' sizes are what my
-  # row reads, and my view's weight times a spacer's spreadability (my constructor says why).
-  _defaultBox: ->
-    one = new Point 1, 1
-    {least: one, desired: one, spreadability: @view.rowSlackWeight() * DivisionStackLayoutSpec.SPREADABILITY_SPACERS}
+  # MY DESIRED SIZE: my natural one, what my cells desire (my base's, which the stack derives), but
+  # across, while a person stated my width (statedWidth), that width, never below my least. Read by
+  # the division arrange of whatever holds me and by my set's measure
+  # (InspectorRowWdgt.scrolledContentMeasure). Collapsed, I desire nothing, stated or not (my base's
+  # answer).
+  getDesiredDim: ->
+    natural = super()
+    return natural  unless @statedWidth? and !@isInCollapsedSubtree()
+    new Point (Math.max @getMinDim().x, @statedWidth), natural.y
 
-  # THE MOST WIDTH I GAVE AWAY across the splits beside me: the most width my default box gives me
-  # less the one my own box holds. A drag on a split trades most width between the two cells beside it
-  # (StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt), so this is my trades' sum, 0 when
-  # no split beside me was dragged, negative when I gained. The default is read through the box's own
-  # arithmetic (DivisionStackLayoutSpec.maxFor), never a second copy of it.
-  mostWidthGivenAway: ->
-    {desired, spreadability} = @_defaultBox()
-    (DivisionStackLayoutSpec.maxFor desired.x, spreadability) - @_divisionBoxOrDefaults().maxWidth
+  # MY MOST SIZE. Across: my desired width, unless my holder says I take its spare room
+  # (InspectorRowWdgt.takesMySlack: my set's last column does), and then a spacer's most over that
+  # width (DivisionStackLayoutSpec.maxFor, the house's spreadability arithmetic), so my set's division
+  # arrange hands me all the room beyond its cells' own widths. My holder is asked each time, never
+  # remembered: a choice or a "Pick up" that leaves another column last moves the spare room to it.
+  # Standing in a holder that answers no such question, my base's answer (my box's most width, at
+  # least my desired: my constructor says where that is read). Down: always my base's.
+  getMaxDim: ->
+    most = super()
+    takesTheSlack = @parent?.takesMySlack? @
+    return most  unless takesTheSlack?
+    desiredWidth = @getDesiredDim().x
+    width = if takesTheSlack then DivisionStackLayoutSpec.maxFor desiredWidth, DivisionStackLayoutSpec.SPREADABILITY_SPACERS else desiredWidth
+    new Point width, most.y
 
-  # MY MOST WIDTH LESS `width`: what I give up to the cell across a split from me, as a drag on it
-  # trades (InspectorRowWdgt._removeInspectorsNoSettle says which split and why). Only my width: a row
-  # divides its width, so my most height stays what my box holds, my default box's. A core: my row
-  # calls it inside its choice's settle.
-  _giveUpMostWidthNoSettle: (width) ->
-    box = @_divisionBoxOrDefaults()
-    @_setMaxDimNoSettle new Point (box.maxWidth - width), box.maxHeight
+  # MY WIDTH STATED, by a drag-move STREAM: the column divider on my right being dragged, or its split
+  # button (InspectorColumnDividerWdgt.nonFloatDragging, SplitGripWdgt.nonFloatDragging: the stream
+  # handlers check-layering [O] lets call a *DeferredSettle entrypoint). An entrypoint of the private
+  # deferred-settle family Widget._setMaxDimDeferredSettle heads: my core's effect, its layout flush
+  # riding the one end-of-cycle settle (world.deferredSettlingEnabled off: settled at each call), both
+  # branches reaching the core directly.
+  _setColumnWidthDeferredSettle: (width) ->
+    if world?.deferredSettlingEnabled
+      @_deferredSettleDeclare => @_setColumnWidthNoSettle width
+    else
+      @_settleLayoutsAfter => @_setColumnWidthNoSettle width
+
+  # My stated width written (statedWidth), and my layout invalidated, which climbs to my set, whose
+  # measure reads my desired width. Settles nothing. Nothing to do when that width is stated already.
+  _setColumnWidthNoSettle: (width) ->
+    return if width is @statedWidth
+    @statedWidth = width
+    @_invalidateLayout()
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled): my header, my chooser when my subject offers more than one view, then my first view, put
@@ -188,10 +205,8 @@ class InspectorWdgt extends Widget
       views.push ["Subclasses", "_newObjectList", "_subclassesOfMySubject"]
     views
 
-  # MY VIEWS' BUILDERS, named by my views' table (_views) and each handed a row's derivation name and
-  # `kept`, the widths I had (B4: my least and desired width as my row read them just before a switch,
-  # _showViewNoSettle). An object list states those widths, so a switch leaves my width as it was; a
-  # member list and a member editor take neither, and state their own.
+  # MY VIEWS' BUILDERS, named by my views' table (_views) and each handed a row's derivation name,
+  # which only a list of objects takes.
   _newMemberEditor: ->
     new MemberEditorWdgt @inspectedObject
 
@@ -200,8 +215,8 @@ class InspectorWdgt extends Widget
 
   # a LIST OF OBJECTS my subject holds in one way: the ones `derivationName` (an ObjectListWdgt method,
   # named by a row of my views' table) lists
-  _newObjectList: (derivationName, kept) ->
-    new ObjectListWdgt @inspectedObject, derivationName, leastWidth: kept?.least, desiredWidth: kept?.desired
+  _newObjectList: (derivationName) ->
+    new ObjectListWdgt @inspectedObject, derivationName
 
   # MY CHOOSER BAND, written as a member list's toggles band is: toggleBandInset in, one toggle per view
   # (its face and its argument the view's title, its action showViewNamed), toggleBandGap between them,
@@ -228,14 +243,14 @@ class InspectorWdgt extends Widget
   # A TOGGLE OF MY CHOOSER PRESSED (slot 3 is its argument, the view's title; slots 1 and 2, the toggle
   # and its subject, carry nothing I need): the view of that title in place of mine, or, the lit one
   # pressed, my view's list read again, in ONE settle (_showViewNoSettle); then, after that settle, what
-  # stood on my right goes, as after any choice of no subject in me (InspectorRowWdgt.showChoice) --
-  # after a switch that threw too, which leaves me showing my first view (_showViewNoSettle says how):
-  # the row's settle then lays that out before the error goes on.
+  # stood on my right goes, as after any choice of no subject in me (InspectorBrowserWdgt.showChoice)
+  # -- after a switch that threw too, which leaves me showing my first view (_showViewNoSettle says
+  # how): the browser's settle then lays that out before the error goes on.
   showViewNamed: (ignored, ignored2, title) ->
     try
       @_settleLayoutsAfter => @_showViewNoSettle title
     finally
-      InspectorRowWdgt.showChoice @, undefined
+      InspectorBrowserWdgt.showChoice @, undefined
 
   # DOES MY VIEW STAND IN ME? It does while a child of mine holds it: my view itself, or a transform
   # island that wraps it in place, having taken its slot and its spec (_childHoldingMyView). The one
@@ -259,12 +274,9 @@ class InspectorWdgt extends Widget
   #   the LIT toggle, while my view stands in me: a place left standing beside it (my view came back to
   #   me) goes first, then my view reads its list again (_rereadNoSettle: a member list re-filters,
   #   keeping its filters; an object list derives its list again);
-  #   any other toggle, or the lit one while my view stands in no child of mine: my WIDTH, read off me
-  #   FIRST, while what I show still stands in me -- my least and desired width as my row reads them (my
-  #   header's, my chooser's, my view's or its place's), handed to the view I build, which states them,
-  #   so my widths stay what they were and the splits beside me do not move because of the switch;
-  #   then the view put in me afresh (_replaceViewNoSettle): what shows my view in me goes first, my
-  #   view let go of BEFORE it goes, and the fresh view is built only THEN;
+  #   any other toggle, or the lit one while my view stands in no child of mine: the view put in me
+  #   afresh (_replaceViewNoSettle): what shows my view in me goes first, my view let go of BEFORE it
+  #   goes, and the fresh view is built only THEN;
   #   and my chooser shown the view.
   #   A VIEW THAT CANNOT BE BUILT LEAVES ME WHOLE. Building or re-reading a view can throw (a derivation
   #   meeting a listed widget whose injected colloquialName answers no string), and by then what it
@@ -272,8 +284,8 @@ class InspectorWdgt extends Widget
   #   my title and my toggles naming it, and the error goes on, to be told as any thrown gesture is (the
   #   world's input catch: the console's INPUT_ERROR line, the error log opened on it). If the view that
   #   threw IS my first, nothing more is tried, and the error goes on as it is.
-  #   My box is not written: every view a chooser offers asks one weight (rowSlackWeight), so my default
-  #   box, and every trade of most width a split made with me, stand as they were.
+  #   No width of mine is written: a width a person stated (statedWidth) stands, and with none I take
+  #   my natural width, the fresh view in it.
   _showViewNoSettle: (title) ->
     rereads = title is @shownViewTitle and @_myViewStandsInMe()
     row = (each for each in @_views() when each[0] is title)[0]
@@ -283,8 +295,7 @@ class InspectorWdgt extends Widget
         @_removeMyPlaceNoSettle()
         @view._rereadNoSettle()
       else
-        kept = least: @getMinDim().x, desired: @getDesiredDim().x
-        @_replaceViewNoSettle row, kept
+        @_replaceViewNoSettle row
     catch error
       first = @_views()[0]
       throw error  if title is first[0]
@@ -293,16 +304,16 @@ class InspectorWdgt extends Widget
       throw error
     @_reflectViewOnToggles()
 
-  # A VIEW PUT IN ME, the view of `row` (a row of my views' table), handed `kept` when a switch read my
-  # widths: what shows my view in me goes first (_removeWhatShowsMyViewNoSettle, which answers where
-  # it stood), and only THEN is the fresh view built, and added there: a view derives its list as it is
-  # built (ObjectListWdgt), and a list derived while what it replaces stands lists that too (a class's
-  # instances include the old view's own parts), though it is destroyed a moment later. The fresh view
-  # is my view, and its title the one I show.
-  _replaceViewNoSettle: (row, kept) ->
+  # A VIEW PUT IN ME, the view of `row` (a row of my views' table): what shows my view in me goes first
+  # (_removeWhatShowsMyViewNoSettle, which answers where it stood), and only THEN is the fresh view
+  # built, and added there: a view derives its list as it is built (ObjectListWdgt), and a list
+  # derived while what it replaces stands lists that too (a class's instances include the old view's
+  # own parts), though it is destroyed a moment later. The fresh view is my view, and its title the
+  # one I show.
+  _replaceViewNoSettle: (row) ->
     [title, builder, derivationName] = row
     at = @_removeWhatShowsMyViewNoSettle()
-    @view = @[builder] derivationName, kept
+    @view = @[builder] derivationName
     @shownViewTitle = title
     @_addNoSettle @view, atIndex: at, layoutSpec: @view.divisionBox('y')
     return
@@ -365,22 +376,20 @@ class InspectorWdgt extends Widget
   # MY VIEW LEFT ME -- picked out, carried off by a drag, deleted into the bin, attached elsewhere,
   # destroyed, itself or the island that wrapped it in place: heard here, the one seat every door
   # reaches, inside the settle of the verb that took it. Its PLACE is kept (my header says why), once:
-  # a SPRING of my stack (BandSpaceWdgt), its desired width the one my view desired as my stack read it
-  # (getDesiredDim), its desired height 1 px and its spreadability a spacer's, so it takes my spare
-  # height; it stands where my view stood -- right after the last of my bands that is still mine
-  # (_indexAfterMyBands). A view destroyed whole answers after its own parts are gone, so a member list
-  # then desires only its own box's 1 px, and my width falls to my header's. Only a view that LEFT: one
-  # that still stands in me (_myViewStandsInMe: re-added to me, or wrapped in place by a transform
-  # island that takes its slot and its spec) still stands for itself; while a place stands nothing more
-  # is kept; and a switch lets go of my view before it goes (_removeWhatShowsMyViewNoSettle), so I have
-  # none then. Not once I am destroyed, nor while I am torn down whole (the flag): nothing is built
-  # into a dying inspector. Cores only: a space settles nothing as it is made, and the verb that took my
-  # view owns the settle.
+  # a SPRING of my stack (BandSpaceWdgt), desiring 1 px each way, as a band's spring does, with a
+  # spacer's spreadability, so it takes my spare height and claims none of my width; it stands where
+  # my view stood -- right after the last of my bands that is still mine (_indexAfterMyBands). Only a
+  # view that LEFT: one that still stands in me (_myViewStandsInMe: re-added to me, or wrapped in place
+  # by a transform island that takes its slot and its spec) still stands for itself; while a place
+  # stands nothing more is kept; and a switch lets go of my view before it goes
+  # (_removeWhatShowsMyViewNoSettle), so I have none then. Not once I am destroyed, nor while I am torn
+  # down whole (the flag): nothing is built into a dying inspector. Cores only: a space settles nothing
+  # as it is made, and the verb that took my view owns the settle.
   _reactToChildRemoved: (child) ->
     return if @destroyed or @_beingFullDestroyed
     return if !@view? or @viewsPlace? or @_myViewStandsInMe()
     return unless child.isAncestorOf @view
-    @viewsPlace = new BandSpaceWdgt @view.getDesiredDim().x, 1, springs: true
+    @viewsPlace = new BandSpaceWdgt 1, 1, springs: true
     @_addNoSettle @viewsPlace, atIndex: @_indexAfterMyBands(), layoutSpec: @viewsPlace.divisionBox('y')
     return
 
@@ -390,10 +399,11 @@ class InspectorWdgt extends Widget
     @_beingFullDestroyed = true
     super
 
-  # MY SUBJECT CHOSEN AGAIN (InspectorRowWdgt.showChoice, which asks only while I show it, my view
+  # MY SUBJECT CHOSEN AGAIN (InspectorBrowserWdgt.showChoice, which asks only while I show it, my view
   # standing in me): my view takes it back -- a member editor puts its member's text back over what is
   # typed, as one step of its undo history; a member list chooses no row of its own any more, since
-  # what stood on its right for its choice has gone. A core: the row calls it inside its one settle.
+  # what stood on its right for its choice has gone. A core: the browser calls it inside its one
+  # settle.
   _reloadNoSettle: ->
     @view._reloadNoSettle()
     return
@@ -425,19 +435,20 @@ class InspectorWdgt extends Widget
   # So my view drops its own choice first, if it shows one: that choice stands on my right no more.
   chooseMyClass: ->
     @view?.clearChoice?()
-    InspectorRowWdgt.showChoice @, @_classAbove()
+    InspectorBrowserWdgt.showChoice @, @_classAbove()
 
-  # The splitter that stands before me in my row, or undefined: read off my row's children each time
-  # I am asked (InspectorRowWdgt.splitterBefore), never stored, so a split button never drags the
-  # splitter of a row I am not in. Only a row answers: anywhere else (a copy of me, standing alone; a
+  # The column divider that stands before me in my set, or undefined: read off my row's children each
+  # time I am asked (InspectorRowWdgt.splitterBefore), never stored, so a split button never drags the
+  # divider of a set I am not in. Only a row answers: anywhere else (a copy of me, standing alone; a
   # transform island turning me) none stands before me.
   _splitterBeforeMe: ->
     @parent?.splitterBefore? @
 
-  # THE SPLITTER `button` MOVES, asked by a split button as it is dragged (SplitGripWdgt): the splitter
-  # before me, exactly while `button` is my own split button and LEADS my header (_showsMySplitGrip).
-  # Any other button moves none -- a stray a person put after my title, before my next reconcile lets
-  # go of it, or one standing in another inspector's header -- so a drag on it moves nothing.
+  # THE DIVIDER `button` DRAGS, asked by a split button as it is dragged and as it is painted
+  # (SplitGripWdgt): the column divider before me, which sizes the column on my left, exactly while
+  # `button` is my own split button and LEADS my header (_showsMySplitGrip). Any other button drags none
+  # -- a stray a person put after my title, before my next reconcile lets go of it, or one standing in
+  # another inspector's header -- so a drag on it moves nothing.
   splitterMovedBy: (button) ->
     @_splitterBeforeMe()  if button is @splitGrip and @_showsMySplitGrip()
 

@@ -24,7 +24,7 @@
 # `Math.max` the compiled text of the function it names). Another member gets another editor, with a
 # history of its own, so no undo brings back a text of another member's that a Save would write into
 # this one.
-#   I stand on the body of the row of inspectors that holds me: my code area wears the inspector's
+#   I stand on the body of the inspector browser that holds me: my code area wears the inspector's
 # pane roles, no fill and no border, and the rules between me and my neighbours are theirs and the
 # bands'. Standing anywhere else -- a person took me out of my inspector -- I paint that body myself,
 # under my code area and my footer's rule (InspectorBodyAppearance, in place of the seam rules alone
@@ -61,15 +61,9 @@ class MemberEditorWdgt extends CodeAreaWdgt
     else
       super
 
-  # HOW MUCH OF ITS ROW'S SPARE WIDTH MY INSPECTOR TAKES, by weight (InspectorWdgt sets its own most
-  # width from it): nearly all of it, since code is what wants width. My inspector's most width is
-  # 1 + 100 x 1e6 = 100,000,001 px, ten thousand times a member list's weight, so beside one I take all
-  # its row's spare but under half a px of it (MemberListWdgt.rowSlackWeight has the arithmetic).
-  rowSlackWeight: -> 100
-
   # My code area, as the editable variant builds it (CodeAreaWdgt), its text my member's, then dressed
   # in the inspector's pane roles in place of the code pane's (ViewportWdgt.wearPaneRoles, read as it
-  # paints and kept by name), so the row's body shows through it as through a member list. Then my
+  # paints and kept by name), so the browser's body shows through it as through a member list. Then my
   # Save, when my member is edited by one, and my code area's content check: my text is the text it
   # compares against, so it starts unmodified and the Save disabled.
   _buildAndConnectChildrenNoSettle: ->
@@ -127,11 +121,11 @@ class MemberEditorWdgt extends CodeAreaWdgt
       @_settleLayoutsAfter => @_reloadNoSettle()
     true
 
-  # MY MEMBER CHOSEN AGAIN (InspectorRowWdgt.showChoice, the subject my inspector already shows), or
-  # just saved, when what it shows is not the text typed (save): its text put back over whatever is
+  # MY MEMBER CHOSEN AGAIN (InspectorBrowserWdgt.showChoice, the subject my inspector already shows),
+  # or just saved, when what it shows is not the text typed (save): its text put back over whatever is
   # typed, as one step of my text's undo history, so the undo chord brings the typing back; that text
   # is then the text my code area compares against, so it reads unmodified and my Save disables. A
-  # core: the row calls it inside its one settle, my Save inside its own.
+  # core: the browser calls it inside its one settle, my Save inside its own.
   _reloadNoSettle: ->
     @textWidget._setTextNoSettle @memberRef.shownText()
     @textWidget.pushUndoState @textWidget.text.length

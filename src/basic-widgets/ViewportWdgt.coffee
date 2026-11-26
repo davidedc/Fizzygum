@@ -69,8 +69,9 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   scrollPolicy: 'auto'
 
   # Only the GENERIC viewport offers the crop⇄scroll flip in its menu:
-  # the dedicated subclasses (list, toolbar, text, stack, pop-up rows) design
-  # their scroll behavior in, so there the row would be menu rent plus a
+  # the dedicated subclasses (list, toolbar, text, stack, pop-up rows, an
+  # inspector browser's set) design their scroll behavior in, so there the
+  # row would be menu rent plus a
   # footgun (cropping an inspector's list pane hides properties with no cue).
   # Each opts out with a one-line reason at its own declaration.
   offersScrollPolicyToggle: true
@@ -687,10 +688,10 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # so a viewport simply not defining it is the opt-out)
 
   # Am I a content-sizing viewport — one whose content frame derives from a PURE measure
-  # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? The two dedicated
-  # subclasses (TextAreaWdgt / VerticalStackViewportWdgt) always
-  # are; a plain viewport is when text-wrapping. Class-level query, was two self-instanceof
-  # tests at the arrange site (type-test-elimination ε).
+  # of @contents's children (§4.1 Stage C, see _positionAndResizeChildren)? A subclass whose plane
+  # ALWAYS measures itself from its own children answers true at its own declaration (a text area's
+  # text, a stack's elements, an inspector browser's set of columns); a plain viewport is one while it
+  # wraps its text. A class-level query the arrange site asks, in place of a type test.
   _isContentSizing: ->
     @isTextLineWrapping
 
@@ -1027,7 +1028,9 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # origin), so the result is independent of where I am in the world -- a caller's scroll survives
   # my being moved/resized (e.g. the sample-slide edit->view container shift). Not `-whereTo.x/.y`
   # (absolute world coords): those only land right for a frame at the world origin -- the root
-  # of a real mis-scrolled-slide bug. SampleSlideApp is the sole caller.
+  # of a real mis-scrolled-slide bug. The public door to a scroll to a place: a holder pins my
+  # content where it wants it (SampleSlideApp), and a subclass brings a part of its plane into view
+  # through it (ListWdgt.scrollRowIntoView, InspectorRowViewportWdgt.revealColumn).
   #
   # CLAMPED like every other scroll path: the request is expressed as deltas and routed through
   # _scrollX/_scrollY, so a target past the content's edge stops AT the edge -- a raw move here let a
@@ -1491,13 +1494,17 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         @escalateEvent 'scrolledBy', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
-        @_scrollX x * WorldWdgt.preferencesAndSettings.wheelScaleX
+        @_scrollX @_wheelTravelX x
 
     if scrollbarJustChanged
       # layout-apply-sanctioned: scroll-input (wheel), determinism-exempt (residuals-audit fam 1)
       @_positionAndResizeChildren()
       @_reLayoutScrollbars()
-  
+
+  # a sideways notch's travel in _scrollX's steps: my wheel scale's share (a subclass may rest it on its own unit)
+  _wheelTravelX: (x) ->
+    x * WorldWdgt.preferencesAndSettings.wheelScaleX
+
 
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     if @takesOverAndMergesChildrensMenus

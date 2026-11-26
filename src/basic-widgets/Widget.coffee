@@ -2553,9 +2553,8 @@ class Widget extends TreeNode
   # Non-settling extent core (the setMaxDim/_setMaxDimNoSettle pattern): record @desiredExtent + invalidate,
   # but do NOT flush -- so the mutation rides an OUTER settle: the public setExtent's own (_settleLayoutsAfter),
   # the ONE end-of-cycle flush _setExtentDeferredSettle declares, or one already open around a core that
-  # resizes a widget (a frame re-wrapping its payload as it is grabbed, a row of inspectors widening its
-  # window inside its choice's settle). Code at event time, inside no settle, reaches it only through
-  # those two entrypoints.
+  # resizes a widget (a frame re-wrapping its payload as it is grabbed). Code at event time, inside no
+  # settle, reaches it only through those two entrypoints.
   # (The per-resize-step fractional remember that used to sit here recorded PRE-flush geometry -- the
   # staleness class the post-flush re-record drain fixed; the handle's release enqueue is the one
   # gesture record now, so the hook and its widgetStartingTheChange plumbing are deleted.)
@@ -4808,7 +4807,11 @@ class Widget extends TreeNode
     # drag of island content resolves the on-hand figure via ActivePointerWdgt.determineGrabs →
     # _resolvePickUpFigure — reuse the island when I am its sole content, else pick-out;
     # the old Phase-1 grabsToParentWhenDragged island-escalation was removed by 4D-2a.)
-    if @isFreeFloating()
+    #   The handles go on me while I am free-floating, unless my holder places me all the same,
+    # though no spec of mine says so (_placedByMyHolder?: an inspector browser's set, which its
+    # viewport commits whole at every arrange). Handles there would move and size what my holder
+    # places, so the climb goes on past me as it does past a widget a spec places.
+    if @isFreeFloating() and !@_placedByMyHolder?()
       # idempotent: this is reachable while my handles are already up (the
       # public method is callable without the menu-open teardown running in
       # between), and a repeat invocation must not stack a second identical
@@ -4923,17 +4926,18 @@ class Widget extends TreeNode
   # the single inspector entry point. Every inspect path routes here:
   # the world menu and widget context-menu "Inspect" items, the "Dev -> Inspect"
   # item (MenusHelper), and a text editor's "Inspect selection". It opens the
-  # inspector as a TOOL: a ROW of inspectors (InspectorRowWdgt), its first on the
-  # inspectee, in a window of the row's own extent, which supplies the chrome and
-  # the resizer. Whatever the inspectee is, the row is the one door: its inspector
-  # asks the member reference how its subject is edited (MemberRef.of: a class's
-  # prototype is edited as its class, through the class's meta-object), so no door
-  # picks a kind of inspector. A row stands with no window too (`world.add new
-  # InspectorRowWdgt target`), and is then resized by the halo, as any widget.
+  # inspector as a TOOL: a BROWSER of inspectors (InspectorBrowserWdgt), its first on
+  # the inspectee, in a window of the browser's own extent, which supplies the chrome
+  # and the resizer (InspectorBrowserWdgt.openInAWindowOn). Whatever the inspectee is,
+  # the browser is the one door: its inspector asks the member reference how its
+  # subject is edited (MemberRef.of: a class's prototype is edited as its class,
+  # through the class's meta-object), so no door picks a kind of inspector. A browser
+  # stands with no window too (`world.add new InspectorBrowserWdgt target`), and is
+  # then resized by the halo, as any widget.
   # The inspector is the LAZY `meta-tools` part, and these two methods are the only places core
   # reaches it. Two consequences, both deliberate:
   #
-  # ⚠⚠ 1. `if InspectorRowWdgt?` must never stand here. For an eager part that guard reads
+  # ⚠⚠ 1. `if InspectorBrowserWdgt?` must never stand here. For an eager part that guard reads
   # "this artifact does not have it, do nothing"; for a lazy one the class is equally undefined
   # merely because nobody has fetched it yet, so the guard would silently swallow the user's click
   # forever. The two cases need opposite responses, and only a PART-level question separates them:
@@ -4955,9 +4959,9 @@ class Widget extends TreeNode
   # appearance a world cycle later -- which the SystemTest suite measures (it drives the world cycle
   # by cycle, ../Fizzygum-tests/DETERMINISM.md), across the ~15 tests that open one.
   #   opts.member names a member to open the inspector ON: once the window stands, that member is
-  # chosen in it as a person's click on its row chooses it (InspectorRowWdgt.chooseMember), in the
-  # same call as the open and under the same guard. A member the inspectee does not answer chooses
-  # nothing, and the window stands with nothing chosen.
+  # chosen in it as a person's click on its row chooses it (InspectorBrowserWdgt.chooseMember), in
+  # the same call as the open and under the same guard. A member the inspectee does not answer
+  # chooses nothing, and the window stands with nothing chosen.
   spawnInspector: (inspectee, opts = {}) ->
     return unless world.parts.isAvailable "meta-tools"
     world.parts.whenAllLoaded ["meta-tools"], ->
@@ -4966,10 +4970,8 @@ class Widget extends TreeNode
         # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
         # layer) — one guard at the acting site covers both waits
         return if inspectee.destroyed
-        # the row states its own opening extent, and its window opens at it
-        row = new InspectorRowWdgt inspectee
-        world.openFrameWith row, row.extent(), world.hand.position().subtract(new Point 50, 100)
-        row.chooseMember opts.member  if opts.member?
+        browser = InspectorBrowserWdgt.openInAWindowOn inspectee
+        browser.chooseMember opts.member  if opts.member?
       if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
   # The console does NOT read the class member maps, so it needs the part but not the reflective

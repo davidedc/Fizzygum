@@ -1,16 +1,18 @@
 # Shared base for the small "layout-editing chrome" widgets -- the layout spacer
 # (LayoutSpacerWdgt), the element adder/droplet (LayoutElementAdderOrDropletWdgt),
-# and the stack-size adjuster (StackElementsSizeAdjustingWdgt) -- and of the split
-# button at the left end of an inspector's header, right of the adjuster standing
-# before that inspector (SplitGripWdgt, in the lazy 'meta-tools' part). My look is
-# my class's (createAppearance). The spacer and the adder wear the handles' look
-# (LayoutChromeAppearance): the layoutChromePlate* plate over the whole box, in the
-# look of my pointer state (below), and each one's glyph on it (_glyphOnMyPlate).
-# The adjuster and the split button wear a split's piece (SplitPieceAppearance): one
-# flat plate, and where the button joins the adjuster before its inspector, the two
-# are ONE piece, lit together (THE JOINED PIECE, below). The two that drag a split
-# show its resize cursor while the pointer is over them or drags them
-# (_resizeCursor, the hover trio below).
+# and the stack-size adjuster (StackElementsSizeAdjustingWdgt; the column divider
+# between two columns of an inspector browser's set is one, InspectorColumnDividerWdgt)
+# -- and of the split button at the left end of an inspector's header, right of the
+# column divider standing before that inspector (SplitGripWdgt; both in the lazy
+# 'meta-tools' part). My look is my class's (createAppearance). The spacer and the
+# adder wear the handles' look (LayoutChromeAppearance): the layoutChromePlate* plate
+# over the whole box, in the look of my pointer state (below), and each one's glyph on
+# it (_glyphOnMyPlate). The adjuster and the split button wear a split's piece
+# (SplitPieceAppearance): one flat plate, and where the button joins the divider before
+# its inspector, the two are ONE piece, lit together (THE JOINED PIECE, below). The two
+# that drag a split show its resize cursor while the pointer is over them or drags them
+# (_resizeCursor, the hover trio below), and KEEP the press that starts the drag
+# (pressBegan, below).
 #
 # Of the first three, only the stack-size adjuster is NOT layout-editing-only:
 # the halo's resize/move affordance inserts it between division siblings on their
@@ -68,6 +70,19 @@ class LayoutChromeWdgt extends Widget
   # the edited container's editing-amenity subtree, so the D21 walk would reach it). Same exemption as the
   # frame-bar chrome / handles / scrollbars; honored by ancestry at ActivePointerWdgt's focus-set sites.
   excludedFromEditorFocusTracking: -> true
+
+  # A PRIMARY PRESS ON ME (Widget.pressBegan says what a receiver answers). A piece that OWNS the
+  # drags starting on it (ownsDragsStartingOnMe: a split's adjuster, and the split button joined to
+  # one) takes the press as the start of that drag, in place, and KEEPS it, as a slider's thumb does
+  # (SliderButtonWdgt.pressBegan): it raises what it stands in, as every press does, and the press
+  # goes no further, so a pane around me that scrolls by a plain drag never takes my drag's stroke for
+  # a drag-scroll and scrolls under it. Every other piece (a spacer, an adder: neither owns a drag)
+  # passes the press on, as any widget does, so a finger's drag on it scrolls such a pane.
+  pressBegan: (ignored_pos) ->
+    if @ownsDragsStartingOnMe?()
+      @bringToForeground()
+      return false
+    super
 
   # A divider IS a division cell, and the adder/droplet/spacer carry division boxes too, but each box is
   # machinery working state, not a user knob: I offer no division-cell submenu

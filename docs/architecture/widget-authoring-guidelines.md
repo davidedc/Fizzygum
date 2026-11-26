@@ -1012,8 +1012,8 @@ until it is empty never meets a fresh part. Both such holders rebuild in `_react
 door reaches (every re-home and destroy of the holder's own child, inside the settle of the verb that took it):
 `FrameWdgt` (a window's content, keeping the window's size and, for a Maker, its mode) and
 `StretchableWidgetContainerWdgt` (a page). A holder whose parts are DERIVED from its other children re-derives them
-in the same seat, under the same flag: a row of inspectors its splitters, one between two inspectors and none
-elsewhere (`InspectorRowWdgt._reconcileSplittersNoSettle`), touching no child it does not derive them from and
+in the same seat, under the same flag: an inspector browser's set its column dividers, one between two inspectors and
+none elsewhere (`InspectorRowWdgt._reconcileSplittersNoSettle`), touching no child it does not derive them from and
 building nothing when nothing is out of place. `_reactToChildRemoved` hears only a DIRECT child's departure.
 
 ---

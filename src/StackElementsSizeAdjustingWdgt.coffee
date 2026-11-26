@@ -52,9 +52,11 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
   # A drag on me: re-apportion the split so my left edge lands EXACTLY where the pointer says. The
   # pointer is mapped into my plane on the line that reads it, my grab point taken off it, and the
-  # split this asks for is my query's (maxDimsPuttingMyLeadingEdgeAt, below), which the split button
-  # a finger drags asks too (SplitGripWdgt.nonFloatDragging): one solve, two handlers, each the mapper
-  # of its own pointer and the declared deferrer of its own stream.
+  # split this asks for is my query's (_maxDimsPuttingMyLeadingEdgeAt, below); I make its two writes
+  # myself, the declared deferrer of my own stream. (Between two columns of an inspector browser's set
+  # nothing is apportioned: the column divider there, InspectorColumnDividerWdgt, a kind of me, sizes
+  # the column on its left by a drag of its own, and the split button joined to it asks that divider's
+  # solve, never mine.)
   #
   # WHY ABSOLUTE, NOT INCREMENTAL. The old code integrated deltaDragFromPreviousCall, so every move
   # rejected or halved at a limit discarded that mouse travel FOREVER: drag past the bound and back and
@@ -82,7 +84,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # screenPointToMyPlane returns the point itself, so the dormant path needs no branch of its own.
     targetLeft = mainOf(@screenPointToMyPlane pos) - mainOf(nonFloatDragPositionWithinWdgtAtStart)
 
-    split = @maxDimsPuttingMyLeadingEdgeAt targetLeft
+    split = @_maxDimsPuttingMyLeadingEdgeAt targetLeft
     return unless split?
 
     # drag-move STREAM: the _-private deferred-settle entrypoint (restricted to stream handlers like this one by
@@ -98,8 +100,8 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # division cells flanking me and the max dims the split asks of them, as {before, beforeMax, after,
   # afterMax} -- or undefined when the split cannot move: no cell on one side of me, a holder outside
   # the third regime, or nothing to move once the move is clamped. A QUERY: it reads the cells' box
-  # FIELDS and changes nothing; each drag handler that moves a split (mine above, a split button's)
-  # makes the two max-dim writes itself. Solved in closed form, not approached by an empirical gain.
+  # FIELDS and changes nothing; my drag handler above, which asks it, makes the two max-dim writes
+  # itself. Solved in closed form, not approached by an empirical gain.
   #
   # WHY a closed form exists. A divider can only bite in the THIRD regime of the division arrange
   # (StackLayoutEngine.arrange, "max-margin fill": the min and the desired both fit) -- regimes 1
@@ -127,7 +129,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # reads only maxWidth/desired FIELDS, which update synchronously, and never the laid-out pixels -- so
   # it is exact at any cadence (0.00px at 1, 2, 5, 13 and 40 moves per layout). That trap is very likely
   # why this was incremental in the first place: deltas are immune to stale geometry too, they just drift.
-  maxDimsPuttingMyLeadingEdgeAt: (targetLeft) ->
+  _maxDimsPuttingMyLeadingEdgeAt: (targetLeft) ->
 
     # MY division axis: in an 'x' row I split widths dragging horizontally; in a 'y'
     # division stack I split heights dragging vertically. Same closed form, transposed —

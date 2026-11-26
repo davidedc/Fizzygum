@@ -363,7 +363,19 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
   commit's window-width floor and grow-to-fill are skipped, because those adjustments suit
   a `tight: false` plane and against a tight hug they manufacture a two-writer fight in any
   state where the viewport is transiently larger than the hug (measured: menu-compose and
-  duplication livelocks, the menu-sandwich dissolution's Phase 0).
+  duplication livelocks, the menu-sandwich dissolution's Phase 0). Its second user is an
+  inspector browser's SET (`InspectorRowWdgt`, the plane of `InspectorRowViewportWdgt`, a
+  content-sizing viewport that scrolls sideways only): an 'x' division row whose measure,
+  read from fields (every column at the width it answers, the last column the rest, as tall
+  as the viewport, widened while it overflows so the end of its scroll is a column's left
+  edge — unless its last column is wider than the viewport, which leaves the end where that
+  column's right edge meets the view's), is its whole frame. A division row arranges its cells in its OWN layout pass, so
+  it also declares `implementsDeferredLayout` true: the viewport commits a plane's frame
+  silently and schedules the plane's re-lay only for a plane that says so, and the set's
+  columns would otherwise stay placed for an old width whenever the viewport is itself
+  sized inside its browser's arrange. One writer: the row's own pass lands on the box the
+  viewport committed (measured over 865 window sizes and choices: the row's box
+  always its measure, every column where its fields say, no re-visit).
 
 For the boolean queries capability ABSENCE is the panel default — there are no
 base-class stubs; the measure alone has a real base implementation
@@ -393,7 +405,7 @@ does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` /
 ## Naming
 
 The construct family is role-named: `ViewportWdgt`, `ScrolledPaneWdgt`,
-`PopUpRowsViewportWdgt`, `VerticalStackViewportWdgt`, `TextAreaWdgt`,
+`PopUpRowsViewportWdgt`, `VerticalStackViewportWdgt`, `InspectorRowViewportWdgt`, `TextAreaWdgt`,
 `DocumentViewportWdgt`, and the already-role-named `ListWdgt`/`ToolbarWdgt`. "Scroll"
 survives only where it names actual scrolling (`_scrollX`, the scroll pins,
 `_reLayoutScrollbars`, `isMyScrollBar`). ⛔ "Frame" belongs to other constructs (the window

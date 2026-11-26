@@ -402,7 +402,8 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 
 // [O] the *DeferredSettle caller ALLOWLIST (Tier C, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §4).
 // A *DeferredSettle entrypoint (_setMaxDimDeferredSettle / _setExtentDeferredSettle / _moveToDeferredSettle / _setWidthDeferredSettle /
-// _setHeightDeferredSettle -- all _-private, restricted to stream handlers) DEFERS its layout SETTLE to the ONE
+// _setHeightDeferredSettle on Widget, and InspectorWdgt._setColumnWidthDeferredSettle, a column's stated width -- all _-private,
+// restricted to stream handlers) DEFERS its layout SETTLE to the ONE
 // end-of-cycle flush -- the field write is synchronous,
 // only the flush is deferred. That is byte-identical (render is once-per-frame after all events), hence sound,
 // ONLY for a per-event STREAM handler (a drag / scroll / key burst) draining many mutations in one frame that
@@ -411,8 +412,9 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 // the _deferredSettleDeclarationDepth / auditUndeclaredEndOfCycle machinery (WorldWdgt :90-98, Widget :3713) enforces
 // the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *DeferredSettle call as auto-declared
 // regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (HandleWdgt,
-// StackElementsSizeAdjustingWdgt and an inspector's split button, SplitGripWdgt, each name their drag handler
-// nonFloatDragging, so the one name covers the three callers). @-self / .-receiver scoped -- the callers are always direct; a comment or a string mentioning one
+// StackElementsSizeAdjustingWdgt, an inspector browser's column divider, InspectorColumnDividerWdgt, and the split button
+// joined to it, SplitGripWdgt, each name their drag handler nonFloatDragging, so the one name covers the four callers).
+// @-self / .-receiver scoped -- the callers are always direct; a comment or a string mentioning one
 // is blanked (lib/coffee-mask.js). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat
 // handler) adopts a *DeferredSettle entrypoint -- a discrete caller reaching for one is exactly the bug this catches.
 // The allowlist is keyed by caller METHOD NAME in any class, so an entry that excuses no call this run FAILS as

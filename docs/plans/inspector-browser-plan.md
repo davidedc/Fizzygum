@@ -121,6 +121,10 @@ words win):
 | L8 | "Open in a new inspector" by a menu row (right-click or a hold) AND by Cmd-click, on every thing whose press would add a column; the original stays as it was. No pop-out button in a header |
 | L9 | The object flows (a widget, its class, Instances, Subclasses, Children, a field holding an object) run in the same tool and shape |
 | L10 | Test churn, reference recapture and saved-world compatibility are not constraints (2026-11-24, standing) |
+| L11 | A choice that REMOVES columns leaves the set's scroll where the choice found it; a gap it leaves at the right closes at the next scroll or choice (2026-11-26, over the double-click a removal's clamp would break: §5.3; built in U2) |
+| L12 | The where-you-are band's labels are in SENTENCE case ("Class RectangleWdgt", "Child Rectangle 2"), data never re-cased; its buttons are the house's 36 px button in a 52 px band (2026-11-26) |
+| L13 | The strip of lists stands 312 px tall over the body below (a member list's three whole rows and most of a fourth; an object column's about two); a divider's drag sets it and it stays (2026-11-26) |
+| L14 | The marker gate's budget counts CLASSES holding an unmarked method, not methods (2026-11-26; §5.10) |
 
 **OPEN: ask the owner at the start. On "use the defaults", run on the default of each row.** D1 and D2 decide the
 arc's size; the rest are a pass of yes or no.
@@ -572,53 +576,69 @@ below" after seeing it).
 ### 5.3 The set that scrolls (U1)
 
 **The measure.** A column's width is a FIELD: its NATURAL width (what its cells desire: its header's, its
-chooser's, its view's) until a divider sizes it, then its STATED width (`InspectorWdgt.columnWidth`, never below
+chooser's, its view's) until a divider sizes it, then its STATED width (`InspectorWdgt.statedWidth`, never below
 the column's least width). Only the set's LAST column may take more than that. The set's width is the larger of its
 columns' and dividers' widths together and its viewport's width, then widened, when it overflows, so that its END
 is a column's left edge (the last column takes that slack too). Its height is its viewport's. That box is the
 row's measure, the row's own layout pass lands on it, and the row declares the measure to be its whole frame:
 
 ```coffee
-  # (InspectorRowWdgt, as its viewport's plane: the five declarations of the scrolled-content contract,
-  #  docs/architecture/viewports-and-planes.md)
-  arrangesOwnScrolledChildren: -> true          # my cells are a division row: the engine arranges them
-  viewportConstrainsMyWidth: -> false           # my width is my columns', not my viewport's
+  # (InspectorRowWdgt, as its viewport's plane: what it declares, as built)
+  scrolledContentMeasure: (viewWidth) ->        # read from fields and the viewport's size only
   scrolledContentMeasureIsMyFrame: -> true      # my measure is committed verbatim: no window floor, no grow-to-fill
-  managesOwnScrollPinning: -> true              # a resize keeps my scroll: the arrange's clamp owns it
-  scrolledContentMeasure: (ignored_widthHint) -> # my box at _wantedExtent(), read from fields only
+  implementsDeferredLayout: -> true             # my division row's own pass places my cells: a committed frame owes it
+  columnLefts: ->                               # where my columns stand, from fields: the measure, the rest points
+  takesMySlack: (column) ->                     # only my last column takes the spare room
+  # (InspectorRowViewportWdgt)
+  _isContentSizing: -> true                     # without it the measure is never asked
 ```
 
-The prototype's patch that proved it is `compare/probes/patches/scroll.js` (points 2 to 4 of its header) and
-`shape6.js` ("snapping on column edges"). It overrode `InspectorWdgt.getDesiredDim` / `getMaxDim` to state a
-column's width; the unit's research decides, with `docs/architecture/layout.md` §4.2 (the layout-spec family: knob
-versus record) in hand, whether the stated width is those two answers or the column's own division box. Either
-way it is a field, and a column picked out of the set keeps it.
+As built, the set is the ONE writer of its frame: it declares neither `arrangesOwnScrolledChildren` (the viewport
+would then call an arrange the row lacks: it throws) nor `viewportConstrainsMyWidth` nor `managesOwnScrollPinning`
+(inert on this plane); it declares `implementsDeferredLayout`, without which a frame the viewport commits silently,
+while the browser's own arrange sizes the viewport, leaves the columns placed for an old width. The column ANSWERS its
+own width (`InspectorWdgt.getDesiredDim` from `statedWidth`; `getMaxDim` asking its set `takesMySlack`), not its
+division box (the engine ignores a container cell's own least and desired). Measured over 865 window sizes and
+choices: the set's box always its measure, every column where `columnLefts` says, no re-visit. The prototype's
+two-writer patch (`compare/probes/patches/scroll.js`, `shape6.js`) proved the behaviour; it is no model for the code.
 
 **Scrolling.** Sideways only (the set's height is its viewport's, so there is no travel down). The REST POINTS are
-the columns' left edges up to the scroll's end. A sideways wheel notch moves one rest point and, at the end, passes
+0, the columns' left edges short of the scroll's end, and the end itself (`InspectorRowViewportWdgt._restOffsets`;
+the end is a column's left edge whenever the last column is no wider than the view). A notch's travel enters by ONE
+branch-free seam of the base, `ViewportWdgt._wheelTravelX` (`scrolledBy` stands at the complexity ceiling), and the
+scroll bar's own write, a wire's delivery onto the "scroll x" pin, rests too (`setScrollX`, the sheet's whole-cell
+precedent). A sideways wheel notch moves one rest point and, at the end, passes
 to the pane outside (the house's wheel rule). A drag comes to rest on the nearest rest point at the stroke's END
 event, never in a later frame (`ViewportWdgt._stopScrollStep` is where every scroll step ends; the momentum glide
 is already suppressed while a test plays). By touch a plain sideways drag anywhere on the columns scrolls the set
 (the direction latch: a list takes a vertical stroke, the set a sideways one). The scroll bar is no finger control.
 
-**A choice reveals its column** (`InspectorRowViewportWdgt.revealColumn inspector`): after the choice's settle the
-set scrolls the least way, to a rest point, that shows the column whole (its start, when it is wider than the
-view). A choice that removes columns scrolls back by the arrange's clamp alone.
+**A choice reveals its column** (`InspectorRowViewportWdgt.revealColumn inspector`, read from fields): after the
+choice's settle the set scrolls the least way, to a rest point, that shows the column whole (its start, when it is
+wider than the view). As built, `InspectorBrowserWdgt.showChoice` asks it (`revealLastColumn`) once `showNextTo` has
+returned: the thin-wraps convention keeps `showNextTo` the plain settle wrapper. A choice that removes columns scrolls
+back by the arrange's clamp alone in U1; **OVERTURNED for U2 by the owner (L11)**: the clamp slides the chooser under a
+double-click's pointer, so the set keeps its scroll where the choice found it.
 
 **The two hazards, each fixed where it lives and each with a control run** (`compare/probes/hazards.js` reproduces
 both):
 - a divider, or the split button joined to it, pressed inside a pane that scrolls by drag, lets the pane scroll
   under its own drag. Both KEEP the press (`pressBegan` answers false after `bringToForeground`, as
-  `HandleWdgt.pressBegan` does). The unit's research decides the home: `LayoutChromeWdgt`, so every division
-  stack's splitter in a scrolling pane is safe, unless a reader of that press turns up (grep every `pressBegan`
-  and every pane that hosts a division stack first);
+  `SliderButtonWdgt.pressBegan` does). As built the home is `LayoutChromeWdgt.pressBegan`, for a piece that owns
+  its drags (`ownsDragsStartingOnMe`: a splitter, a split button), so every division stack's splitter in a
+  scrolling pane is safe; a spacer and an adder own no drag and pass the press on as before (no reader of the kept
+  press was found);
 - on an ordinary viewport plane each inspector would be LOOSE content, and a mouse drag on a column's header would
   lift the column out of the set (`Widget._amIDirectlyInsideViewport`). The set's viewport answers
   `contentsPanelHoldsLooseContent` false, as `ListWdgt` does, so that drag moves the window as it does today.
 
-**The column divider** (`InspectorColumnDividerWdgt`). A drag sizes the column on its LEFT: that column's stated
+**The column divider** (`InspectorColumnDividerWdgt`, a kind of `StackElementsSizeAdjustingWdgt`: the halo's
+"Resize/move…" tests a neighbour for that class, and a sibling class would get a trading adjuster inserted beside
+it; its box exactly its thickness, spreadability 0). A drag sizes the column on its LEFT: that column's stated
 width follows the pointer's travel since the drag began, from the width it had then, floored at its least width;
-the columns right of it shift. The solve reads two things fixed at the drag's start (the pointer's place in the
+the columns right of it shift. The ONE seam is three queries on the divider (`dragPlane`, `columnDragAnchorAt`,
+`columnWidthDraggedTo`) that both handlers ask, each mapping its own pointer and writing the column
+(`_setColumnWidthDeferredSettle`) itself. The solve reads two things fixed at the drag's start (the pointer's place in the
 VIEWPORT's plane, the column's width), never the row's place under the pointer, so a drag at the scroll's far end
 cannot run away as the clamp slides the plane (RESEARCH Q3b's inferred hazard; the unit proves it by a run at the
 far end). The split button moves the same split through ONE seam on the divider that both drags use (the earlier
@@ -631,10 +651,12 @@ changed in what it does for any other stack.
 `_normalWidthOf`; `InspectorWdgt._defaultBox`, `mostWidthGivenAway`, `_giveUpMostWidthNoSettle`; `rowSlackWeight`
 on the three views; the heir rule and `sameKind`; `ObjectListWdgt.leastWidthKept` / `desiredWidthKept` and the
 `kept` a view switch hands (a switch keeps the column's own width field); the width a view's place desires (the
-place stays: it still takes the column's spare height). The row stops being a `ClippingWdgt`: its viewport clips.
+place stays: it still takes the column's spare height); `dressAsAViewsList`'s two width parameters; the split
+button's trading drag (the splitter's own solve, now `_maxDimsPuttingMyLeadingEdgeAt`, has its own handler as its
+one caller). The row stops being a `ClippingWdgt`: its viewport clips, and the browser clips the tool.
 
-**What must still hold, and where it moves**: the body under the inspectors (the row answers
-`laysTheInspectorBodyUnderItsParts` and paints it, as the plane); the derived dividers and split buttons (the row's
+**What must still hold, and where it moves**: the body under the inspectors (as built the BROWSER paints it, once,
+and the row, the inspectors' parent, answers `laysTheInspectorBodyUnderItsParts` and paints nothing); the derived dividers and split buttons (the row's
 reconcile, unchanged in rule, building `InspectorColumnDividerWdgt`); the window's title (the browser's
 `colloquialName` is its first inspector's; the reconcile's re-title asks the browser's window).
 
@@ -655,10 +677,12 @@ reconcile, unchanged in rule, building `InspectorColumnDividerWdgt`); the window
 # my TRAIL band; my set's viewport; and, with my body below, my divider (the stack's own splitter,
 # StackElementsSizeAdjustingWdgt, whose drag trades most height between its two neighbours) and my body's place.
 # The place is never empty: while my sequence ends on a list it holds a body that shows nothing.
-class InspectorBrowserWdgt extends Widget
+class InspectorBrowserWdgt extends ClippingWdgt
   bodyPlace: "below"
   constructor: (subject, opts = {}) ->          # opts.bodyPlace
   inspectors: ->                                # my sequence, in order: my set's, then my body when it stands below
+  @holding: (widget) ->                         # the browser a widget stands in: the nearest ancestor answering showNextTo
+  @openInAWindowOn: (subject) ->                # a browser in a window by the hand: the door's and a lone chooser's one statement
   @showChoice: (chooser, subject) ->            # from the chooser up to its inspector, then up to its browser
   showNextTo: (inspector, subject) ->
   chooseMember: (name) ->                       # the door on a member (§5.12)
@@ -667,6 +691,11 @@ class InspectorBrowserWdgt extends Widget
   @defaultExtent: ->                            # §5.13
 ```
 
+- **As built in U1** (the body beside): the browser is a `ClippingWdgt` (it takes over the row's reason to clip) and
+  paints the body once; its cell is the set's viewport (`viewport`), whose plane is the set (`row`, its columns
+  `columns()`); U1 has no `bodyPlace` field (one value and no reader would be a knob with nothing behind it: U2 adds it
+  with its second branch); the row takes no subject, and the browser places every inspector (`_placeNoSettle`); the
+  window's re-title is the browser's, told by the row's reconcile (a "Pick up" of a column reaches only the row).
 - **The climb.** `showChoice` climbs from the chooser to the nearest ancestor that answers `showsSubject` (the
   inspector), then to the nearest ancestor that answers `showNextTo` (the browser). The second climb is more than
   one level now (inspector, row, viewport, browser; or the body's place, browser). A chooser under no browser opens
@@ -990,7 +1019,7 @@ rig and doc it touches before any edit (§7 is the starting list).
 | Unit | What lands | Needs | Days | Done |
 |---|---|---|---|---|
 | U0 | Orient: read, verify, ask the open decisions | — | 0.5 | |
-| U1 | The set scrolls, and the tool is a browser (the body still beside); the widening and the trading deleted | — | 2–3 | |
+| U1 | The set scrolls, and the tool is a browser (the body still beside); the widening and the trading deleted | — | 2–3 | ✓ 2026-11-26 |
 | U2 | The body below, the where-you-are band, the default window, the class button | U1 | 2–3 | |
 | U3 | Every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule | U2 | 1–1.5 | |
 | U4 | "Open in a new inspector": the menu row and Cmd-click | U2 | 1–1.5 | |
@@ -1050,9 +1079,10 @@ behaves as it does on the desktop.
   finger: the left column by exactly the travel, floored at its least width, the set not scrolling under the drag.
   `macroInspectorSplitMovesByDividerAndByButton` is ported into it or beside it (its research decides which of its
   assertions still state a truth).
-- `macroInspectorSetScrollsByDragOnlyByFinger`: a finger's sideways drag on a list row scrolls the set and chooses
-  nothing, its vertical drag scrolls the list, its tap chooses; a mouse's drag on a column's header moves the
-  window and lifts no column.
+- `macroInspectorSidewaysDragScrollsTheSet` (named in this plan first `…SetScrollsByDragOnlyByFinger`; renamed in U1,
+  since a mouse's sideways drag on a list row scrolls the set too): a finger's sideways drag on a list row scrolls the
+  set and chooses nothing, its vertical drag scrolls the list, its tap chooses; a mouse's drag on a column's header
+  moves the window and lifts no column.
 - `macroInspectorBehavesTheSameInEveryHolder`: the same drill in a window on the desktop, in a document and with no
   window: no window resized, no column narrowed below its natural width.
 
@@ -1069,6 +1099,35 @@ would starve: PARK U1.4's general home and keep the press in the column divider 
 user), `layout.md` where it describes the row, `src/macros/CLAUDE.md` and `MACRO-PATTERNS.md` (the locators),
 `build-and-packaging.md` §2 and `parts.json`'s note for `meta-tools` (the door's class), the three CLAUDE.md files
 where they name the row as the tool.
+
+**Landed 2026-11-26** (inspector-browser loop; one commit per repo, this unit's). **Built**: `InspectorBrowserWdgt` (a
+`ClippingWdgt`, the tool: the sequence, the rule of choice, the two climbs, `@openInAWindowOn`, the body painted once,
+the re-title); `InspectorRowViewportWdgt` (the set's role-named viewport: content-sizing, no loose content, no drops,
+no glide, hidden from the hierarchy menu, no look of its own; rest points, the wheel's one-rest-point notch through the
+base's one seam `ViewportWdgt._wheelTravelX`, the rest at a SCROLLING stroke's end, the scroll bar's write resting,
+`revealColumn`); `InspectorRowWdgt` as the set (no subject, `columns()`, the measure, `implementsDeferredLayout`,
+`columnLefts`, `takesMySlack`, `_placedByMyHolder` so a column's "Resize/move…" goes past it to the window);
+`InspectorColumnDividerWdgt` (a kind of the splitter; the seam `dragPlane` / `columnDragAnchorAt` /
+`columnWidthDraggedTo` both handlers ask); the column's `statedWidth`; the kept press in
+`LayoutChromeWdgt.pressBegan`; the toolkit's column verbs (`bringColumnIntoView_InputEvents_Macro`,
+`wheelSetTowardColumn_InputEvents`, `assertColumnInView`). **Deleted**: everything §5.3 lists, the split button's
+trading drag, `dressAsAViewsList`'s widths; `macroInspectorDrillWidensItsWindow` (successor
+`macroInspectorColumnsScrollAndStopOnAColumn`); `macroInspectorSplitMovesByDividerAndByButton` (rewritten as
+`macroInspectorDividerSizesOneColumn`). **Ruled in the loop** (PREP §2): the field `statedWidth`; R1, a column's natural
+width is its cells' (a gutted or switched column falls to its bands' width); no `bodyPlace` field yet; the row's
+`columns()` and the browser's `inspectors()` two names; the browser paints the body once; the divider a kind of the
+splitter (the halo's type test); the reveal asked by `showChoice` (thin wraps); the test renamed
+`macroInspectorSidewaysDragScrollsTheSet` (a mouse's sideways drag on a row scrolls the set too). **Evidence**: a plane
+probe (865 window sizes and choices: the set's box always its measure, every column where `columnLefts` says, 0
+re-visits, 0 errors); a divider probe and a scroll probe by real mouse and finger; a fixes probe with a control per fix;
+four new tests passing at their first run with every expected value derived from the code, 40 plants each seen failing
+its own line under its own pointer on the final build, followers clean; every rig green; the dpr-1 and finger suites
+failing exactly the predicted pictures; two independent reviews, every (A) finding fixed or ruled. **Ratchets moved**:
+`check-complexity-ratchets.js` re-keys `StackElementsSizeAdjustingWdgt#_maxDimsPuttingMyLeadingEdgeAt` (score 18
+unchanged: the query lost its one outside caller and became private); `Fizzygum-tests/CLAUDE.md`'s byte ceiling 66361
+→ 66368 (the menu sweep's roots renamed to what is true). **Filed**: three BACKLOG items (the set resting off a column
+edge after its edges move; a trackpad swipe a column per event; a double-click on a member in the set's rightmost
+column, for U2 to close).
 
 ### U2. The body below, the where-you-are band, the default window, the class button (2–3 days)
 
@@ -1589,6 +1648,33 @@ no-conclusions-before-evidence, loaded-file-trust-and-backlog-bar.
 
 (Each unit files here what it leaves open, under a heading equal to its BACKLOG line's bold title.)
 
+### The set can rest off a column edge after its edges move
+
+Filed by U1 (2026-11-26). The set's scroll rests on a column's left edge after every stroke, notch, bar write and reveal
+(`InspectorRowViewportWdgt`), but a change that MOVES the edges under a still offset leaves the offset where it was: a window
+narrowed while the set stands at an end no column edge marks (its last column wider than the view), a divider's drag of a
+column left of the view or at the far end, a view picked out of a column left of the view (the column falls to its bands'
+width). The view then starts mid-column until the next notch or stroke rests it. Resting the offset at every arrange would
+also stop a stroke mid-drag; the shape is a rest after such a change, asked of the fields the rest points are read from.
+
+### A double-click on a member in the set's rightmost column can miss
+
+Filed by U1 (2026-11-26), to close with U2. A double-click is recognised only when both clicks meet one widget
+(`ActivePointerWdgt`, its double-click recogniser). While the body stands beside the lists (U1), a member's first click
+adds its editor as a column; when the set must scroll to show it, the reveal moves the set under the pointer, and the
+second click meets another widget: the member's value is not opened (in the default window, inspecting a rectangle and
+double-clicking `constructor`, then `__super__` in the second column). Only a member list has a double-click action
+(`inspectMemberValue`). U2 puts the body below the lists, so a member's first click adds no column and nothing scrolls;
+U2's test of the body below proves the double-click, and U2's research weighs the residue (a choice that removes columns
+lets the clamp slide the chooser).
+
+### A trackpad's sideways swipe moves the set a column per wheel event
+
+Filed by U1 (2026-11-26). A sideways notch moves the set one rest point whatever its size (`InspectorRowViewportWdgt._wheelTravelX`,
+the sheet's precedent: `SimpleSpreadsheetWdgt.scrolledBy`). A trackpad's swipe is many small wheel events, so a gentle swipe
+moves a column per event and races across the set. No notch accumulator exists in the house; it would serve the sheet too.
+
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
+- [x] U1: the set of columns scrolls sideways and stops on a column, and the tool is a browser that owns the rule of choice; the window widening itself and the trading of width between columns deleted (§5.3, §5.4). — CLOSED 2026-11-26 (inspector-browser loop, U1): `InspectorBrowserWdgt`, `InspectorRowViewportWdgt`, `InspectorColumnDividerWdgt`, the set as a viewport's plane; the widening and the trade deleted (§6 U1, its Landed paragraph).
 - [x] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24) — CLOSED 2026-11-26: this plan is that plan (moved from the `plans/inspector-overhaul-plan.md` section; the work itself is this plan's units, each with its own line).

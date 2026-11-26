@@ -1,7 +1,7 @@
 # AN OBJECT LIST: an inspector's view of the OBJECTS its subject holds in one way, one row per object
 # -- a widget's CHILDREN (the parts copies and saves carry), a class's INSTANCES (its subclasses'
 # included, as its class's instances set holds them), or a class's direct SUBCLASSES (sorted by name).
-# A row chosen is a CHOICE (InspectorRowWdgt.showChoice): the inspector to my right shows that object.
+# A row chosen is a CHOICE (InspectorBrowserWdgt.showChoice): the inspector to my right shows that object.
 # I stand in an inspector (InspectorWdgt), whose chooser builds me; picked out of it, I still list and
 # choose.
 #   WHICH objects I list is my derivation, named as my inspector builds me (derivationName: one of my
@@ -19,10 +19,9 @@
 # object that is not in my subject's list as it stands is no choice. Nothing refreshes my list but my
 # inspector's lit chooser toggle (_rereadNoSettle) and a copy's first press that finds it stale.
 #   Top to bottom, the elements of a vertical DIVISION stack (StackLayoutEngine): my LIST, which takes
-# the slack, and my CUT-NOTICE band when I list only the first MemberListWdgt.MOST_ITEMS_LISTED. My list
-# states my width: the width my inspector had when it built me (leastWidthKept, desiredWidthKept), so
-# a switch to me moves no split. In an inspector I paint nothing; standing anywhere else I paint the
-# inspector's body (InspectorBodyAppearance).
+# the slack, dressed as every view's list is (MemberListWdgt.dressAsAViewsList), and my CUT-NOTICE band
+# when I list only the first MemberListWdgt.MOST_ITEMS_LISTED. In an inspector I paint nothing;
+# standing anywhere else I paint the inspector's body (InspectorBodyAppearance).
 class ObjectListWdgt extends Widget
 
   # the object whose objects I list, and deliberately not called `target` (MemberListWdgt says why)
@@ -39,16 +38,12 @@ class ObjectListWdgt extends Widget
   # the labels my list was built from, in its rows' order (possibly none: my list then shows its
   # placeholder row, "(empty)"). Carried by copies and files: a copy's first press compares them
   labels: undefined
-  # the width my inspector had when it built me, which my list states as its least and desired width
-  leastWidthKept: undefined
-  desiredWidthKept: undefined
 
   # my objects, in the array parallel to my labels: derived, never carried (my header says why)
   @serializationTransients: ["objects"]
   @copyTransients: ["objects"]
 
-  # The subject and my derivation's name are my identity; opts.leastWidth and opts.desiredWidth the
-  # width my list states (my inspector's, at a switch), else a chrome target's side.
+  # The subject and my derivation's name are my identity, my two positional parameters.
   #   A BUILD THAT THROWS LEAVES NOTHING OF ME -- a guard of this class's own, because a view switch
   # recovers from my build failing (InspectorWdgt._showViewNoSettle) and must not leak the view it gave
   # up on; not a pattern every constructor follows. My list is derived as I am built, and a derivation can
@@ -57,11 +52,8 @@ class ObjectListWdgt extends Widget
   # -- so I destroy what I built of myself and let the error go on. Through the core: I am an orphan, so
   # nothing outside me hears my death, and no settle of mine may run inside the switch that builds me
   # (InspectorWdgt._replaceViewNoSettle, a core).
-  constructor: (@inspectedObject, @derivationName, opts = {}) ->
+  constructor: (@inspectedObject, @derivationName) ->
     super()
-    least = WorldWdgt.theme.minimumTargetSize
-    @leastWidthKept = opts.leastWidth ? least
-    @desiredWidthKept = opts.desiredWidth ? least
     @appearance = new InspectorBodyAppearance @
     @setMinAndMaxBoundsAndSpreadability (new Point 1, 1), (new Point 1, 1), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     try
@@ -77,10 +69,6 @@ class ObjectListWdgt extends Widget
       @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     else
       super
-
-  # HOW MUCH OF ITS ROW'S SPARE WIDTH MY INSPECTOR TAKES: a member list's (MemberListWdgt.rowSlackWeight
-  # has the arithmetic), so a switch between my inspector's views leaves its box as it is.
-  rowSlackWeight: -> 0.01
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -146,13 +134,13 @@ class ObjectListWdgt extends Widget
   # MY LIST, built from my labels and added at `atIndex` among my children (_rereadNoSettle says where,
   # and has removed what it replaces). A member list's look, its tag column empty (objectRowFactsOf); a
   # click dispatches chooseRow; no double-click of its own (a click already opens the object). Dressed
-  # as a view's list, stating the width my inspector had.
+  # as a view's list.
   _buildListNoSettle: (atIndex) ->
     @list = new ListWdgt @labels.slice(),
       target: @
       action: "chooseRow"
       memberFactsQuery: "objectRowFactsOf"
-    MemberListWdgt.dressAsAViewsList @list, @leastWidthKept, @desiredWidthKept
+    MemberListWdgt.dressAsAViewsList @list
     @_addNoSettle @list, atIndex: atIndex, layoutSpec: @list.divisionBox('y')
 
   # my cut-notice band in step with my list (_rereadNoSettle has removed the one standing in me): a
@@ -182,7 +170,7 @@ class ObjectListWdgt extends Widget
   #   the object must still be in my derivation as it stands now (a child of my subject still, still
   #   registered, still a subclass); one that is not is NO choice, as a member list's label that names
   #   no member is.
-  # No choice removes what stood on my right (InspectorRowWdgt.showChoice, with no subject), after any
+  # No choice removes what stood on my right (InspectorBrowserWdgt.showChoice, with no subject), after any
   # settle of mine, as every gesture asks it.
   chooseRow: (label, place) ->
     unless @objects?
@@ -191,11 +179,11 @@ class ObjectListWdgt extends Widget
         @objects = objects
       else
         @_settleLayoutsAfter => @_rereadNoSettle()
-        InspectorRowWdgt.showChoice @, undefined
+        InspectorBrowserWdgt.showChoice @, undefined
         return
     object = @objects[place]  if @labels[place] is label
     stillThere = object? and object in @[@derivationName]()
-    InspectorRowWdgt.showChoice @, (if stillThere then object)
+    InspectorBrowserWdgt.showChoice @, (if stillThere then object)
 
   # NO ROW OF MINE IS CHOSEN any more (my inspector's class chip pressed: InspectorWdgt.chooseMyClass;
   # or my subject chosen again: my inspector's reload). My list drops its selection; nothing is derived

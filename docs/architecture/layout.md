@@ -420,9 +420,13 @@ through the cell's own step, `Widget._addMyDivisionCellMenuEntries`, which the c
 nothing.
 A border layout is COMPOSITION, not an engine: a 'y' division stack whose middle cell is an 'x' row, dividers at the seams
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
-A TOOL is composition the same way. The inspector (`InspectorRowWdgt`) is an 'x' division row of inspectors with a
-splitter between each two, which the row derives from its inspectors itself
-(`InspectorRowWdgt._reconcileSplittersNoSettle`); each inspector (`InspectorWdgt`) a 'y' division stack of its header band, its
+A TOOL is composition the same way. The inspector (`InspectorBrowserWdgt`) is a 'y' division stack whose cell is the
+viewport of its SET (`InspectorRowViewportWdgt`), and the set (`InspectorRowWdgt`, that viewport's plane) an 'x' division
+row of inspectors with a column divider between each two, which the set derives from its inspectors itself
+(`InspectorRowWdgt._reconcileSplittersNoSettle`). The set is no division of a given width: its viewport commits the set's
+own measure, every column at the width it answers (`InspectorWdgt.getDesiredDim`: what its cells desire, or a width a
+person stated by a divider) and the last column the rest, so the set overflows and scrolls rather than squeeze a column
+(`viewports-and-planes.md`, "The scrolled-content contract"). Each inspector (`InspectorWdgt`) is a 'y' division stack of its header band, its
 chooser band when its subject offers more than one view, and one view at a time (a member list or an object list, each a 'y' stack in turn: its list with its bands; or, when its subject is one member, a member editor, a code area that lays out its own pane and footer band); each band (`BandWdgt`) an 'x' row of controls fixed at their own sizes, centred down it, with gaps
 (`BandSpaceWdgt`) and ONE piece that takes the slack, a spring or a text that gives. None of the three has a
 `_reLayout`: every cell is sized by its division box, and a holder's least width is its cells' (`getRecursiveMinDim`).

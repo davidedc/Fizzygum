@@ -513,13 +513,13 @@ class Theme
     # ... and the ink of the pencil on it.
     @editMarkInk = @ink
 
-    # the BODY of a row of inspectors (InspectorRowWdgt paints it, in a window or with none): under
+    # the BODY of an inspector browser (InspectorBrowserWdgt paints it, in a window or with none): under
     # every inspector's bands and panes, the draft's panel ...
     @inspectorBodyFill = @panel
     # ... and an inspector's panes' fill (a member list's list and a member editor's code area,
     # viewports and planes alike, and the background of the code area's text) and their border
     # (MemberListWdgt and MemberEditorWdgt dress each pane in them as they build it, and a pane taken
-    # out keeps them): none, so the row's body and the bands' rules show through them.
+    # out keeps them): none, so the browser's body and the bands' rules show through them.
     @inspectorPaneFill = Color.TRANSPARENT
     @inspectorPaneStroke = undefined
     # the ink of an inspector's TITLE, its subject's name in its header (InspectorWdgt; its class chip

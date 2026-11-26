@@ -135,8 +135,9 @@ Take the clock, the inspector, a paint app: each should be — at least in princ
 assembly of simpler citizens plus small scripts, not a sealed special-case. The converse
 test is disassembly: a good-citizen application can be taken apart and its parts recombined
 into things its author never anticipated (mashups). The tools pass their own test: the
-inspector is itself an assembly of ordinary widgets — a division row of inspectors (`InspectorRowWdgt`) with a
-splitter between each two, each inspector (`InspectorWdgt`) a division stack of a header band, a chooser band of toggles when its subject offers
+inspector is itself an assembly of ordinary widgets — a browser (`InspectorBrowserWdgt`), a division stack around a
+viewport whose plane is a division row of inspectors (`InspectorRowWdgt`) with a column divider between each two, each
+inspector (`InspectorWdgt`) a division stack of a header band, a chooser band of toggles when its subject offers
 more than one view, and one view at a time, a member list, an object list or a code area (`MemberListWdgt`, itself a
 stack of bands around its list; `ObjectListWdgt`, a list of the objects its subject holds; `MemberEditorWdgt`), every band a row of plain controls
 (`BandWdgt`: a chip, toggles, buttons), and none of

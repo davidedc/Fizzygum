@@ -414,13 +414,14 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `SimpleButtonWdgt` (the design's button: radius 6, its look derived from the theme by state, its one-line
   `StringWdgt` face centred in its box and cropped on `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
-- **One inspector tool — a ROW of inspectors, in a window by default, and a widget like any other with none:** "Dev →
+- **One inspector tool — a BROWSER of inspectors, in a window by default, and a widget like any other with none:** "Dev →
   Inspect" (`inspect` → `Widget.spawnInspector`, the one door; `spawnInspector subject, member: name` opens it with that
   member chosen as a click on its row chooses it, its row scrolled whole into view and Inherited turned on where only that
-  hid it — `InspectorRowWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open) opens a 760 × 528 window (`InspectorRowWdgt.defaultExtent`;
-  its row 758 × 439) whose content is an
-  `InspectorRowWdgt` (a `ClippingWdgt`), titled by its first inspector ("Inspector — analog clock").
-  `row.inspectors()` are its `InspectorWdgt`s, left to right, a splitter between two: each has its `inspectedObject`,
+  hid it — `InspectorBrowserWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open) opens a 760 × 528 window (`InspectorBrowserWdgt.defaultExtent`;
+  its set's viewport 758 × 439) whose content is an `InspectorBrowserWdgt` (a `ClippingWdgt`), titled by its first inspector
+  ("Inspector — analog clock"): its cell `browser.viewport` (`InspectorRowViewportWdgt`) scrolls sideways its plane, the SET
+  `browser.row` (`InspectorRowWdgt`, `row.columns()`). `browser.inspectors()` is its SEQUENCE, the `InspectorWdgt`s left to
+  right, a column divider (`InspectorColumnDividerWdgt`) between two: each has its `inspectedObject`,
   a `header` (`headerTitle`, and a `classChip` naming the class its subject is made by), a `chooser` band when its
   subject offers more than one VIEW (`viewToggles`, one `LabelledToggleWdgt` per view, the shown one ON: a widget
   offers Members and Children, a class's prototype Members, Instances where instances register, and Subclasses), and
@@ -437,9 +438,13 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   chooser); a double-click on a row whose value has members to show -- an object, or a Fizzygum class (a function
   carrying the class marker, a `constructor` row's) -- (`inspectMemberValue`) puts one on the value, while a plain
   method's row keeps its editor; the class chip puts one on the class it names (its prototype), each a member list.
-  A choice that leaves the row short of its least width widens a free-floating window, toward the width at which
-  the inspector it ADDED has its normal width (an editor 374, as beside a list in the default window; a list its
-  desired width), as far as the desktop's right edge. "Add…", "Duplicate…" and "Rename…" refuse a new name the
+  Nothing widens the window: every column stands at its NATURAL width (what its cells desire: a member list 372, an
+  editor 280 at least) until a drag on the divider at its right, or on the split button joined to it, STATES its width;
+  the set's last column takes the spare room, and a set wider than its viewport SCROLLS — never squeezes a column —,
+  its scroll resting on a column's left edge (a sideways wheel notch moves one column; a stroke rests at its end); a
+  choice brings the column it shows whole into view, the least way (`InspectorRowViewportWdgt.revealColumn`). A press
+  at a column the set scrolled out misses (AIM MISSED): bring it in first, as a person does,
+  `bringColumnIntoView_InputEvents_Macro column` (a notch, or a swipe under a finger). "Add…", "Duplicate…" and "Rename…" refuse a new name the
   subject already answers, its own or inherited, with an inform (a rename to the member's own name does nothing and
   says nothing); an own version of an inherited member is made by choosing it and pressing Save. ⚠ An editor exists only once a member is
   chosen; ANOTHER member REPLACES its inspector with a new one holding a new editor (the same member chosen again
@@ -449,22 +454,22 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   locators**, not a search of the world (one for "an editor" also meets a script's, a console's or another window's):
   `@topMemberList()` — the frontmost widget answering `selectionFromList` with a `list`: the rightmost member list of
   the frontmost window holding one — and `@memberEditorFedBy memberList` — STRUCTURAL: the view of the inspector
-  standing next after that list's own in its row, while it holds a `memberRef` on a member of the list's subject
-  (else undefined) — with
+  standing next after that list's own in its browser's sequence (`browser.inspectors()`), while it holds a `memberRef`
+  on a member of the list's subject (else undefined) — with
   `@topMemberEditor()` that of `topMemberList()`. The `*FromTopInspector*` verbs ride them: `topInspectorList()` is
   `topMemberList()`'s `list`, and the three code-pane verbs act on `topMemberEditor()`, throwing NO MEMBER EDITOR when
   no member is chosen (NO SAVE BUTTON for a member no Save edits). A test holding a list of its own (a copied window's,
-  the second of two) hands THAT list to `memberEditorFedBy`. An inspector's `parent` is its row and the row's the
-  window: move the WINDOW, never an inspector (a cell of its row's division). A part picked out of its row stands
-  alone, on a body it paints itself: an inspector whose view is picked out of it shows no subject (it keeps its
-  header and its chooser), a choice in a list in no row opens a window of its own, and a split button anywhere but
-  at the lead of its inspector's header moves no split.
-  **With no window** (`world.add new InspectorRowWdgt target`) the row paints its own body (`inspectorBodyFill`) and
-  chooses and edits the same way, found by the same locators; it has NO resizer of its own, and a choice that needs
-  width narrows its inspectors instead. Resize it as any widget, by the halo its "Resize/move…" gives it
-  (`@resizeWidgetBy_InputEvents row, delta`). Two gotchas (learned in
+  the second of two) hands THAT list to `memberEditorFedBy`. An inspector's `parent` is its set, the set's its
+  viewport, the viewport's its browser and the browser's the window: find the window by `enclosingFrame()`, never a
+  `.parent` chain, and move the WINDOW, never an inspector (a cell of its set's division). A part picked out of its
+  set stands alone, on a body it paints itself: an inspector whose view is picked out of it shows no subject (it keeps
+  its header and its chooser, and its column falls to their width), a choice in a list in no browser opens a window of
+  its own, and a split button anywhere but at the lead of its inspector's header moves no column.
+  **With no window** (`world.add new InspectorBrowserWdgt target`) the browser paints its own body (`inspectorBodyFill`)
+  and chooses, scrolls and edits the same way, found by the same locators; it has NO resizer of its own. Resize it as
+  any widget, by the halo its "Resize/move…" gives it (`@resizeWidgetBy_InputEvents browser, delta`). Two gotchas (learned in
   `SystemTest_macroNakedInspectorRendersResizesAndEdits`): (1) a drag pressed where a FITTING code area's vBar would be
-  lands on the code area itself and float-drags what holds it — the window, or the row with none — instead of
+  lands on the code area itself and float-drags what holds it — the window, or the browser with none — instead of
   scrolling, so only drag a bar that SHOWS (`@bringcodeStringFromTopInspectorInView` checks this itself: on a code area
   with no vertical overflow it presses nothing); (2) shrinking the HEIGHT so a code area newly overflows makes its
   alpha-blended scroll thumb + re-scroll render nondeterministically at dpr 2, so shrink the WIDTH (keep the code

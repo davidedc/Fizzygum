@@ -1431,14 +1431,21 @@ class MacroToolkit
   # hand reads as a tap; a macro that means a scroll under a finger asks for more than the threshold.
   _swipeLegWithin: (remaining, box, swipesLeft) ->
     return remaining unless box?
-    reach = (span) -> Math.max 1, Math.floor(span - (2 * MacroToolkit.scrollSwipeMarginPx))
-    reachX = reach box[1].x - box[0].x
-    reachY = reach box[1].y - box[0].y
+    reachX = @_swipeReach box[1].x - box[0].x
+    reachY = @_swipeReach box[1].y - box[0].y
     swipesNeeded = Math.max Math.ceil(Math.abs(remaining.x) / reachX), Math.ceil(Math.abs(remaining.y) / reachY)
     return remaining if swipesNeeded <= 1
     swipes = Math.max 1, (Math.min swipesNeeded, (swipesLeft ? swipesNeeded))
     share = (want, limit) -> Math.max (-limit), (Math.min limit, Math.round(want / swipes))
     new Point (share remaining.x, reachX), (share remaining.y, reachY)
+
+  # THE REACH of one swipe across `span` px of a swipe box (_swipeBoxOf): the whole pixels between the
+  # box's own edges, scrollSwipeMarginPx clear of each, at least 1. FLOORED, for a pane on a scaled or
+  # tilted plane, whose box is fractional (_swipeLegWithin says what a fractional reach costs). The one
+  # statement of how far a swipe carries: _swipeLegWithin splits a longer delta at it, and a wheel that
+  # must stay ONE swipe keeps its travel within it (_oneSwipeOverRow).
+  _swipeReach: (span) ->
+    Math.max 1, Math.floor(span - (2 * MacroToolkit.scrollSwipeMarginPx))
 
   # Where a drag of `travel` must START on one axis for BOTH its ends to sit inside [spanStart,
   # spanEnd], given the caller aimed at `from`: `from` itself whenever the drag already fits, else
@@ -2245,6 +2252,17 @@ class MacroToolkit
     return  unless out?
     world.automator.player.recordMacroAssertion false, "MENU ROW NOT IN VIEW: '#{out.label}' of #{out.popUp} after its scroll", "whole in the rows", "row #{out.rowTop}..#{out.rowBottom}, shown #{out.boxTop}..#{out.boxBottom} (x #{out.rowLeft}..#{out.rowRight}, shown #{out.boxLeft}..#{out.boxRight})"
 
+  # Assert that `column`, a column of an inspector browser's set, shows WHOLE in its set's viewport
+  # (_columnOutOfView; a column wider than the viewport as much of itself as it can, its left edge on
+  # the viewport's): the promise bringColumnIntoView makes, checked where it is made. Like
+  # assertListItemInView it records only a FAULT and the macro runs on -- a press aimed into the column
+  # next is checked anyway (AIM MISSED). Pushes no input events and does not yield. A toolkit method for
+  # the same reason as the menu assertions above.
+  assertColumnInView: (column) ->
+    out = @_columnOutOfView column
+    return  unless out?
+    world.automator.player.recordMacroAssertion false, "COLUMN NOT IN VIEW: #{column} of its browser's set after its scroll", "whole in the set's viewport", "column x #{out.columnLeft}..#{out.columnRight}, shown #{out.boxLeft}..#{out.boxRight}, on screen"
+
   # Assert that two screenshots ALREADY TAKEN in this test are byte-identical — the explicit
   # form of the no-op / round-trip idiom (undo restores the pre-edit pixels, collapse →
   # uncollapse restores the window, a cancelled prompt leaves zero residue, …). Pass the two
@@ -2403,47 +2421,57 @@ class MacroToolkit
     list.topWdgtSuchThat (item) -> item.labelString is listItemString
 
   # ── THE INSPECTOR'S TWO LOCATORS ───────────────────────────────────────────────────────────────
-  # "Inspect" opens a window whose content is a ROW of inspectors (InspectorRowWdgt): the first on
-  # the widget inspected, its view a MEMBER LIST (MemberListWdgt: its `list`, toggles and footer
-  # buttons); a member chosen in a member list puts an inspector on that member right of the list's
-  # own inspector, its view a MEMBER EDITOR (MemberEditorWdgt: its code area `tempPromptEntryField`,
-  # the `textWidget` in it, and its `saveButton`). The `…FromTopInspector…` verbs find both parts
-  # through the two locators below, which tests use too. Both ask what a part ANSWERS, never its
-  # class: those classes are the LAZY 'meta-tools' part's and this toolkit the EAGER 'harness'
-  # part's, so a class named here would be an unguarded reference into something a profile may not
-  # ship and a page may not yet have fetched. With no part, nothing answers, and undefined is the
-  # true answer: no inspector can be open.
+  # "Inspect" opens a window whose content is an inspector BROWSER (InspectorBrowserWdgt), which
+  # holds a SEQUENCE of inspectors: the first on the widget inspected, its view a MEMBER LIST
+  # (MemberListWdgt: its `list`, toggles and footer buttons); a member chosen in a member list puts an
+  # inspector on that member next after the list's own inspector in the sequence, its view a MEMBER
+  # EDITOR (MemberEditorWdgt: its code area `tempPromptEntryField`, the `textWidget` in it, and its
+  # `saveButton`). The `…FromTopInspector…` verbs find both parts through the two locators below,
+  # which tests use too. Both ask what a part ANSWERS, never its class: those classes are the LAZY
+  # 'meta-tools' part's and this toolkit the EAGER 'harness' part's, so a class named here would be an
+  # unguarded reference into something a profile may not ship and a page may not yet have fetched.
+  # With no part, nothing answers, and undefined is the true answer: no inspector can be open.
 
   # THE MEMBER LIST A PERSON WOULD PICK FROM: the frontmost widget that answers selectionFromList and
   # holds a `list`, or undefined when no member list shows. The search visits the last child first
   # and a widget's children before itself (topWdgtSuchThat), so this is the RIGHTMOST member list of
-  # the frontmost window holding one (a row with no window is found the same way), or a member list
-  # picked out of its row that stands in front of it.
+  # the frontmost window holding one (a browser with no window is found the same way), or a member
+  # list picked out of its browser that stands in front of it.
   topMemberList: ->
     world.topWdgtSuchThat (w) -> w.selectionFromList? and w.list?
 
-  # THE MEMBER EDITOR `memberList` FEEDS, read off the row's STRUCTURE: a choice in a member list goes
-  # to the inspector standing next after the list's own inspector in their row
-  # (InspectorRowWdgt.showChoice), so the editor it feeds is that next inspector's view, while the
-  # view is a member editor (it holds a memberRef) standing in it, on a member of the list's own
-  # subject. undefined when there is none: no member is chosen (the list's inspector is its row's
-  # last), what stands next shows a value or a class (a member list), the editor stands outside its
-  # inspector (picked out of it), the editor shows another subject's member (an inspector between
-  # the two is gone from the row, picked out of it), or the list feeds no row (a list picked out of
-  # its inspector, or an inspector picked out of its row: a choice there opens a window of its own).
+  # THE BROWSER `inspector` STANDS IN: its nearest ancestor that answers showNextTo, or undefined --
+  # the climb InspectorBrowserWdgt.holding makes, asked here by capability (the class is the lazy
+  # part's)
+  _browserHolding: (inspector) ->
+    holder = inspector?.parent
+    holder = holder.parent  until !holder? or holder.showNextTo?
+    holder
+
+  # THE MEMBER EDITOR `memberList` FEEDS, read off its browser's SEQUENCE: a choice in a member list
+  # goes to the inspector standing next after the list's own inspector in the sequence of the browser
+  # it stands in (InspectorBrowserWdgt.showChoice), so the editor it feeds is that next inspector's
+  # view, while the view is a member editor (it holds a memberRef) standing in it, on a member of the
+  # list's own subject. undefined when there is none: no member is chosen (the list's inspector is
+  # its sequence's last), what stands next shows a value or a class (a member list), the editor
+  # stands outside its inspector (picked out of it), the editor shows another subject's member (an
+  # inspector between the two is gone from the browser, picked out of it), or the list feeds no
+  # browser (a list picked out of its inspector, or an inspector picked out of its browser, which is
+  # in no sequence: a choice there opens a window of its own).
   # Structural on purpose: a search for a code area with a Save would also meet a script's or a
   # console's, and "the topmost editor" would type into another window's editor
   # whenever two are open. Public, so a test holding a list of its own (a copied window's, the second
-  # of two in one row) reaches the editor of THAT list.
+  # of two in one browser) reaches the editor of THAT list.
   #   An editor exists only once a member is chosen, and a choice of ANOTHER member replaces its
   # inspector with a new one holding a new editor (the same member chosen again reloads the editor
   # in place): ask again after every choice rather than keep an editor from before it.
   memberEditorFedBy: (memberList) ->
     inspector = memberList?.parent
-    row = inspector?.parent
-    return undefined  unless inspector?.showsSubject? and row?.inspectors?
-    inspectors = row.inspectors()
-    next = inspectors[inspectors.indexOf(inspector) + 1]
+    return undefined  unless inspector?.showsSubject?
+    sequence = @_browserHolding(inspector)?.inspectors?() ? []
+    at = sequence.indexOf inspector
+    return undefined  if at < 0
+    next = sequence[at + 1]
     view = next?.view
     view  if view?.memberRef? and view.parent is next and view.memberRef.holder is memberList.inspectedObject
 
@@ -2566,6 +2594,130 @@ class MacroToolkit
     @_aimingAt v.row, "clickOnListItem", =>
       @moveToAndClick_InputEvents (v.label.localPointToScreen new Point (v.label.left() + 10), clickY), "left button", milliseconds, startTime
 
+  # ── A COLUMN OF A BROWSER'S SET, BROUGHT INTO VIEW ─────────────────────────────────────────────────
+  # An inspector browser's inspectors are the COLUMNS of its set, which is the plane of the set's
+  # viewport (InspectorRowViewportWdgt): a set wider than its viewport overflows it and scrolls
+  # sideways, and after a choice the browser brings the column that choice shows into view, so a
+  # column further left stands scrolled out of view. A press aimed into such a column meets whatever the
+  # viewport shows there (AIM MISSED), so a step reaching back to it brings it into view first, as a
+  # person does: bringColumnIntoView_InputEvents_Macro, one sideways wheel over the set at a time (a
+  # swipe under a finger), each moving the set one of the rest points its scroll comes to rest at. The
+  # set's viewport is the `viewport` of the browser a column stands in (_browserHolding), found by what
+  # the browser answers, never by its class (the classes are the lazy part's).
+
+  # WHERE `column` STANDS AGAINST ITS SET'S VIEWPORT, across: undefined while it shows whole there (a
+  # column wider than the viewport, as much of itself as it can, its left edge on the viewport's, where
+  # the browser itself reveals such a column: InspectorRowViewportWdgt.revealColumn), else the viewport,
+  # the column's and the viewport's spans across the screen, and dx, how far the viewport's offset must
+  # move to show it the least way (_scrollDeltaBringingIntoView, the menu row's rule; positive: toward
+  # the set's end). Both boxes are carried to the screen, since the column's plane is the scrolled one
+  # and the viewport's is not. A pure read, which moves nothing: the wheel and the assertion both ask
+  # it. Handed no widget (a column a step looked up and did not find) or a widget that is no column of
+  # a browser's set (one a person picked out), it THROWS a named fault rather than answer "in view".
+  _columnOutOfView: (column) ->
+    unless @_isWidgetTarget column
+      throw new Error "COLUMN MISSING: a column to bring into view or to check is #{column}, not a widget — take it from its browser's inspectors()"
+    viewport = @_browserHolding(column)?.viewport
+    unless viewport? and column in (viewport.contents?.columns?() ? [])
+      throw new Error "NOT A COLUMN: #{column} stands in no inspector browser's set, so no set's viewport shows it"
+    columnLeft = (column.localPointToScreen new Point column.left(), column.top()).x
+    columnRight = (column.localPointToScreen new Point column.right(), column.top()).x
+    boxLeft = (viewport.localPointToScreen new Point viewport.left(), viewport.top()).x
+    boxRight = (viewport.localPointToScreen new Point viewport.right(), viewport.top()).x
+    dx =
+      if columnRight - columnLeft > boxRight - boxLeft
+        columnLeft - boxLeft
+      else
+        @_scrollDeltaBringingIntoView columnLeft, columnRight, boxLeft, boxRight
+    return undefined  if dx is 0
+    viewport: viewport
+    columnLeft: columnLeft
+    columnRight: columnRight
+    boxLeft: boxLeft
+    boxRight: boxRight
+    dx: dx
+
+  # THE TRAVEL ONE NOTCH MOVES `viewport`, a browser's set's viewport, toward dx's side (dx > 0: toward
+  # the set's end), in its scroll offset's own sense: to the next of its REST POINTS that way -- the left
+  # edges of its set's columns short of the end of its scroll (InspectorRowWdgt.columnLefts), and that
+  # end, its plane's width less its own -- or nothing at the last of them. Read off the set as a person
+  # reads the columns' edges off the screen; a notch moves there whatever its size, and a stroke rests on
+  # the rest point nearest where it ends (InspectorRowViewportWdgt), so this is the travel a finger's
+  # swipe carries to make the notch's move.
+  _setTravelTowardSide: (viewport, dx) ->
+    offset = viewport.getScrollX()
+    end = Math.max 0, viewport.contents.width() - viewport.width()
+    edges = (left for left in viewport.contents.columnLefts() when left < end).concat [end]
+    next = if dx > 0 then (edge for edge in edges when edge > offset)[0] else (edge for edge in edges when edge < offset).pop()
+    (next ? offset) - offset
+
+  # THE LIST ROW a sideways wheel over `viewport`'s set is aimed at (wheelSetTowardColumn_InputEvents):
+  # the first row showing whole in its list's pane (_firstRowShowingWholeIn), of the WIDEST LIST among
+  # the columns of the set that show whole and whose view, standing in it, holds a list -- a member
+  # list's, an object list's; an editor holds none (the first of two lists as wide) -- as {list, row},
+  # or undefined when no column that shows holds one.
+  # A ROW, and never the viewport: the wheel's check holds a wheel named for a scroller to the first
+  # widget that takes it (wheelOn_InputEvents), which over a column is its list, while a row takes no
+  # scroll itself -- its list, with no sideways travel, hands a sideways notch on
+  # (ViewportWdgt.scrolledBy), and the set's viewport takes it. The widest, because a finger's swipe
+  # stays inside the list it starts on, and the widest list carries the longest one.
+  _listRowOfAColumnShowingIn: (viewport) ->
+    best = undefined
+    for column in viewport.contents.columns() when column.view?.list? and column.view.parent is column
+      list = column.view.list
+      continue  if (best? and list.width() <= best.list.width()) or (@_columnOutOfView column)?
+      row = @_firstRowShowingWholeIn list
+      best = {list: list, row: row}  if row?
+    best
+
+  # THE FIRST ROW OF `list` THAT SHOWS WHOLE in its pane, top to bottom (_listRowVisibility,
+  # _listRowShowsWhole), or undefined
+  _firstRowShowingWholeIn: (list) ->
+    for row in @_listRows list
+      v = @_listRowVisibility list, row.labelString
+      return row  if v?.row is row and @_listRowShowsWhole v
+    undefined
+
+  # A FINGER'S WHEEL OVER `row` of `list` KEPT TO ONE SWIPE (wheelSetTowardColumn_InputEvents): the
+  # travel `travel` asks, cut to what one swipe carries across the row where its list's swipe box shows
+  # it (_swipeBoxOf, _swipeReach: a longer one would be split into swipes, each a stroke of its own,
+  # each resting on its own end), and the fraction along the row the swipe starts from, so that, centred
+  # on that span, it ends inside it too (the swipe runs against the offset's travel: the content follows
+  # the finger). A swipe cut short still comes to rest on the rest point the travel reaches while it
+  # carries more than half of it. Answers [the travel, the fraction].
+  _oneSwipeOverRow: (row, list, travel) ->
+    box = @_swipeBoxOf list
+    rowLeft = (row.localPointToScreen new Point row.left(), row.top()).x
+    rowRight = (row.localPointToScreen new Point row.right(), row.top()).x
+    spanStart = Math.max box[0].x, rowLeft
+    spanEnd = Math.min box[1].x, rowRight
+    carried = (Math.sign travel) * (Math.min (Math.abs travel), (@_swipeReach spanEnd - spanStart))
+    start = (spanStart + spanEnd + carried) / 2
+    [carried, [(start - rowLeft) / (rowRight - rowLeft), 0.5]]
+
+  # ONE SIDEWAYS WHEEL over a browser's set toward `column`, a column its set's viewport does not show
+  # whole (_columnOutOfView). Under a mouse, one NOTCH: the set moves one rest point that way whatever the
+  # notch's size (InspectorRowViewportWdgt._wheelTravelX). Under a finger, one SWIPE (wheelOn's
+  # translation) of the travel to that same rest point (_setTravelTowardSide), kept to one swipe
+  # (_oneSwipeOverRow). Either aims at a list ROW of a column that shows whole
+  # (_listRowOfAColumnShowingIn), its press checked to land on that row (wheelOn_InputEvents). Answers
+  # whether it queued anything -- a column that shows whole, or a set already at its last rest point that
+  # way, takes no wheel -- so the macro verb waits only when there is something to wait for. Throws NO
+  # LIST ROW IN VIEW where no column that shows holds a list row to aim at: a wheel over an editor's code
+  # area is that area's own.
+  wheelSetTowardColumn_InputEvents: (column) ->
+    out = @_columnOutOfView column
+    return false  unless out?
+    aim = @_listRowOfAColumnShowingIn out.viewport
+    unless aim?
+      throw new Error "NO LIST ROW IN VIEW: wheelSetTowardColumn aims its wheel at a row of a list in a column of #{out.viewport}'s set that shows whole, and no column that shows holds one"
+    travel = @_setTravelTowardSide out.viewport, out.dx
+    return false  if travel is 0
+    fraction = [0.5, 0.5]
+    [travel, fraction] = @_oneSwipeOverRow aim.row, aim.list, travel  if @fingerMode()
+    @wheelOn_InputEvents aim.row, 0, travel, fraction
+    true
+
 
   # THE CODE-PANE VERBS act on the member editor the top member list feeds (topMemberEditor): the
   # view of the inspector right of that list's, on the member chosen in it. Each finds it afresh as it
@@ -2607,7 +2759,7 @@ class MacroToolkit
   # vertical bar to the share of its travel that the string's line is of the text's lines. A code
   # area whose text fits it vertically shows no vertical bar and has nothing to bring into view, so
   # nothing is pressed: a drag pressed where that bar would be lands on the code area itself, and a
-  # mouse drag there carries away what holds it, its window (or a row with no window).
+  # mouse drag there carries away what holds it, its window (or its browser, with no window).
   bringcodeStringFromTopInspectorInView_InputEvents: (codeString, occurrenceNumber = 1, after = true) ->
     editor = @_topMemberEditorFor "bringcodeStringFromTopInspectorInView"
 
@@ -2658,13 +2810,14 @@ class MacroToolkit
     """
 
     # THE INSPECTOR VERBS. bringUpInspector opens a widget's inspector as a person does, its menu's
-    # "Dev" then "Inspect": a window whose content is a row of inspectors, one on the widget, its view
-    # a member list. bringInViewAndClickOnListItemFromTopInspector chooses a member in the top member
-    # list (topInspectorList), which puts an inspector on that member beside the list, its view the
-    # member editor the code-pane verbs act on (topMemberEditor); bringUpInspectorAndSelectListItem is
-    # the two, one after the other. Below the list verbs, clickViewToggle shows another view of an
-    # inspector's subject (its chooser's toggle, by the face it shows), and dragSplitControlBy moves the
-    # split between two inspectors (by the divider or by the split button).
+    # "Dev" then "Inspect": a window whose content is an inspector browser, its one inspector on the
+    # widget, its view a member list. bringInViewAndClickOnListItemFromTopInspector chooses a member in
+    # the top member list (topInspectorList), which puts an inspector on that member beside the list, its
+    # view the member editor the code-pane verbs act on (topMemberEditor); bringUpInspectorAndSelectListItem is
+    # the two, one after the other. Below the list verbs, bringColumnIntoView scrolls a browser's set
+    # to a column of it its viewport does not show whole, clickViewToggle shows another view of an
+    # inspector's subject (its chooser's toggle, by the face it shows), and dragSplitControlBy sizes the
+    # column left of a column divider (by the divider or by the split button).
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
         clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
@@ -2712,6 +2865,25 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
+    macroSubroutines.add Macro.fromString """
+      bringColumnIntoView_InputEvents_Macro = (column) ->
+        # BRING A COLUMN OF A BROWSER'S SET INTO VIEW THROUGH THE INPUT QUEUE, as a person scrolls the set
+        # to it: one sideways wheel over the set toward it at a time (wheelSetTowardColumn_InputEvents; a
+        # finger run swipes), each moving the set one rest point, while the column does not show whole --
+        # at most one wheel per column of the set (its rest points are its columns' left edges and the end
+        # of its scroll, so no column stands more of them away) -- then the column must show whole
+        # (assertColumnInView), never a try past that bound. A column that already shows takes no wheel
+        # and no cycle. The locators find a column wherever it stands and scroll nothing, and a press
+        # aimed into a column scrolled out meets what the set's viewport shows there instead (AIM
+        # MISSED), so a step reaching back to one says so with this first, on the column it is about to
+        # press in.
+        wheelsLeft = column?.parent?.columns?().length ? 0
+        while wheelsLeft > 0 and @wheelSetTowardColumn_InputEvents column
+          yield "waitNoInputsOngoing"
+          wheelsLeft--
+        @assertColumnInView column
+    """
+
     # AN INSPECTOR'S VIEW TOGGLE CLICKED, as a person clicks it (a tap under a finger): the toggle of the
     # inspector's CHOOSER band -- one toggle per view its subject offers, the shown one ON
     # (InspectorWdgt._views) -- that shows `face` ("Members", "Children", "Instances", "Subclasses"); the
@@ -2737,17 +2909,18 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # A DRAG ON ONE OF A SPLIT'S CONTROLS by deltaX across -- an inspector row's divider (its splitter,
-    # StackElementsSizeAdjustingWdgt, the mouse's way) or the split button leading the header of the
+    # A DRAG ON ONE OF A SPLIT'S CONTROLS by deltaX across -- a column divider of an inspector browser's
+    # set (InspectorColumnDividerWdgt, the mouse's way) or the split button leading the header of the
     # inspector right of it (SplitGripWdgt, the finger's way) -- in LEGS, as a person drags: the press on
     # the control (its centre, the press verified to land on it), drained, so the drag starts where it
     # pressed; then a move with the button held to deltaX right of the press, and the release. Under a
     # finger the press is a touch-down, the move the finger's move stream and the release its lift: a
     # plain touch stroke with NO hold, right for both controls, which own the drags that start on them
     # (ownsDragsStartingOnMe: a finger's press arms at once), where syntheticEventsMouseMovePressDragRelease
-    # would hold first. The first move sample lands on the press point, so both pointers move a split by
-    # exactly deltaX, as far as the split's solve lets it go. The control is chrome: it stays where it
-    # stands, and its nonFloatDragging moves the split.
+    # would hold first. The first move sample lands on the press point, where the drag takes its anchor,
+    # so both pointers size the column left of the divider by exactly deltaX, never below that column's
+    # least width. The control is chrome: it stays where it stands, keeps the press (no pane around it
+    # scrolls), and its nonFloatDragging sizes the column.
     macroSubroutines.add Macro.fromString """
       dragSplitControlBy_InputEvents_Macro = (control, deltaX) ->
         @moveToAndMouseDown_InputEvents control

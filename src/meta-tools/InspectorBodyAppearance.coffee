@@ -1,10 +1,12 @@
-# THE INSPECTOR'S BODY under a part of the tool that stands on its own. The row of inspectors paints the
-# body every inspector of it stands on (InspectorRowWdgt, inspectorBodyFill), and an inspector holds its
-# views on it; a part that stands anywhere else -- a view a person took out of its inspector, an inspector
-# picked out of its row -- would show whatever lies under it (the desktop, its own drop shadow through its
-# panes) and cast one shadow per control. So the part I paint for paints the body itself, exactly while
-# its HOLDER lays none under its parts (laysTheInspectorBodyUnderItsParts, answered by the row and by an
-# inspector): asked of the holder at every paint, never stored, so the look follows every re-parenting.
+# THE INSPECTOR'S BODY under a part of the tool that stands on its own. The inspector browser paints the
+# body every part of the tool in it stands on (InspectorBrowserWdgt, inspectorBodyFill), its set of
+# inspectors lays that body under its inspectors, and an inspector holds its views on it; a part that
+# stands anywhere else -- a view a person took out of its inspector, an inspector picked out of its row
+# -- would show whatever lies under it (the desktop, its own drop shadow through its panes) and cast one
+# shadow per control. So the part I paint for paints the body itself, exactly while its HOLDER lays none
+# under its parts (laysTheInspectorBodyUnderItsParts, answered by the browser, by its set, InspectorRowWdgt,
+# and by an inspector): asked of the holder at every paint, never stored, so the look follows every
+# re-parenting.
 #   Not painting the body, I am my base exactly -- my widget's seam rules and nothing else, nothing on the
 # shadow pass, and no opaque cover, so the body my holder stands on shows through. Painting it, I fill my
 # widget's box with inspectorBodyFill, read as I paint, its seam rules over it, and its box on the shadow

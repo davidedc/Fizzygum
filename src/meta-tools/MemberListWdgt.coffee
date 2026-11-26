@@ -1,7 +1,7 @@
 # A MEMBER LIST: an inspector's view of one object's members -- which ones it has, as a list of
 # rows, each a kind tag and the member's name -- and, for a subject whose members are edited
 # (MemberRef.canEdit), the gestures that change WHICH members it has: Add… Duplicate… Rename…
-# Remove. A row chosen is a CHOICE (InspectorRowWdgt.showChoice): the inspector to my right shows
+# Remove. A row chosen is a CHOICE (InspectorBrowserWdgt.showChoice): the inspector to my right shows
 # that member (a click: its editor, MemberEditorWdgt) or that member's value (a double-click, when
 # the value has members to show: an object, or a class), so I show no member's code myself. I stand
 # in an inspector (InspectorWdgt) whose subject is my inspectedObject, its first view; picked out of
@@ -10,7 +10,7 @@
 # or my list: my TOGGLES band (BandWdgt), my member LIST, which takes the slack, my CUT-NOTICE band
 # when my list cuts an indexed subject's items, and my FOOTER band of buttons when my subject's
 # members are edited. I have no layout of my own. In an inspector I paint nothing -- my bands paint
-# their rules, and the row paints the body under all of us -- and standing anywhere else I paint
+# their rules, and the browser paints the body under all of us -- and standing anywhere else I paint
 # that body myself (InspectorBodyAppearance): one body under my bands, one shadow.
 #   My TOGGLES (LabelledToggleWdgt) show my member FILTER -- Methods, Fields, Inherited, Own props
 # only (none for a class's prototype, whose every member is its class's) -- whose one truth is my
@@ -18,8 +18,8 @@
 # RE-FILTERS me (_refilterMembers): my member list is rebuilt from the filter as it stands,
 # every other child of mine stays the same widget, and every toggle is shown its field. Adding,
 # duplicating, renaming or removing a member re-filters me the same way. A re-filter's fresh list
-# selects nothing, so what stood on my right for its selection goes (InspectorRowWdgt.showChoice,
-# with no subject): every gesture of mine asks the row AFTER its own settle, never inside it.
+# selects nothing, so what stood on my right for its selection goes (InspectorBrowserWdgt.showChoice,
+# with no subject): every gesture of mine asks the browser AFTER its own settle, never inside it.
 #   Each edit is ONE step of the member's reference (MemberRef.of: an object's member through the
 # instance edit protocol, a class's through its meta-object, recorded), which makes the edit, tells
 # once, and answers whether it made it: a step that refuses (a class's member with no source to
@@ -91,15 +91,15 @@ class MemberListWdgt extends Widget
 
   # A LIST DRESSED AS A VIEW'S: it takes no drops; it wears the inspector's pane roles
   # (ViewportWdgt.wearPaneRoles; its plane wears them too), read as it paints and kept by name, so the
-  # body and the bands' rules show through it; and its division box is a chrome target's side square
-  # tall at least, `leastWidth` / `desiredWidth` wide, and grows to any size, so the slack of the view's
-  # stack is the list's. The one statement both list views dress their list by (mine and
-  # ObjectListWdgt's, which states there the width its inspector had: InspectorWdgt._showViewNoSettle).
-  @dressAsAViewsList: (list, leastWidth, desiredWidth) ->
+  # body and the bands' rules show through it; and its division box is a chrome target's side square,
+  # least and desired, and grows to any size, so the slack of the view's stack is the list's. The one
+  # statement both list views dress their list by (mine and ObjectListWdgt's).
+  @dressAsAViewsList: (list) ->
     list.disableDrops()
     list.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
-    least = WorldWdgt.theme.minimumTargetSize
-    list.setMinAndMaxBoundsAndSpreadability (new Point leastWidth, least), (new Point desiredWidth, least), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
+    side = WorldWdgt.theme.minimumTargetSize
+    square = new Point side, side
+    list.setMinAndMaxBoundsAndSpreadability square, square, DivisionStackLayoutSpec.SPREADABILITY_SPACERS
 
   # The subject is my identity, my one positional parameter. My own division box takes my
   # inspector's slack: its most size is large, while my least and desired sizes are my bands' and my
@@ -117,22 +117,6 @@ class MemberListWdgt extends Widget
       @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     else
       super
-
-  # HOW MUCH OF ITS ROW'S SPARE WIDTH MY INSPECTOR TAKES, by weight (InspectorWdgt sets its own most
-  # width from it): little. I keep the width my controls and names need, and the code beside me takes
-  # the rest (MemberEditorWdgt.rowSlackWeight, 100). The numbers, a most width being desired +
-  # weight x SPREADABILITY_SPACERS (1e8) x desired / 100, over a desired of 1, and a division row
-  # handing out its spare in proportion to its cells' margins of most over desired:
-  #   my inspector's most width is 1 + 0.01 x 1e6 = 10,001 px, far above any desired width a member
-  # list has (about 372 px with its four buttons, whatever its title), so the split
-  # beside me can move, and two member lists side by side take their row's spare in near-equal shares
-  # (margins of about 9,600 px each), a splitter (its margin 0.12 px) taking about a hundredth of a px
-  # of a 2,000 px spare;
-  #   beside an editor, whose most width is 1 + 100 x 1e6 = 100,000,001 px, my share of the spare is my
-  # margin over the two together, about 9,600 / 100,000,000, under a ten-thousandth: under half a px for
-  # any spare below about 5,000 px, so I lay out at exactly my desired width and the editor takes the
-  # rest.
-  rowSlackWeight: -> 0.01
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled). Built once, at construction: a filter change or a member add / duplicate / rename /
@@ -202,25 +186,25 @@ class MemberListWdgt extends Widget
     @_settleLayoutsAfter =>
       @showingMethods = !@showingMethods
       @_refilterMembersNoSettle()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   toggleShowingFields: ->
     @_settleLayoutsAfter =>
       @showingFields = !@showingFields
       @_refilterMembersNoSettle()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   toggleShowingInherited: ->
     @_settleLayoutsAfter =>
       @showingInherited = !@showingInherited
       @_refilterMembersNoSettle()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   toggleShowingOwnPropsOnly: ->
     @_settleLayoutsAfter =>
       @showingOwnPropsOnly = !@showingOwnPropsOnly
       @_refilterMembersNoSettle()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   # My subject's ITEMS -- an INDEXED subject's: an Array's (a subclass's too), a typed array's (a buffer
   # view with a length; a DataView has none), a string's -- the first MOST_ITEMS_LISTED of them in index
@@ -382,8 +366,7 @@ class MemberListWdgt extends Widget
       action: "selectionFromList"
       doubleClickAction: "inspectMemberValue"
       memberFactsQuery: "memberFactsOf"
-    least = WorldWdgt.theme.minimumTargetSize
-    MemberListWdgt.dressAsAViewsList @list, least, least
+    MemberListWdgt.dressAsAViewsList @list
     @_addNoSettle @list, atIndex: atIndex, layoutSpec: @list.divisionBox('y')
 
   # WHAT MY LIST SHOWS OF A MEMBER beside its name (my list's memberFactsQuery, asked once per row
@@ -406,7 +389,7 @@ class MemberListWdgt extends Widget
 
   # A CLICK on a member row (ListWdgt.select hands me its member's name, my list's selection already
   # moved to that row): my member buttons follow the selection, and the member is my CHOICE -- the
-  # inspector on my right shows it (InspectorRowWdgt.showChoice; the member's reference, MemberRef.of,
+  # inspector on my right shows it (InspectorBrowserWdgt.showChoice; the member's reference, MemberRef.of,
   # says how it is edited). The same member chosen again is reloaded there: its saved text put back
   # over unsaved typing, as one step of its undo history. A label that names no member (my list's
   # placeholder, a row whose member has gone since my list was built: _memberNamedBy) is NO choice,
@@ -415,9 +398,9 @@ class MemberListWdgt extends Widget
   selectionFromList: (selected) ->
     @_reflectMemberSelection()
     name = @_memberNamedBy selected
-    InspectorRowWdgt.showChoice @, (if name? then MemberRef.of(@inspectedObject, name))
+    InspectorBrowserWdgt.showChoice @, (if name? then MemberRef.of(@inspectedObject, name))
 
-  # A CHOICE MADE FOR THE PERSON, as their own clicks would make it (InspectorRowWdgt.chooseMember):
+  # A CHOICE MADE FOR THE PERSON, as their own clicks would make it (InspectorBrowserWdgt.chooseMember):
   # the member `name` of my subject. Hidden by my filter -- a member a superclass declares, an own
   # version of one included, while my Inherited toggle is off -- my Inherited toggle is turned on
   # first, as its click turns it on (toggleShowingInherited). Then its row is clicked (my list's
@@ -448,14 +431,15 @@ class MemberListWdgt extends Widget
     value = @inspectedObject[name]
     hasMembersToShow = value? and (typeof value is "object" or (Utils.isFunction(value) and classNamed(value.name) is value))
     return unless hasMembersToShow
-    InspectorRowWdgt.showChoice @, value
+    InspectorBrowserWdgt.showChoice @, value
 
   # NO ROW OF MINE IS CHOSEN any more: what stands on my right shows something other than my choice,
   # or nothing, so my list drops its selection (ListWdgt.clearSelection) and my member buttons follow.
   # One act, two doors: my inspector's class chip pressed (InspectorWdgt.chooseMyClass, at the press,
-  # before my row settles the choice), and my subject chosen again (my inspector's reload, inside my
-  # row's settle, which removes what stood right of it): a list holds no text to put back, so this is
-  # its reload. Paint only -- my selected row's look and my buttons' -- so a core both doors reach.
+  # before my browser settles the choice), and my subject chosen again (my inspector's reload, inside
+  # my browser's settle, which removes what stood right of it): a list holds no text to put back, so
+  # this is its reload. Paint only -- my selected row's look and my buttons' -- so a core both doors
+  # reach.
   clearChoice: ->
     @_reloadNoSettle()
 
@@ -468,7 +452,7 @@ class MemberListWdgt extends Widget
   # member's reference (MemberRef.of: its add, duplicate, rename and remove), which makes the edit,
   # records it where a world snapshot needs it, tells ONCE, and answers whether it made it. My member
   # set changed, so I re-filter (_refilterMembers), and what stood on my right for my selection goes
-  # (InspectorRowWdgt.showChoice, with no subject), after my settle. A step that refused changed
+  # (InspectorBrowserWdgt.showChoice, with no subject), after my settle. A step that refused changed
   # nothing, so I keep my list and my choice as they are.
 
   # The add, past the prompt (addPropertyPopout). Refused: the name `constructor`
@@ -481,7 +465,7 @@ class MemberListWdgt extends Widget
     return if @_refusesAsANewMemberName(prop) or @_refusesAsAnAnsweredName(prop, "a new member")
     return unless MemberRef.of(@inspectedObject, prop).add()
     @_refilterMembers()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   # `constructor` is no name a member can take: a widget's or a prototype's `constructor` is its
   # class, what every `.constructor` read answers (Class.refuseTheConstructor), so Add…, Duplicate…
@@ -534,7 +518,7 @@ class MemberListWdgt extends Widget
     return if @_refusesAsANewMemberName(newName) or @_refusesAsAnAnsweredName(newName, "a duplicate")
     return unless MemberRef.of(@inspectedObject, propertyName).duplicate newName
     @_refilterMembers()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   duplicatePropertyPopout: ->
     # no member selected = nothing to duplicate: a fresh list has NO default selection, and its
@@ -561,7 +545,7 @@ class MemberListWdgt extends Widget
     return if @_refusesAsANewMemberName(prop) or @_refusesAsAnAnsweredName(prop, "a rename")
     return unless MemberRef.of(@inspectedObject, propertyName).rename prop
     @_refilterMembers()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined
 
   renamePropertyPopout: ->
     # no member selected = nothing to rename (see duplicatePropertyPopout)
@@ -582,4 +566,4 @@ class MemberListWdgt extends Widget
     propertyName = @_selectedMemberName()
     return unless MemberRef.of(@inspectedObject, propertyName).remove()
     @_refilterMembers()
-    InspectorRowWdgt.showChoice @, undefined
+    InspectorBrowserWdgt.showChoice @, undefined

@@ -434,15 +434,15 @@ blind spot is structural:
   (`ELLIPSIS_EXCEPTIONS`, `SENTENCE_CASE_EXCEPTIONS`) and a vacuity guard (`ELLIPSIS_CHECK_VACUOUS`,
   `SENTENCE_CASE_CHECK_VACUOUS`).
   ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: its roots (its summary's `roots` line counts them) are two
-  world roots, representative widget classes, the two inspector rows (`InspectorRowWdgt[widget]`,
-  `InspectorRowWdgt[class]`; their member lists' prompts open from a BUTTON row no menu walk can reach, which a section
+  world roots, representative widget classes, the two inspector browsers (`InspectorBrowserWdgt[widget]`,
+  `InspectorBrowserWdgt[class]`; their member lists' prompts open from a BUTTON row no menu walk can reach, which a section
   of their own presses), a `MenuWdgt`/`PromptWdgt` pair, each popped up and right-clicked on ITSELF, since no other
   root stands in a pop-up and so nothing else walks a transient frame's own entries, the P5 docking pair
   (`FrameWdgt[docked band]` / `FrameWdgt[host with an empty slot]` — a Docs Maker's own docked toolbar, built and
   floated the product way, since a bare `FrameWdgt` representative is free-floating with an empty slot and offers
   neither side's dock rows), and the NESTED shapes whose rows exist only inside a container, among them each part of
-  an inspector where it stands (the row, an inspector, a member list, a member editor, a header band, a chooser band,
-  an object list, a split button, a splitter), so a class not among them is unreached. That is why
+  an inspector where it stands (the browser, an inspector, a member list, a member editor, a header band, a chooser band,
+  an object list, a split button, a column divider), so a class not among them is unreached. That is why
   it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
   catches 2 of the 16 affected classes and the pin sweep catches all 16.
   ⚠⚠ **A menu built behind a BRANCH is only swept in the branch the rig happens to be standing in**, and an action can

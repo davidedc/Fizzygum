@@ -223,9 +223,12 @@ const RECORDED = {
   'SimpleSpreadsheetWdgt#scrolledBy': 24,
   // the split's closed-form solve, recorded at 19 as StackElementsSizeAdjustingWdgt#nonFloatDragging. Re-keyed on
   // 2026-11-24 and read at 18: the solve is a QUERY of its own (the split a wanted leading edge asks for), which
-  // the splitter's drag handler and an inspector's split button both ask, each mapping its own pointer and making
-  // the two deferred max-dim writes itself; the handler keeps the guard and the mapping, well under the ceiling
-  'StackElementsSizeAdjustingWdgt#maxDimsPuttingMyLeadingEdgeAt': 18,
+  // the splitter's drag handler asks, mapping its own pointer and making the two deferred max-dim writes itself; the
+  // handler keeps the guard and the mapping, well under the ceiling. (An inspector browser's column divider, a kind
+  // of splitter, and its split button ask a solve of the divider's own, InspectorColumnDividerWdgt#columnWidthDraggedTo.)
+  // Re-keyed 2026-11-26 (inspector-browser U1), score unchanged: with the split button asking the column divider's
+  // solve, the splitter's own handler is this query's only caller, so it is _-private (check-call-separation [U]).
+  'StackElementsSizeAdjustingWdgt#_maxDimsPuttingMyLeadingEdgeAt': 18,
   'StackLayoutEngine.arrange': 43,
   'StorageSorter#_auditStorageNoSettle': 27,
   'StringWdgt#activated': 17,
