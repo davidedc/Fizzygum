@@ -381,8 +381,9 @@ class SliderWdgt extends ControllerWdgt
       ceilingNum: @stop - @start
       isRounded: true
 
+  # my value in a bubble, as the value it is (_informOfValue)
   showValue: ->
-    @inform @value
+    @_informOfValue @value
 
   # Adopt a whole scale at once — the APPLY half of reflectTarget, and a reflect-without-firing (it
   # deliberately does not call updateTarget: I am SHOWING a value, not producing one, so announcing

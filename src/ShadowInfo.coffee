@@ -16,6 +16,11 @@ class ShadowInfo
   # and one (fully opaque)
   constructor: (@offset = new Point(7, 7), @alpha = 0.2) ->
 
+  # ME AS CODE (Utils.codeFormOf asks): CoffeeScript that makes a shadow equal to me, through my
+  # constructor -- `new ShadowInfo (new Point 7, 7), 0.2`, my offset's form in its parentheses.
+  codeForm: ->
+    Utils.callFormOf "new ShadowInfo", [@offset, @alpha]
+
   # THE canonical "no shadow" instance, memoized on first use. Deliberately NOT a
   # class-level `@NO_SHADOW: new ShadowInfo …` constant: a class-level initializer
   # runs at ShadowInfo's class-eval and would need Point RIGHT THEN — but the boot

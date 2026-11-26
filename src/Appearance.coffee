@@ -174,16 +174,17 @@ class Appearance
       if toBePainted.isNotEmpty()
         @_fillLocalRectSnappedToDevicePixels ctx, toBePainted
 
-  # THE PLATE over my widget's whole box: `fill` rounded at `radius`, and, when a `stroke` is given,
-  # the 1 px border just inside it at the same radius, in the house crisp spelling (the button's look,
-  # visual-design-system §4.3: a bordered rounded rectangle means "press me"). A box narrower than
-  # twice the radius rounds at half its short side. Painted inside my _paintInLocalScope body
-  # (widget-local logical pixels), its geometry my widget's box, never the damage box: the scope has
-  # clipped to that. A handle's plate (HandleAppearance) and the layout chrome's
+  # THE PLATE over my widget's whole box: `fill` rounded at `radius` -- one radius, or one per corner
+  # ([topLeft, topRight, bottomRight, bottomLeft], visual-design-system §4.7) -- and, when a `stroke`
+  # is given, the 1 px border just inside it at the same radius, in the house crisp spelling (the
+  # button's look, visual-design-system §4.3: a bordered rounded rectangle means "press me"). A box
+  # narrower than twice a radius rounds at half its short side. Painted inside my _paintInLocalScope
+  # body (widget-local logical pixels), its geometry my widget's box, never the damage box: the scope
+  # has clipped to that. A handle's plate (HandleAppearance) and the layout chrome's
   # (LayoutChromeAppearance) are painted with it; a plate with no stroke is a borderless well (an empty
   # icon holder's drop placeholder, SimpleDropletAppearance; a prompt's text field,
-  # StringFieldAppearance), and a plate filled in shadowColor with no stroke is any of them as a shadow
-  # silhouette.
+  # StringFieldAppearance) or a flat piece (a split's divider and its tab, SplitPieceAppearance), and a
+  # plate filled in shadowColor with no stroke is any of them as a shadow silhouette.
   _paintPlate: (ctx, radius, fill, stroke) ->
     w = @widget.width()
     h = @widget.height()
@@ -198,9 +199,11 @@ class Appearance
 
   # The radius THE PLATE over my widget's box is rounded at for a requested `radius`: that radius,
   # but never more than half the box's side, rounded down -- so a box narrower than twice it rounds at
-  # half its short side. _paintPlate rounds by it, and so does an appearance answering the corners of
-  # its plate (StringFieldAppearance.outlineCornerRadii), so the two cannot disagree.
+  # half its short side; for radii per corner, each corner's so. _paintPlate rounds by it, and so does
+  # an appearance answering the corners of its plate (StringFieldAppearance.outlineCornerRadii), so
+  # the two cannot disagree.
   _plateRadius: (radius) ->
+    return (@_plateRadius each for each in radius)  if Array.isArray radius
     Math.min radius, Math.floor(@widget.width() / 2), Math.floor(@widget.height() / 2)
 
   # THE GRIP DOTS, the house's mark for "hold here and drag": square dots gripDotSize a side on a
@@ -208,7 +211,8 @@ class Appearance
   # whatever the dots must not touch: as many as fit on each axis, at most opts.mostColumns across
   # and opts.mostRows down (each absent: no bound), the field they make centred in `field`, none on
   # an axis too short for one (a `field` inset past its own size included). A band's strip shows them
-  # over its plate (FrameStripAppearance), a split adjuster along its length (LayoutChromeAppearance).
+  # over its plate (FrameStripAppearance), a split adjuster along its length and the split button
+  # joining it a field across the two (SplitPieceAppearance).
   # Painted inside my _paintInLocalScope body: they are ART, so `field` comes from my widget's box,
   # never from the damage box (the scope has clipped to that). Integers throughout, and each dot
   # filled snapped to device pixels, so every dot is whole device pixels at every density.

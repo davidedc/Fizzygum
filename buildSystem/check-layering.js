@@ -248,6 +248,12 @@ const MACRO_SANCTION = /#\s*macro-private-call-sanctioned:\s*\S/;   // [D] exemp
 //     scanner CAN attribute, and the most important hole to close (a future *NoSettle core doing @add).
 //     (The orphan guard + runtime throw remain the backstop for the `.add` member form and for
 //     construction-time add() on an orphan.)
+//   * `save` -- it shares its name with the canvas context's `ctx.save()`, which every paint method calls
+//     beside its `ctx.restore()`, and a name scanner cannot tell a canvas's save from a widget's without type
+//     inference. ONE widget method named `save` settles: a member editor's (MemberEditorWdgt.save, its Save
+//     button's action, which shows a stored value again inside its own settle); on 2026-11-25 all 26 census
+//     hits of the name in low-level code were `ctx.save()`. A top-level gesture's action, it has no caller in
+//     low-level code to guard; excluded by the owner's ruling of that day, as `add` is, a reasoned boundary.
 // (collapse / unCollapse USED to be excluded here -- they appeared in layout passes
 // [FrameWdgt._positionAndResizeChildren's editButton / internalExternalSwitchButton;
 // HorizontalMenuPanelWdgt._reLayoutSelf]. The end-of-cycle-flush drawdown convert (2026-06-25) routed those
@@ -300,7 +306,8 @@ const APPLY_CORNER = new Set([...MUTATORS.polymorphicApplies, ...BYPASS_TWINS, .
 const K_SEAM_CALL  = /@\s*(_reFitContainer\w*|_announce\w*)\b/;   // the up-notify seam (the DISPATCH-axis negative): _reFitContainer* valve + the _announce* announce-up (dead, deleted 2026-07-01)
 const K_REACT_CALL = new RegExp('@\\s*(' + REPAINT_VERBS + '|_reLayout\\w*|_positionAndResizeChildren)\\b');   // repaint (the derived verbs, see [I]) / self- or child-relayout (the REACT axis)
 const K_POLY_APPLY = new RegExp('[@.]\\s*(' + MUTATORS.polymorphicApplies.join('|') + ')(?![A-Za-z])');   // a call to a polymorphic apply corner (NOT an _apply*Base twin: the lookahead) — routing an arrange apply back through the override it bypasses
-const WRAPPER_EXCLUDED = new Set(['add']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores); an entry no src class defines as a SETTLING method removes nothing from the wrapper set and FAILS as stale (STALE_ALLOWLIST_ENTRY)
+// hand-list-sanctioned: G_STALE_WRAPPER_EXCLUDED (this gate fails an entry no src class defines as a settling method)
+const WRAPPER_EXCLUDED = new Set(['add', 'save']);   // see the [G] block above (collapse/unCollapse folded in once the layout passes routed to their cores); an entry no src class defines as a SETTLING method removes nothing from the wrapper set and FAILS as stale (STALE_ALLOWLIST_ENTRY)
 const SELF_ADD_CALL = /@\s*add\b/;        // [G] the unambiguous structural add: @add (self == Widget.add inside a Widget
                                           // method). \b excludes @addMany / @addInPseudoRandomPosition; the leading @ (not .)
                                           // excludes the Point#add-ambiguous member form @expr().add / pt.add / @_addNoSettle.

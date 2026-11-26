@@ -318,5 +318,5 @@ class HandleWdgt extends Widget
     else
       # Not pre-computed: finding eligible widgets is costly, so the list is calculated lazily
       # here, on menu-open; if none are found, show a message instead of hiding the entry.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleKind: "message"
     menu.popUpAtHand()

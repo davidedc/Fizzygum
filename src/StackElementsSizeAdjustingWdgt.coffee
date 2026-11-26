@@ -7,9 +7,9 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   colloquialName: -> "splitter"
 
 
-  # I am a grab strip between stacked elements, layoutAdjusterThickness across the split, and
-  # LayoutChromeAppearance rounds my plate's ends and paints only my grip dots inside it: every pixel
-  # of that strip has to drag, between the dots as on them, or the divider is unusable.
+  # I am a grab strip between stacked elements, layoutAdjusterThickness across the split, one flat
+  # plate with only my grip dots on it (SplitPieceAppearance): every pixel of that strip has to drag,
+  # between the dots as on them, or the divider is unusable.
   catchesPointerAt: (aPoint) ->
     @boundsContainPoint aPoint
 
@@ -20,6 +20,23 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     thickness = WorldWdgt.theme.layoutAdjusterThickness
     @setMinAndMaxBoundsAndSpreadability (new Point thickness, thickness), (new Point thickness, thickness), DivisionStackLayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
+
+  # my look: a split's piece, one flat plate (LayoutChromeWdgt.createAppearance)
+  createAppearance: -> new SplitPieceAppearance @
+
+  # I LEFT THE STACK I DIVIDE -- picked out, attached elsewhere or destroyed -- told by it (an
+  # inspector row: InspectorRowWdgt._reactToChildRemoved): the button joined to me stays in its header
+  # and is no piece with me any more, so we part (LayoutChromeWdgt.joinedPiece's rule) and I stand as a
+  # divider alone; the row's next divider before that button's inspector is joined to it by that
+  # inspector's reconcile.
+  noteLeftMyStack: ->
+    @notePartedFrom @joinedPiece
+
+  # the part joined to me (LayoutChromeWdgt._myJoinedPiece): the button I hold, while it says I am the
+  # part joined to it -- a button that does not lead its inspector's header, or that leads the header
+  # of an inspector I do not stand before, joins nothing
+  _myJoinedPiece: ->
+    @joinedPiece  if @joinedPiece?._myJoinedPiece() is @
 
   detachesWhenDragged: ->
     return false
@@ -188,13 +205,20 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
 
 
-  # MY MARK (LayoutChromeWdgt._gripDotsOnMyPlate; the plate and its states are my base's): the
-  # house's grip dots, as a band's strip shows them, in layoutAdjusterGripMark -- at most
+  # MY PLATE'S CORNERS (SplitPieceAppearance): square, ends included -- a divider is a strip from
+  # cell to cell, and the tab joined to me meets my edge with no step
+  _plateCornerRadii: -> 0
+
+  # MY MARK (SplitPieceAppearance paints it, in layoutAdjusterGripMark): the house's grip dots, as a
+  # band's strip shows them, in my box kept layoutChromeGripDotsInset in from every edge -- at most
   # layoutAdjusterGripDotsAlong along my long side, down a strip standing between a row's cells,
   # across one lying between a column's, and as many as fit across (two at layoutAdjusterThickness,
-  # fewer on a strip squeezed thinner). My appearance places them (LayoutChromeAppearance). Paint,
-  # not a control: every pixel of my box drags, between the dots as on them.
-  _gripDotsOnMyPlate: ->
+  # fewer on a strip squeezed thinner, none on one too thin for a dot), answered as [the field, the
+  # most dots along] (Appearance._paintGripDots's field and opts). Paint, not a control: every pixel of
+  # my box drags, between the dots as on them.
+  _gripDotFieldOnMyPlate: ->
     theme = WorldWdgt.theme
-    [theme.layoutAdjusterGripMark, theme.layoutAdjusterGripDotsAlong]
+    field = (new Rectangle 0, 0, @width(), @height()).insetBy theme.layoutChromeGripDotsInset
+    along = theme.layoutAdjusterGripDotsAlong
+    if @height() >= @width() then [field, {mostRows: along}] else [field, {mostColumns: along}]
 

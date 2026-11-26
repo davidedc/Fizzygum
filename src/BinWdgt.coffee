@@ -69,7 +69,7 @@ class BinWdgt extends Widget
   # the framework's only bulk-destructive user action, so it confirms through an
   # in-world menu first; the menu is transient, so dismissal destroys it.
   emptyBinRequested: ->
-    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good.", titleIsAMessage: true
+    menu = new MenuWdgt @, target: @, title: "Empty the bin?\nEverything shown in it will be\ndestroyed for good.", titleKind: "message"
     menu.addMenuItem "Yes, empty it", @, "emptyBin"
     menu.addMenuItem "Cancel"
     # the pointer rests on the first row -- "Yes, empty it" -- where this confirmation wants it

@@ -3804,10 +3804,18 @@ for (const s of sites) if (s.absentBefore.length) {
 
 - [ ] **A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane** (found by the
       independent review closing "A run that sets a widget field to a function blocks every world snapshot", in the
-      plan's ledger; a UX call for the owner). A Save of the pane's text as shown is always refused as not CoffeeScript;
-      label such a pane, or make it read-only? The same holds, with real CoffeeScript, on a READ-ONLY subject (a class
-      function's statics): the pane is typeable and shows a modified mark, with no Save (noted closing "An object
-      inspector on a class shows its statics as compiled text").
+      plan's ledger; a UX call for the owner). On a holder a Save edits (a widget), a member holding a function that
+      keeps no source and has no record (a run's `@m = -> …`, a native, another object's method held in a field)
+      shows its compiled text (`MemberRef.shownText`, which reads a Fizzygum class by its name), and its pane takes
+      typing: a Save of the text as shown is refused as not CoffeeScript, and CoffeeScript typed over it is the way to
+      replace the member, so the pane stays editable. A Save makes one too: text that NAMES a function (`Math.max`,
+      `@otherMethod`) saved into a widget's member stores that function, which keeps no source (the editor then shows
+      its compiled text), and from then on "Save world snapshot…" refuses (`Serializer`'s `encodeFunction`, caught in
+      `WorldWdgt.saveWorldSnapshotToFile`): a bubble names the member, saying it has no editable source, and how to
+      mend it, nothing downloads, until the member is removed or saved again as a function literal (found by the
+      inspector follow-ups' review A, its B1, 2026-11-26). Label such a pane? (The half about a READ-ONLY subject, a class
+      function's statics typeable with no Save, is answered: an editor takes typing exactly while a Save can apply it,
+      `MemberEditorWdgt`; `plans/inspector-overhaul-plan.md`'s ledger, the follow-ups' unit S.)
 
 ### Three plans teach a stamp without its declaration
 

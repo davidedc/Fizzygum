@@ -23,8 +23,7 @@ class ErrorsLogViewerWdgt extends CodeAreaWdgt
   # and gets its real size from the window that wraps it, createErrorConsole.)
   # ALL options, no operand: the error console is opened by the world with nothing to
   # configure. It carries no target/callback pair -- an error log reports, it does not commit a
-  # value back to anyone, so my OK button just hides my window (hideLog) and the
-  # deliverValue path belongs to CodePromptWdgt alone.
+  # value back to anyone, so my OK button just hides my window (hideLog).
   # defaultContents is read GUARDED so absence leaves the class-level "" standing: a bare
   # @param would overwrite it with undefined (R5).
   constructor: (opts = {}) ->

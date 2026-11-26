@@ -583,8 +583,7 @@ time, so a saved or duplicated sheet wears the current look.
   keys (`_isCaretEditLive`); the edit-starting key never double-delivers into the fresh
   caret because `KeydownInputEvent` dispatches over a SNAPSHOT of the receivers Set; Tab
   and Shift+Tab commit and move right / left (`nextTab`/`previousTab` → `tabFromEdit`), so
-  they never climb to `WorldWdgt.nextTab`. Multi-line editing stays the deferred
-  `CodePromptWdgt` path (spec §9.1).
+  they never climb to `WorldWdgt.nextTab`. Multi-line editing stays deferred (spec §9.1).
 - **Settle discipline:** the mount/teardown of the overlay editor mutates the tree, so the ONE
   layout settle is opened at the PUBLIC event entries (`processKeyDown` / `activated`, like
   `world.edit`) and every edit-lifecycle helper is a `*NoSettle` core using `_addNoSettle` /

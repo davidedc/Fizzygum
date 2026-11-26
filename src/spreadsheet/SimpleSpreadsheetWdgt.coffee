@@ -73,7 +73,7 @@
 #     edit is live this widget's processKeyDown IGNORES keys (the caret owns them; the
 #     receivers-Set dispatch snapshot in KeydownInputEvent keeps the edit-starting key from
 #     double-delivering into the fresh caret); Tab is swallowed at the cell. Multi-line
-#     editing stays the deferred CodePromptWdgt path (spec §9.1).
+#     editing stays deferred (spec §9.1).
 #
 # Keyboard selection + editing use the standard receiver path (world.keyboardEventsReceivers, which
 # I join when built, + processKeyDown, which acts while I am the editor focus, show and no caret is

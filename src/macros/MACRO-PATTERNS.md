@@ -444,13 +444,28 @@ assertion a recapture after a regression silently stores two different hashes an
   class's member, the world itself at the root). Fixture: a
   STANDALONE editable `new TextWdgt "@colloquialName()", backgroundColor: bg, backgroundTransparency: 1` on the world — a text on
   the world opens its OWN menu on a right-click, not a hierarchy menu — sized so the text FITS (else a click opens the "edit:"
-  prompt). `@colloquialName()` answers the name of whatever it ran against, so "Show selection" showing "Desktop" proves the
-  receiver. Assert the rows BY MEANING: the labels of the rows whose `target is` the text, joined into one string
+  prompt). `@colloquialName()` answers the name of whatever it ran against, so "Show selection" showing the string "Desktop" --
+  in its double quotes, the value's code form, its title shown as it is (`Widget._informOfValue`) -- proves the receiver (the
+  test reads a piece whose text is `'"Desktop"'`). Assert the rows BY MEANING: the labels of the rows whose `target is` the text, joined into one string
   (`assertValuesEqual` compares arrays by identity, so compare a joined string). GOTCHAS: a text's full menu is taller than
   the screen and SCROLLS — bring its last row into view before a shot (`bringMenuRowIntoView_InputEvents_Macro
   (@getTextMenuItemFromMenu menu, "Connect")`: one wheel over the rows; the locator itself answers the row where it is and
   scrolls nothing), or the run rows are below the fold; dismissing a menu ENDS editing, so re-click into the text before
   Meta+a, or select-all routes nowhere and the selected menu silently equals the unselected one.
+- **"Show selection" shows a value AS A VALUE** (`macroShowSelectionShowsAValueAsItIs`, assertion-only): the standalone
+  editable `TextWdgt` of the entry above, its code run against the world. Per value: press its slot 0, "Meta+a", type the code,
+  "Meta+a" (check `textBox.selection()` is the code), right-click the text and HOLD its menu, `bringMenuRowIntoView_InputEvents_Macro
+  (@getTextMenuItemFromMenu menu, "Show selection")`, take `world.children` before the click on the row: the bubbles are the
+  shown `MenuWdgt`s that were not there before (`Widget._informOfValue`: titled `Utils.printedFormOf value`, of the title kind
+  "value"). Hold each bubble's stored `title` AND what its title piece shows (`label.textPossiblyCroppedToFit`) to written
+  values: `'"color"'`, `true`, `42`, `new Point 3, 4`, `a WorldWdgt`, `undefined`; code that does not compile pops exactly ONE
+  bubble, the compiler's (`Cannot run this as code (line 1, column 1): missing )` for `(false`). Pinned by its header
+  (`@clickMenuHeaderToPin_InputEvents bubble`), a pop-up takes its rows' width and its strip hides a title that does not fit,
+  so read its piece's shown form as `label.transformTextOneToOne(label.text)`. A title whose first character has no case (a
+  quote mark, a digit) reads the same as a value and as a message: hold the never-re-cased claim on `true`, and a number's
+  bubble -- a slider's "Show value" (its lower track right-clicked, the row brought into view) -- by its `titleKind`,
+  "value". Put each bubble still shown away by its OK row (a press on one bubble's row closes any other it lands outside of).
+  No new verb.
 - **An inspector's code pane runs against its subject** (`macroInspectorCodePaneRunsAgainstItsSubject`): a member editor's
   text sits in a `TextAreaWdgt` (its code area, `editor.tempPromptEntryField`) that takes over its children's menus, nested in
   the editor, so a press in the text opens dev mode's HIERARCHY menu (`Widget.buildContextMenu` asks the TAKER); its row
@@ -1644,8 +1659,10 @@ assertion a recapture after a regression silently stores two different hashes an
   `headerTitle.textPossiblyCroppedToFit`); and the window resizes as any window (`@resizeWindowBy_InputEvents win, delta`): narrower than
   its inspectors desire together (664), the row gives up the empty places' room before any control's — its least width is its cells'
   least together: the list's inspector its chooser band's 181 (12 + Members 76 + 8 + Children 73 + 12, wider than its header's 111),
-  the editor's its header's 69, and the splitter's 12: 262 — so at 523 it divides 305 | 12 | 206 (each inspector its least plus its share
-  of the 261 px over the least, in proportion to its desired less its least), the headers still 44 at the top, both titles whole (assert
+  the editor's its header's 57 (its split button's tab 32, the gap 8, its title's least 5, the inset 12), and the splitter's 12: 250 —
+  so at 523 it divides 307 | 12 | 204 (each inspector its least plus its share of the 273 px over the least, in proportion to its
+  desired less its least: 306.95 and 204.05, the row rounding each boundary to the nearest pixel), the headers still 44 at the top,
+  both titles whole (assert
   the widths AFTER the resize: it is the first layout of the gutted inspectors, and the widths read
   before it are the last layout's, which no missing place can change); nothing comes back into the gaps; (2) a member list picked out feeds NO row — a choice in it (`bringInViewAndClickOnListItem_InputEvents_Macro
   memberList.list, name`) opens the member in a window of its OWN (find it by diffing the windows on the desktop across the choice) and
@@ -1707,7 +1724,10 @@ assertion a recapture after a regression silently stores two different hashes an
   never shown, then `fullDestroy`). No new verb.
 - **The split's two controls, dragged on both pointers — and the split a person set** (`macroInspectorSplitMovesByDividerAndByButton`):
   a row holding a member list and an editor has the splitter (`StackElementsSizeAdjustingWdgt`, the divider) and, first in the SECOND
-  header only, a 44 × 44 `SplitGripWdgt`; find the button among the header's pieces by class (`c instanceof SplitGripWdgt` among
+  header only, a `SplitGripWdgt`: a TAB joined to the divider, `theme.splitButtonWidth` (32) wide and a chrome target's side
+  (`theme.minimumTargetSize`, 44) tall, so the divider (12) and the tab make ONE flat grey piece a target's side across at the
+  header (`SplitPieceAppearance`) -- hold the tab's width to the touch size less the divider's thickness
+  (`theme.minimumTargetSize - theme.layoutAdjusterThickness`), never to the tab's own metric; find the button among the header's pieces by class (`c instanceof SplitGripWdgt` among
   `header.children`), never through what the inspector holds of it. Drag either in LEGS, the stack-divider pattern — the toolkit's
   `dragSplitControlBy_InputEvents_Macro control, dx` is exactly it: `@moveToAndMouseDown_InputEvents control` (verified),
   drain, read `world.hand.position()` as the press point, `@syntheticEventsMouseMove_InputEvents (press + dx), "left button"`, drain,
@@ -1721,7 +1741,18 @@ assertion a recapture after a regression silently stores two different hashes an
   set: another member keeps it exactly (a new second inspector), the same member keeps it, a filter toggle (Methods off keeps a field
   listed) then a member returns the default; stay clear of a double-click drill (owner questions). A plant that makes a control GRAB TO
   ITS PARENT must also take its `nonFloatDragging` away: a widget that has one is its own grab root (`Widget.findFirstLooseWidget`).
-  Two shots, the pointer parked off the window: mouse and finger byte-identical. No new verb.
+  The PIECE shows one pointer state (`LayoutChromeWdgt`, the joined piece: a hover or a press on either part lights both); read it
+  off the CANVAS, never off the parts' answers: one plate pixel of each part clear of every dot (the divider's at its middle across,
+  4 px below its top; the tab's at its middle down, `layoutChromePlateRadius` in from its right edge) through
+  `world.worldCanvasContext.getImageData` at `localPointToScreen` × (`world.worldCanvas.width / world.width()`), named by the Theme
+  role (`splitPieceFill`, `splitPieceHoverFill`, `splitPiecePressFill`) -- a part that would ANSWER the joined state but is never
+  told to repaint fails the line. Hover: park the pointer, then rest it on the divider's middle (its path never crosses the tab),
+  `yield "waitForScreenshotReady"`, read; a finger rests nowhere (`not @fingerMode()`: both at rest). Press:
+  `@moveToAndMouseDown_InputEvents tab`, drain, `waitForScreenshotReady`, read and shoot with the press held STILL (nothing moves, so
+  only the press repaints), then a pressed move before the release -- a press that travels never becomes a hold, so a finger's
+  release opens no menu. The DIVIDER BESIDE THE TAB (where a finger aimed at the piece's left part lands): `@pressMustLandOn
+  splitter`, then `@moveToAndMouseDown_InputEvents (new Point splitter.center().x, tab.center().y)` and the same legs; it moves the
+  split as a drag on the tab does. Three shots: image_1 parked, image_2 resting on the divider, image_3 a held press. No new verb.
 - **A WHOLE inspector taken out of its row, and a split button out of its header** (`macroInspectorTakenOutLeavesNoStraySplitter`,
   assertion-only): an inspector's own menu is
   reached by the hierarchy menu's row standing for it — `openOwnMenuAtFractionOf_InputEvents_Macro inspector, [0.5, 0.5]` right-clicks
@@ -1739,12 +1770,24 @@ assertion a recapture after a regression silently stores two different hashes an
   inspector whose header it LEADS (`InspectorWdgt.splitterMovedBy`); read both widths before the drag and assert their change 0, the
   button where it was dropped, `world.hand.isThisPointerFloatDraggingSomething()` false. The SAME member
   chosen again (a click on the selected row: a reload, which adds and removes no inspector) gives the header ONE button again, a NEW
-  one (`isnt` the one on the desktop, which stays there, not destroyed), 44 × 44 with its left on the splitter's right, and a drag
+  one (`isnt` the one on the desktop, which stays there, not destroyed), a tab 32 × 44 (held to `minimumTargetSize -
+  layoutAdjusterThickness` by `minimumTargetSize`) with its left on the splitter's right, and a drag
   on it (the toolkit's `dragSplitControlBy_InputEvents_Macro`) moves the split by its travel. Read the button among the header's pieces by
   class before and after, never through what the inspector holds of it. When no button came back, give the drag's line
   a fixed found value instead of skipping it, so the line fails under a plant rather than vanishing. Destroy what the earlier
   sections left before opening a section's window, so its drop point is bare desktop. Destroy every inspector and button picked out:
-  neither is under its window any more. No new toolkit verb.
+  neither is under its window any more. The button left on the desktop shows a TAB ALONE, read off the canvas once the reload has let
+  go of it: six pixels -- its four corners 'off' (rounded: the desktop shows there), its field's first dot at (6, 12) 'dot' (a 20 px
+  field centred in 32 × 44), and its left edge at (0, 12), where a JOINED tab's first dot stands, 'plate'. PARTING (the divider and
+  the button hold each other, `LayoutChromeWdgt.joinedPiece`): a DIVIDER picked out of its row by the same verb
+  (`pickUpAndDropAt_InputEvents_Macro splitter, point`) stands alone, naming nothing, and the row's new divider is joined by the
+  header's button -- but that join parts the old pair too (`noteJoinedBy` lets go of what each of the two held), so to see the
+  divider's OWN parting take the button out FIRST: the reconcile then builds a fresh button, and only the divider's leaving
+  (`StackElementsSizeAdjustingWdgt.noteLeftMyStack`) can part the two that left. A button destroyed through its own menu's "Destroy"
+  (a per-test `destroyThroughItsOwnMenu_InputEvents_Macro`, the ChildrenView test's) leaves no divider naming it
+  (`SplitGripWdgt._destroyNoSettle`); read it before any choice reconciles. Read what a part NAMES off its `joinedPiece` field and
+  what its look reads as joined through `_myJoinedPiece()` (a sanctioned oracle: `# macro-private-call-sanctioned:`). No new toolkit
+  verb.
 - **Duplicate… on a widget and on a class, through its prompt** (`macroInspectorDuplicateCopiesAMember`, assertion-only): press the
   footer button, hold the prompt (`@getMostRecentlyOpenedMenu()`, a `PromptWdgt`), then either type after the name it holds (the caret
   stands at its end: "Copy" makes `probeMethodCopy`) or replace it (`"Meta+a"`, then type), and `@clickPromptButton_InputEvents prompt,
@@ -1773,6 +1816,28 @@ assertion a recapture after a regression silently stores two different hashes an
   back through the meta-object between them, and open a fresh window (the list is stale); hold EACH way to the move written out, its
   records included, never one way to the other: two ways that agree on a wrong record pass a comparison of one with the other. An
   editor's text there is set by code (`textWidget.setText`) before a real press of its Save. No new verb.
+- **A member editor shows a value as CODE, and takes typing exactly while a Save can apply it**
+  (`macroInspectorShowsAValueAsCode`, one picture): give a never-mounted widget own fields of each kind (`subject.probePoint =
+  new Point 12, 68.5`, …), open the product's row on it in a window (`new InspectorRowWdgt subject`, `world.openFrameWith row,
+  row.extent(), position`), choose each member by its row (`bringInViewAndClickOnListItem_InputEvents_Macro memberList.list,
+  name`, then `@memberEditorFedBy memberList`), and hold `editor.textWidget.text` to a WRITTEN code form (`MemberRef.shownText`
+  through `Utils.printedFormOf`): `Color.create 80, 80, 80`, `new Point 12, 68.5` with its numbers unrounded, `new Rectangle 10,
+  20, 110, 70` by its corners, `[5]`, `["color"]`, `{"a": 1, "b": "two"}`, `new Date <its time>`, `[(new Point 1, 2), (new
+  Point 3, 4)]` (a call inside another in parentheses), a class by its name, and a widget, which has no code form, by its
+  printed name (`a RectangleWdgt`), still editable. Edit by keys at a slot named from the text (`text.text.indexOf(piece) +
+  piece.length`, then "Backspace" and the typing), press `editor.saveButton`, then read the value held and the editor again:
+  after a Save the editor shows what its member shows (`MemberEditorWdgt.save`), so a value is read back as stored (`1 + 1`
+  saved reads `2`, `Color.GRAY` reads `Color.create 128, 128, 128`), and where what it shows is the text typed (a function
+  literal, a value typed in its code form) nothing moves. GOTCHAS: the Save is disabled while the text is as loaded, so a
+  Save of an UNCHANGED text does nothing -- "saved unchanged" is a Save of the shown text with one space typed before it
+  (another text, the same value; the read-back drops the space) -- and a key typed and deleted leaves the Save disabled, the
+  claim vacuous. A string holding `"`, `\`, `#{x}` and a line break: build it, and its expected form, from `String.fromCharCode
+  34` / `92` / `10` and a single-quoted `'#{x}'`, never through the template literal's escapes, and never write `#{` in a
+  double-quoted CoffeeScript string -- an assertion's description included -- where it interpolates. A member of a Point is
+  reached by the drill a person makes, a double-click on the field's NAME (its row's `label`, at the middle of its text, the
+  aim `macroInspectorEditsAClassPrototypeAsAClass` takes): its editor has no Save, and a press in its text puts no caret
+  (`world.caret?.target`), so keys change nothing; the `constructor` row likewise takes no typing, though its holder's Save
+  stands there. No new verb.
 - **An inspector's CHILDREN view by real presses — its chooser found by what it holds** (`macroInspectorChildrenViewWalksTheWidgetTree`):
   a widget's inspector stands a chooser band right under its header (one `LabelledToggleWdgt` per view, Members then Children, the
   shown one ON). Find the chooser BY MEANING, the band among the inspector's OWN children whose pieces are toggles (a member list's
@@ -1843,6 +1908,52 @@ assertion a recapture after a regression silently stores two different hashes an
   that error, never in a broad one: the runners excuse a declared token for the test's whole window, with no count and no message
   (`scripts/lib/gate-tokens.js`), so in a broad test it excuses every other throw too — a regression that throws after its visible work
   anywhere in it passes. The before-and-after reading of the log is what keeps even this test's excuse to the one press.
+- **A paint tool's member that cannot be made errs ONCE per door, and stays mendable** (`macroToolMemberThatCannotBeMadeErrsOnce`,
+  assertion-only, its one declared error INPUT_ERROR): state the person's record BY CODE through the load's own door
+  (`world.user.replaceDrawingToolOverrides {pencil: record}`), one member's text naming something the page does not define — on the
+  harness page every part is loaded, so no gesture could store it, and the claim is what follows once a file brought it. COUNT the
+  Error log's entries — `world.errorConsole?.contents?.textWidget?.text` split on the rule of 41 dashes each report writes above itself
+  (`Array(42).join "-"`) — after each step, and name the step that MAKES the tool: park the pointer where its route to the step's
+  target crosses no glass, before the record is stated, since every pointer move over a glass is a take-up that asks the tool. ORDER the
+  steps so each surface's first take-up comes by a move of its own right after the making: the error a take-up raises clears the input
+  queue (the world's input catch), so a later gesture whose mouse route crosses a glass not yet taken up loses the rest of itself —
+  a route from a tool cell's menus back to an inspector crosses its own drawing's glass. Then read the stand-in (a function, answering undefined), the
+  surface (its glass owning no member of that name, the others kept with their sources: `Widget.keptSourceOf glass.member`), the
+  two edit doors (the mark, and the cell menu's Edit code), the editor showing the person's text (`editor.textWidget.text`,
+  `isEditable`), a write's record (`world.user.drawingToolOverrideFor key`), and the mend's take-up (each glass holding the made
+  member). A stroke "lays paint" when the canvas's painting buffer changed (`glass.underlyingCanvasWdgt.behindTheScenesBackBuffer`
+  read before and after, compared byte by byte).
+- **The door ON a member, read as values** (`macroInspectorDoorOpensOnAMember`, one shot): `world.spawnInspector subject,
+  member: name` opens the window with that member chosen as a click on its row chooses it (`InspectorRowWdgt.chooseMember`).
+  Call it BY CODE — the claim is the door's, and no gesture calls it but through its callers (the next entry) — then find the
+  window as after "Inspect" (`memberList = @topMemberList()`, `memberList.parent.parent.parent`). Read the choice off the
+  list: `memberList.list.selected.labelString`, the editor beside it (`@memberEditorFedBy memberList`, its `memberRef.name`),
+  the scroll (`memberList.list.scrollOffsetY > 0`), and "WHOLE in view" in the ROW's plane — the list's box mapped into it
+  (`row.screenPointToMyPlane new Point list.left(), list.top()`), the arithmetic the list verbs aim by, since a row of a
+  scrolled list never moves when it scrolls. Pick the member by a fact the list itself states (its LAST element, past its
+  fifth, read as the fixture's premise); a member only the default filter hides (a rectangle's `color`, Widget's) is
+  revealed by Inherited turned on (`memberList.showingInherited`, `showInheritedToggle.isOn`); a name the subject does not
+  answer opens the window with nothing chosen and nothing said (exactly one new desktop child that is no ephemeral
+  overlay, `isEphemeral()` left out, and no Error log: the door opens each window at the hand, so under a mouse the new
+  window's resize grip stands under the parked pointer and brings a hover outline, a second new child). A subject on
+  no desktop (an analog clock never added) keeps its face out of the picture. Each call opens a window of its own.
+- **One declaration, three ways in: the edit mark, the "Edit code" row, the user-mode menu**
+  (`macroEditMarkAndMenuRowOpenTheSameMember`, assertion-only): a widget that names code a person edits (`_memberToEdit`: a
+  palette's tool button names the person's tool, `DrawingTool.of`, on `applyToolAt`) is reached by its edit mark (a press
+  on `tool.children.find (c) -> c instanceof EditableMarkWdgt`), by its base menu's "Edit code" in dev mode (`@openMenuOf_InputEvents
+  tool` — a hold under a finger — opens the HIERARCHY menu; its row standing for the button, `@rowOfMenuStandingFor`, reads the
+  button's own name, "Pencil tool"; that row's menu holds "Edit code" right after "Inspect"), and in USER mode by the one-row menu
+  the button builds itself (the same right-click; the menu's `target` is the button, its `title` "pencil tool",
+  `@assertTopMenuItemStrings ["Edit code"]`), while any other widget in user mode still opens the desktop's menu (`target is
+  world`, title "Desktop"). Switch modes as a person does, through the desktop's own rows ("Switch to user mode", "Switch to dev
+  mode", from `@clickOnDesktopAt_InputEvents point, "right button"`), and come back to dev mode before the end. Every way
+  opens a window of its OWN on the SAME tool object (`memberList.inspectedObject is world.user.drawingTools.pencil`), its
+  title "Inspector — pencil tool": hold each title and name to a WRITTEN string, never to a call of the product's naming method.
+  Close each window by its close button (`@closeWindow_InputEvents`), so the drawing under it is free for the next gesture;
+  a closed window rests in the bin, as any does. A Save there is the person's (`world.user.drawingToolOverrideFor "pencil"`, a
+  member record), and the glass takes it up at its next move (one mouse move queued as itself, as in
+  `macroToolCodeSaveRefusesCodeThatDoesNotCompile`). Put `world.user.drawingToolOverrides` and `world.user.drawingTools` back
+  at the end.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.activated` is EMPTY and its
   `pressBegan` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a
@@ -2196,17 +2307,24 @@ assertion a recapture after a regression silently stores two different hashes an
   instanceof-TextWdgt EXCLUSION. No new verb.
 - **Re-proportion a stack LIVE by dragging the divider** (`macroStackDividerReproportionsCells`): the INTERACTIVE sibling of basic
   proportions above — a `StackElementsSizeAdjustingWdgt` placed BETWEEN two cells in the stack (`holder.add lime/divider/blue,
-  layoutSpec: theCell.divisionBox()`; this is `setupTestScreen1`'s second holder, `WidgetFactory.coffee:174`).
-  Dragging the divider runs its `nonFloatDragging` (`StackElementsSizeAdjustingWdgt.coffee:28`), which shifts the max-size (spreadability)
-  allowance between the flanking cells — re-apportioning the split. Drive it with the HELD-DRAG idiom (a per-test helper): `p =
-  divider.center(); @moveToAndMouseDown_InputEvents p; yield "waitNoInputsOngoing"; @syntheticEventsMouseMove_InputEvents (new Point (p.x+Δ),
-  p.y), "left button"; @syntheticEventsMouseUp_InputEvents()`. GOTCHAS: a plain CLICK on the divider is a NO-OP (it early-returns on an absent drag
-  delta, `:32-33`) — you MUST move while held; the post-mouse-down `yield "waitNoInputsOngoing"` is mandatory (else the grab offset is stale and
-  it apportions by a bogus delta); the reachable range is BOUNDED — `setMaxDim` reverts a drag that would push a cell below its DESIRED width
-  (`:65-76`), so only two split states are reachable (the spreadability baseline and the opposite-dominant bound), and the apportioning scales
-  with the drag DISTANCE (one firm large move reaches the bound where several small moves do not). So drive ONE firm drag to the bound, not a
-  back-and-forth (the return leg would mostly revert and duplicate the baseline shot). Resize the holder via its lone HandleWdgt
-  (`@dragResizeMoveHandleTo_InputEvents "resizeBothDimensionsHandle"`) to show the dragged split survives a container resize. First
+  layoutSpec: theCell.divisionBox()`; the shape of `WidgetFactory.setupTestScreen1`'s first adjustable holder, at the test's own
+  sizes, BLUE with twice LIME's spreadability). A drag on the divider runs `StackElementsSizeAdjustingWdgt.nonFloatDragging`, which
+  maps the pointer into the divider's plane, takes the grab grip off it, and asks the split's closed-form solve
+  (`maxDimsPuttingMyLeadingEdgeAt`) for the max widths that put the divider's leading edge exactly there: one flanking cell's max
+  raised by as much as the other's is lowered, which re-apportions the stack's SPARE width (its width less its cells' desired widths
+  together) between the two. Drive it with the HELD-DRAG idiom (a per-test helper, `dragStackDividerBy_InputEvents_Macro divider, Δ`):
+  `p = divider.center(); @moveToAndMouseDown_InputEvents divider; yield "waitNoInputsOngoing"; @syntheticEventsMouseMove_InputEvents
+  (new Point (p.x+Δ), p.y), "left button"; yield "waitNoInputsOngoing"; @syntheticEventsMouseUp_InputEvents()`. GOTCHAS: a plain CLICK
+  on the divider is a NO-OP (it returns early on an absent drag delta) — you MUST move while held; the post-mouse-down
+  `yield "waitNoInputsOngoing"` is mandatory (the target is the ABSOLUTE pointer less the grab grip, so a stale grip offsets the
+  whole drag); a drag moves nothing unless the holder is wider than its cells' desired widths together (outside the division
+  arrange's third regime the solve answers nothing), so widen the holder first; and the range is BOUNDED — the solve clamps a move
+  so no flanking cell goes below its DESIRED width. Between the two bounds the divider lands exactly under the pointer by any route
+  (one large move and many small ones reach the same split), and past a bound it stays on it and re-syncs once the pointer comes
+  back — the sibling `macroStackDividerFollowsPointerExactly` asserts that tracking as values. This test pins the SPLIT in
+  pixels: ONE firm rightward drag that overshoots BLUE's bound, so its shot shows the clamp, LIME the wider cell. Resize the holder
+  by its lone HandleWdgt (`@resizeWidgetBy_InputEvents holder, delta`) to show the dragged split survives a container resize: the
+  moved max widths are fields of the cells' division boxes, so each cell takes the same share of the new spare. First
   interactive-layout-re-proportioning test. No new verb.
 - **VERTICAL division stack — the 'y' transpose of the proportional-cells recipe**
   (`macroStackDividerFollowsPointerExactlyVertical`): attach each cell with `holder.add cell, layoutSpec: cell.divisionBox('y')`
@@ -2577,19 +2695,26 @@ assertion a recapture after a regression silently stores two different hashes an
 - **A gesture over typed code answered, not crashed — and nothing changed** (`macroScriptSaveRefusesCodeThatDoesNotCompile`,
   `macroInspectorSaveRefusesCodeThatDoesNotCompile`, `macroInspectorSaveOfAClassMemberRefusesCodeThatDoesNotCompile`,
   `macroToolCodeSaveRefusesCodeThatDoesNotCompile`): set the editor's text (`script.textWidget.setText …`, a member
-  editor's `textWidget` — `@memberEditorFedBy memberList`, asked once the member is chosen, since the choice builds it —
-  a `CodePromptWdgt`'s `textWidget`), press the gesture's real button (`saveButton`, `okButton`), then
+  editor's `textWidget` — `@memberEditorFedBy memberList`, asked once the member is chosen, since the choice builds it,
+  a paint tool's member editor as any other's, opened by the tool's edit mark), press the gesture's real button
+  (`saveButton`), then
   assert four things. (1) The message is SHOWN and says what the person reads: `message = @getMostRecentlyOpenedMenu()`,
-  `@popUpIsShown(message)`, and `message.title` equal to the full "Cannot save this as code (line L, column C): …". Read the
+  `@popUpIsShown(message)`, and `message.title` equal to the full "Cannot save this as code (line L, column C): …" (a line and
+  no column for a statement after a member's function; no place at all for a member a paint tool cannot keep as text, which
+  compiles). Read the
   expected position off the CoffeeScript compiler run on the TYPED text alone, never off the build under test. (2) The crash
   path never ran: `world.errorConsole is undefined` (each test starts on a freshly constructed world, so the Error log exists
   only if something threw into it). (3) Nothing changed: the route's own state by IDENTITY (`script.savedScript
   is savedBefore`, the class member the Save was refused for unchanged). (4) The edit
-  survived: the editor still holds the text, Save is still enabled (`saveButton.isEnabled`), and a "… + close"/"OK" gesture
-  left its window up (`win.parent is world`, `prompt.isOrphan()` false); a member list asked again still feeds the SAME
+  survived: the editor still holds the text, Save is still enabled (`saveButton.isEnabled`), and a "… + close" gesture
+  left its window up (`win.parent is world`); a member list asked again still feeds the SAME
   editor (`(@memberEditorFedBy memberList) is editor`: a refused Save chooses nothing). Dismiss with `@moveToItemOfMenuAndClick_InputEvents
-  message, "OK"` before the next gesture. A behaviour no gesture can reach any more (the prompt now refuses before injecting)
-  is checked by a direct call inside a `try` in the macro body, saying so in `provenance`.
+  message, "OK"` before the next gesture. A behaviour no gesture can reach any more (a gesture now refuses before the edit
+  would happen) is checked by a direct call inside a `try` in the macro body, saying so in `provenance`. A paint tool's
+  refusals of a NAME (any the paint surface answers, `DrawingToolBase.nameTheSurfaceAnswers`: its entries `hoverMoved` /
+  `pressMoved`, a `width`, a field such as `bounds`) stand at the gestures that name a member — Add…,
+  Duplicate…, Rename…, each answered through its prompt — read as the one new pop-up's title, the tool's words with their line
+  breaks, and the list left as it was (`memberList.list is listBefore`, the choice kept).
 - **Count a framework call — a spy on the method, restored before the macro ends** (`macroInstancesRegistry`,
   `macroInspectorEditTellsOnce`): when the claim is HOW OFTEN something runs ("a construction registers a widget once",
   "a class edit tells every live widget once"),

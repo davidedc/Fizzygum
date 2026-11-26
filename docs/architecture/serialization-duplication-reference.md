@@ -512,16 +512,24 @@ NAMED like one.
 - **Functions**: for an own function-valued property `foo` —
   - if `foo` holds a CLASS → `{"$wk": "class:<Name>"}`, named by its class (§4 step 0, §4a), asked
     before everything below;
-  - else if the owner's class takes injected methods (a widget's, `Serializer.classTakesInjectedMethods`)
-    and the function has a kept source (a user-injected method: `injectProperty` keeps the
+  - else if the owner's class takes injected methods (`Serializer.classTakesInjectedMethods`: its
+    instances answer `injectProperty` — a widget's, and a non-widget's that services the instance edit
+    protocol, a paint tool's `DrawingTool`, which therefore carries `{"$src"}` the same way)
+    and the function has a kept source that spells a function literal (a user-injected method: the
+    injection's one body, `Widget.injectPropertyInto`, keeps the
     CoffeeScript WITH the function it compiles — a weak store keyed by the function, read
-    through `Widget.keptSourceOf` — and only for a function it MAKES, a txt that IS one function
+    through `Widget.keptSourceOf`, written through `Widget.keepSourceWith`, its one writer — and only
+    for a function it MAKES, a txt that IS one function
     literal (`Widget.spellsAFunctionLiteral`, read off the lexer's tokens); a txt naming one, `@f`,
     keeps nothing, so the function it names keeps the source it has, or none; and a txt with a
-    statement after its function is stored by no door — an object's, a code blurb's or a class's
-    member edit refuses it like a compile error, `Widget.refuseCodeAfterAFunction` — since
+    statement after its function is stored by no door — an object's or a class's member edit
+    refuses it like a compile error, `Widget.refuseCodeAfterAFunction` — since
     every load and copy compiling it back would run that statement again) → serialize
-    `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning widget. A COPY
+    `{"$src": <source>}`; restore recompiles it with `injectProperty` on the owning object. The save
+    asks the load's own test of a `{"$src"}` (`spellsAFunctionLiteral`) of the kept source too, so it
+    never writes one its load refuses: the one kept source that spells no function literal, a paint
+    tool's STAND-IN for a member it could not make (`DrawingToolBase._standInFor`, which keeps the
+    person's text), is refused below by the member's name until it is mended or removed. A COPY
     does the same, asking the same test (`Duplicator._compileInjectedMethods`): each injected method
     a widget's own field holds — a `@serializationTransients` one too, which the save drops and a copy
     keeps — is compiled afresh on the copy, so a fat arrow (`=> @x`), bound to the widget that
@@ -678,7 +686,7 @@ that a save refuses.
 `src/serialization/Deserializer.coffee`, five passes: (1) instantiate shells /
 native-type factories; (2) populate & link, resolving `$r`/`$wk`/`$ext`/`$num` at any
 nesting depth and setting each `$src` property aside; (3) identity & registration
-(`registerThisInstance`); (4) fixups (compile each `$src` with its widget's `injectProperty`,
+(`registerThisInstance`); (4) fixups (compile each `$src` with its holder's own `injectProperty`,
 decode async assets into one `whenReady` promise,
 re-register `memberships`, per-class `_afterDeserialization` hook — whose answer, when it is a
 thenable (an element load the hook started), `whenReady` awaits too); (5) deliver a detached
@@ -728,8 +736,9 @@ reports (§10). `parts-snapshot-load-headless.js` holds the parts half on the de
 beside the world door's sections); the production boot smoke (`fg homepage`) holds the layer half on a
 `sources: "lazy"` tree.
 
-A `{"$src"}` stands only as a property of a widget's record, since the load compiles it with that
-widget's `injectProperty` and a save writes no other (§5; both sides ask `Serializer.classTakesInjectedMethods`).
+A `{"$src"}` stands only as a property of a record whose class takes injected methods (a widget's, a paint
+tool's), since the load compiles it with that object's `injectProperty` and a save writes no other (§5; both
+sides ask `Serializer.classTakesInjectedMethods`).
 One in a tag record (an `$Array` or `$Set` item, a `$Map` entry, an `$Object` property, any `TAG_BUILDERS`
 record) makes a malformed table (`Deserializer._envelopeShapeProblem`). One among the properties of a
 record of a class that cannot inject a method is refused by
@@ -811,17 +820,24 @@ unserializable value still raises the rich `SerializationError`.
 `infoDocFlags` (the `world.infoDoc_*_created` own booleans — named in one place, `WorldWdgt.infoDocFlagName` /
 `isInfoDocFlagName`, which InfoDocs, the save, the load's vetting and the teardown all ask),
 `untitledNamingCounters`, `users` (`world.users` — one record per `User` (`Serializer._userRecord`): the
-`armedDrawingTool` KEY, and the person's edits of the paint tools, `drawingToolOverrides` (tool key → source
-text, left out while there are none), captured by name like the naming service since a `User` is a plain
-delegated collaborator, not a tree object; the load's vetting refuses a record that is not a plain record, a tool
-key that is not a string, or edits that are not a plain record of strings (`Deserializer._userRecordProblem`: the
-sources themselves are not compiled at the load), then applies each record to the live users positionally,
-re-stating the hand and REPLACING the person's edits with the file's, `User.replaceDrawingToolOverrides`, since the
+`armedDrawingTool` KEY, and the person's edits of the paint tools, `drawingToolOverrides` (tool key → the tool's
+MEMBER RECORD, member name → source text in the tool's member order, both levels written entry by entry; left out
+while there are none), captured by name like the naming service since a `User` is a plain
+delegated collaborator, not a tree object; the tool objects the person holds (`User.drawingTools`) are not saved:
+they are made again from these records. The load's vetting refuses a record that is not a plain record, an armed
+tool that is not a string, edits that are not a plain record, a tool whose members are not a plain record, a member
+whose source is not a string, and a member's source with a statement after its function
+(`Deserializer._userRecordProblem` / `_toolMembersProblem`: the sources themselves are not compiled at the load),
+then applies each record to the live users positionally,
+re-stating the hand and REPLACING the person's edits with the file's, `User.replaceDrawingToolOverrides` (fresh
+records, so each tool the person holds re-makes itself at its next ask), since the
 users outlive the load; a window's own tool, `FrameWdgt.armedDrawingTool`, is an ordinary field of the window, and a
 palette cell holds no code, so what a tool key MEANS is saved in one place, the person's table; a paint surface's
-taken-up tool members and the source they came from (`CanvasGlassTopWdgt._takenUpToolSource`) ride its record like
-any injected member, and its first use after a load compares that source with what its holder's key means now —
-[`toolbars.md`](toolbars.md) §4), `appWindows` (`{AppClassName:{$r}}`),
+taken-up tool members, the member code they came from and their names (`CanvasGlassTopWdgt._takenUpToolCode`,
+`_takenUpMemberNames`) ride its record like any injected member, and its first use after a load compares that code with the code of the person's tool for its
+holder's key now — [`toolbars.md`](toolbars.md) §4. A tool OBJECT is saved only where something saved holds it (an
+inspector window on one): an ordinary `DrawingTool` record, its members `{"$src"}`, restored detached, its Saves
+writing the loading person's tool by its key), `appWindows` (`{AppClassName:{$r}}`),
 `bin` (`{$r}`), `shelf` (`{$r}`), `preferences` (a FORCED data record — `refFor` would give the
 `{"$wk":"preferences"}` symbolic link, but the section needs the actual values, restored onto
 the static `WorldWdgt.preferencesAndSettings`), `idCounters` (per-class
@@ -978,8 +994,9 @@ once, by a world load: a member of the page it could not return to boot that the
 recorded as that member's edit would have been (`recordMembersStillRunning`, §11):
 
 - **instance** — a member editor's Save on an object's member (its member reference's step, `MemberRef.save`) records
-  `recordInstanceEdit(widget, name, txt)` when the value it saves is a function.
-  `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
+  `recordInstanceEdit(widget, name, txt)` when the value it saves is a function — for a holder with an identity,
+  a widget's (`uniqueIDString`): a paint tool's Save is not recorded, its edit riding the person's user record
+  whole. `Widget.injectProperty` itself records nothing: the product injects its own handlers through it
   (a paint surface taking up its tool, `CanvasGlassTopWdgt._takeUpToolInReach`) and a load re-injects each `{"$src"}` through
   it, none of them an edit a person made. Instance edits ALSO ride serialization on their own: the
   injected function keeps its source → `{"$src"}` → re-injected on restore (§5). The registry

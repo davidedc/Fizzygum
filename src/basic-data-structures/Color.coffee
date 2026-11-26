@@ -243,6 +243,14 @@ class Color
     else
       "rgba(" + Math.round(@_r) + "," + Math.round(@_g) + "," + Math.round(@_b) + "," + @_a + ")"
 
+  # ME AS CODE (Utils.codeFormOf asks): CoffeeScript that makes a colour equal to me, through the
+  # factory every colour is made by -- `Color.create 128, 128, 128`, my alpha written only where it is
+  # not 1. Never one of my named constants: two of them can name one colour (GRAY and GREY), so a name
+  # would be a choice my value does not make. My string above is my CSS form, which every appearance
+  # hands the canvas, and no code.
+  codeForm: ->
+    Utils.callFormOf "Color.create", (if @_a is 1 then [@_r, @_g, @_b] else [@_r, @_g, @_b, @_a])
+
 
   # Color comparison:
   equals: (aColor) ->

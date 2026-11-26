@@ -5,15 +5,25 @@
 # is my memberRef too: chosen in the member list on its left (MemberListWdgt.selectionFromList).
 #   HOW my member is edited is my memberRef's to know (its save: an object's member through the
 # instance edit protocol, a class's through its meta-object, recorded), and so is whether it is
-# edited at all (MemberRef.canEdit): a member no Save edits -- of a number, a Point, a built-in
-# class's prototype -- gets no Save, and with it no footer band (CodeAreaWdgt._hasAFooterBand), my
-# code area running down to my bottom. `constructor`'s code is shown, never edited: it is the class
-# itself, which a save would replace (Class.refuseTheConstructor).
-#   My text is my member's as my memberRef shows it (MemberRef.shownText), at my build and again
+# edited at all (MemberRef.canEdit): a member no Save edits -- of a number, a Point, a plain object,
+# a built-in class's prototype -- gets no Save, and with it no footer band
+# (CodeAreaWdgt._hasAFooterBand), my code area running down to my bottom. My text takes typing
+# exactly while a Save can apply it: a member no Save edits is shown, never typed into, and so is
+# `constructor`'s code: it is the class itself, which a save would replace
+# (Class.refuseTheConstructor). A value with no code form on a holder a Save edits (a widget-valued
+# field, a function with no source kept) keeps its typing and its Save: CoffeeScript typed over its
+# printed form is the way to replace it.
+#   My text is my member's as my memberRef shows it (MemberRef.shownText): a function's source, a
+# field's recorded source, else the field's value as code where it has a code form (a field holding
+# a Fizzygum class reads as the class's name), else its printed form; at my build and again
 # whenever my member is CHOSEN AGAIN (_reloadNoSettle): put back over whatever is typed as one step of
-# my text's undo history, so the undo chord brings the typing back. Another member gets another
-# editor, with a history of its own, so no undo brings back a text of another member's that a Save
-# would write into this one.
+# my text's undo history, so the undo chord brings the typing back. After a Save I show what my
+# member then shows, whatever kind of thing was stored: where that is the text typed (a function
+# literal, kept as its source; a value typed in its code form) the text stays, its caret, selection
+# and undo history with it; where it is not, it is put back the same way (`1 + 1` saved reads `2`,
+# `Math.max` the compiled text of the function it names). Another member gets another editor, with a
+# history of its own, so no undo brings back a text of another member's that a Save would write into
+# this one.
 #   I stand on the body of the row of inspectors that holds me: my code area wears the inspector's
 # pane roles, no fill and no border, and the rules between me and my neighbours are theirs and the
 # bands'. Standing anywhere else -- a person took me out of my inspector -- I paint that body myself,
@@ -66,8 +76,9 @@ class MemberEditorWdgt extends CodeAreaWdgt
     @_buildEditableCodeAreaNoSettle @memberRef.shownText()
     @tempPromptEntryField.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
     @textWidget.backgroundColor = WorldWdgt.theme.inspectorPaneFill
-    # `constructor`'s code is shown, never edited: it is my member's holder's class itself
-    @textWidget.isEditable = @memberRef.name isnt "constructor"
+    # my text takes typing exactly while a Save can apply it: my member's holder is edited at all,
+    # and my member is not `constructor`, my member's holder's class itself
+    @textWidget.isEditable = (MemberRef.canEdit @memberRef.holder) and @memberRef.name isnt "constructor"
     if MemberRef.canEdit @memberRef.holder
       @saveButton = new SimpleButtonWdgt target: @, action: "save", face: "Save", primary: true
       @_addNoSettle @saveButton
@@ -87,8 +98,9 @@ class MemberEditorWdgt extends CodeAreaWdgt
     @saveButton?.setEnabled false
 
   # What code typed in me runs against (TextWdgt._codeReceiver): my member's holder, exactly while it
-  # is an object my Save edits as an object's (MemberRef.codeReceiverOf); a class's member, or a value
-  # no Save edits, gets no run rows.
+  # is an object my Save edits as an object's and a receiver typed code runs against
+  # (MemberRef.codeReceiverOf); a class's member, a paint tool's, or a value no Save edits, gets no run
+  # rows.
   codeReceiver: ->
     MemberRef.codeReceiverOf @memberRef.holder
 
@@ -96,18 +108,30 @@ class MemberEditorWdgt extends CodeAreaWdgt
   # where a world snapshot needs it, and tells once. Every save step compiles before it changes
   # anything, so an edit that does not compile changes nothing: it is reported beside the hand, and
   # stays MODIFIED, my Save still enabled (Widget._savingTypedCode). The gesture asks MemberRef.canEdit
-  # too, not only my build: a restored editor keeps the button its file holds. Answers whether it saved.
+  # too, not only my build: a restored editor keeps the button its file holds. Then I show what my
+  # member SHOWS (MemberRef.shownText), one rule whatever was stored: where that is the text typed,
+  # read once before the save, nothing moves -- the text stays, its caret, selection and undo history
+  # with it; where it differs, it is put back (_reloadNoSettle, one step of my undo history), so I show
+  # what was stored: `Color.GRAY` saved reads as its code form, a text NAMING a function (`Math.max`,
+  # `@otherMethod`), which keeps no source, as that function's compiled text. Either way the text
+  # shown is then the one my code area compares against: unmodified, my Save disabled. Answers whether
+  # it saved.
   save: ->
     return false unless @saveButton? and MemberRef.canEdit @memberRef.holder
-    return false unless @_savingTypedCode => @memberRef.save @textWidget.text.toString()
-    @textWidget.considerCurrentTextAsReferenceText()
-    @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    typed = @textWidget.text.toString()
+    return false unless @_savingTypedCode => @memberRef.save typed
+    if @memberRef.shownText() is typed
+      @textWidget.considerCurrentTextAsReferenceText()
+      @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    else
+      @_settleLayoutsAfter => @_reloadNoSettle()
     true
 
-  # MY MEMBER CHOSEN AGAIN (InspectorRowWdgt.showChoice, the subject my inspector already shows): its
-  # text put back over whatever is typed, as one step of my text's undo history, so the undo chord
-  # brings the typing back; that text is then the text my code area compares against, so it reads
-  # unmodified and my Save disables. A core: the row calls it inside its one settle.
+  # MY MEMBER CHOSEN AGAIN (InspectorRowWdgt.showChoice, the subject my inspector already shows), or
+  # just saved, when what it shows is not the text typed (save): its text put back over whatever is
+  # typed, as one step of my text's undo history, so the undo chord brings the typing back; that text
+  # is then the text my code area compares against, so it reads unmodified and my Save disables. A
+  # core: the row calls it inside its one settle, my Save inside its own.
   _reloadNoSettle: ->
     @textWidget._setTextNoSettle @memberRef.shownText()
     @textWidget.pushUndoState @textWidget.text.length

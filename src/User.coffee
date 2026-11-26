@@ -10,9 +10,10 @@
 # with it. Both holders answer the same pair (armedDrawingTool, armDrawingTool), so a palette's tool
 # and a paint surface each find their nearest holder without asking which kind it is. A palette is a
 # VIEW of its holder's fact and a CONTROLLER that writes it; the fact itself has one home per holder.
-#   The person also holds the ONE table of edited tool code (drawingToolOverrides): an edit of a tool,
-# made from any palette's cell, docked or floating, means that tool everywhere, since holders hold
-# only a KEY and a key means the same code for every holder.
+#   The person also holds the ONE table of edited tools (drawingToolOverrides): an edit of a tool,
+# made through any palette's cell, docked or floating, means that tool everywhere, since holders hold
+# only a KEY and a key means the same members for every holder. And the person holds the TOOL OBJECTS
+# those edits are made on (drawingTools), one per key, which the authoring part builds and keeps here.
 #
 # ── THE ANNOUNCE SEAM ────────────────────────────────────────────────────────────────────────
 # I am a dataflow NODE (DataflowEngine's duck-typed node protocol: any object the engine holds by
@@ -38,12 +39,22 @@ class User
   #   Born holding a pencil, so a drawing born under the hand is born ready to draw.
   armedDrawingTool: 'pencil'
 
-  # THE PERSON'S EDITS OF THE TOOLS: tool key -> the source text the person saved for it, through
-  # any palette cell's edit mark. A tool the person never edited has no entry and means its stock
-  # source (PaintToolbarWdgt.sourceForToolKey). TEXT, never a function: the person types text, and
-  # the CoffeeScript must stay around to be opened and edited again. undefined until the first edit
-  # builds my own object -- never an object on the prototype, which every person would share.
+  # THE PERSON'S EDITS OF THE TOOLS: tool key -> its MEMBER RECORD, a plain record of member name ->
+  # source text, in the tool's member order, as the person's tool for that key last wrote itself
+  # (DrawingToolBase.sourceChanged, after an inspector's edit of it) -- the WHOLE tool's members once
+  # edited, never a change over the stock ones, so a Remove of a stock member is kept too. A tool the
+  # person never edited has no entry and means its stock members (PaintToolbarWdgt.stockToolMembers).
+  # TEXT, never a function: the person types text, and the CoffeeScript must stay around to be opened
+  # and edited again. undefined until the first edit builds my own object -- never an object on the
+  # prototype, which every person would share.
   drawingToolOverrides: undefined
+
+  # THE TOOLS I HOLD: tool key -> the person's tool for it (a DrawingTool), built and kept by
+  # DrawingTool.of, which re-makes one from my table whenever its key means another record. A part's
+  # objects, held here as the person's (the authoring part builds them; I name no class of it), and
+  # never saved (my record names its fields: Serializer._userRecord) nor copied (I am in no tree).
+  # undefined until the first ask builds my own object.
+  drawingTools: undefined
 
   # THE KEYBOARD FAMILY I type on: "mac" (Cmd and Option) or "pc" (Ctrl), whose conventions every caret follows
   # for line and document ends, word jumps, word and line deletes, select-all, undo and redo
@@ -81,27 +92,40 @@ class User
     return undefined unless Object::hasOwnProperty.call @drawingToolOverrides, toolKey
     @drawingToolOverrides[toolKey]
 
-  # The person saved `source` as the tool `toolKey` (the code prompt of a palette cell's edit mark
-  # checked it first). Every surface using that key takes it up at its next use; announced like the
-  # hand, so what reflects the person re-reads it.
-  overrideDrawingTool: (toolKey, source) ->
+  # The person's tool `toolKey` wrote `members` (a member record, as my table keeps it) as their edit of
+  # it (DrawingToolBase.sourceChanged, which hands me a fresh record each time). I keep the record I am
+  # handed, the one the tool remembers making itself from. Every surface using that key takes it up at
+  # its next use; announced like the hand, so what reflects the person re-reads it.
+  overrideDrawingTool: (toolKey, members) ->
     @drawingToolOverrides ?= {}
-    @drawingToolOverrides[toolKey] = source
+    @drawingToolOverrides[toolKey] = members
     world.dataflow?.markNonValueChange @
     return
 
-  # My edits of the tools BECOME `table`'s own entries (tool key -> source text): an edit `table` lacks
+  # My edits of the tools BECOME `table`'s own entries (tool key -> member record): an edit `table` lacks
   # is gone, and an undefined or empty `table` means no edits. A loaded world states its file's table
   # this way (WorldWdgt.loadWorldSnapshot): the load keeps its users, so an edit made before it must not
-  # outlive it. The entries go into an object of my own, never `table` itself, and each one by
-  # Object.fromEntries, an own entry whatever its key spells (a key read out of a file is data).
-  # Announced like the hand, and only when my edits changed.
+  # outlive it. "Unchanged" is read per member: the same keys, and per key the same member names in the
+  # same order with the same sources (_sameMembers). The entries go into objects of my own, never
+  # `table`'s, each one by Object.fromEntries, an own entry whatever its key or member name spells (read
+  # out of a file, both are data) -- fresh records, so each tool I hold, which compares its key's
+  # record by identity, re-makes itself at its next ask (DrawingTool.of). The tools themselves stay
+  # mine: an inspector open on one goes on editing my tool. Announced like the hand, and only when my
+  # edits changed.
   replaceDrawingToolOverrides: (table) ->
     entries = Object.entries table ? {}
     current = @drawingToolOverrides ? {}
     unchanged = entries.length is Object.keys(current).length and
-      entries.every ([toolKey, source]) -> Object::hasOwnProperty.call(current, toolKey) and current[toolKey] is source
+      entries.every ([toolKey, members]) -> Object::hasOwnProperty.call(current, toolKey) and User._sameMembers current[toolKey], members
     return if unchanged
-    @drawingToolOverrides = if entries.length > 0 then Object.fromEntries entries else undefined
+    @drawingToolOverrides = if entries.length > 0 then Object.fromEntries ([toolKey, Object.fromEntries Object.entries members] for [toolKey, members] in entries) else undefined
     world.dataflow?.markNonValueChange @
     return
+
+  # Do two member records hold the same members: the same names, in the same order, each with the same
+  # source?
+  @_sameMembers: (one, other) ->
+    oneEntries = Object.entries one
+    otherEntries = Object.entries other
+    oneEntries.length is otherEntries.length and
+      oneEntries.every ([name, source], i) -> otherEntries[i][0] is name and otherEntries[i][1] is source

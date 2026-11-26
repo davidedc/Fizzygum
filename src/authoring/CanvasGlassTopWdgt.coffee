@@ -1,40 +1,38 @@
 # THE PAINT SURFACE ("the glass"): the transparent canvas over a drawing's canvas. A paint tool shows
 # its feedback on me and lays its paint on the canvas under me (@underlyingCanvasWdgt).
 #
-# I TAKE MY TOOL UP WHEN I AM USED. A tool is a source of `name = value` assignments
-# (PaintToolbarWdgt's stock sources, or the person's edit of one) that I carry as INSTANCE members:
-# `applyToolAt` and its helpers. The pointer reaches me through my two class entries, hoverMoved and
+# I TAKE MY TOOL UP WHEN I AM USED. A tool is the person's DrawingTool for a key (DrawingTool.of: made
+# from the person's edit of that tool, else from PaintToolbarWdgt's stock members), whose members --
+# `applyToolAt` and its helpers -- I carry as INSTANCE members of mine while I carry it, each compiled
+# on me from its source. The pointer reaches me through my two class entries, hoverMoved and
 # pressMoved, and each asks, at that very event, which tool I should carry now: none while my drawing
 # sits in view-mode content, else the one my nearest holder holds (_toolHolder: the nearest window
 # whose content I stand in and that wears drawing tools, else the person). Nothing pushes a tool onto
 # me and nothing has to tell me when the answer changes, so no change of hand, of window, of docking,
-# of nesting or of mode can leave me carrying a stale one.
+# of nesting, of mode or of the person's edit can leave me carrying a stale one.
 
 class CanvasGlassTopWdgt extends CanvasWdgt
 
   underlyingCanvasWdgt: undefined
   defaultRejectDrags: true
 
-  # the TOOTHPASTE tool's rolling buffer of recent pointer positions: the tool's handlers
-  # (PaintToolbarWdgt.TOOTHPASTE_TOOL_SOURCE) are injected onto me and run with @ bound to me, so
-  # the buffer is mine. Built lazily on first use and drained as the stroke is laid down. Declared
-  # undefined, never [] — the lazy build keys off `if !@queue?`, and a prototype array would be
-  # shared by every instance.
+  # the TOOTHPASTE tool's rolling buffer of recent pointer positions: the tool's members
+  # (PaintToolbarWdgt.TOOTHPASTE_TOOL) are put on me and run with @ bound to me, so the buffer is
+  # mine. Built lazily on first use and drained as the stroke is laid down. Declared undefined, never
+  # [] — the lazy build keys off `if !@queue?`, and a prototype array would be shared by every
+  # instance.
   queue: undefined
 
-  # THE SOURCE MY TOOL MEMBERS CAME FROM: the tool source I last took up, undefined while I carry
-  # none. My take-up compares it with the one I should carry now, and on a change removes exactly the
-  # members it assigns before injecting the next. A plain saved field: after a load or a copy it still
-  # names what the restored members came from, so the first use after either compares truly.
-  _takenUpToolSource: undefined
-
-  # MY TWO ENTRIES, the names no tool source may assign: a tool assigns applyToolAt, which both of them
-  # run. An instance member of either name would shadow my class entry, and the drawing would then
-  # never take its tool up again. Read by the save of a tool's code, which refuses such a source
-  # (refuseToolCodeAssigningMyEntries).
-  # hand-list-sanctioned: SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile saves a tool's code
-  # assigning each of these names and fails unless the save is refused and my class entries still run
-  @TOOL_ENTRIES: ["hoverMoved", "pressMoved"]
+  # THE CODE MY TOOL MEMBERS CAME FROM: the member code (DrawingToolBase.memberCode, a JSON text of
+  # member name -> source) of the tool I last took up, undefined while I carry none. My take-up
+  # compares it with the code of the tool I should carry now, and takes the next tool up on a change.
+  # A plain saved field: after a load or a copy it still names what my restored members came from, so
+  # the first use after either compares truly.
+  _takenUpToolCode: undefined
+  # THE MEMBERS I PUT ON ME at that take-up, by name, in its order: the members of that code I took up
+  # and made (_takeUpToolInReach), and the names my next change removes, so what I remove is exactly
+  # what I put on me. A plain saved field, as the code beside it.
+  _takenUpMemberNames: undefined
 
   # what a person calls me: the surface a drawing is painted on
   colloquialName: -> "paint surface"
@@ -89,30 +87,50 @@ class CanvasGlassTopWdgt extends CanvasWdgt
     @_takeUpToolInReach()
     @applyToolAt? pos, mouseButton
 
-  # Bring my injected tool members in line with the tool I should carry NOW. A string compare when
-  # nothing changed; on a change, every member the previous source assigned goes (the toothpaste's
-  # pressEnded with it) before the new source's are injected, so two tools never mix on me.
+  # Bring my tool members in line with the tool I should carry NOW. COST PER POINTER MOVE, while nothing
+  # changed: the tool asked of my holder (DrawingTool.of: a lookup and an identity compare) and one
+  # string compare of its member code with the one I took up -- the same string, so equal by
+  # reference. On a change, every member I put on me at my last take-up goes (the toothpaste's
+  # pressEnded with it), read from my own saved field, before the new tool's members are compiled on me
+  # from their sources, never shared as the tool's own functions: a `=>` a person types binds me, and a
+  # copied or loaded drawing compiles its own from its {"$src"} either way. So two tools never mix on me.
+  #   The member code is read ONCE, where it is parsed, and filtered there: a member under a name I
+  # already answer is NEVER put on me (DrawingToolBase.nameTheSurfaceAnswers), whatever brought it into
+  # the tool -- a file's record, code run elsewhere -- since standing over a name of mine would break me;
+  # such a record is inert on every surface, while the inspector on the tool still lists the member and
+  # its Remove removes it. Each other member is put on me in its own try, and the code and the names I
+  # made are recorded whatever happened, so no failure is tried again at the next move; a member that
+  # fails (its text throws as it is evaluated: DrawingToolBase._standInFor) is simply absent from me,
+  # and after all of them the first failure is rethrown, ONCE, to the pointer event's catch, which says
+  # it in the Error log.
   _takeUpToolInReach: ->
-    wanted = @_sourceOfToolInReach()
-    return if wanted is @_takenUpToolSource
-    # public-call-sanctioned: removeOwnProperty and injectProperties are the edit verbs of my own
+    wanted = @_toolInReach()?.memberCode()
+    return if wanted is @_takenUpToolCode
+    # public-call-sanctioned: removeOwnProperty and injectProperty are the edit verbs of my own
     # instance members -- settle-free, touching no geometry -- and taking a tool up IS editing them
-    if @_takenUpToolSource?
-      @removeOwnProperty each.name for each in Widget.compilePropertyAssignments @_takenUpToolSource
-    @injectProperties wanted if wanted?
-    @_takenUpToolSource = wanted
+    @removeOwnProperty name for name in @_takenUpMemberNames ? []
+    @_takenUpToolCode = wanted
+    @_takenUpMemberNames = made = []
+    firstFailure = undefined
+    for own name, source of (if wanted? then JSON.parse wanted else {}) when !DrawingToolBase.nameTheSurfaceAnswers name
+      try
+        @injectProperty name, source
+        made.push name
+      catch error
+        firstFailure ?= error
+    throw firstFailure if firstFailure?
+    return
 
-  # The source of the tool I should carry now, or undefined for none: none while my drawing sits in
-  # view-mode content (Widget.sitsInViewModeContent: the canvas under me holds my drawing's mode, which
-  # the container coordinating it sets -- a Drawings Maker's edit toggle reaches it there -- and view
-  # mode around the drawing reaches in too, up to the nearest window with an edit toggle), else what
-  # my holder's key means now (the person's edit of that tool, else the stock one:
-  # PaintToolbarWdgt.sourceForToolKey); a holder holding no key gives none.
-  _sourceOfToolInReach: ->
+  # The tool I should carry now, or undefined for none: none while my drawing sits in view-mode content
+  # (Widget.sitsInViewModeContent: the canvas under me holds my drawing's mode, which the container
+  # coordinating it sets -- a Drawings Maker's edit toggle reaches it there -- and view mode around the
+  # drawing reaches in too, up to the nearest window with an edit toggle), else the person's tool for
+  # my holder's key (DrawingTool.of: the person's edit of that tool, else the stock one); a holder
+  # holding no key gives none.
+  _toolInReach: ->
     return undefined if @sitsInViewModeContent()
     toolKey = @_toolHolder().armedDrawingTool
-    return undefined unless toolKey?
-    PaintToolbarWdgt.sourceForToolKey toolKey
+    DrawingTool.of toolKey  if toolKey?
 
   # WHO HOLDS MY TOOL: climbing my ancestors, the first window whose CONTENT I stand in (its contents
   # is the child the climb came up through -- a band is no window's content) and that wears drawing
@@ -126,22 +144,3 @@ class CanvasGlassTopWdgt extends CanvasWdgt
       cameThrough = holder
       holder = holder.parent
     world.user
-
-  # Refuse a tool's code that assigns one of my entries (TOOL_ENTRIES), by throwing before anything is
-  # stored -- the way Widget.compilePropertyAssignments refuses code outside its assignments: the
-  # refusal reads like a compile error (`isCompileError`) placed on its line as typed (`typedLocation`,
-  # a line and no column), which the saving gesture tells the person (Widget._savingTypedCode).
-  # `assignments` is what compilePropertyAssignments read in `codeBlurb`, so the decision is its reading
-  # (a line in a ### block assigns nothing); the line named is the first typed line that opens such an
-  # assignment.
-  @refuseToolCodeAssigningMyEntries: (codeBlurb, assignments) ->
-    reserved = (each.name for each in assignments when each.name in CanvasGlassTopWdgt.TOOL_ENTRIES)
-    return if reserved.length is 0
-    name = reserved[0]
-    typedLines = codeBlurb.replace(/\r\n?/g, "\n").split "\n"
-    typedLine = typedLines.findIndex (eachLine) -> /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=/.exec(eachLine)?[1] is name
-    refusal = new Error "line #{typedLine + 1} of the code assigns #{name}",
-      cause: new Error "a tool's code assigns applyToolAt, never #{name}: the paint surface owns #{name}"
-    refusal.isCompileError = true
-    refusal.typedLocation = line: typedLine
-    throw refusal

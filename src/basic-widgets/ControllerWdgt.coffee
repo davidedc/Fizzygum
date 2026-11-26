@@ -18,7 +18,7 @@ class ControllerWdgt extends Widget
       targets.forEach (each, i) =>
         menu.addMenuItem labels[i], @, "openTargetPropertySelector", closesUnpinnedPopUps: false, opensSubmenu: true, arg1: each, representsAWidget: true
     else
-      menu = new MenuWdgt @, target: @, title: "no targets available", titleIsAMessage: true
+      menu = new MenuWdgt @, target: @, title: "no targets available", titleKind: "message"
     menu.popUpAtHand()
 
   # ---- THE WIRES ----------------------------------------------------------------------
@@ -485,7 +485,7 @@ class ControllerWdgt extends Widget
       choices.forEach (each, i) =>
         menu.addMenuItem labels[i], @, "bindToOnePickedFromMenu", arg1: each, representsAWidget: true
     else
-      menu = new MenuWdgt @, target: @, title: "nothing to bind with", titleIsAMessage: true
+      menu = new MenuWdgt @, target: @, title: "nothing to bind with", titleKind: "message"
     menu.popUpAtHand()
 
   # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu).

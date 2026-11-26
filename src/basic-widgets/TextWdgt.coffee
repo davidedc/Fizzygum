@@ -694,8 +694,10 @@ class TextWdgt extends StringWdgt
     undefined
 
   # My RUN actions -- the run rows I add to my menu (_addTextMenuEntries), and a console's buttons
-  # -- run typed code against my code receiver, asked as they run (_runningTypedCode). Show and
-  # Inspect answer what the code answered. A selection runs as it is selected, its indentation
+  # -- run typed code against my code receiver, asked as they run (_runningTypedCode). Show shows
+  # every value the code answered, undefined included, as a value (_informOfValue: a show answers
+  # every value, and Run is the gesture that shows nothing); Inspect inspects what the code answered,
+  # where it answered something. A selection runs as it is selected, its indentation
   # included: whole indented lines compile as they stand and would not once trimmed. A run leaves
   # my editing as it finds it: the caret stays and so does the selection that ran, to run again or
   # to edit (re-entering the edit would drop the selection, and open the pop-out editor on a text
@@ -707,8 +709,7 @@ class TextWdgt extends StringWdgt
     @_runningTypedCode @selection()
 
   showSelection: ->
-    result = @_runningTypedCode @selection()
-    if result? then @inform result
+    @_runningTypedCode @selection(), (value) => @_informOfValue value
 
   inspectSelection: ->
     result = @_runningTypedCode @selection()
@@ -719,13 +720,14 @@ class TextWdgt extends StringWdgt
   # thrown at the world, and code that ran tells the receiver. The receiver is asked again here, at the
   # run: a row offered while I stood in a place that names one can be clicked after I moved to one that
   # names none (a pinned menu, a window closed into the bin), and then I say so instead of running
-  # nothing silently.
-  _runningTypedCode: (code) ->
+  # nothing silently. withTheValue, when given, is handed the value once the code has run
+  # (Widget._runningTypedCodeAgainst): code that ran against nothing, or did not compile, has none.
+  _runningTypedCode: (code, withTheValue) ->
     receiver = @_codeReceiver()
     unless receiver?
       @inform "There is nothing here for this code to run against"
       return undefined
-    @_runningTypedCodeAgainst receiver, code
+    @_runningTypedCodeAgainst receiver, code, withTheValue
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps

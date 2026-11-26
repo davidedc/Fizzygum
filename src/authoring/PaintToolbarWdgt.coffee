@@ -2,7 +2,7 @@
 # toolbar-slot (docked left), or floats like any toolbar. It is the PALETTE VARIANT of the ONE
 # toolbar construction (ToolbarWdgt), and like every variant it is an ITEM LIST -- four commands
 # (pencil / brush / toothpaste / eraser) in the shared tool grid, each cell holding a tool that
-# answers its own tap -- plus what a tool key MEANS: the stock tool sources. What makes it a palette
+# answers its own tap -- plus what a tool key MEANS: the stock tools' members. What makes it a palette
 # rather than a rack of drag-out thumbnails is SELECTION -- and the tool chosen is not MINE. It is
 # my HOLDER's: the window whose edge slot I occupy while I am docked (its
 # FrameWdgt.armedDrawingTool), the person while I float (world.user.armedDrawingTool, User) -- the
@@ -14,8 +14,9 @@
 # command obey.
 #
 # Nothing of mine reaches a drawing. A paint surface takes its tool up when it is USED
-# (CanvasGlassTopWdgt.hoverMoved / pressMoved), from its own nearest holder, and reads what a tool key
-# means from me (sourceForToolKey): the person's edit of that tool, else my stock source.
+# (CanvasGlassTopWdgt.hoverMoved / pressMoved), from its own nearest holder: the person's tool for that
+# holder's key (DrawingTool.of), made from the person's edit of that tool, else from my stock members
+# (stockToolMembers).
 #
 # Clicking anywhere in here -- a tool, its icon, an edit mark, the grid between them -- must not
 # steal the editor focus pointer from the image being edited. ToolbarWdgt declares that exclusion
@@ -37,18 +38,23 @@ class PaintToolbarWdgt extends ToolbarWdgt
   toothpasteTool: undefined
   eraserTool: undefined
 
-  # HOW A TOOL SOURCE IS SHAPED. A source is a blurb of `name = value` assignments the paint surface
-  # carries as its own instance members while it holds that tool: `applyToolAt`, the one body a
-  # person opens when they edit the tool, and any helpers it calls (the toothpaste's paintBrush, its
-  # queue's initialiser and the pressEnded that drains it). The surface owns the two pointer-move
-  # entries and routes both into applyToolAt (CanvasGlassTopWdgt.hoverMoved / pressMoved), with @
-  # bound to the surface: a HOVER move shows where the tool would land, and a PRESSED move carries
-  # the button as a fact -- the primary button lays paint down, any other previews exactly as a hover
-  # does. So a source never assigns either entry (the save of a tool's code refuses one that does:
-  # CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries), and "no tool" is simply no tool members.
+  # HOW A TOOL IS SHAPED. A tool is MEMBERS: a record of member name -> CoffeeScript source, which the
+  # person's tool for a key is made of (DrawingTool.of) and which a paint surface puts on itself as
+  # instance members while it carries that tool -- `applyToolAt`, the one body a person opens when
+  # they edit the tool (the tool's edit mark opens the inspector on it), and any helpers it calls (the
+  # toothpaste's paintBrush, its queue's initialiser and the pressEnded that drains it). Each source is
+  # a function literal, exactly as an injection takes it (Widget.injectPropertyInto), a comment about
+  # a member written inside its body. The surface owns the two pointer-move entries and routes both
+  # into applyToolAt (CanvasGlassTopWdgt.hoverMoved / pressMoved), with @ bound to the surface: a HOVER
+  # move shows where the tool would land, and a PRESSED move carries the button as a fact -- the
+  # primary button lays paint down, any other previews exactly as a hover does. So no member takes a
+  # name the surface already answers, either entry's included (a tool refuses one:
+  # DrawingToolBase.nameTheSurfaceAnswers), and "no tool" is simply no tool members. These four records
+  # are the stock tools, each in its members' order; no name of theirs is one the surface answers.
 
-  @PENCIL_TOOL_SOURCE: """
-      applyToolAt = (pos, mouseButton) ->
+  @PENCIL_TOOL:
+    applyToolAt: """
+      (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -84,8 +90,9 @@ class PaintToolbarWdgt extends ToolbarWdgt
           @_changed()
       """
 
-  @BRUSH_TOOL_SOURCE: """
-      applyToolAt = (pos, mouseButton) ->
+  @BRUSH_TOOL:
+    applyToolAt: """
+      (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -172,14 +179,9 @@ class PaintToolbarWdgt extends ToolbarWdgt
           @_changed()
       """
 
-  @TOOTHPASTE_TOOL_SOURCE: """
-      # Toothpaste graphics
-      # original implementation by Ward Cunningham, from Tektronix Smalltalk
-      # implementation of Smalltalk 80
-      # on the Magnolia (1980-1983) and the Tek 4404 (1984)
-      # "Draw spheres ala Ken Knowlton, Computer Graphics, v15 n4 p352."
-
-      paintBrush = (contextMain) ->
+  @TOOTHPASTE_TOOL:
+    paintBrush: """
+      (contextMain) ->
           contextMain.save()
           # the brush is 16 x 16, so center it
           contextMain.translate -8, -8
@@ -242,16 +244,18 @@ class PaintToolbarWdgt extends ToolbarWdgt
           contextMain.fill()
 
           contextMain.restore()
-
-      # you'd be tempted to initialise the queue
-      # on mouseDown but it would be a bad idea
-      # because the mouse could come "already-pressed"
-      # from outside the canvas
-      initialiseQueueIfNeeded = ->
+      """
+    initialiseQueueIfNeeded: """
+      ->
+          # you'd be tempted to initialise the queue
+          # on mouseDown but it would be a bad idea
+          # because the mouse could come "already-pressed"
+          # from outside the canvas
           if !@queue?
               @queue = [0..24].map -> undefined
-
-      pressEnded = ->
+      """
+    pressEnded: """
+      ->
           if world.hand.isThisPointerDraggingSomething() then return
           if @queue?
               # draining the queue
@@ -267,8 +271,14 @@ class PaintToolbarWdgt extends ToolbarWdgt
                       @paintBrush contextMain
                       contextMain.restore()
               delete @queue
-
-      applyToolAt = (pos, mouseButton) ->
+      """
+    applyToolAt: """
+      (pos, mouseButton) ->
+          # Toothpaste graphics
+          # original implementation by Ward Cunningham, from Tektronix Smalltalk
+          # implementation of Smalltalk 80
+          # on the Magnolia (1980-1983) and the Tek 4404 (1984)
+          # "Draw spheres ala Ken Knowlton, Computer Graphics, v15 n4 p352."
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -314,8 +324,9 @@ class PaintToolbarWdgt extends ToolbarWdgt
           @_changed()
       """
 
-  @ERASER_TOOL_SOURCE: """
-      applyToolAt = (pos, mouseButton) ->
+  @ERASER_TOOL:
+    applyToolAt: """
+      (pos, mouseButton) ->
           if world.hand.isThisPointerDraggingSomething() then return
           context = @backBuffer.canvasContext
           context.setTransform 1, 0, 0, 1, 0, 0
@@ -350,7 +361,8 @@ class PaintToolbarWdgt extends ToolbarWdgt
   # My four commands, in strip order. Each tool acts on its own press, so the grid wraps it bare --
   # no glass lid over it -- and a tap on the cell reaches the tool itself, which is what the
   # dispatch law asks of a cell (CommandSpec's header). The EDIT MARK rides the tool: the triangle
-  # in the tool's own top-right corner opens that command's source for editing.
+  # in the tool's own top-right corner opens the inspector on the person's tool for that command (the
+  # code the tool names, CodeInjectingSimpleRectangularButtonWdgt._memberToEdit).
   #   Each face is built in the toolbar glyph ink, the ink of every toolbar's glyphs (a creator
   # button takes it in its createAppearance, a text tool reads it as it paints), where an icon built
   # without a colour would take the plain icon ink (IconWdgt).
@@ -361,28 +373,21 @@ class PaintToolbarWdgt extends ToolbarWdgt
     @toothpasteTool = new CodeInjectingSimpleRectangularButtonWdgt (new ToothpasteIconWdgt glyphInk), 'toothpaste'
     @eraserTool = new CodeInjectingSimpleRectangularButtonWdgt (new EraserIconWdgt glyphInk), 'eraser'
 
-    for tool in @_tools()
-      new EditableMarkWdgt tool, tool, "editInjectableSource"
+    new EditableMarkWdgt tool for tool in @_tools()
 
     @_tools()
 
-  # WHAT A TOOL KEY MEANS NOW: the person's edit of that tool (User.drawingToolOverrideFor: there is
-  # ONE table of edited tool code, the person's, whichever cell's edit mark wrote it), else my stock
-  # source. Holders speak in KEYS (User and FrameWdgt armedDrawingTool), so this is where a key
-  # becomes behaviour, read at each use by the paint surface (CanvasGlassTopWdgt._sourceOfToolInReach)
-  # and by a tool's edit mark, which opens the source it means now. A key naming no tool of mine
-  # means nothing (undefined): nothing paints.
-  @sourceForToolKey: (toolKey) ->
-    world.user.drawingToolOverrideFor(toolKey) ? PaintToolbarWdgt.stockSourceForToolKey toolKey
-
-  # THE STOCK TOOLS: what each key means while the person has not edited it. A key naming no tool of
-  # mine answers undefined.
-  @stockSourceForToolKey: (toolKey) ->
+  # THE STOCK TOOLS: what each key means while the person has not edited it, as its members (HOW A
+  # TOOL IS SHAPED, above). Holders speak in KEYS (User and FrameWdgt armedDrawingTool), and the
+  # person's tool for a key is made from its edit, else from these (DrawingTool.of), so this is where
+  # a key becomes behaviour. A key naming no tool of mine answers undefined: it names no tool, and
+  # nothing paints.
+  @stockToolMembers: (toolKey) ->
     switch toolKey
-      when 'pencil' then PaintToolbarWdgt.PENCIL_TOOL_SOURCE
-      when 'brush' then PaintToolbarWdgt.BRUSH_TOOL_SOURCE
-      when 'toothpaste' then PaintToolbarWdgt.TOOTHPASTE_TOOL_SOURCE
-      when 'eraser' then PaintToolbarWdgt.ERASER_TOOL_SOURCE
+      when 'pencil' then PaintToolbarWdgt.PENCIL_TOOL
+      when 'brush' then PaintToolbarWdgt.BRUSH_TOOL
+      when 'toothpaste' then PaintToolbarWdgt.TOOTHPASTE_TOOL
+      when 'eraser' then PaintToolbarWdgt.ERASER_TOOL
       else undefined
 
   # my tools, in strip order

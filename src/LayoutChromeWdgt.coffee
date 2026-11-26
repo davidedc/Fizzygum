@@ -2,12 +2,15 @@
 # (LayoutSpacerWdgt), the element adder/droplet (LayoutElementAdderOrDropletWdgt),
 # and the stack-size adjuster (StackElementsSizeAdjustingWdgt) -- and of the split
 # button at the left end of an inspector's header, right of the adjuster standing
-# before that inspector (SplitGripWdgt, in the lazy 'meta-tools' part). They all
-# wear the handles' look (LayoutChromeAppearance): the
-# layoutChromePlate* plate over the whole box, in the look of my pointer state
-# (below), and each subclass's mark on it (its glyph, _glyphOnMyPlate, or its grip
-# dots, _gripDotsOnMyPlate). The two that drag a split show its resize cursor while
-# the pointer is over them or drags them (_resizeCursor, the hover trio below).
+# before that inspector (SplitGripWdgt, in the lazy 'meta-tools' part). My look is
+# my class's (createAppearance). The spacer and the adder wear the handles' look
+# (LayoutChromeAppearance): the layoutChromePlate* plate over the whole box, in the
+# look of my pointer state (below), and each one's glyph on it (_glyphOnMyPlate).
+# The adjuster and the split button wear a split's piece (SplitPieceAppearance): one
+# flat plate, and where the button joins the adjuster before its inspector, the two
+# are ONE piece, lit together (THE JOINED PIECE, below). The two that drag a split
+# show its resize cursor while the pointer is over them or drags them
+# (_resizeCursor, the hover trio below).
 #
 # Of the first three, only the stack-size adjuster is NOT layout-editing-only:
 # the halo's resize/move affordance inserts it between division siblings on their
@@ -23,16 +26,41 @@ class LayoutChromeWdgt extends Widget
 
   thisSpacerIsTransparent: false
 
+  # THE PART JOINED TO ME, or undefined: a split's divider (StackElementsSizeAdjustingWdgt) and the
+  # inspector's split button joined to it as a tab (SplitGripWdgt) each hold the other here, and are
+  # painted as one piece (THE JOINED PIECE, below). THE RULE, once:
+  #   SET only where the two are INTRODUCED, the reconcile of the inspector whose header the button
+  #     leads (InspectorWdgt._reconcileSplitGripNoSettle), through noteJoinedBy, which sets it on
+  #     both parts, each letting go of any part it held before;
+  #   CLEARED on both parts by either part's going, each by its own event: the BUTTON's teardown
+  #     (SplitGripWdgt._destroyNoSettle tells the divider: notePartedFrom), and the DIVIDER's leaving
+  #     the stack it divides -- picked out, attached elsewhere or destroyed -- which the row it
+  #     divides hears and tells it (InspectorRowWdgt._reactToChildRemoved: noteLeftMyStack).
+  # So no reference of either part outlives the other. (A button a person takes out of its header
+  # stays held, though painted alone, until either event, or until the reconcile introduces the
+  # divider to the fresh button that replaces it.) Never in a file nor in a copy: a save or a copy of
+  # the inspector a button leads joins the two again as it is restored or copied (the same reconcile,
+  # from its _afterDeserialization and _reactToBeingCopied), and a part saved or copied without the
+  # other has nothing to join.
+  joinedPiece: undefined
+  @serializationTransients: ["joinedPiece"]
+  @copyTransients: ["joinedPiece"]
+
   # MY POINTER STATE is the hand's, as a handle's is (HandleWdgt), asked as I am painted and kept
   # nowhere (_plateFillForMyState): pressed while the hand presses me (ActivePointerWdgt.pressesOn)
   # where a press shows on my plate (_showsPressOnMyPlate), hovered while the pointer rests on me
   # (restsOn: never a finger, so a finger carrying a payload over a drop slot does not light it), at
   # rest otherwise. So my look after a gesture is a function of where the gesture left the pointer
-  # and me.
+  # and me -- and, joined into a piece, of where it left the part joined to me (_pieceShowsPress).
 
   constructor: ->
     super()
-    @appearance = new LayoutChromeAppearance @
+    @appearance = @createAppearance()
+
+  # my look: the handles' plate with my glyph on it. A method, not a class field, so a subclass
+  # reskins by overriding it (widget-authoring guidelines §5): a split's adjuster and its button
+  # wear a split's piece.
+  createAppearance: -> new LayoutChromeAppearance @
 
   # Layout-editing CHROME (the spacer, the element adder/droplet, the stack-size adjuster / divider) is
   # never editor content (§5.D D-3/D21). Clicking or dragging one to reshape a layout must NOT make it
@@ -46,11 +74,6 @@ class LayoutChromeWdgt extends Widget
   # (Widget._addMyDivisionCellMenuEntries).
   _addMyDivisionCellMenuEntries: (widgetOpeningThePopUp, menu) ->
 
-  # THE GRIP DOTS ON MY PLATE, which my appearance paints inside it in the normal pass: [their ink,
-  # the most of them along my long side], or [] for none. Read for each paint, as the glyph below is,
-  # so no ink is saved or copied with me. Default: none -- the split adjuster answers here.
-  _gripDotsOnMyPlate: -> []
-
   # THE GLYPH ON MY PLATE, which my appearance paints centred over it in the normal pass: [the
   # size-aware icon appearance that draws it, in layoutChromeGlyph, and the side of its square], or []
   # for none. Built for each paint, as the handles' glyphs are, so no ink is saved or copied with me.
@@ -62,9 +85,56 @@ class LayoutChromeWdgt extends Widget
   _showsPressOnMyPlate: -> true
 
   # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my plate
-  # is read from them as I am painted, so I repaint.
+  # is read from them as I am painted, so I repaint, and so does the part joined to me, whose plate
+  # shows them too: I tell it (noteMyPieceChanged), as it repaints only itself.
   notePointerStateChanged: ->
     @_changed()
+    @_myJoinedPiece()?.noteMyPieceChanged()
+
+  # MY PIECE CHANGED: the part joined to me tells me the hand's answers about it may have moved. My
+  # look reads them as I am painted, so I repaint.
+  noteMyPieceChanged: ->
+    @_changed()
+
+  # `piece` and I are INTRODUCED (joinedPiece's rule says where): I do my half -- I part from any part
+  # I held (it repaints as a part alone), hold `piece` and repaint -- and tell `piece`, which does its
+  # half the same way and tells me back, a call that ends here at once, since I hold it by then. Each
+  # of us touches only its own field and repaints only itself. Nothing to do when I hold `piece`
+  # already.
+  noteJoinedBy: (piece) ->
+    return if @joinedPiece is piece
+    @notePartedFrom @joinedPiece
+    @joinedPiece = piece
+    @_changed()
+    piece.noteJoinedBy @
+
+  # `piece` and I PART (joinedPiece's rule says when): I let go of it and tell it, and it lets go of me
+  # and tells me back, a call that ends here at once, since by then I hold nothing; so neither names the
+  # other, and each repaints itself as a part alone -- a part being destroyed excepted, which repaints
+  # no more. Nothing to do when `piece` is not the part I hold.
+  notePartedFrom: (piece) ->
+    return unless piece? and @joinedPiece is piece
+    @joinedPiece = undefined
+    piece.notePartedFrom @
+    @_changed()  unless @destroyed
+
+  # THE JOINED PIECE. A split's divider and the split button joined to it as a tab are painted as ONE
+  # piece (SplitPieceAppearance): a press on either shows on both, and so does a hover. Each part
+  # answers the other (_myJoinedPiece) from the one join both hold, so they agree at every moment: the
+  # button stands joined while the divider it holds is the splitter its inspector says it moves (one it
+  # took out of its header, or put after its title, stands alone until its inspector's reconcile), and
+  # the divider while that button says so. The part joined to me, or undefined. Default: none -- the
+  # spacer and the adder join nothing.
+  _myJoinedPiece: -> undefined
+
+  # Does my PIECE show a press? My plate does, or the plate of the part joined to me.
+  _pieceShowsPress: ->
+    @_showsPressedPlate() or (@_myJoinedPiece()?._showsPressedPlate() ? false)
+
+  # Does my PIECE show a hover? The pointer rests on me, or on the part joined to me.
+  _pieceShowsHover: ->
+    joined = @_myJoinedPiece()
+    world.hand.restsOn(@) or (joined? and world.hand.restsOn joined)
 
   # THE RESIZE CURSOR my hover shows, a CSS cursor name, or undefined for none: what a drag on me
   # does, said by the page's pointer while the pointer is over me or drags me. Default: none -- a

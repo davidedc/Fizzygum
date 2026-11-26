@@ -29,9 +29,12 @@ class SourceEditsRegistry
   constructor: ->
     @records = []
 
-  # record an instance-scope edit (from an inspector's Save, MemberRef.save).
+  # record an instance-scope edit (from an inspector's Save, MemberRef.save): a holder WITH AN IDENTITY,
+  # a widget's (its uniqueIDString), so the record names the one object edited. A holder with none (a
+  # paint tool, DrawingToolBase: the person's, whose edit the world snapshot's user record carries
+  # whole) is no one this record could name, and is not recorded.
   recordInstanceEdit: (widget, propertyName, source) ->
-    return unless widget? and propertyName?
+    return unless widget?.uniqueIDString? and propertyName?
     @records.push
       scope: "instance"
       className: widget.constructor?.name

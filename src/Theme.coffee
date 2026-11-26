@@ -454,20 +454,28 @@ class Theme
     # (visual-design-system §4.8), the drop outline's painter at its own width, selectionOutlineWidth.
     @selectionOutline = @accent
 
-    # the LAYOUT CHROME (LayoutChromeWdgt's family, painted by LayoutChromeAppearance: a division's
+    # the "Edit layout" scaffold's LAYOUT CHROME (painted by LayoutChromeAppearance: a division's
     # adders and a content stack's drop slots, LayoutElementAdderOrDropletWdgt; a spacer,
-    # LayoutSpacerWdgt; a split adjuster, StackElementsSizeAdjustingWdgt) in the handles' look over
-    # its whole box, rounded at layoutChromePlateRadius: its PLATE's fill and 1 px border at rest,
-    # its fill hovered (its border stays layoutChromePlateStroke), its fill and darker border pressed
-    # (an adder under a press, an adjuster under a press or its drag; a spacer has no pressed look),
-    # and the ink of the mark on it, the same in every state: an adder's plus and a spacer's double
-    # arrow in layoutChromeGlyph, an adjuster's grip dots in layoutAdjusterGripMark, quieter.
+    # LayoutSpacerWdgt) in the handles' look over its whole box, rounded at layoutChromePlateRadius:
+    # its PLATE's fill and 1 px border at rest, its fill hovered (its border stays
+    # layoutChromePlateStroke), its fill and darker border pressed (an adder under a press; a spacer
+    # has no pressed look), and the ink of the glyph on it, the same in every state: an adder's plus
+    # and a spacer's double arrow.
     @layoutChromePlateFill = @paper
     @layoutChromePlateStroke = @line
     @layoutChromePlateHoverFill = @desk
     @layoutChromePlatePressFill = @chrome
     @layoutChromePlatePressStroke = @frame
     @layoutChromeGlyph = @ink
+    # a SPLIT'S PIECE (painted by SplitPieceAppearance: a division stack's divider,
+    # StackElementsSizeAdjustingWdgt, and the inspector's split button that joins it as a tab,
+    # SplitGripWdgt): ONE flat plate with no outline, its tone at rest, while the pointer rests on
+    # either part of the piece, and while either part is pressed or dragged -- a tone step of the WHOLE
+    # piece, both parts lit together -- and the ink of its grip dots, the same in every state: the
+    # divider's along its length and the split button's field, quieter.
+    @splitPieceFill = @chrome
+    @splitPieceHoverFill = @chip
+    @splitPiecePressFill = @line
     @layoutAdjusterGripMark = @muted
     # an EMPTY ICON HOLDER's drop placeholder (SimpleDropletWdgt, painted by SimpleDropletAppearance):
     # the fill of its borderless well and the ink of the plus on it, the same in every pointer state
@@ -496,8 +504,8 @@ class Theme
     # EditorContentPropertyChangerButtonWdgt._fillForMyState): the disabled ink of buttons
     # (buttonDisabledText).
     @toolbarGlyphDimmed = @disabledText
-    # the corner "edit code" MARK (UpperRightTriangleIconicButtonWdgt: a paint tool's edit mark,
-    # EditableMarkWdgt): its triangle's fill at rest, hovered and pressed, read as it is painted
+    # the corner "edit code" MARK (UpperRightTriangleIconicButtonWdgt: the edit mark, EditableMarkWdgt,
+    # worn by a widget that names code to edit): its triangle's fill at rest, hovered and pressed, read as it is painted
     # (UpperRightTriangleIconicButtonWdgt._fillForMyState) ...
     @editMarkFill = @paper
     @editMarkHoverFill = @desk
@@ -795,14 +803,18 @@ class Theme
     @handleArrowGlyphSize = 24
     @handleRotateGlyphSize = 28
     @handleCornerGlyphSize = 28
-    # the LAYOUT CHROME at the sizes its boxes keep (LayoutChromeAppearance): its plate's rounding (a
-    # box narrower than twice it rounds at half its short side, Appearance._paintPlate), the side of
-    # the glyph square centred on it -- an adder's plus in a division's strip and in a content
-    # stack's drop slot (PlusIconAppearance), a spacer's double arrow -- and a split adjuster's
-    # thickness across the split (StackElementsSizeAdjustingWdgt's box, both sides) and the most grip
-    # dots it shows along its long side (as many as fit across: two at this thickness). Grip dots on
-    # a plate keep layoutChromeGripDotsInset in from its edge across its short side: the plate's 1 px
-    # border and one clear pixel, so no dot touches the border however thin the plate is squeezed.
+    # the LAYOUT CHROME at the sizes its boxes keep: its plate's rounding (a box narrower than twice it
+    # rounds at half its short side, Appearance._plateRadius) -- an adder's and a spacer's whole plate
+    # (LayoutChromeAppearance), a split button's free corners (SplitPieceAppearance) -- the side of
+    # the glyph square centred on an adder's or a spacer's plate -- an adder's plus in a division's
+    # strip and in a content stack's drop slot (PlusIconAppearance), a spacer's double arrow -- and a
+    # split adjuster's thickness across the split (StackElementsSizeAdjustingWdgt's box, both sides)
+    # and the most grip dots it shows along its long side (as many as fit across: two at this
+    # thickness). An adjuster's grip dots keep layoutChromeGripDotsInset in from its edges, so no dot
+    # touches an edge however thin the divider is squeezed. An inspector's split button, the TAB
+    # joining the adjuster before its inspector (SplitGripWdgt), is splitButtonWidth wide and
+    # minimumTargetSize tall -- the piece the two make is the target's side across at the header --
+    # and its face is a field of the adjuster's own dots, at most splitButtonGripDots each way.
     @layoutChromePlateRadius = 6
     @layoutChromeGripDotsInset = 2
     @layoutAdderGlyphSize = 9
@@ -810,6 +822,8 @@ class Theme
     @layoutSpacerGlyphSize = 24
     @layoutAdjusterThickness = 12
     @layoutAdjusterGripDotsAlong = 4
+    @splitButtonWidth = 32
+    @splitButtonGripDots = 4
     # a frame's resize GRIP (FrameGripWdgt, the draft's three-stroke grip): the side of its square,
     # which is also its whole hit area, and how far in from the corner of the frame's CONTENT area
     # (inside its border) the square sits. The GRIP STRIP holds it, its inset on either side of it, and
@@ -871,7 +885,8 @@ class Theme
     # dots gripDotSize a side on a gripDotPitch, as many as fit their field, the field centred, none
     # on an axis too short for one. A band's strip shows them where it shows no piece and no title
     # (FrameStripAppearance), kept barGripMarkInset (the strip's own) in from its plate (its box less
-    # its rule) on both axes; a split adjuster shows them along its length (LayoutChromeAppearance).
+    # its rule) on both axes; a split adjuster shows them along its length, and the split button that
+    # joins it a field of them across the piece the two make (SplitPieceAppearance).
     @gripDotSize = 2
     @gripDotPitch = 6
     @barGripMarkInset = 12

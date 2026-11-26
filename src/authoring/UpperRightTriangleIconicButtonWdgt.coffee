@@ -1,6 +1,6 @@
 # like an UpperRightTriangleWdgt, but it adds an icon on the top-right
 #
-# MY LOOK is the edit mark's (a paint tool's EditableMarkWdgt): my triangle's fill for my pointer
+# MY LOOK is the edit mark's (EditableMarkWdgt, worn by a widget that names code to edit): my triangle's fill for my pointer
 # state -- editMarkFill at rest, editMarkHoverFill hovered, editMarkPressFill pressed -- asked of the
 # hand as I am painted (_fillForMyState), and the pencil on me in editMarkInk.
 

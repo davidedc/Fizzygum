@@ -72,7 +72,15 @@ const METHOD_CEILINGS = {
   // settles round it as every public structural mutator does (the end-of-cycle capstone found the bin's close button
   // and "Make pointer" leaving the removal's layout to the end of the cycle). Raised 395 -> 396 on 2026-11-22 under
   // the owner's standing ruling of 2026-11-16 (the right shape over the count): _addMyDivisionCellMenuEntries, the
-  // division-cell submenu step every cell offers and the layout chrome overrides with nothing
+  // division-cell submenu step every cell offers and the layout chrome overrides with nothing. Raised 396 -> 397 on
+  // 2026-11-25 under the same ruling: _informOfValue, the VALUE door beside inform (the message door): a bubble
+  // titled with a value's printed form, shown as it is, never re-cased as a message is. Lowered 397 -> 395 on
+  // 2026-11-25: the code prompt's door (textPrompt) and the one-text reader of a paint tool's code (injectProperties,
+  // compilePropertyAssignments and its two helpers) are gone, a tool being an object the inspector edits; in their
+  // place the door's verb for "edit my code" (inspectMemberToEdit), its menu row (_addEditCodeMenuEntry) and the one
+  // body every holder's member edit shares (injectPropertyInto). Raised 395 -> 396 on 2026-11-26 under the
+  // owner's standing ruling of 2026-11-16 (the right shape over the count): keepSourceWith, the kept-source store's
+  // one writer, so a paint tool keeping the text of a member it could not make writes no private field of Widget's
   Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 396 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
@@ -200,13 +208,6 @@ const RECORDED = {
   'ListWdgt#_buildAndConnectChildrenNoSettle': 17,
   'MacroToolkit#titleGrabPoint': 17,
   'MacroToolkit#verifyPressLanding': 22,
-  // recorded 2026-11-22 at 20, born of the split that takes InspectorWdgt#selectionFromList (21) off the record: the
-  // table of what an inspector's code pane shows for each kind of member, one branch per kind, moved whole out of the
-  // door that loads it, so the load's undo rule (a reload of the member it last loaded is a
-  // step of the pane's history, another member starts it afresh) reads plainly.
-  // Re-keyed from 'InspectorWdgt#_paneTextOfMember' on 2026-11-24, the body unchanged: what an inspector shows of a
-  // member is its member reference's to say (MemberRef), beside the steps that edit it
-  'MemberRef#shownText': 20,
   'PatchNodeWdgt#_heightsSplitByWeights': 25,
   'RectangularAppearance#paintIntoAreaOrBlitFromBackBuffer': 17,
   'ScriptIconAppearance#_scriptMetrics': 27,

@@ -513,7 +513,7 @@ launcher registration. Decisions/deviations recorded per rules 7/8:
 - Editing v1: selected cell + typing → an overlay editor mounted at the cell's rect (a
   `StringWdgt`-based single-line editor; Enter commits, Escape cancels; commit path =
   `FormulaCompiler.commit` + `world.dataflow.markStale cellRecord`). Multi-line editing
-  via the cell's menu → `CodePromptWdgt` (existing modal code editor). The overlay editor
+  stays deferred (spec §9.1). The overlay editor
   is the ONLY live child widget in v1 — everything else stays painted.
 - **SystemTests:** `SystemTest_macroSpreadsheetLiteralEntry` (type `42`, `"hello"` — note
   the CS quoting requirement is BY DESIGN, spec §9.2/§13),
@@ -545,7 +545,7 @@ rules 7/8:
   sheet stays the SOLE keyboard receiver in both modes and drives its own edit BUFFER (append /
   Backspace / Enter-commits / Escape-cancels), mirrored into a live overlay `StringWdgt` (the
   socket precursor). Exact, deterministic commit/cancel; no receiver juggling. Rich editing stays
-  the deferred `CodePromptWdgt` path.
+  deferred.
 - **Layering discipline:** the mount/teardown of the overlay mutates the tree, so the ONE settle
   is opened at the PUBLIC event entries (`processKeyDown`/`mouseClickLeft`, like `world.edit`) and
   every edit-lifecycle helper is a `*NoSettle` core (`_addNoSettle`/`_setTextNoSettle`/

@@ -23,12 +23,14 @@ class MenuWdgt extends FrameWdgt
 
   target: undefined
   title: undefined
-  # Does my title SAY something -- a message (an inform, the empty state of a chooser, a question
-  # such as the bin's confirmation) -- rather than NAME what I am about (a widget, a section, a
-  # chooser)? A header that names shows in capitals while I am a pop-up; a message reads as a
-  # sentence (FrameWdgt._titleDisplayCase). Its opener says which, through the `titleIsAMessage`
-  # option: a title is a name unless its opener says otherwise.
-  titleIsAMessage: false
+  # WHAT MY TITLE IS, one of three: "name" -- it NAMES what I am about (a widget, a section, a
+  # chooser); "message" -- it SAYS something (an inform, the empty state of a chooser, a question
+  # such as the bin's confirmation); "value" -- it IS a value somebody asked to see, as code
+  # (Widget._informOfValue). A name shows in capitals while I am a pop-up, a message reads as a
+  # sentence, and a value as it is, in either lifetime: data is never re-cased
+  # (FrameWdgt._titleDisplayCase). Its opener says which, through the `titleKind` option: a title is
+  # a name unless its opener says otherwise.
+  titleKind: "name"
   fontSize: undefined
   # the CommandPanelWdgt that is my rows' whole visible body, and the viewport it lives
   # in — my @contents. Declared here so a duplicate has the handles to remap.
@@ -52,13 +54,13 @@ class MenuWdgt extends FrameWdgt
 
   # widgetOpeningThePopUp is the one required argument; everything else rides an opts object
   # (P5 arg-object conversion): target / title / fontSize, each undefined when absent, and
-  # titleIsAMessage, false when absent.
+  # titleKind, "name" when absent.
   # The rows payload is built BEFORE super: it IS the frame's content operand, and the title
   # my frame reads for its strip -- and the case it shows in -- is mine to know first.
   constructor: (@widgetOpeningThePopUp, opts = {}) ->
     @target = opts.target
     @title = opts.title
-    @titleIsAMessage = opts.titleIsAMessage ? false
+    @titleKind = opts.titleKind ? "name"
     @fontSize = opts.fontSize
     # a menu is born mid-gesture UI: the lifetime entry enrols me in the open set and arms the
     # click-outside dismissal that ends me.
@@ -108,9 +110,9 @@ class MenuWdgt extends FrameWdgt
   _titleForContents: (unused_aWdgt) ->
     @title
 
-  # my header names what I am about unless my opener said it is a message (titleIsAMessage)
-  _headerIsAName: ->
-    !@titleIsAMessage
+  # my title is what my opener said it is (titleKind): a name unless it said a message or a value
+  _titleKind: ->
+    @titleKind
 
   # As another frame's CONTENT (a pinned menu dropped into a window), I keep the size I have
   # and do not grow in the holder's stack: a menu is its rows, and stretching it would only

@@ -295,7 +295,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   a prompt's buttons (`clickPromptButton(prompt, label)`, `clickTopPromptButton(label)`: a prompt ends in a row of real
   buttons — [Close] [OK], or [Don't save] [Cancel] [OK] — that carry no `labelString`, so the row verbs cannot see them;
   the label is the button's face text, a missing label throws naming the labels the prompt has, and the press is verified
-  like every widget-aimed press; an `inform` is a MENU, and its "OK" stays a row);
+  like every widget-aimed press; an `inform` is a MENU, and its "OK" stays a row; so is a value's bubble ("Show
+  selection", a slider's "Show value": `Widget._informOfValue`), its title kind "value", shown as it is);
   clipboard (`cutSelection`/`copySelection`/`pasteText`); window chrome (`closeWindow`, `collapseOrUncollapseWindow`;
   its resize is `resizeWindowBy`/`To` above); assertions (`assertValuesEqual` — the general expected-vs-found verb every non-pixel
   claim goes through, `assertTopMenuItemCount`, `assertTopMenuItemStrings` — both on a SHOWN menu only,
@@ -414,7 +415,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `StringWdgt` face centred in its box and cropped on `setText`) — but for an editable-label or flat-centred-label button use `MenuItemWdgt` (its `TextWdgt` label re-measures
   on `setText`); see `macroBareButtonFloatDragsWithoutTriggering` / `macroEditButtonLabelText`.
 - **One inspector tool — a ROW of inspectors, in a window by default, and a widget like any other with none:** "Dev →
-  Inspect" (`inspect` → `Widget.spawnInspector`, the one door) opens a 760 × 528 window (`InspectorRowWdgt.defaultExtent`;
+  Inspect" (`inspect` → `Widget.spawnInspector`, the one door; `spawnInspector subject, member: name` opens it with that
+  member chosen as a click on its row chooses it, its row scrolled whole into view and Inherited turned on where only that
+  hid it — `InspectorRowWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open) opens a 760 × 528 window (`InspectorRowWdgt.defaultExtent`;
   its row 758 × 439) whose content is an
   `InspectorRowWdgt` (a `ClippingWdgt`), titled by its first inspector ("Inspector — analog clock").
   `row.inspectors()` are its `InspectorWdgt`s, left to right, a splitter between two: each has its `inspectedObject`,
@@ -473,7 +476,12 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   HIERARCHY menu, whose row standing for the text area opens the area's own menu with the text's rows, its run rows
   among them (none for a class's member: `MemberEditorWdgt.codeReceiver`; MACRO-PATTERNS.md, "An inspector's code pane
   runs against its subject"); it defaults to NON-wrapping (`textWidget.toggleSoftWrap()` wraps it — on each editor, a
-  new member being a new editor), and `constructor`'s code is shown, never edited; the list HIDES inherited members by
+  new member being a new editor); an editor's text takes typing exactly while a Save can apply it (`MemberRef.canEdit` of
+  its holder, and the member is not `constructor`): a member of a number, a string, a Point or a class function is shown,
+  never typed into, and so is `constructor`'s code; a value shows as CODE wherever it has a code form
+  (`Utils.printedFormOf`: `Color.create 80, 80, 80`, `new Point 12, 68.5`, a string escaped, a class by its name), a
+  widget by its printed name, still editable, and a Save of a value reads back what it stored (MACRO-PATTERNS.md, "A
+  member editor shows a value as CODE"); the list HIDES inherited members by
   default (toggle `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first
   rows); members are edited by the list's "Add…"/"Duplicate…"/"Rename…"/"Remove" footer buttons and the editor's
   "Save" (`save` → `MemberRef.save`: an object's member through `injectProperty`, a class's through its meta-object; a

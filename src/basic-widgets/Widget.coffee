@@ -3958,7 +3958,7 @@ class Widget extends TreeNode
   # The edit verbs it drives -- injectProperty and its add, duplicate, rename and remove twins, evaluateString --
   # tell no one, as a class's meta-object tells no one (Class.applyMemberEdit): the product calls
   # them too, as plumbing (a patch node compiles its formula with evaluateString on every recompute, a
-  # paint tool injects its handlers, a load re-injects each {"$src"}), where there is no edit of a
+  # paint surface puts its tool's members on itself, a load re-injects each {"$src"}), where there is no edit of a
   # person's to show. What layout and paint derive from my code follows on the next frame; what my
   # code already STORED does not, until its next trigger (an edit changes code, not state). And the
   # edit may be what mends a widget whose paint or step threw -- a run reaches whatever it names, not
@@ -4237,33 +4237,47 @@ class Widget extends TreeNode
 
   # Injecting code /////////////////////////////////////////
 
-  # The program that injects ONE property: the typed value behind its assignment. Read by
-  # injectProperty, which runs it, and by compilePropertyAssignments, which compiles it ahead, so
-  # "compiles as it will be injected" has one definition. The typed text begins at its length minus
-  # the value's (compileFGCode's typedFrom). The member is named by KEY (`@["…"] = `, its `#` escaped
-  # so no name interpolates), so any name a Rename… gives it assigns that very field: written bare,
-  # `@my method = …` would read as a call, `@my(method = …)`, and `@a.b = …` as a path.
+  # The program that injects ONE property: the typed value behind its assignment, which the
+  # injection's one body runs (injectPropertyInto). The typed text begins at its length minus the
+  # value's (compileFGCode's typedFrom), so a compile error is placed in the value as typed. The
+  # member is named by KEY (`@["…"] = `, the name's code
+  # form, Utils.codeFormOf: JSON's escapes and its `#` escaped, so no name interpolates), so any name a
+  # Rename… gives it assigns that very field: written bare, `@my method = …` would read as a call,
+  # `@my(method = …)`, and `@a.b = …` as a path.
   @propertyAssignmentSource: (propertyName, txt) ->
-    "@[" + JSON.stringify(propertyName).replace(/#/g, "\\#") + "] = " + txt
+    "@[" + Utils.codeFormOf(propertyName) + "] = " + txt
 
-  # Give me the member `propertyName`, the value txt evaluates to (a function's txt holds its
-  # parameters, its arrow and its body). The edit alone: it tells no one and records nothing, as a
-  # class's meta-object does not (Class.applyMemberEdit) -- an inspector's Save, the
-  # person's gesture, records the edit and tells me (its member reference's step, MemberRef.save),
-  # while the product's own injections (a paint tool's handlers, a load's {"$src"}) are plumbing with nothing
-  # to tell. A function the injection MAKES -- txt spells a function literal -- is kept with its source
+  # Give `holder` the member `propertyName`, the value txt evaluates to (a function's txt holds its
+  # parameters, its arrow and its body): THE ONE BODY of an injection, for every holder that services
+  # the instance edit protocol (MemberRef's header states it) -- a widget's injectProperty, below, and
+  # a paint tool's (DrawingToolBase.injectProperty). The edit alone: it tells no one and records
+  # nothing, as a class's meta-object does not (Class.applyMemberEdit) -- an inspector's Save, the
+  # person's gesture, records the edit and tells the holder (its member reference's step,
+  # MemberRef.save), while the product's own injections (a paint surface taking its tool up, a load's
+  # {"$src"}) are plumbing with nothing to tell. `evaluate` is the HOLDER's own evaluation of the
+  # assignment against itself, called `evaluate assignment, typedFrom: …`, and it is handed in because
+  # this body may not reach for it: a paint tool's is PRIVATE (DrawingToolBase._evaluateAgainstMe),
+  # since a tool answers no public run verb (no code is run against a tool: MemberRef.codeReceiverOf),
+  # and a private method is called by its own class alone. A widget hands its public evaluateString
+  # (injectProperty, below), so its injection evaluates in the very method its runs go through.
+  # A function the injection MAKES -- txt spells a function literal -- is kept with its source
   # (Widget.keptSourceOf), so it stays editable as CoffeeScript and rides serialization as {"$src"}. A
   # txt that names a function (`@f`, a class member, `Math.max`) makes none: what it names keeps the
   # source it has, or none. A txt with a statement after its function is refused before anything
-  # changes (refuseCodeAfterAFunction).
-  injectProperty: (propertyName, txt) ->
+  # changes (refuseCodeAfterAFunction), and a txt that does not compile throws the compiler's error,
+  # placed in txt as typed (typedFrom), before anything changes.
+  @injectPropertyInto: (holder, propertyName, txt, evaluate) ->
     Widget.refuseCodeAfterAFunction txt
     assignment = Widget.propertyAssignmentSource propertyName, txt
-    @evaluateString assignment, typedFrom: assignment.length - txt.length
-    injected = @[propertyName]
-    if Utils.isFunction(injected) and Widget.spellsAFunctionLiteral txt
-      Widget._keptSources.set injected, txt
+    evaluate assignment, typedFrom: assignment.length - txt.length
+    injected = holder[propertyName]
+    Widget.keepSourceWith injected, txt  if Utils.isFunction(injected) and Widget.spellsAFunctionLiteral txt
     return
+
+  # Give me the member `propertyName`, the value txt evaluates to: the injection's one body
+  # (injectPropertyInto), with me as its holder, evaluated by my own evaluateString.
+  injectProperty: (propertyName, txt) ->
+    Widget.injectPropertyInto @, propertyName, txt, (assignment, opts) => @evaluateString assignment, opts
 
   # How txt reads as a member's code, read from the lexer's tokens -- the reading the compiler makes of
   # this very text (as Class reads a member's supers), never from the text, so the comments and blank
@@ -4308,14 +4322,14 @@ class Widget extends TreeNode
     reading? and !reading.after?
 
   # A member's code that opens with a function IS that function: a statement after it is no part of the
-  # function, yet every load and copy compiling the code back (injectProperty, a replayed class
-  # edit) would run it again. So every door that stores a member's code -- an object's
-  # (injectProperty, the paint tools' code blurbs: compilePropertyAssignments), a class's
-  # (Class.applyMemberEdit) -- refuses such code before it changes
+  # function, yet every load and copy compiling the code back (an injection, a replayed class edit,
+  # a paint tool made again from the person's record) would run it again. So every door that stores
+  # a member's code -- an object's (injectPropertyInto, a widget's and a paint tool's members alike), a
+  # class's (Class.applyMemberEdit) -- refuses such code before it changes
   # anything, as code that does not compile is refused: the refusal reads like a compile error
   # (`isCompileError`), placed on the statement's line as typed (`typedLocation`, a line and no column),
   # which the saving gesture tells the person (Widget._savingTypedCode). The load holds a file to the
-  # same (Deserializer: a {"$src"}, a source-edit record).
+  # same (Deserializer: a {"$src"}, a source-edit record, a member of a person's edited tool).
   @refuseCodeAfterAFunction: (txt) ->
     after = Widget.functionLiteralReading(txt)?.after
     return unless after?
@@ -4325,116 +4339,40 @@ class Widget extends TreeNode
     refusal.typedLocation = line: after
     throw refusal
 
-  # THE COFFEESCRIPT A FUNCTION WAS INJECTED FROM (injectProperty), kept BY THE FUNCTION, never by the
+  # THE COFFEESCRIPT A FUNCTION WAS INJECTED FROM (injectPropertyInto), kept BY THE FUNCTION, never by the
   # field that holds it: whatever replaces or deletes a member takes the member's function, and its
   # source with it, so no reader is handed one function's source for another (a run's `@m = -> …`
   # leaves a function with none, which shows as compiled text and which a save refuses). A copy
   # compiles its own function from that source, as a load does (Duplicator._compileInjectedMethods), so
   # a fat arrow binds the copy; an alias of it (`@g = @f`) holds the same function, and so has it too.
   # undefined for any function no injection made -- a class member keeps its source on its
-  # meta-object (Class.applyMemberEdit). Read by an inspector (MemberRef.shownText), the own-code key
-  # (_sourceChangedNoSettle) and the save's {"$src"} (Serializer). The store is weak: it writes to no
-  # function and keeps none alive.
+  # meta-object (Class.applyMemberEdit) -- but one: a paint tool's STAND-IN for a member it could not
+  # make keeps the person's text of that member (DrawingToolBase._standInFor), a text that spells no
+  # function literal, so a save writes no {"$src"} for it (Serializer). Read by an inspector
+  # (MemberRef.shownText), the own-code key (_sourceChangedNoSettle), the save's {"$src"} (Serializer)
+  # and a paint tool writing its members as the person's record (DrawingToolBase._sourceOfMember). The
+  # store is weak: it writes to no function and keeps none alive.
   @_keptSources: new WeakMap
   @keptSourceOf: (aFunction) ->
     Widget._keptSources.get aFunction if Utils.isFunction aFunction
 
-  # Inject every `name = value` assignment a code blurb holds -- all of them or none: each is compiled
-  # before any is injected (compilePropertyAssignments), so a blurb that does not compile changes
-  # nothing.
-  injectProperties: (codeBlurb) ->
-    for each in Widget.compilePropertyAssignments codeBlurb
-      @injectProperty each.name, each.source
-    return
-
-  # The `name = value` assignments a code blurb holds, in order, as {name, source}. A blurb holds
-  # assignments, comment lines and blank lines, and nothing else: a value runs from its `name =` to
-  # the next line that starts with a name, a `#` or a `$`, so any other code on such a line, and the
-  # lines after it up to the next assignment, would be stored and never run. Such code is refused
-  # here, by its line as typed (_refuseCodeOutsideAssignments). Each assignment is then COMPILED
-  # exactly as injectProperty will run it (propertyAssignmentSource), so a blurb that does not compile
-  # throws here, before anything is injected. Read by injectProperties and by the tool-code save that
-  # checks a blurb before storing it (CodeInjectingSimpleRectangularButtonWdgt.modifyCodeToBeInjected).
-  # A compile error names the assignment it is in (`typedIn`) and carries no position: the blurb is
-  # reshaped before it is split (blank lines doubled below), so no line counted here is one the
-  # person sees. A save that wants the place in the text compiles the text as typed first.
-  @compilePropertyAssignments: (codeBlurb) ->
-    reshaped = Widget._blurbAsTyped(codeBlurb).replace(/^[ \t]*$/gm,"\n") + "\n# end injected code"
-
-    # ([a-zA-Z_$][0-9a-zA-Z_$]*) is the variable name
-    regex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=[ \t]*([^]*?)(?=^[\w#$])/gm
-
-    assignments = []
-    endOfPrevious = 0
-    while (m = regex.exec(reshaped))?
-      # This is necessary to avoid infinite loops with zero-width matches
-      if m.index == regex.lastIndex
-        regex.lastIndex++
-      Widget._refuseCodeOutsideAssignments reshaped, endOfPrevious, m.index
-      endOfPrevious = m.index + m[0].length
-      assignments.push name: m[1], source: m[2]
-    Widget._refuseCodeOutsideAssignments reshaped, endOfPrevious, reshaped.length
-
-    for each in assignments
-      assignment = Widget.propertyAssignmentSource each.name, each.source
-      try
-        Widget.refuseCodeAfterAFunction each.source
-        compileFGCode assignment, true, typedFrom: assignment.length - each.source.length
-      catch error
-        error.typedIn = each.name
-        delete error.typedLocation
-        throw error
-    assignments
-
-  # The blurb's lines as the person typed them, in the one shape the splitter reads, line for line (so
-  # a line number still names a typed line): pasted CRLF/CR line ends become "\n", and a top-level
-  # `###` block comment becomes `#` line comments, each of its lines gaining a leading `#`. A block
-  # opens on a line starting with `###` (`####` is a line comment) and closes on the next line holding
-  # `###`. Without this a block's lines would read as code outside every assignment, and a
-  # `name = value` line inside one would be injected.
-  @_blurbAsTyped: (codeBlurb) ->
-    inBlock = false
-    lines = for eachLine in codeBlurb.replace(/\r\n?/g, "\n").split "\n"
-      if inBlock
-        inBlock = false if eachLine.indexOf("###") >= 0
-        "#" + eachLine
-      else if /^###(?!#)/.test eachLine
-        inBlock = eachLine.indexOf("###", 3) < 0
-        "#" + eachLine
-      else
-        eachLine
-    lines.join "\n"
-
-  # Throws at the first line of reshaped[from...to] -- text no assignment owns -- that is neither
-  # blank (any whitespace) nor a comment. The refusal reads like a compile error (`isCompileError`: the blurb does not
-  # compile AS A BLURB) and is placed on the line as typed (`typedLocation`, a line and no column).
-  # The reshaping doubled every blank line, so the typed line is the non-blank lines above this one
-  # plus half the blank ones.
-  @_refuseCodeOutsideAssignments: (reshaped, from, to) ->
-    lineStart = from
-    while lineStart < to
-      lineEnd = reshaped.indexOf "\n", lineStart
-      lineEnd = to if lineEnd is -1 or lineEnd > to
-      unless /^\s*(#|$)/.test reshaped.slice lineStart, lineEnd
-        linesAbove = reshaped.slice(0, lineStart).split "\n"
-        linesAbove.pop()
-        blankAbove = (eachLine for eachLine in linesAbove when /^[ \t]*$/.test eachLine).length
-        typedLine = linesAbove.length - blankAbove / 2
-        refusal = new Error "line #{typedLine + 1} of the code is not inside a name = value assignment",
-          cause: new Error "not inside a name = value assignment"
-        refusal.isCompileError = true
-        refusal.typedLocation = line: typedLine
-        throw refusal
-      lineStart = lineEnd + 1
+  # txt KEPT AS aFunction's SOURCE (keptSourceOf answers it): the store's one writer, for its two
+  # writes -- the injection's, of a function it makes from a function literal (injectPropertyInto), and
+  # a paint tool's, of the stand-in that keeps a member's text it could not make
+  # (DrawingToolBase._standInFor).
+  @keepSourceWith: (aFunction, txt) ->
+    Widget._keptSources.set aFunction, txt
     return
 
   # The add, remove, rename and duplicate twins of injectProperty, edits alone as it is: the gesture
   # that drives one tells me (an inspector's add, duplicate, rename and remove go through MemberRef's
-  # steps, which end in sourceChanged).
+  # steps, which end in sourceChanged). Each ANSWERS WHETHER IT MADE ITS EDIT, the protocol's answer
+  # (MemberRef's header): mine always do, while a holder that keeps only some members may refuse
+  # (DrawingToolBase), and a refused step then tells no one.
   # the add twin: a new own member, undefined until a save gives it a value
   addOwnProperty: (propertyName) ->
     @[propertyName] = undefined
-    return
+    true
 
   # the remove twin ("Own" keeps these clear of MemberListWdgt's
   # same-named button actions, which would otherwise shadow them on
@@ -4442,13 +4380,13 @@ class Widget extends TreeNode
   # function keeps (keptSourceOf).
   removeOwnProperty: (propertyName) ->
     delete @[propertyName]
-    return
+    true
 
   # the rename twin: re-keys the member; its function carries its kept source to the new name.
   renameOwnProperty: (oldName, newName) ->
     @[newName] = @[oldName]
     delete @[oldName]
-    return
+    true
 
   # the duplicate twin: the member oldName, kept, and a copy of it under newName. A field's copy holds
   # the SAME value -- the slot copied, not the thing it holds. A function injected with its source
@@ -4465,7 +4403,7 @@ class Widget extends TreeNode
       @injectProperty newName, keptSource
     else
       @[newName] = @[oldName]
-    return
+    true
 
   # Widget dragging (and dropping) /////////////////////////////////////////
   
@@ -4913,22 +4851,34 @@ class Widget extends TreeNode
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   
-  # Pop a one-line bubble showing a VALUE. ⚠ The empty case is ABSENCE, not falsiness: `0`, `""`
-  # and `false` are values somebody asked to see — a text's "Show selection" run row hands
-  # this whatever the selected snippet evaluated to — so this tests `msg?`, never `msg`. Absence
-  # is spelled the way the language spells it, as everywhere else in the codebase.
-  # The `toString?` arm is not defensiveness about ordinary values: an object built with a null
-  # prototype has no `toString` at all, and `String x` THROWS on it rather than answering.
+  # Pop a one-line bubble telling a MESSAGE: what a gesture has to say ("There is nothing here for
+  # this code to run against", a refusal, a compile error's words). A VALUE somebody asked to see has
+  # its own door, _informOfValue. ⚠ The empty case is ABSENCE, not falsiness: code a person runs can
+  # hand this `0`, `""` or `false` as its message, so this tests `msg?`, never `msg`, and an absent
+  # message reads "undefined". The `toString?` arm is not defensiveness about ordinary messages: an
+  # object built with a null prototype has no `toString` at all, and `String x` THROWS on it rather
+  # than answering.
   inform: (msg) ->
     text =
       if not msg?           then "undefined"
       else if msg.toString? then msg.toString()
       else Object.prototype.toString.call msg
     # the bubble's title IS the message, so it reads as a sentence, never in a name header's capitals
-    m = new MenuWdgt @, target: @, title: text, titleIsAMessage: true
+    m = new MenuWdgt @, target: @, title: text, titleKind: "message"
     m.addMenuItem "OK"
     # the pointer comes to rest on the "OK" row (see popUpCenteredAtHand), so the click that
     # dismisses this bubble needs no aiming.
+    m.popUpCenteredAtHand world
+
+  # Pop a one-line bubble showing a VALUE (a text's "Show selection", a slider's "Show value"): its
+  # code form where it has one, else its printed form (Utils.printedFormOf) -- `"color"`, `true`,
+  # `new Point 3, 4`, `undefined`, a widget's `a RectangleWdgt`. Its title is DATA, shown as it is in
+  # either lifetime, never re-cased (the "value" title kind, FrameWdgt._titleDisplayCase): a string
+  # keeps its quotes and `true` its lower case. Every value has a text to show, absence included.
+  _informOfValue: (value) ->
+    m = new MenuWdgt @, target: @, title: Utils.printedFormOf(value), titleKind: "value"
+    m.addMenuItem "OK"
+    # the pointer comes to rest on the "OK" row, as an inform's does
     m.popUpCenteredAtHand world
 
   # The door to the Text/Number prompts. msg/callback are operands HERE — every
@@ -4949,13 +4899,6 @@ class Widget extends TreeNode
     prompt.popUpAtHand()
     prompt.tempPromptEntryField.text.edit()
 
-  # The door to the code-entry prompt. It takes no numeric range — CodePromptWdgt
-  # has no slider — so the head stops at the three operands.
-  textPrompt: (msg, target, callback, opts = {}) ->
-
-    prompt = new CodePromptWdgt target, (Object.assign {}, opts, msg: msg, callback: callback)
-    world.openFrameWith prompt, (new Point 460, 400), world.hand.position().subtract(new Point 50, 100)
-
 
   # E5-exempt: three operands, no hole — no caller skips one to reach a later one.
   pickColor: (msg, callback, defaultContents) ->
@@ -4964,6 +4907,18 @@ class Widget extends TreeNode
 
   inspect: ->
     @spawnInspector @
+
+  # THE CODE A PERSON EDITS OF ME, opened: the inspector on what _memberToEdit names, the member chosen
+  # (spawnInspector's door). The action of my "Edit code" row (_addEditCodeMenuEntry) and the press of
+  # an edit mark I wear (EditableMarkWdgt). A widget that names no code opens nothing.
+  #   _memberToEdit is the ONE declaration a widget makes to be edited this way -- what code of mine a
+  # person edits, and where: `{subject, member}`, the door's own two operands, or undefined. A
+  # capability question, asked with `?()` and only by my own verbs: nothing on Widget answers it, so
+  # no widget's member list grows a row for it (CodeInjectingSimpleRectangularButtonWdgt answers it:
+  # the person's tool its key names, on applyToolAt).
+  inspectMemberToEdit: ->
+    edit = @_memberToEdit?()
+    @spawnInspector edit.subject, member: edit.member  if edit?
 
   # the single inspector entry point. Every inspect path routes here:
   # the world menu and widget context-menu "Inspect" items, the "Dev -> Inspect"
@@ -4999,7 +4954,11 @@ class Widget extends TreeNode
   # long before anything asks, and deferring the open by even a microtask would move the inspector's
   # appearance a world cycle later -- which the SystemTest suite measures (it drives the world cycle
   # by cycle, ../Fizzygum-tests/DETERMINISM.md), across the ~15 tests that open one.
-  spawnInspector: (inspectee) ->
+  #   opts.member names a member to open the inspector ON: once the window stands, that member is
+  # chosen in it as a person's click on its row chooses it (InspectorRowWdgt.chooseMember), in the
+  # same call as the open and under the same guard. A member the inspectee does not answer chooses
+  # nothing, and the window stands with nothing chosen.
+  spawnInspector: (inspectee, opts = {}) ->
     return unless world.parts.isAvailable "meta-tools"
     world.parts.whenAllLoaded ["meta-tools"], ->
       openTheInspector = ->
@@ -5010,6 +4969,7 @@ class Widget extends TreeNode
         # the row states its own opening extent, and its window opens at it
         row = new InspectorRowWdgt inspectee
         world.openFrameWith row, row.extent(), world.hand.position().subtract(new Point 50, 100)
+        row.chooseMember opts.member  if opts.member?
       if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
   # The console does NOT read the class member maps, so it needs the part but not the reflective
@@ -5069,6 +5029,15 @@ class Widget extends TreeNode
         return hierarchyMenuWidgets[0].buildWidgetContextMenu()
       else
         return widgetToAskMenuTo.buildHierarchyMenu hierarchyMenuWidgets
+
+    # USER MODE builds no widget's menu, so a right-click or a press-and-hold climbs on to the desktop's
+    # (ActivePointerWdgt.openContextMenuAtPointer) -- unless I name code a person edits (_memberToEdit):
+    # then I build a menu of my own holding that ONE row, titled by my name, the way a finger reaches
+    # what my edit mark opens (_addEditCodeMenuEntry).
+    else if @_memberToEdit?()?
+      menu = new MenuWdgt @, target: @, title: @colloquialName()
+      @_addEditCodeMenuEntry menu
+      menu
 
   getHierarchyMenuWidgets: ->
     hierarchyMenuWidgets = []
@@ -5166,6 +5135,7 @@ class Widget extends TreeNode
     menu.addMenuItem "Pick up", @, "pickUpMenuAction", toolTip: "disattach and put \ninto the hand"
     menu.addMenuItem "Attach", @, "attach", opensSubmenu: true, toolTip: "stick this widget\nto another one"
     menu.addMenuItem "Inspect", @, "inspect", toolTip: "open a window\non all properties"
+    @_addEditCodeMenuEntry menu
     menu.addLine()
 
     # capability, instead of `(parent instanceof PanelWdgt) and !(parent instanceof ViewportWdgt)`
@@ -5212,6 +5182,14 @@ class Widget extends TreeNode
       menu.addMenuItem "Destroy", @, "fullDestroy"
 
     menu
+
+  # MY "Edit code" ROW, while I name code a person edits (_memberToEdit): it opens the inspector on that
+  # code (inspectMemberToEdit), as an edit mark I wear does, so a finger, which a mark's corner is too
+  # small for, has the row and a mouse both. The one statement of the row, in the two menus that offer
+  # it: my base menu (dev mode) and, in user mode, the one-row menu I then build (buildContextMenu).
+  # No "…": opening a window asks nothing more.
+  _addEditCodeMenuEntry: (menu) ->
+    menu.addMenuItem "Edit code", @, "inspectMemberToEdit", toolTip: "edit this code\nin an inspector"  if @_memberToEdit?()?
 
   # Widget-specific menu entries are basically the ones
   # beyond the generic entries above.
@@ -5381,7 +5359,7 @@ class Widget extends TreeNode
       # this list if the user invokes the
       # command, and if there are no good
       # widgets then show some kind of message.
-      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleIsAMessage: true
+      menu = new MenuWdgt @, target: @, title: "no widgets to attach to", titleKind: "message"
     menu.popUpAtHand()
 
   attach: ->
@@ -5630,7 +5608,7 @@ class Widget extends TreeNode
     for pin in pins
       menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue pin.label), @, "setTargetAndActionWithOnesPickedFromMenu", arg1: theTarget, arg2: pin.setterName
     if pins.length == 0
-      menu = new MenuWdgt @, target: @, title: "no target properties available", titleIsAMessage: true
+      menu = new MenuWdgt @, target: @, title: "no target properties available", titleKind: "message"
     menu.popUpAtHand()
 
   # Menu-dispatched, and now shared by every controller: the per-class stubs differed ONLY by which
@@ -5708,8 +5686,13 @@ class Widget extends TreeNode
   # it (or, for a function held directly in a field, a Save of it as CoffeeScript) clears it. Two callers read
   # the value: a text's "Show selection" and "Inspect selection" (TextWdgt), which `fg menusweep`'s
   # text roots and `SystemTest_macroEvaluateStringReturnsItsValue` hold to it. opts.typedFrom: where
-  # in codeSource the text a person typed begins, for a caller that wraps it (injectProperty); it
-  # only places a compile error.
+  # in codeSource the text a person typed begins, for a caller that wraps it (an injection's
+  # assignment: injectProperty hands me to Widget.injectPropertyInto); it only places a compile error.
+  #   I am the RUN verb: answering me is what makes an object a receiver typed code runs against
+  # (MemberRef.codeReceiverOf), a capability apart from being edited as an object. A paint tool's
+  # evaluation (DrawingToolBase._evaluateAgainstMe) is my one line again, written there and not shared:
+  # a widget's injections and its runs keep evaluating here, in me, and the tool's must be private,
+  # since a tool answers no run verb.
   evaluateString: (codeSource, opts = {}) ->
     eval compileFGCode codeSource, true, typedFrom: opts.typedFrom
 
@@ -5724,8 +5707,8 @@ class Widget extends TreeNode
   # clicked menu open. compileFGCode's failure is told apart by the mark it puts on it
   # (_informOfCompileErrorOrRethrow). Anything else -- code that compiled and then
   # threw -- goes on to the Error log as any thrown error does, where the stack it shows is the
-  # person's own code. ⚠ I answer what the gesture answers: "Show selection" and "Inspect selection"
-  # read the value of the code they ran through me.
+  # person's own code. ⚠ I answer what the gesture answers: "Inspect selection" reads the value of the
+  # code it ran through me, and "Show selection" is handed it (_runningTypedCodeAgainst).
   _reportingCompileErrors: (runTypedCode) ->
     try
       return runTypedCode()
@@ -5738,11 +5721,15 @@ class Widget extends TreeNode
   # press, which runs its saved text exactly as its "Try it" runs the typed one (ScriptWdgt.doAll). The
   # text is compiled FIRST, under _reportingCompileErrors: text that is not code ran nothing, is said
   # beside the hand and tells no one; code that compiled runs through _runningAPersonsCode. Answers what
-  # the code answers.
-  _runningTypedCodeAgainst: (receiver, code) ->
+  # the code answers, and hands it to withTheValue, when given, once the code has run (a text's "Show
+  # selection" shows it): text that did not compile ran nothing and has no value to hand on, not even
+  # undefined, so only the compiler's word is shown.
+  _runningTypedCodeAgainst: (receiver, code, withTheValue) ->
     @_reportingCompileErrors =>
       compileFGCode code, true
-      @_runningAPersonsCode receiver, => receiver.evaluateString code
+      value = @_runningAPersonsCode receiver, => receiver.evaluateString code
+      withTheValue? value
+      value
 
   # The ONE seam a person's code runs through against its receiver -- a run gesture's
   # (_runningTypedCodeAgainst: a text's run rows, a script's press). `run` runs code that has COMPILED --
@@ -5761,7 +5748,7 @@ class Widget extends TreeNode
       receiver.sourceChanged() unless receiver.destroyed
 
   # The SAVE gestures -- a button that STORES code a person typed (a script window's "Save + close",
-  # an inspector's "Save", the paint tools' code prompt's "Save" and "OK") -- run their apply through
+  # an inspector's "Save", a paint tool's member included) -- run their apply through
   # me, and I answer whether it applied. A save refuses text that is not CoffeeScript AS A WHOLE:
   # every apply compiles before it stores anything, so nothing has changed when I say so beside the
   # hand ("Cannot save this as code …") and answer false -- and the gesture then neither marks the
@@ -5778,16 +5765,15 @@ class Widget extends TreeNode
   # The one reading of a compile error, for both kinds of gesture. compileFGCode marks every error it
   # throws (`isCompileError`) and carries the compiler's own as its `cause` (or the engine's, when the
   # JavaScript the compiler wrote does not parse); its place in the text the
-  # person typed is `typedLocation`, absent when that place is not in it or the compiler gave none,
-  # and a line with no column when the fault is the whole line (a blurb's code outside its
-  # assignments). A blurb of several assignments also names the one it is in (`typedIn`,
-  # Widget.compilePropertyAssignments).
+  # person typed is `typedLocation`, absent when that place is not in it or the compiler gave none
+  # (a paint tool's refusal of a member it cannot keep: DrawingToolBase.injectProperty), and a line
+  # with no column when the fault is the whole line (a statement after a method's function:
+  # refuseCodeAfterAFunction).
   _informOfCompileErrorOrRethrow: (error, verb) ->
     throw error unless error?.isCompileError
     compilerError = error.cause
     where = error.typedLocation
     place = []
-    place.push "in " + error.typedIn  if error.typedIn?
     if where?
       place.push "line #{where.line + 1}" + (if where.column? then ", column #{where.column + 1}" else "")
     placeText = if place.length then " (" + place.join(", ") + ")" else ""

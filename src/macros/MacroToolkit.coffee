@@ -2431,8 +2431,8 @@ class MacroToolkit
   # inspector (picked out of it), the editor shows another subject's member (an inspector between
   # the two is gone from the row, picked out of it), or the list feeds no row (a list picked out of
   # its inspector, or an inspector picked out of its row: a choice there opens a window of its own).
-  # Structural on purpose: a search for a code area with a Save would also meet a script's, a
-  # console's or a code prompt's, and "the topmost editor" would type into another window's editor
+  # Structural on purpose: a search for a code area with a Save would also meet a script's or a
+  # console's, and "the topmost editor" would type into another window's editor
   # whenever two are open. Public, so a test holding a list of its own (a copied window's, the second
   # of two in one row) reaches the editor of THAT list.
   #   An editor exists only once a member is chosen, and a choice of ANOTHER member replaces its

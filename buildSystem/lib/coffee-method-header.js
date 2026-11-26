@@ -5,7 +5,7 @@
 // WHY THIS EXISTS. Six gates each carried their own copy of
 //     /^  ([A-Za-z_]\w*): (\(.*?\) )?[-=]>/
 // and every copy had the same blind spot: it requires the `->` on the header LINE, so a method whose
-// parameter list WRAPS is not a method header to any of them. `Widget.prompt` and `Widget.textPrompt`
+// parameter list WRAPS is not a method header to any of them. `Widget.prompt` and a second prompt door
 // were invisible to the public/private call census for as long as they had two-line signatures — the
 // census simply had no record that the methods existed, and nobody could see that from its output,
 // because a gate that cannot see a method reports nothing about it rather than reporting a gap.

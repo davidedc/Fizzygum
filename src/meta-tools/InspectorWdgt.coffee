@@ -28,11 +28,13 @@
 # cut, so my least width is my header's, and a narrower row gives up the hole's room before it
 # squeezes a control.
 #   My header opens with a SPLIT BUTTON (SplitGripWdgt) exactly while a splitter stands before me in
-# my row: the touch-sized way to move that split. The button is DERIVED from where I stand, never
-# told: my row reconciles it at every choice (an inspector a choice adds among them) and whenever a
-# child leaves the row (_reconcileSplitGripNoSettle) -- a widget a person attaches is no moment of
-# its own, and waits for the next of those -- and so do a copy of me and a restore of me, which can
-# stand in no row. A button a person took out of my header comes back at my row's next reconcile.
+# my row: the touch-sized way to move that split, a tab joined to that splitter, the two of them
+# painted as one piece. The button is DERIVED from where I stand, never told: my row reconciles it at
+# every choice (an inspector a choice adds among them) and whenever a child leaves the row
+# (_reconcileSplitGripNoSettle, which also introduces the button to that splitter) -- a widget a
+# person attaches is no moment of its own, and waits for the next of those -- and so do a copy of me
+# and a restore of me, which can stand in no row. A button a person took out of my header comes back
+# at my row's next reconcile.
 #   In a row I paint nothing: my bands paint their rules, and the row paints the body under all of us
 # (inspectorBodyFill). Picked out of my row I paint that body myself, and my views stand on it either
 # way (InspectorBodyAppearance, laysTheInspectorBodyUnderItsParts).
@@ -463,17 +465,25 @@ class InspectorWdgt extends Widget
   # my row's reconcile does. Inside a layout pass (an "Edit layout" slot the pass takes away tells my
   # row a child left) I change nothing: a lead rebuilt there would schedule layout mid-pass, so my
   # row's next reconcile outside a pass rebuilds it.
+  #   Here my button and the splitter before me are INTRODUCED: a button leading my header is joined
+  # to that splitter (LayoutChromeWdgt.noteJoinedBy, a no-op while they are joined already, and the
+  # one place a join is made: LayoutChromeWdgt.joinedPiece's rule), which also joins them again in a
+  # copy or a restore of me, whose parts hold nothing (joinedPiece is never copied nor saved), joins my
+  # button to a splitter that replaced the one before me, and parts the splitter from a button I let
+  # go of, which a fresh button replaces.
   _reconcileSplitGripNoSettle: ->
     return if world?._recalculatingLayouts
     return unless @header?.parent is @ and @headerTitle?.parent is @header
+    splitter = @_splitterBeforeMe()
     lost = @splitGrip? and !@_showsMySplitGrip()
     @splitGrip = undefined  if lost
-    wanted = @_splitterBeforeMe()?
-    return unless lost or wanted isnt @splitGrip?
-    theme = WorldWdgt.theme
-    @splitGrip = if wanted then new SplitGripWdgt() else undefined
-    lead = if wanted then [@splitGrip, theme.inspectorHeaderGap] else [theme.inspectorHeaderInset]
-    @header._replacePiecesBeforeNoSettle @headerTitle, lead
+    wanted = splitter?
+    if lost or wanted isnt @splitGrip?
+      theme = WorldWdgt.theme
+      @splitGrip = if wanted then new SplitGripWdgt() else undefined
+      lead = if wanted then [@splitGrip, theme.inspectorHeaderGap] else [theme.inspectorHeaderInset]
+      @header._replacePiecesBeforeNoSettle @headerTitle, lead
+    splitter.noteJoinedBy @splitGrip  if wanted
     return
 
   # The two notifications a widget built without its constructor gets (Duplicator, Deserializer: both

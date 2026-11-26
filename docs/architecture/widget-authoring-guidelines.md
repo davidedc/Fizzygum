@@ -619,10 +619,10 @@ mark after `add` + `setExtent` adds nothing.
   the text's own 'use strict') is a compile error too: `compileFGCode` has the engine parse what it compiled
   (`engineRefusalOf`, two readings that run nothing) and marks a refusal like any other, in the engine's words and
   with no place; only the build's own sources skip it (`fromTheBuild`). A text whose FORM
-  decides what runs is refused for its form the same way: a code blurb (`Widget.compilePropertyAssignments`)
-  holds `name = value` assignments, comments and blank lines only, so code outside its assignments, which would
-  be stored and never run, is refused by its line. Code that compiles and then throws still goes to the Error
-  log, where its stack is the person's own.
+  decides what runs is refused for its form the same way: a member's code that opens with a function IS that
+  function, so a statement after it, which every load and copy compiling the code back would run again, is
+  refused by its line (`Widget.refuseCodeAfterAFunction`). Code that compiles and then throws still goes to the
+  Error log, where its stack is the person's own.
 - **No wall-clock, no timers, no randomness** in render/layout/input code: the suite asserts byte-exact
   pixels and those diverge under parallel load. The cycle and step machinery are the sanctioned clock
   (`../../Fizzygum-tests/DETERMINISM.md`).
@@ -651,6 +651,15 @@ mark after `add` + `setExtent` adds nothing.
   (`@target[@callback].call @target, @_promptValue()`) — the same slot, so the same proof applies; the
   gate holds both doors to one standard, and those callbacks also count as menu-dispatched verbs for
   its unread-parameter ratchet.
+- **A bubble tells a MESSAGE or shows a VALUE, each through its own door.** [convention] `@inform msg` is
+  for what a gesture has to say: its title reads as a sentence. `@_informOfValue value` (private: a widget
+  shows its own values) is for a value somebody asked to see (a text's "Show selection", a slider's "Show
+  value"): it shows the value as code
+  where it has a code form, else its printed form (`Utils.printedFormOf`), as it is, never re-cased
+  (visual-design-system.md §4.9) — through `inform` a value would read "True" or "Rgb(80,80,80)". The
+  same printer is what a member editor shows of a field (`MemberRef.shownText`), so the text an editor
+  shows is code that a Save stores as what is held; a value class that has a faithful code form answers
+  `codeForm()` (immutable-value-classes.md §6).
 - **`colloquialName` is DERIVED — override it only to say something better.** [convention] It is what
   the product shows: window titles, inspector and console titles, the drag-embed hint, the shortcut
   auto-namer, the name a saved file gets. The base splits your class name into lowercase words
@@ -1063,6 +1072,22 @@ canonical constant ([`immutable-value-classes.md`](immutable-value-classes.md)).
 Every member lives in a CLASS body, at two spaces: a member written in any other object literal is seen by no
 gate ([`lint-and-static-checks.md`](lint-and-static-checks.md) §6b). There is no mixin mechanism (its history:
 [`../archive/mixins.md`](../archive/mixins.md)).
+
+**An object that is no widget, whose members a person edits in the inspector,** services the INSTANCE EDIT
+PROTOCOL a widget's members are edited through — its verbs, what each answers and its one notification are stated
+once, in `MemberRef`'s header (`src/meta-tools`). The inspector asks for the capability, never for a class
+(`MemberRef.canEdit`: `injectProperty?`), so such an object needs no inspector change: its injection is the one body
+every holder shares (`Widget.injectPropertyInto`), handed the object's own evaluation of an assignment against itself
+(handed, because that body may not call it: on an object that answers no run verb it is private); its add,
+duplicate, rename and remove twins each answer whether they made their edit, a refusal
+said by the object itself; and `sourceChanged` is what the person's gesture tells it. Being RUN AGAINST is a second
+capability, apart: only an object that also answers `evaluateString`, the run verb, gets run rows in its member
+editor (`MemberRef.codeReceiverOf`), so an object whose code means nothing run against it answers none. Put the
+protocol on a BASE class the object's class extends and declare nothing on the
+class itself, so a member list on it (its default filter: what the subject's own class declares, and what no class
+declares) shows the object's own members, not the plumbing. It is a plain class, never a widget kept off the tree
+([`world-lifetime-and-inventory.md`](world-lifetime-and-inventory.md)). The worked case: a paint tool
+(`DrawingToolBase`, `DrawingTool`, `src/authoring`; [`toolbars.md`](toolbars.md) §4.3).
 
 **Moving a member up to a base class** changes exactly these lookups, and nothing else: the class's own
 same-named members still win; (a) a `super` in a member that shadows a moved one now reaches the base's member;

@@ -50,6 +50,13 @@ class TransformSpec
     if @scale <= 0
       @scale = 1
 
+  # ME AS CODE (Utils.codeFormOf asks): CoffeeScript that makes a spec equal to me, through my
+  # constructor -- `new TransformSpec 30, 2, "slot"`, my anchor written last, in its parentheses, only
+  # where I have one.
+  codeForm: ->
+    scalars = [@rotationDegrees, @scale, @claimsSpace]
+    Utils.callFormOf "new TransformSpec", (if @anchor? then scalars.concat [@anchor] else scalars)
+
   # exact identity test on the CANONICAL scalars (plan §4.3) — this is why scalars,
   # not the matrix, are the source of truth: `== 0` / `== 1` are exact here.
   isIdentity: ->

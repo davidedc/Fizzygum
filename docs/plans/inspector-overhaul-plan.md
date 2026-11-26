@@ -1,13 +1,15 @@
 # Inspector overhaul: one tool, a row of inspectors, each one a small composed widget
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
-**STATUS: IN EXECUTION since 2026-11-24** (authored and spiked that day). U1 and U1b landed on 2026-11-24, U2, U3,
-U4 and U5 on 2026-11-25, and each landed unit's paragraph (§6) says what it corrected here; U3b, the finger icon on
-the split button, waits for the owner (§0.4 D11), so the plan stays in `docs/plans/` and its BACKLOG section keeps
-U3b's line. What the arc leaves open is filed there, each item's text in `## BACKLOG detail` below. Every fact in §1
-and §7 was read off the tree at
+**STATUS: EVERY UNIT CLOSED, the arc not yet closed by the owner** (authored and spiked on 2026-11-24). U1 and U1b
+landed on 2026-11-24, U2, U3, U4 and U5 on 2026-11-25, and each landed unit's paragraph (§6) says what it corrected
+here; U3b, the finger icon on the split button, closed unrun on 2026-11-25 (§6 U3b: the owner's dotted split button
+has no glyph to put a finger beside); and the owner's three follow-ups of 2026-11-25, a value shown as code, a door
+that opens the inspector on a member, the split's one flat piece, landed after the loop (§6, "Follow-ups"). The plan
+stays in `docs/plans/` until the owner closes the arc. What the arc leaves open is filed in its BACKLOG section, each
+item's text in `## BACKLOG detail` below. Every fact in §1 and §7 was read off the tree at
 Fizzygum `f7aed9e0` / Fizzygum-tests `e78dc3e50` (471 SystemTests) on 2026-11-24, but the test names, counts and
-rig numbers §7 gives as U2 left them; §5 states the tool as built through U4. Line numbers drift:
+rig numbers §7 gives as U2 left them; §5 states the tool as built through the follow-ups. Line numbers drift:
 the quoted method or symbol name is authoritative, so grep it fresh before trusting a number.
 **The design was spiked the same day against the unmodified dev build** (§4): six page probes, no
 source change. What the spike measured is stated as measured; what it did not reach is stated as a
@@ -106,10 +108,10 @@ Workspace routing: the umbrella `CLAUDE.md` at `/Users/davidedellacasa/code/Fizz
    chrome target, drawn as big as it is, `visual-design-system.md` §4.2), and its mark reads as a
    scroll bar's thumb beside a list's bar. So:
    - **the divider**, the mouse's control: slightly thicker, showing grip dots;
-   - **the split button**, the finger's control: 44 × 44, at the left end of the header of the
-     inspector on the divider's right, a double arrow (a finger icon on it, so it says what to do, is
-     U3b's, which the owner ruled on 2026-11-24 is not run in the loop that built U2: the button ships
-     with the double arrow alone).
+   - **the split button**, the finger's control, as the owner decided it on 2026-11-24: 44 × 44, at
+     the left end of the header of the inspector on the divider's right, showing a double arrow, a
+     finger icon to be added by U3b so it says what to do. The tool as it stands is the owner's
+     redraw of 2026-11-25, the button a dotted tab joined to the divider as one flat piece: §5.10.
    Both are present whatever pointer is in use, because some devices have both. Nothing in the
    layout reads the pointer, so "one geometry serves mouse and finger alike" (`Theme.coffee`,
    program ruling G1) holds as it stands (§5.10).
@@ -131,7 +133,7 @@ default (its prompt: "use the defaults"), and each row below says how it stands 
 | D8 | **No resizer of its own for a row with no window.** Its two hooks and their readers are deleted (§6 U2.2) | **Default taken**: U2.2 deleted the two hooks and their readers. Nothing in the product makes a windowless inspector any more (a drill used to); one picked out of its window resizes by the halo, as any widget |
 | D9 | Starting window **760 × 480** (before U2: 560 × 410) | **Default taken**, then made **760 × 528** in U4 (the owner, 2026-11-25: 48 px taller, so a widget's or a class's member list keeps its five whole rows under the chooser band): `InspectorRowWdgt.defaultExtent()` states it once (two inspectors at their least widths, 663 together, fit its 758 px row) |
 | D10 | One window title for every subject: **"Inspector — <name>"** (before U2: "Object Inspector — …" / "Class Inspector — …") | **Default taken**, built (`InspectorWdgt.colloquialName`; the window takes its row's first inspector's) |
-| D11 | **A split's two controls, both always present** (owner, 2026-11-24, final): the divider slightly thicker with grip dots, for a mouse; and a 44 × 44 button in the header of the inspector on its right, a double arrow (with a finger icon once U3b draws one), for a finger. Both are there at all times, because some devices have both a mouse and a touch screen (§5.10) | **LOCKED**. Details as built: the divider 12 px with a 2 × 4 dot field (U1b); the button shows the double arrow alone: the owner ruled on 2026-11-24 that U3b, the finger icon, is not run in the inspector-overhaul loop, so it stays this plan's open item and the plan stays in `docs/plans/` at U5 |
+| D11 | **A split's two controls, both always present** (owner, 2026-11-24, final): the divider slightly thicker with grip dots, for a mouse; and a 44 × 44 button in the header of the inspector on its right, a double arrow (with a finger icon once U3b draws one), for a finger. Both are there at all times, because some devices have both a mouse and a touch screen (§5.10) | **LOCKED**. Details as built: the divider 12 px with a 2 × 4 dot field (U1b). The look, by the owner's ruling of 2026-11-25 (two rounds of pictures, the follow-ups' G; §5.10): the divider and the button ONE flat grey piece with no outline, the button a TAB 32 × 44 (`splitButtonWidth` by `minimumTargetSize`) on the divider's right, its two right corners rounded while joined, its face a 4 × 4 field of the divider's dots centred across divider and tab, with no glyph. So U3b, the finger icon, closed unrun (§6 U3b) |
 | D12 | Second phase (U4): the first object-list views, **Children**, **Instances**, **Subclasses**, and the view chooser they need | **Default taken**, built in U4 (§5.5, §5.11): a chooser band of toggles under the header, one view class for the three lists of objects (`ObjectListWdgt`), each by the owner's rulings B1–B8 of 2026-11-25. Senders, implementors and protocols stay out (§11) |
 | D13 | Commits | Per house rule, **ask before every commit and push**. At the start, ask whether this plan gets a standing grant ("commit and continue while gates pass; ask before push"). The inspector-overhaul loop runs under its prompt's grant: commit and push each unit after its green gauntlet |
 | D14 | The dotted divider is the look of **every** division stack's splitter (the halo's layout adjusters, "Edit layout"), not a look of the inspector's own | **Default taken**, landed in U1b: one splitter class, one look. It recaptured the five tests that photograph a splitter (18 shots; the grep of U1b step 4 names 23 sources, ten of which build one) |
@@ -235,7 +237,7 @@ overrides: `_editClassMember`/`_removeClassMember` (the meta-object's edit plus 
 
 | Thing | Where | What this plan needs of it |
 |---|---|---|
-| The door | `Widget.inspect` (:4961) → `Widget.spawnInspector(inspectee)` (:4997): `isAvailable "meta-tools"`, `whenAllLoaded ["meta-tools"]`, the reflective layer (synchronous when loaded), `new (InspectorWdgt.inspectorClassFor inspectee) inspectee`, `world.openFrameWith inspector, (new Point 560, 410), …` | Stays; builds the row instead. The class is named bare INSIDE the `whenAllLoaded` callback, which `check-part-edges.js` reads as the guard |
+| The door | `Widget.inspect` (:4961) → `Widget.spawnInspector(inspectee)` (:4997): `isAvailable "meta-tools"`, `whenAllLoaded ["meta-tools"]`, the reflective layer (synchronous when loaded), `new (InspectorWdgt.inspectorClassFor inspectee) inspectee`, `world.openFrameWith inspector, (new Point 560, 410), …` | Stays; builds the row instead, and takes `opts.member`, a member chosen in the window once it stands (`InspectorRowWdgt.chooseMember`, §5.9). The class is named bare INSIDE the `whenAllLoaded` callback, which `check-part-edges.js` reads as the guard |
 | Menu rows | "Inspect" in the widget context menu (`Widget.coffee:5163`), the desktop menu (`WorldWdgt.coffee:3504`), Dev tools (`MenusHelper.coffee:15`); "Inspect selection" in a text's run rows (`TextWdgt.coffee:655` → `inspectSelection` → `spawnInspector result`) | Unchanged |
 | Instance edit protocol | `Widget.injectProperty(name, txt)` (:4273), `addOwnProperty(name)` (:4448), `removeOwnProperty(name)` (:4456), `renameOwnProperty(old, new)` (:4461), `sourceChanged()` (:3980); `Widget.keptSourceOf(fn)` (static, :4353) | Called from `MemberRef` |
 | Class edit protocol | `Class.applyMemberEdit(name, source)`, `removeMember(name)`, `definesMember(name)`, statics `Class.memberRecordOf(fn)`, `Class.fieldRecordHolds(proto, name, value)`, `Class.refuseTheConstructor`; `nonStaticPropertiesSources`; `WorldWdgt.noteCodeChanged()` (:232) | Called from `ClassMemberRef` |
@@ -350,16 +352,16 @@ All in `src/meta-tools/` (the lazy `meta-tools` part), one class per file, file 
 
 | Class | Is | Replaces | Lines (as built, comments included) |
 |---|---|---|---|
-| `InspectorRowWdgt extends ClippingWdgt` | the tool: a window's content (or a widget with no window), inspectors side by side, a splitter between two, derived from them; where a choice goes, a split a person set kept across it; the default extent (`defaultExtent`); widening on the desktop, toward an added inspector's normal width; it clips its children to its box | the welded body, `inspectMemberValue`'s windowless inspector, `openClassInspector`'s window | 313 |
-| `InspectorWdgt extends Widget` | ONE subject (`inspectedObject`), one view of it at a time among those it offers (`_views`): a header band (name, class chip; a split button while a splitter stands before it), a chooser band when the subject offers more than one view, the view; the switch between views | `InspectorWdgt` (rewritten whole), `ClassInspectorWdgt` | 491 |
-| `MemberListWdgt extends Widget` | the view of an object's members: filter toggles, the list, a cut notice, Add… Duplicate… Rename… Remove, and the one rule for a new member's name | the inspector's left half | 558, moved |
+| `InspectorRowWdgt extends ClippingWdgt` | the tool: a window's content (or a widget with no window), inspectors side by side, a splitter between two, derived from them; where a choice goes, a split a person set kept across it; the default extent (`defaultExtent`); widening on the desktop, toward an added inspector's normal width; the door's member choice (`chooseMember`); it clips its children to its box | the welded body, `inspectMemberValue`'s windowless inspector, `openClassInspector`'s window | 326 |
+| `InspectorWdgt extends Widget` | ONE subject (`inspectedObject`), one view of it at a time among those it offers (`_views`): a header band (name, class chip; a split button while a splitter stands before it), a chooser band when the subject offers more than one view, the view; the switch between views | `InspectorWdgt` (rewritten whole), `ClassInspectorWdgt` | 501 |
+| `MemberListWdgt extends Widget` | the view of an object's members: filter toggles, the list, a cut notice, Add… Duplicate… Rename… Remove, and the one rule for a new member's name | the inspector's left half | 585, moved |
 | `ObjectListWdgt extends Widget` | the view of the OBJECTS a subject holds in one way: a widget's Children, a class's Instances, its Subclasses; its objects derived, never carried | (new, U4) | 208 |
-| `MemberEditorWdgt extends CodeAreaWdgt` | the view of one member: its source or value as text, Save | the inspector's right half | 116 |
-| `MemberRef` | one member of one holder: its text (`shownText`), the edit steps, and three questions about a holder (`of`, `canEdit`, `codeReceiverOf`) | the inspector's edit hooks and `_paneTextOfMember` | 196, moved (U1) |
-| `ClassMemberRef extends MemberRef` | a member of a class's prototype | `ClassInspectorWdgt`'s overrides | 130, moved |
+| `MemberEditorWdgt extends CodeAreaWdgt` | the view of one member: its source, or its value as code (§5.6), Save | the inspector's right half | 134 |
+| `MemberRef` | one member of one holder: its text (`shownText`), the edit steps, and three questions about a holder (`of`, `canEdit`, `codeReceiverOf`) | the inspector's edit hooks and `_paneTextOfMember` | 224, moved (U1) |
+| `ClassMemberRef extends MemberRef` | a member of a class's prototype | `ClassInspectorWdgt`'s overrides | 132, moved |
 | `BandWdgt extends Widget` | a row of controls at their own sizes, gaps between them, ONE taker of the slack (a spring, or a text that gives), a rule along one edge | `_layOutTogglesIn`, the header's and the footer's hand placement | 122 |
 | `BandSpaceWdgt extends Widget` | a band's gap or spring, or the place a view left in its inspector: paints nothing, may be 0 wide, hidden from the hierarchy menu | (new) | 39 |
-| `SplitGripWdgt extends LayoutChromeWdgt` | a 44 × 44 grip in an inspector's header that drags the splitter before that inspector, while it leads that header: the touch-sized way to move a split (D11) | (new) | 77 |
+| `SplitGripWdgt extends LayoutChromeWdgt` | the split button: a TAB 32 × 44 on the splitter before an inspector, at the lead of that inspector's header, painted with the splitter as one flat piece (§5.10), that drags that splitter while it leads the header: the touch-sized way to move a split (D11) | (new) | 116 |
 | `InspectorBodyAppearance extends SeamRulesAppearance` | the inspector's body under a part of the tool standing outside its holder (an inspector out of its row, a view out of its inspector), and its one box of shadow | (new, U4) | 49 |
 
 Deleted files: `ClassInspectorWdgt.coffee`, `BreadcrumbSeparatorWdgt.coffee`. In core U2 added
@@ -374,14 +376,20 @@ width by (§5.5). A widget joins a division stack along the axis its cells alrea
 and a member list are columns. In core U4 made a list's rows carry their PLACE (each row built with its element's
 index, `arg1: place`, fixed at the build) and has `ListWdgt.select` / `openRow` hand the target the row's label AND
 that place (an object list resolves a pressed row by it: §5.11), and deleted `Utils.isObject`
-(no caller left once a double-click drills only into an object or a Fizzygum class: §5.6).
+(no caller left once a double-click drills only into an object or a Fizzygum class: §5.6). In core the follow-ups
+(§6) added the one printer of values (`Utils.codeFormOf`, `Utils.printedFormOf`, each value class's `codeForm`:
+§5.6), the value door (`Widget._informOfValue`, a menu's `titleKind`), the door's member choice (`ListWdgt.rowLabelled`,
+`ListWdgt.scrollRowIntoView`: §5.9) and the verb that opens it on what a widget names (`Widget.inspectMemberToEdit`,
+`_memberToEdit`), the injection's one body (`Widget.injectPropertyInto`: §5.7), and the split's piece
+(`SplitPieceAppearance`, `LayoutChromeWdgt.joinedPiece`: §5.10); they deleted `CodePromptWdgt.coffee` and
+`Widget.textPrompt`, whose one client the paint tools were.
 
 ### 5.2 The picture
 
 ```
 window  "Inspector — analog clock"
 ┌──────────────────────────────────┬─┬──────────────────────────────────────┐
-│ analog clock     [AnalogClockWdgt]│ │[↔] drawSecondsHand                   │  header band (44); [↔] = split grip
+│ analog clock     [AnalogClockWdgt]│ │[:] drawSecondsHand                   │  header band (44); [:] = split button, a dotted tab on the splitter
 ├──────────────────────────────────┤ ├──────────────────────────────────────┤
 │ [Members][Children]               │s│ (context, squareDim) ->              │  chooser band (48) │ code
 ├──────────────────────────────────┤p│   @_drawHand context, squareDim, …   │
@@ -479,7 +487,7 @@ where a snapshot needs it, and tells once:
 | `remove()` | `holder.removeOwnProperty name` | `class.removeMember name` + `recordClassMemberRemoval` |
 | the one notice | `holder.sourceChanged()` | `world.noteCodeChanged()` |
 
-These are the old inspectors' bodies, moved (§12 gives the map; U1 landed all but `duplicate`), plus `duplicate` (D15), which is what a class rename already did before it removed the old name. ⚠ A gesture tells ONCE (`macroInspectorEditTellsOnce` counts it): a class `rename` built on a PUBLIC, notifying `duplicate` would tell twice, so the copy the two share is a step of its own that does not notify (`ClassMemberRef._editCopyUnder`, which answers whether it made the copy), and each of `duplicate` and `rename` ends in the one notice. Every step ANSWERS whether it made its edit: an object's always answers true; a class's `duplicate` or `rename` that is refused answers false, changes nothing and tells no one. Nothing records an object member's duplicate or rename (a copied method rides a save as its own `{"$src"}`). The widgets keep the gesture logic: prompts,
+These are the old inspectors' bodies, moved (§12 gives the map; U1 landed all but `duplicate`), plus `duplicate` (D15), which is what a class rename already did before it removed the old name. ⚠ A gesture tells ONCE (`macroInspectorEditTellsOnce` counts it): a class `rename` built on a PUBLIC, notifying `duplicate` would tell twice, so the copy the two share is a step of its own that does not notify (`ClassMemberRef._editCopyUnder`, which answers whether it made the copy), and each of `duplicate` and `rename` ends in the one notice. Every step ANSWERS whether it made its edit: an object's answers what its holder's verb answers (a widget's always true; a paint tool refuses a name its paint surface answers, §5.7); a class's `duplicate` or `rename` that is refused answers false; a refused step changes nothing and tells no one. Nothing records an object member's duplicate or rename (a copied method rides a save as its own `{"$src"}`). The widgets keep the gesture logic: prompts,
 refusals of `constructor` and of a name the subject already answers, owned or inherited (Add…, Duplicate… and
 Rename… alike, §5.6), enabling, re-filtering; and the
 gesture of a refused step neither re-filters nor drops its choice.
@@ -487,7 +495,7 @@ gesture of a refused step neither re-filters nor drops its choice.
 **(c) Who refreshes.** Only the member list changes the member SET (add, duplicate, rename, remove: D7,
 D15), and it re-filters itself and then, after its own settle, tells the row there is no choice any more; a
 filter toggle does the same, since a re-filter's fresh list selects nothing. A Save changes no set and
-refreshes nothing. A list of OBJECTS is read again by one gesture only, a press on its inspector's lit view toggle,
+refreshes no other view (a Save of a value reads its own editor's text back, §5.6). A list of OBJECTS is read again by one gesture only, a press on its inspector's lit view toggle,
 which (as any switch) then closes what stands right of the inspector; and a copy's or a restore's first press that
 finds its list stale builds it again (§5.11). No inspector reaches into another.
 
@@ -608,7 +616,9 @@ The rest, in words (each written in the house voice, with its comment):
   not reconcile again inside it. Nothing here reads the pointer. "Edit layout" on a row puts adders around its
   cells, and each choice leaves behind the adders that flanked a destroyed inspector, the window widened by their
   width: as built; by the owner's ruling (A1, 2026-11-25) it is filed, low, its fix the "Edit layout" mechanism's (U5).
-- **`_reactToChildRemoved(child)`** returns while I am destroyed, while I am destroyed whole
+- **`_reactToChildRemoved(child)`** first tells the child it left me, however it left, my reconcile's removals and
+  my teardown included (`child.noteLeftMyStack?()`: a splitter then parts from the split button joined to it,
+  §5.10). Then it returns while I am destroyed, while I am destroyed whole
   (`_beingFullDestroyed`, set at the entry of my `_fullDestroyNoSettle`, as `FrameWdgt`'s flag) and while my
   reconcile runs; otherwise a child that LEFT me (neither destroyed nor back in me: a person's "Pick up", an
   "Attach", a drop into another widget) re-derives its split button where it now stands
@@ -639,6 +649,9 @@ The rest, in words (each written in the house voice, with its comment):
   division row then shrinks every cell below its own least, buttons narrower than their labels: as built; by the
   owner's ruling (A3, 2026-11-25) it stays, and "a window honours its content's least size" is filed as a feature
   for every window (U5).
+- **`chooseMember(name)`**, the door's member choice (§5.9): my first inspector's view chooses the member as a click
+  on its row chooses it (`MemberListWdgt.chooseMember`, §5.6); an inspector on one member lists none and chooses
+  nothing. No settle of its own: each step the choice takes settles itself.
 - **No `readsClassMemberMaps` here**: I read no member map. The classes that do declare it (§5.5–5.6).
 
 ### 5.5 `InspectorWdgt`
@@ -817,7 +830,13 @@ Build (inside ONE settle, children added with the NoSettle tier):
   `_afterDeserialization` (no class above me defines either, so neither calls `super`): an inspector copied or
   saved alone out of a row stands in none and sheds its grip; inside a copied or restored row the row's structure
   gives it back. A header or a title a person took out of me is not re-led. The header band is 44 tall and the
-  grip 44 × 44, so the grip fills the band's height and its left end, over the band's rule.
+  grip `splitButtonWidth` (32) wide and 44 tall, so the grip fills the band's height at its left end, over the
+  band's rule, a TAB on the splitter before me (§5.10). The same reconcile INTRODUCES the two, and is the one
+  place a join is made: a grip leading my header is joined to the splitter before me
+  (`splitter.noteJoinedBy @splitGrip`, a no-op while they are joined already); so a copy or a restore of me,
+  whose parts hold nothing (`joinedPiece` is never copied nor saved), is joined again, a splitter that replaces
+  the one before me is joined to my grip, and a fresh grip replacing one I let go of parts the splitter from
+  the old one. Parting is the parts' own business (§5.10, the join).
 - **`_splitterBeforeMe()`** answers the splitter itself, from STRUCTURE, each time it is asked: my row's
   (`InspectorRowWdgt.splitterBefore`: the cell just before me, when it is one of the row's splitters), else
   undefined. Nothing stores a splitter: a grip can then never drag a splitter of a row its inspector is not in. A
@@ -954,6 +973,10 @@ What changes inside it:
   click right of x 372 lands on the splitter or the editor and the double-click shows the member's editor, not its
   value (a double-click on the NAME is unaffected): as built, and by the owner's ruling (A4) it stays; a visible
   "open the value" control in the editor's header is filed as an idea (U5).
+- **`chooseMember(name)`**: the door's member choice, made as a person's clicks would make it (§5.9 says how: my
+  Inherited toggle turned on where only it hides the member, the row clicked, then scrolled whole into my list's
+  view). A name my subject does not answer, or a member my filter hides some other way (Fields, Methods, Own props
+  only), chooses nothing and says nothing.
 - **`clearChoice()`** and the list's **`_reloadNoSettle()`** are ONE act, "drop my choice": what stands on my
   right shows something other than my choice, or nothing, so `@list?.clearSelection()` (`ListWdgt.clearSelection`:
   `@selected = undefined`, then `@listContents.noteShownSelectionChanged()`, the two lines `select` opens with),
@@ -965,12 +988,12 @@ What changes inside it:
 - the four edits (`addProperty`, `duplicateProperty`, `renameProperty`, `removeProperty`) call the ref's step
   (`MemberRef.of(@inspectedObject, name).add()` …); when it answers true, `_refilterMembers()`, then, after that
   settle, `InspectorRowWdgt.showChoice @, undefined`. A step that answers false (a class's member with no source to
-  copy) changed nothing, so the list keeps its selection and the row its choice. Add…, Duplicate… and Rename… each
+  copy, a paint tool's member under a name its paint surface answers) changed nothing, so the list keeps its selection and the row its choice. Add…, Duplicate… and Rename… each
   return at once when the prompt hands them no name (`prop?`, `newName?`, `prop?`).
 - **the naming rule** (the owner's ruling of U4): a NEW member's name, the one Add…, Duplicate… or Rename… gives,
   must be one my subject does not already ANSWER, its own member's or one it inherits
-  (**`_refusesAsAnAnsweredName(name, noun)`**: `name of @inspectedObject`, which on a subject my edits reach, a widget
-  or a Fizzygum class's prototype, never throws and runs no getter), asked after the refusal of `constructor`
+  (**`_refusesAsAnAnsweredName(name, noun)`**: `name of @inspectedObject`, which on a subject my edits reach, a widget,
+  a paint tool or a Fizzygum class's prototype, never throws and runs no getter), asked after the refusal of `constructor`
   (`_refusesAsANewMemberName`), which every subject answers and which has words of its own. Under an answered name a
   new member would overwrite an own one, or stand over an inherited one and change what my subject answers (an Add…
   of `color` on a rectangle: an own member holding nothing, so the rectangle paints no fill). Refused in ONE
@@ -1024,8 +1047,9 @@ What changes inside it:
     # dressed in the inspector's pane roles, so the row's body shows through me as through a member list
     @tempPromptEntryField.wearPaneRoles fill: "inspectorPaneFill", stroke: "inspectorPaneStroke"
     @textWidget.backgroundColor = WorldWdgt.theme.inspectorPaneFill
-    # `constructor`'s code is shown, never edited: it is the class itself (Class.refuseTheConstructor)
-    @textWidget.isEditable = @memberRef.name isnt "constructor"
+    # my text takes typing exactly while a Save can apply it: my member's holder is edited at all, and my
+    # member is not `constructor`, the class itself (Class.refuseTheConstructor)
+    @textWidget.isEditable = (MemberRef.canEdit @memberRef.holder) and @memberRef.name isnt "constructor"
     if MemberRef.canEdit @memberRef.holder
       @saveButton = new SimpleButtonWdgt target: @, action: "save", face: "Save", primary: true
       @_addNoSettle @saveButton
@@ -1037,23 +1061,33 @@ What changes inside it:
   textContentModified: -> @saveButton?.setEnabled true
   textContentUnmodified: -> @saveButton?.setEnabled false
 
-  # What code typed in me runs against (TextWdgt._codeReceiver): my member's holder, exactly while
-  # it is an object my Save edits; a class's member, or a value no Save edits, gets no run rows.
+  # What code typed in me runs against (TextWdgt._codeReceiver): my member's holder, exactly while it
+  # is an object my Save edits as an object's and a receiver typed code runs against
+  # (MemberRef.codeReceiverOf); a class's member, a paint tool's, or a value no Save edits, gets no run
+  # rows.
   codeReceiver: -> MemberRef.codeReceiverOf @memberRef.holder
 
   # Answers whether it saved. An edit that does not compile changes nothing, is reported beside the
   # hand, and stays modified, Save still enabled (Widget._savingTypedCode). It asks MemberRef.canEdit
-  # too, not only my build: a restored editor keeps the button its file holds.
+  # too, not only my build: a restored editor keeps the button its file holds. Then I show what my
+  # member SHOWS, one rule whatever was stored: where that is the text typed, nothing moves; where it
+  # differs it is put back (`Color.GRAY` saved reads `Color.create 128, 128, 128`, `1 + 1` reads `2`,
+  # `Math.max` the compiled text of the function it names, which keeps no source).
   save: ->
     return false  unless @saveButton? and MemberRef.canEdit @memberRef.holder
-    return false  unless @_savingTypedCode => @memberRef.save @textWidget.text.toString()
-    @textWidget.considerCurrentTextAsReferenceText()
-    @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    typed = @textWidget.text.toString()
+    return false  unless @_savingTypedCode => @memberRef.save typed
+    if @memberRef.shownText() is typed
+      @textWidget.considerCurrentTextAsReferenceText()
+      @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
+    else
+      @_settleLayoutsAfter => @_reloadNoSettle()
     true
 
   # my member's text again, over whatever is typed: one step of my undo history, so the undo chord
-  # brings the typing back (InspectorRowWdgt.showChoice, the subject chosen again). A core: the row
-  # calls it inside its one settle.
+  # brings the typing back (InspectorRowWdgt.showChoice, the subject chosen again; and save, when what
+  # my member shows is not the text typed). A core: the row calls it inside its one settle, save inside
+  # its own.
   _reloadNoSettle: ->
     @textWidget._setTextNoSettle @memberRef.shownText()
     @textWidget.pushUndoState @textWidget.text.length
@@ -1062,13 +1096,27 @@ What changes inside it:
     return
 ```
 
-Three things it settles:
+Four things it settles:
 
-- **A read-only member has no footer band.** `CodeAreaWdgt` always kept a band, because each of its four other
-  subclasses has buttons. The base has ONE derived question, `_hasAFooterBand`: did my build make a footer button
+- **What it shows, what takes typing, what a Save shows after.** Its text is `MemberRef.shownText()` (§5.7): a
+  function's source, a field's recorded source, else the field's value through the one printer
+  (`Utils.printedFormOf`): its code form where it has one (`Color.create 80, 80, 80`, `new Point 200, 130`, `[5]`, a
+  string escaped so it evaluates back exactly; a field holding a Fizzygum class, its name), so a Save of the text as
+  shown stores what is held, else its printed form (a widget's `a RectangleWdgt`). The text takes typing exactly while a Save can apply it
+  (`MemberRef.canEdit holder`, and the member is not `constructor`): a member of a Point or of a plain object is
+  shown, never typed into. A value with no code form on a holder a Save edits (a widget-valued field, a function
+  with no kept source) keeps its typing and its Save: CoffeeScript typed over it is the way to replace it. After a
+  Save the editor shows what its member shows, one rule whatever was stored: where that is the text typed (a function
+  literal, kept as its source; a value typed in its code form) nothing moves, the caret, the selection and the undo
+  history with it; where it differs the member is read back (`_reloadNoSettle`, one undo step), so the editor shows
+  what was stored (`1 + 1` saved reads `2`; a text that NAMES a function, `Math.max`, keeps no source and reads as
+  that function's compiled text). Errors are where `Widget._savingTypedCode` puts them:
+  a compile error beside the hand, code that throws in the Error log.
+- **A read-only member has no footer band.** `CodeAreaWdgt` always kept a band, because each of its three other
+  subclasses (the script window, the console, the error log) has buttons. The base has ONE derived question, `_hasAFooterBand`: did my build make a footer button
   at all (a button of my two groups, whether or not it is still my child: a band a person emptied by picking its
   buttons out stays), read by `_layOutOwnContents` (the code area runs to my bottom without one) and `_seamRects`
-  (no rule without one). No subclass changed, and the four others keep their 52 px band.
+  (no rule without one). No subclass changed, and the three others keep their 52 px band.
 - **The code area's floor.** In a division row an editor with one button derives no width of its own, so its own
   division box states one: least `theme.inspectorEditorLeastWidth` (280) wide and `theme.footerBandHeight` tall,
   a spacer's spreadability.
@@ -1087,8 +1135,8 @@ together with its subject must point at the copied subject, which only an ordina
 ```coffee
 # ONE MEMBER of one object: `name` in `holder`. What an inspector shows when a member is its
 # subject, and the one place that knows HOW a member is edited: an object's member through the
-# instance edit protocol (Widget.injectProperty and its three siblings), a class's through its
-# meta-object and recorded for a snapshot to replay (ClassMemberRef).
+# instance edit protocol its holder services (injectProperty and its four twins: a widget, a paint
+# tool), a class's through its meta-object and recorded for a snapshot to replay (ClassMemberRef).
 class MemberRef
 
   holder: undefined
@@ -1100,15 +1148,16 @@ class MemberRef
     if isAClassPrototype holder then new ClassMemberRef holder, name else new MemberRef holder, name
 
   # Can `holder`'s members be edited at all? A class's prototype, through its class; an object that
-  # answers the instance edit protocol (a capability, never `instanceof Widget`). A number, a Point,
-  # a plain object, a built-in class's prototype, a class function: no.
+  # answers the instance edit protocol (a capability, never `instanceof Widget`: a widget, a paint
+  # tool). A number, a Point, a plain object, a built-in class's prototype, a class function: no.
   @canEdit: (holder) ->
     (isAClassPrototype holder) or holder?.injectProperty?
 
-  # What code typed in a member's editor runs against: an object whose members are edited as an
-  # object's; never a class's prototype (code run against it would change the class unrecorded).
+  # What code typed in a member's editor runs against: a holder EDITED AS AN OBJECT that is also a
+  # RECEIVER TYPED CODE RUNS AGAINST (evaluateString, the run verb); never a class's prototype (code
+  # run against it would change the class unrecorded). A paint tool is no receiver: no run rows.
   @codeReceiverOf: (holder) ->
-    holder  if holder?.injectProperty? and !isAClassPrototype holder
+    holder  if holder?.injectProperty? and holder.evaluateString? and !isAClassPrototype holder
 
   constructor: (@holder, @name) ->
 
@@ -1122,7 +1171,11 @@ class MemberRef
 `@_recordedStaticSourceOf`, `shownText()` (the old `_paneTextOfMember`; not `text()`, which is a FIELD
 of every text widget), `_fieldSource()` (the old `_sourceForFieldMember`), `canBeRenamedOrRemoved()`
 (the old `_selectedMemberCanBeRenamedOrRemoved` without the selection read), `add()`, `save(txt)`,
-`rename(newName)`, `remove()`, `_notifyOfEdit()`. `ClassMemberRef` overrides `_fieldSource`, the four
+`rename(newName)`, `remove()`, `_notifyOfEdit()`. `shownText()`'s value branch is the one printer of values,
+`Utils.printedFormOf val` (the value's code form, else its printed form; §5.6), behind a field's recorded source
+(`_fieldSource()`, which keeps its precedence); its function branch ends in the same printer where no source is kept
+or recorded, so a Fizzygum class reads by its name (a field holding one, the `constructor` row of a class that writes
+no constructor) and any other function as its compiled text. `ClassMemberRef` overrides `_fieldSource`, the four
 steps and `_notifyOfEdit`, with `_editClassMember` and `_removeClassMember` as its two helpers,
 exactly as `ClassInspectorWdgt` had them. **What U2 added**, each with its first reader: the three statics
 above (`of`: the member list's choice and its gestures; `canEdit`: the list's and the editor's builds and every
@@ -1130,7 +1183,18 @@ edit gesture; `codeReceiverOf`: `MemberEditorWdgt.codeReceiver`), `editsAsAMembe
 (`InspectorWdgt`: its view, `_classAbove`, `showsSubject`), `colloquialName` (the header's title, through
 `Utils.colloquialNameOf`), and `duplicate(newName)` on both classes, with `ClassMemberRef._editCopyUnder(newName,
 verb)` the copy its `duplicate` and `rename` share (§5.3 b's warning: the copy is a step that does not notify).
-Every step answers whether it made its edit (§5.3 b). A member reference IS held now: by a member editor
+Every step answers whether it made its edit (§5.3 b). **The instance edit protocol is stated in `MemberRef`'s
+header** (its verbs, what each answers, its one notification): the injection's one body is
+`Widget.injectPropertyInto holder, name, txt, evaluate`, `evaluate` being the holder's own evaluation of an
+assignment against itself (a widget's `evaluateString`; a paint tool's private `_evaluateAgainstMe`); each of the
+four twins answers whether it made its edit (a widget's always do), and an object step passes that answer up
+(`return false unless @holder.addOwnProperty @name`, likewise duplicate, rename, remove), so a holder that refuses
+changes nothing and tells no one. Its worked non-widget case is a paint tool (`DrawingToolBase`, `src/authoring`).
+The header names two capabilities apart: EDITED AS AN OBJECT (`canEdit`: `injectProperty?`) and a RECEIVER TYPED
+CODE RUNS AGAINST (`evaluateString?`, the run verb). `codeReceiverOf` asks both (and no class prototype): a widget
+answers both; a paint tool is edited but answers no run verb (its members run with `@` the paint surface), and
+the macro toolkit runs code but is not edited, so neither has run rows.
+A member reference IS held now: by a member editor
 (`memberRef`) and, as its `inspectedObject`, by the inspector the editor stands in, so a copy and a world save
 carry it as an ordinary object of its class (a snapshot restores each editor's `memberRef.holder` as the restored
 subject).
@@ -1214,12 +1278,20 @@ class BandWdgt extends Widget
   `inspectorHeaderHeight` (44), `breadcrumbInset` → `inspectorHeaderInset` (12; a member list's cut-notice band
   reads both too), `breadcrumbCaptionGap` → `inspectorHeaderGap` (8: the gap after the split button). New:
   `inspectorEditorLeastWidth` (280, a member editor's floor) and the role `inspectorHeaderTitle` (`ink`: the
-  header title's). The comment above each inspector metric says what reads it. Colours stay Theme roles
+  header title's); and, for the split's piece (§5.10), the roles `splitPieceFill` (`chrome`), `splitPieceHoverFill`
+  (`chip`) and `splitPiecePressFill` (`line`) and the metrics `splitButtonWidth` (32) and `splitButtonGripDots` (4).
+  The comment above each inspector metric says what reads it. Colours stay Theme roles
   (`raw-chrome-color` is held at 0).
-- **Door (`Widget.spawnInspector`).** Inside the same two awaits:
+- **Door (`Widget.spawnInspector inspectee, opts = {}`).** Inside the same two awaits:
   `row = new InspectorRowWdgt inspectee` then
-  `world.openFrameWith row, row.extent(), world.hand.position().subtract(new Point 50, 100)`.
-  `inspectorClassFor` is gone: `MemberRef.of` makes the one decision it made.
+  `world.openFrameWith row, row.extent(), world.hand.position().subtract(new Point 50, 100)`, then, with
+  `opts.member`, `row.chooseMember opts.member`: the row's first inspector's view chooses it
+  (`InspectorRowWdgt.chooseMember` → `MemberListWdgt.chooseMember`) as a person's clicks would — Inherited turned
+  on when only it hides the member (`toggleShowingInherited`), the row clicked (`ListWdgt.rowLabelled`, then
+  the list's `select`), then scrolled whole into the list's view (`ListWdgt.scrollRowIntoView`); a member the
+  subject does not answer chooses nothing. Its callers with a member: `Widget.inspectMemberToEdit`, the action of
+  an edit mark (`EditableMarkWdgt`) and of the base menu's "Edit code" row, on what a widget's `_memberToEdit`
+  names. `inspectorClassFor` is gone: `MemberRef.of` makes the one decision it made.
 - **Part.** No partition change: every new class lives in `src/meta-tools`. The `//` comment of the
   `meta-tools` entry in `buildSystem/parts.json` names the classes it holds, and `profiles/lean.json`'s prose the
   tool it leaves out.
@@ -1238,61 +1310,95 @@ the mapper of its own pointer and the declared deferrer of its own stream. The s
 DESIRED width, so from the default split (a member list at its desired 372) a split moves right only, as far as the
 editor's least 280. A split gets two controls, both always present, one look whatever the pointer:
 
+**ONE flat grey piece** (the owner's pick from two rounds of pictures, 2026-11-25). The divider and the split
+button joined to it are painted as one piece by one appearance,
+`SplitPieceAppearance` (core): a flat plate with no outline, `splitPieceFill` (`chrome`) at rest,
+`splitPieceHoverFill` (`chip`) while the pointer rests on either part, `splitPiecePressFill` (`line`) while either
+is pressed or dragged, so a hover or a press on one part lights both. The spacer and the adder of "Edit layout"
+keep the handles' outlined plate (`LayoutChromeAppearance`); `LayoutChromeWdgt.createAppearance` is where a class
+picks one or the other.
+
 **The divider, for a mouse** (U1b, landed). The splitter is `theme.layoutAdjusterThickness` across
-(12) and its mark is a small field of the house's grip dots: the ones a toolbar band's strip shows
+(12), square-ended, and its mark is a small field of the house's grip dots: the ones a toolbar band's strip shows
 (2 px squares, `gripDotSize`, on a 6 px pitch, `gripDotPitch`), in `layoutAdjusterGripMark` (`muted`).
 There is ONE dot field in the tree, `Appearance._paintGripDots`: the strip's appearance calls it over
-its plate, and the layout chrome's appearance for a piece that DECLARES dots
-(`LayoutChromeWdgt._gripDotsOnMyPlate`: their ink and the most of them along the long side; the
-splitter answers `layoutAdjusterGripDotsAlong`, 4), so the field reads as a grip, not a texture. Per
+its plate, and the split's appearance in the field its widget DECLARES (`_gripDotFieldOnMyPlate`: the field and
+the most dots each way; the splitter answers its box kept `layoutChromeGripDotsInset` in, at most
+`layoutAdjusterGripDotsAlong`, 4, along its long side), so the field reads as a grip, not a texture. Per
 D14 this is the look of every splitter, a change to the core class with no inspector in it.
 
 **The split button, for a finger** (U2). A `SplitGripWdgt` in the header band of the inspector on
 the divider's right asks that splitter's solve for the split its own drag means, so there is no second solve. An
-inspector wears one exactly while a splitter stands before it (§5.4). A mouse may use it too. Measured: the divider
-by mouse and the button by mouse and by touch each move the split by exactly the travel after the first move (a
-chrome drag has no threshold), the button's left edge is the splitter's right edge after every layout, the window
-never moves, and the cursor reads `col-resize` over both.
+inspector wears one exactly while a splitter stands before it (§5.4). A mouse may use it too. It is a TAB on the
+divider: `splitButtonWidth` (32) wide and `minimumTargetSize` (44) tall, flush right of the splitter, so the piece
+the two make is 44 wide at the header; its corners against the splitter are square and its two right corners
+rounded at `layoutChromePlateRadius`, so the divider runs into it with no line and no step. Measured on the patched
+prototype at widths 44 down to 24: a finger's drag on the DIVIDER beside the tab moves the split exactly as one on
+the tab, so the finger's landing area at the header is the whole piece. Measured at 44 wide: the divider by mouse
+and the button by mouse and by touch each move the split by exactly the travel after the first move (a chrome drag
+has no threshold), the button's left edge is the splitter's right edge after every layout, the window never moves,
+and the cursor reads `col-resize` over both.
 
-**The finger icon** (U3b; by the owner's ruling not run in the loop that built U2: §0.4 D11). The
-button's face is to be a double arrow with a finger on it, so it says what to do; until then it shows the double
-arrow alone. No finger or hand icon exists in `src/icons/`. Draw one as a size-aware icon with the
-`/convert-icon-size-aware` skill of the umbrella (its probe, preview and owner-review loop), and
-compose it with the double arrow in the grip's glyph. Until the owner has approved the icon the
-button shows the double arrow alone; do not ship a stand-in drawing.
+**The tab's face.** A field of the divider's own dots, at most `splitButtonGripDots` (4) each way: 4 × 4, centred
+across the WHOLE piece (from the splitter's leading edge, its division box's width left of the tab, to the tab's far
+edge) and down the tab. At these sizes the field starts exactly at the tab's left edge, so the tab paints all of it.
+The double arrow is gone from the button (the spacer and the halo's handles still show theirs), and the dot field is
+the face the owner chose in place of the finger icon U3b was to draw.
+
+**The join.** A widget repaints only itself, and the divider is core while the button is `meta-tools`, so the
+divider names no class of the button's: the two parts hold each other in ONE field of their core base,
+`LayoutChromeWdgt.joinedPiece`, whose rule is stated once where it is declared. SET only where the two are
+introduced, the reconcile of the inspector whose header the button leads (`noteJoinedBy`, §5.5), in which each
+part does its own half, through the other's public introduction: it parts from any part it held, holds the other,
+repaints itself, and tells the other, which does the same. CLEARED on both by either part's going, each by its own
+event, so no reference outlives its target (the house's lifetime law): the button's teardown
+(`SplitGripWdgt._destroyNoSettle`, the house's teardown hook, as `FrameGripWdgt`'s and `ShortcutWdgt`'s: it tells
+the divider, `notePartedFrom`, while it still stands in its header), and the divider's leaving the row it divides
+(picked out, attached elsewhere, destroyed, its row's own reconcile's removals included), which the row hears in
+the hook every holder has for a child leaving it (`InspectorRowWdgt._reactToChildRemoved`, first, before its
+guards) and tells the divider (`noteLeftMyStack`). The button holds the divider too because it must find the
+divider that holds it wherever it is destroyed: a button a person took out of its header is no longer the one its
+inspector says leads, so no derivation finds its divider, yet that divider holds it until the reconcile.
+`joinedPiece` is in the base's `@serializationTransients` and `@copyTransients`: the reconcile, which the
+inspector's `_afterDeserialization` and `_reactToBeingCopied` run, joins the two again. Each part answers the other
+(`LayoutChromeWdgt._myJoinedPiece`) only while they hold each other AND the button's inspector says that divider
+is the one it moves (`SplitGripWdgt._mySplitter`), so the two always agree; a button standing anywhere else is
+alone (four rounded corners, its field centred on it). Each paints by "either of us is pressed, else either of
+us is hovered" (`_pieceShowsPress`, `_pieceShowsHover`), and each tells the other when the hand's answers about it
+move (`notePointerStateChanged` → `noteMyPieceChanged`, a public note: the invalidation-privacy rule).
 
 ```coffee
-# A SPLIT GRIP: the FINGER's way to move a split. I am a 44 x 44 piece of layout chrome (the 44
-# rule, visual-design-system §4.2: a target that must be big is drawn big) standing at the left end
-# of an inspector's header band, right of the splitter that stands before that inspector. The
-# splitter itself is the mouse's way; we are both always there, since a device can have both. A drag
-# on me moves that splitter's split exactly as a drag on the splitter does: the split's arithmetic is
-# the splitter's own (StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt), and I only say
-# where its leading edge should be.
-#   I hold no splitter: I ask the inspector I stand in which splitter I move, as I am dragged
-# (InspectorWdgt.splitterMovedBy, read off its row's children), and it answers only while I am its
-# own split button and lead its header: a copy of me, my inspector taken out of its row, a button a
-# person put after a title or into another inspector's header, or one on the desktop drags nothing.
+# A SPLIT GRIP: the FINGER's way to move a split. I am a TAB on the splitter that stands before an
+# inspector: splitButtonWidth wide and a chrome target's side tall, at the left end of that
+# inspector's header band, flush right of the splitter, so the splitter and I make one piece a chrome
+# target's side across at the header (the 44 rule, visual-design-system §4.2), and a finger landing
+# anywhere on it moves the split. The splitter alone is the mouse's way; we are both always there. A
+# drag on me moves that splitter's split exactly as a drag on the splitter does: the split's
+# arithmetic is the splitter's own (StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt), and
+# I only say where its leading edge should be.
+#   I hold no splitter: I ask the inspector I stand in which splitter I move, as I am dragged and as I
+# am painted (InspectorWdgt.splitterMovedBy), and it answers only while I am its own split button and
+# lead its header: a copy of me, my inspector taken out of its row, a button a person put after a title
+# or into another inspector's header, or one on the desktop drags nothing.
+#   My look is a split's piece (SplitPieceAppearance): joined to that splitter, one flat piece with it,
+# my free corners rounded, a field of its dots centred on the whole piece; alone, all four rounded.
 class SplitGripWdgt extends LayoutChromeWdgt
 
-  # my box is a chrome target's side square, fixed: my band holds me at my own size
+  # my box is splitButtonWidth by a chrome target's side, fixed: my band holds me at my own size
   constructor: ->
     super()
-    side = WorldWdgt.theme.minimumTargetSize
-    extent = new Point side, side
+    theme = WorldWdgt.theme
+    extent = new Point theme.splitButtonWidth, theme.minimumTargetSize
     @__commitExtent extent
     @setMinAndMaxBoundsAndSpreadability extent, extent, 0
+
+  createAppearance: -> new SplitPieceAppearance @
 
   # I am CHROME, as the splitter is: a drag that starts on me moves my split, at once, for a
   # finger as for a mouse (ActivePointerWdgt._touchPressArmsAtOnce), and it never lifts me out
   ownsDragsStartingOnMe: -> true
   detachesWhenDragged: -> false
   grabsToParentWhenDragged: -> false
-
-  # MY GLYPH: the double arrow across, as a layout spacer's (LayoutChromeWdgt._glyphOnMyPlate)
-  _glyphOnMyPlate: ->
-    theme = WorldWdgt.theme
-    [(new DoubleArrowIconAppearance @, theme.layoutChromeGlyph), theme.layoutSpacerGlyphSize]
 
   # my hover shows the cursor a row's splitter shows (LayoutChromeWdgt.hoverEntered)
   _resizeCursor: -> "col-resize"
@@ -1302,6 +1408,28 @@ class SplitGripWdgt extends LayoutChromeWdgt
     holder = @parent
     holder = holder.parent  until !holder? or holder.splitterMovedBy?
     holder?.splitterMovedBy @
+
+  # the part joined to me: the divider I hold, while it is the splitter I move
+  _myJoinedPiece: ->
+    @joinedPiece  if @joinedPiece? and @_mySplitter() is @joinedPiece
+
+  # my teardown: the divider joined to me must not name me once I am gone, so I tell it
+  _destroyNoSettle: ->
+    @joinedPiece?.notePartedFrom @
+    super
+
+  # my corners: joined, the two against the splitter square and my two right ones rounded; alone, all four
+  _plateCornerRadii: ->
+    radius = WorldWdgt.theme.layoutChromePlateRadius
+    if @_myJoinedPiece()? then [0, radius, radius, 0] else radius
+
+  # my face: the splitter's dots, at most splitButtonGripDots each way, centred on the WHOLE piece
+  # (from the splitter's leading edge, its division box's width left of mine) and down me
+  _gripDotFieldOnMyPlate: ->
+    most = WorldWdgt.theme.splitButtonGripDots
+    splitter = @_myJoinedPiece()
+    reach = if splitter? then splitter.getDesiredDim().x else 0
+    [(new Rectangle (-reach), 0, @width(), @height()), {mostColumns: most, mostRows: most}]
 
   # The split moves so that the splitter's LEADING EDGE lands where the pointer, less where I was
   # grabbed, less the splitter's own width says: I stand flush after it. That width is the one its
@@ -1342,10 +1470,13 @@ Notes, as built:
   `InspectorWdgt._reactToBeingCopied` and `_afterDeserialization` re-derive its split button from where it
   stands, so it sheds the grip (§5.5).
 - `SplitGripWdgt` lives in `meta-tools` while the inspector is its only client. Every OTHER
-  division stack's splitter has the dotted look (D14) and no finger's way to move it: U5 files
+  division stack's splitter has the flat, dotted look (D14) and no finger's way to move it: U5 files
   that.
-- A mouse can still press the 12 px divider a finger cannot take reliably; that is intended. The
+- Below the header a mouse can still press the 12 px divider a finger cannot take reliably; that is intended. The
   divider stays a pointer target for every pointer (a finger that does land on it moves the split).
+- A splitter a person takes out of its row ("Pick up") parts from its button as it leaves (the row's
+  `_reactToChildRemoved` → `noteLeftMyStack`) and stands as a divider alone; the row puts a new splitter before
+  the inspector, whose reconcile joins its button to that one.
 
 ### 5.11 `ObjectListWdgt` (U4)
 
@@ -1497,7 +1628,7 @@ As built:
 | U1b | The divider's look: every division stack's splitter 12 px wide with grip dots (D11, D14) | `fg gauntlet` | [x] 2026-11-24 |
 | U2 | The switch: the new widget classes, the door, the toolkit, 32 tests, the rigs, recapture | `fg gauntlet` + `fg homepage` | [x] 2026-11-25 |
 | U3 | Tests of what is new, each proven to bite | `fg presuite` | [x] 2026-11-25 |
-| U3b | The finger icon on the split button: candidates, then the owner's choice (D11) | `fg presuite` after the choice | [ ] |
+| U3b | The finger icon on the split button: candidates, then the owner's choice (D11) | `fg presuite` after the choice | [x] 2026-11-25, closed unrun |
 | U4 | Object-list views (Children, Instances, Subclasses) and the chooser (D12); the owner's A2, A5, A6, the naming rule, a taller window | `fg gauntlet` + `fg homepage` | [x] 2026-11-25 |
 | U5 | Docs, BACKLOG, churn set, close | `fg gauntlet` | [x] 2026-11-25 |
 
@@ -2005,6 +2136,10 @@ The split button ships from U2 with the double arrow alone. This unit draws the 
 4. After the choice: the icon class in `src/icons/`, the grip's `_glyphOnMyPlate` composing it with
    the arrow, recapture of the pictures that show a split button, `fg presuite`.
 
+**Closed unrun 2026-11-25.** The owner's follow-up of that day redrew the split button as a dotted tab joined to the
+divider, one flat piece with no glyph (§0.4 D11; §6 "Follow-ups", G): there is no arrow left to put a finger beside,
+and the dot field is the face the owner chose. Nothing of this unit was drawn or built; it is the owner's to reopen.
+
 ### U4. Object-list views and the chooser (1 day, D12)
 
 What this unit builds, as the owner's rulings of 2026-11-25 and the unit's own (its preparation, `u4/PREP.md` in the
@@ -2333,6 +2468,283 @@ step 4's wait for approval did not apply; the rest as the steps say:
 - **Evidence:** the churn set's derivation equal to its prediction; the fix's two tests green alone under both
   pointers, its new line failing under each of its two plants; `fg gauntlet` OK on the whole (all 20 legs in wave,
   1831 s), the failing set the predicted EMPTY one; `fg homepage` OK.
+
+### Follow-ups (2026-11-25, the owner's three requests after the loop)
+
+After reading the loop's review page the owner asked for three things (in session, 2026-11-25 19:46; the dated
+record, the owner's words and every ruling: `Fizzygum-tests/.scratch/inspector-followups/LEDGER.md`, gitignored):
+- of the four points the loop left to the owner (the Save of a value whose shown text is not code, "Show
+  selection"'s capital, the two readings standing as built, the finger icon): "I trust your recommendation, as usual
+  let's Do The Right Thing" (S; the finger icon is G's);
+- the divider and the split button "seem a bit disjoint. The vertical one's rounded corners make too much noise and the
+  joinery between the two also makes noise": "Evaluate the request and give me a prototype, perhaps with some
+  variations according to your own visual examination" (G);
+- the paint tools are edited through a dedicated code-editing window: "Find a way / standard / convention for invoking
+  the inspector(s)" directly on an object and one of its members, "general enough that it can be used in other
+  widgets", then "make the editing of the tools happen that way and get rid of the current special-case widget" (D).
+
+Research, design notes and implementation by agents; the rulings are the coordinating session's unless named as the
+owner's. The three were built on one tree and gated together: the first suite run on their first build failed exactly
+the 23 tests the three predictions, written before it, named, 23 of 23, every failure a picture (one of the 23, D's new
+door test, also an assertion: a fixture fault, below).
+
+**Landed 2026-11-25 (S: a value shown as code, and a value shown as a value).**
+- **The premise was wrong.** The research read, and one real press confirmed (on the build of 19:07), that a Save of a
+  Color's shown `rgb(80,80,80)` does not fail "with no word": nothing is saved and no bubble shows, but the Error log
+  opens on `ReferenceError: rgb is not defined` with its stack, where the house puts code a person typed that throws
+  (a compile error beside the hand, a throw in the Error log). U4's probe had seen no bubble, and the filing read that
+  as silence. So the half "a Save that says why at the hand" was dropped (one failure would get two answers), and the
+  unit made the shown text code instead.
+- **One printer of values, in core.** `codeForm()` on each fully immutable value class (`Point`, `Rectangle`, `Color`,
+  `ShadowInfo`, `TransformSpec`: CoffeeScript that evaluates to an equal value, its numbers unrounded; `toString`
+  stays the display form), and `Utils.codeFormOf` / `Utils.printedFormOf` / `Utils.callFormOf` answering for the
+  values that carry none (`immutable-value-classes.md` §6 has the table and the rules). `MemberRef.shownText` shows a
+  value through it (§5.7), and `Widget.propertyAssignmentSource` spells a member's name through it (one string idiom).
+  A probe of the forms ran before any build: 57 forms evaluated back equal under the pinned CoffeeScript and the
+  vendored compiler, 15 cases with no code form answered undefined.
+- **The editor (§5.6).** Its text takes typing exactly while a Save can apply it (`MemberRef.canEdit` of its holder,
+  and not `constructor`); after a Save of a VALUE it reads the member back (`MemberEditorWdgt.save` →
+  `_reloadNoSettle`). The research's four open questions were ruled at their defaults: the editor shows what was
+  stored; no label on a pane of compiled text; "Show selection" of `undefined` shows `undefined`; a long code form is
+  shown whole. A ruling on the source report: `shownText`'s function branch ends in the same printer where no source
+  is kept or recorded, so a field holding a Fizzygum class reads by its name; accepted with it, the `constructor` row
+  of a class that writes no constructor reads as the class's name (`HeartIconWdgt`), where it read compiled text.
+- **A value shown as a value.** `MenuWdgt.titleKind` (`"name"`, `"message"`, `"value"`) in place of the
+  `titleIsAMessage` flag (its reader `_headerIsAName` became `_titleKind`, and `FrameWdgt._titleDisplayCase` a switch
+  on it): a value's bubble is never re-cased, pinned or not (`visual-design-system.md` §4.9). The value door beside
+  `inform` is `Widget._informOfValue`, private because its only callers are widgets showing their own values
+  (`TextWdgt.showSelection`, `SliderWdgt.showValue`). "Show selection" shows every result, `undefined` included,
+  through a continuation the run hands on (`TextWdgt._runningTypedCode` → `Widget._runningTypedCodeAgainst`,
+  `withTheValue`), so code that does not compile gets one bubble, the compiler's.
+- **Gates moved, each with its reason:** Widget's method ceiling 396 → 397, dated (the value door; D lowered it
+  again); the complexity record `MemberRef#shownText` (20) removed as stale (its value branch moved to the printer);
+  and, by the OWNER's word (in session, 2026-11-25), `save` joins `add` in the layering gate's `WRAPPER_EXCLUDED`,
+  its reason beside `add`'s: `MemberEditorWdgt.save` now settles round its reload, the gate finds settling wrappers
+  BY NAME, and so every canvas `ctx.save()` in paint code read as a call to it (26 false [G] hits). The agent neither
+  marked 26 sites nor moved the settle to dodge the name. The list takes the hand-list gate's marker, guarded by its
+  own stale-entry rule (`G_STALE_WRAPPER_EXCLUDED`); the gate's self-test planted all 35 of its rules.
+- **Tests:** two new, `macroInspectorShowsAValueAsCode` (13 assertions, one shot) and
+  `macroShowSelectionShowsAValueAsItIs` (8 assertions); four ported: `macroTextRunRowsReflectSelection` (the bubble
+  reads `"Desktop"` in its quotes), `macroInspectorShowsTheFunctionItsSubjectHolds` (the `constructor` row, the record
+  store's row), `macroHandleAttachShowsNoTargetsMessage` and `macroRefusedToolCopyIsNotCarried` (a menu's title kind).
+  24 plants under the mouse, each failing first on its own line; the first of them, the printer never asking for a
+  code form, gave back the old behaviour itself (`rgb(80,80,80)`, then the Error log's "rgb is not defined"). The
+  prediction, written before any run, was ONE picture, `macroTextRunRowsReflectSelection` image_3, and it held: under
+  the plant that shows the value unquoted that shot matches its old reference, so the quotes are all that moved. The
+  three tests named at risk stayed green; followers clean under both pointers. The new test's first run met a fixture
+  fault (`color` is Widget's, so the list shows it only with Inherited on), fixed by a real press with no expected value
+  changed.
+- **Docs:** `immutable-value-classes.md` §6, `visual-design-system.md` §4.9, `widget-authoring-guidelines.md` §10, §5.6
+  and §5.7 here, two `MACRO-PATTERNS.md` entries, `src/macros/CLAUDE.md` and the tests repo's `/author-macro-test`
+  skill; the ⛔ BACKLOG line on a function with no kept source, and its detail in
+  `archive/argument-holes-both-repos-plan.md`, keep only what remains (the ledger, below).
+
+**Landed 2026-11-25 (D: a door that opens the inspector on a member, and the paint tools edited through it).**
+- **What the research found** (read-only): `CodePromptWdgt` and `Widget.textPrompt` had one client, the paint tools (a
+  census rig built one, the menu sweep listed it, a spreadsheet use was planned and never built); a tool's code was ONE
+  text of `name = value` assignments, kept per person and per tool key, injected into the paint surface as its own
+  members at use. A tool's code was no member of any object.
+- **Ruled** over a design note with eleven stop points (the scratch's `door/RULINGS.md` wins over `door/DESIGN.md`):
+  ONE door, `Widget.spawnInspector inspectee, member: name`, choosing the member as a person's clicks would (§5.9); a
+  GENERAL edit mark that asks the widget it marks what to open, its look unchanged, and a menu row with the same action
+  ("Edit code"), since the mark is about 23 px and a finger needs a way of its own; the verb on `Widget`
+  (`inspectMemberToEdit`, on what a widget's `_memberToEdit` names, private because only Widget's own verbs ask it); a
+  paint tool an OBJECT whose members are its handlers, held by the person, the person's table its store, one record per
+  member, with no mixin; two classes, `DrawingToolBase` holding the plumbing and `DrawingTool` declaring nothing, so the
+  member list's own rule shows a person the handlers alone; a tool in a file an ordinary record, restored detached;
+  each instance-edit twin answering whether it made its edit, and a tool refusing inside its own verb, in words; a
+  tool's Save refusing a member it cannot keep as text; the paint surface's two entries (`hoverMoved`, `pressMoved`)
+  the only names a tool refused, the derived rule put off as low (a call review A showed wrong: the reviews' round,
+  below, built the rule and deleted the two-name list); a tool's edit not recorded as an
+  instance edit; the protocol stated in `MemberRef`'s header and `widget-authoring-guidelines.md` §16. THE OWNER's,
+  asked (in session, 2026-11-25: "as per your recommendation"): in user mode no widget builds a context menu, so a
+  widget answering `_memberToEdit` builds a ONE-row menu of its own, "Edit code"; every other widget's user mode is
+  unchanged.
+- **Corrected on the way.** The design note moved every injection's `eval` into a closure (its own "riskiest part");
+  ruled instead: ONE body for every holder, `Widget.injectPropertyInto`, a widget's injection evaluating where it always
+  did. Asking the tool for `evaluateString` there made it a CODE RECEIVER: its editor got run rows, and a run stitching
+  on a member with no source would have written `undefined` into the person's record and thrown at every pointer move
+  over a drawing using the tool. A tool is no code receiver (its handlers run with `@` the paint surface), so the body
+  takes how the holder evaluates an assignment against itself (`injectPropertyInto holder, name, txt, evaluate`: a
+  widget its `evaluateString`, a tool its private `_evaluateAgainstMe`), and `MemberRef.codeReceiverOf` asks for both
+  capabilities (§5.7). Then the person's record keeps exactly the members that read back as text
+  (`DrawingToolBase.memberSources`, the one feed of the write-back and of a surface's take-up; `_sourceOfMember` the
+  one predicate, shared with the Save's refusal), so code run elsewhere that writes straight into a tool object cannot
+  break the drawings using it. And the tool button names itself by its tool, in the tool object's words ("pencil
+  tool", `DrawingToolBase.colloquialNameForKey`), so the user-mode menu is not titled "code injecting simple
+  rectangular button". Departures accepted: the row written once (`Widget._addEditCodeMenuEntry`: two menus build it,
+  and it adds the row only for a widget that names a member, so no other widget's menu changes);
+  `Deserializer._toolMembersProblem` split out of the user record's check (its complexity); `ListWdgt.scrollRowIntoView`
+  in the caret follow's arithmetic, the plane-discipline count unmoved; the Serializer's remediation line made safe for
+  a tool's member with no source.
+- **Built:** the door (`Widget.spawnInspector (inspectee, opts = {})`, `InspectorRowWdgt.chooseMember`,
+  `MemberListWdgt.chooseMember`, `ListWdgt.rowLabelled`, `ListWdgt.scrollRowIntoView`); the mark (`EditableMarkWdgt`,
+  one operand, its `activated` its button's `inspectMemberToEdit`) and the row; the tool (`DrawingToolBase`,
+  `DrawingTool.of key`, `src/authoring`; `User.drawingTools`; member records in `User.drawingToolOverrides` through
+  `User.overrideDrawingTool`; the stock tools as member records, `PaintToolbarWdgt.PENCIL_TOOL` and its siblings, chosen
+  by `stockToolMembers`; a surface's take-up, `CanvasGlassTopWdgt._takenUpToolCode` and `_toolInReach`; the load's
+  check of the records at both levels). `architecture/toolbars.md` §4.3 states the paint tools as they stand.
+- **Deleted:** `CodePromptWdgt.coffee`; `Widget.textPrompt`, `injectProperties`, `compilePropertyAssignments`,
+  `_blurbAsTyped`, `_refuseCodeOutsideAssignments`; `CodeInjectingSimpleRectangularButtonWdgt.editInjectableSource` and
+  `modifyCodeToBeInjected`; `CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries`; `PaintToolbarWdgt.sourceForToolKey`
+  and `stockSourceForToolKey`. A file's old string-shaped tool record is refused by the load (no compatibility is
+  owed).
+- **Gates moved, each with its reason:** Widget's method ceiling 397 → 395, dated (the prompt's door and the one-text
+  reader gone, the verb, the row's helper and the injection's one body in); `public-api-allowlist.txt`'s stale `textPrompt` line removed; the four
+  `raw-chrome-color` sanctions re-keyed to the stock tools' member records, their counts unchanged (3, 3, 5, 3); the
+  menu-actions gate knows one prompt door; `PROMPTS_DRIVEN_FLOOR` 85 → 87, by the comment's own practice (the new roots
+  add the tool button's developer menu, Color… and Transparency…; the old code prompt was never driven, being no
+  `PromptWdgt`), both bounds measured again (37 and 110).
+- **Tests:** two new, `macroInspectorDoorOpensOnAMember` (one shot) and `macroEditMarkAndMenuRowOpenTheSameMember`
+  (assertion-only); the five paint-tool tests ported through real gestures (the mark's press, the editor's Save, the
+  window's close button): `macroToolCodeSaveRefusesCodeThatDoesNotCompile` (with new lines: Add… on a tool, a member
+  stitched on by code), `macroDrawingToolReachesEveryDrawingOfItsHolder`, `macroPaletteDockUndockKeepsTheTool`,
+  `macroTwoDrawingsKeepTheirOwnTools`, `macroViewModeBareDrawingTakesNoPaint`; two more in prose. 38 plants (30 on the
+  tests, 8 on the serialization rig), each failing first on its own line, the gesture lines under both pointers. The
+  rigs: the census (the code prompt's row out, a row opening the door on a tool in), the serialization rig (five
+  expectations: the old record shape refused, a member that is no source refused, a member with a statement after its
+  function refused, a tool surviving a snapshot, an inspector on a tool surviving one), the menu sweep (a tool button's
+  recipe and a USER-MODE root; its self-test plants a tool button that names no member). The door test's line "one
+  window opens" counted two new desktop children in the suite: the second was the resize grip's hover outline (a
+  `HighlighterWdgt`; the door opens each window at the hand, where the test parks the pointer), so the line leaves out
+  ephemeral overlays, its expected value unchanged; no product defect. The prediction, before any run, was two shots of
+  one test (`macroDuplicatedInspectorDrivesCopiedTargetOnly` image_2 and image_3): it held by name and was wrong in
+  detail, the list standing 22 px lower with TWO new members before `alpha` (`_addEditCodeMenuEntry`, and S's
+  `_informOfValue`) where it said one row.
+- **Docs:** `toolbars.md` §1, §4.2, §4.3 and §8, `widget-authoring-guidelines.md` §16, `serialization-duplication-reference.md`,
+  `world-lifetime-and-inventory.md` (the door's member choice under the destroyed-check), the menu-action wording in
+  `lint-and-static-checks.md` and `visual-design-system.md`, §5 here, `MACRO-PATTERNS.md` and `src/macros/CLAUDE.md`;
+  `src/dataflow/CLAUDE.md` (the person's table holds member records); the deleted class's name dropped where a deferred
+  idea named it (`src/spreadsheet/CLAUDE.md`, `plans/dataflow-engine-implementation-plan.md`); and the BACKLOG item §7d-D, the code prompt's undisplayed operand,
+  closed into the ledger below, its detail taken out of `archive/constructor-parameter-conformance-plan.md`.
+
+**Landed 2026-11-25 (G: the divider and the split button drawn as one piece).**
+- **Two rounds of pictures, the owner's pick.** Round 1, six variations beside the look of the day on the owner's
+  scene (three inspectors, dpr 2, a splitter with no tab, a press, a finger's drag; a patch at load, no source
+  change), drew the owner's ruling (in session): "try this combo for the dividers: 1. 4 × 4 DOTS, and make the 'touch'
+  tab narrower, it's too wide for that landing area. 2. go with flat grey, no outline." Round 2 put the tab's width in
+  as real layout (44, 36, 32, 28, 24, the title moving with it) with five variants at 32, and measured by real finger
+  drags that a drag started on the DIVIDER beside the tab moves the split exactly as one on the tab, at every width:
+  the finger's landing area at the header is the whole piece. The OWNER chose round 2's Variant 5, "the 4 × 4 field
+  centred on the whole piece, In the base grey", not the session's recommendation (one rounded corner, the dots centred
+  on the tab). The finger icon was thereby settled: dots, no glyph (U3b closed unrun).
+- **Built** (§5.10): one home for the look, `SplitPieceAppearance` (core), which asks its widget what it shows; the
+  roles `splitPieceFill`, `splitPieceHoverFill`, `splitPiecePressFill` (`chrome`, `chip`, `line`) and the metrics
+  `splitButtonWidth` (32) and `splitButtonGripDots` (4); `LayoutChromeWdgt.createAppearance`, which a split's two parts
+  override (the "Edit layout" spacer and adder keep their outlined look: filed); per-corner radii in
+  `Appearance._plateRadius`; the tab 32 × 44; the joined pointer state through a public note each part sends the other
+  (`noteMyPieceChanged`). THE JOIN: the two parts hold each other in one field of their core base,
+  `LayoutChromeWdgt.joinedPiece`, never saved nor copied, set only by the introduction in
+  `InspectorWdgt._reconcileSplitGripNoSettle` (`noteJoinedBy`) and cleared on both by either part's going.
+- **Ruled on the way:** an edge the first source pass left open, a stray divider still naming a destroyed tab: BOTH ends
+  part, each by its own event, the tab's teardown telling the divider that holds it (`SplitGripWdgt._destroyNoSettle`)
+  and a divider that leaves its stack letting go (`StackElementsSizeAdjustingWdgt.noteLeftMyStack`, told first by
+  `InspectorRowWdgt._reactToChildRemoved`). A departure accepted: the tab holds the divider too, because a tab a person
+  took out of its header can no longer derive the divider that still holds it. No core structural method is overridden.
+- **Deleted:** the double arrow's face on the button (`SplitGripWdgt._glyphOnMyPlate`), the dots' old declaration
+  (`_gripDotsOnMyPlate`, the base's and the splitter's) and `LayoutChromeAppearance._paintMyWidgetsGripDots`.
+  `DoubleArrowIconAppearance` stays: the halo's resize handle and the spacer show it.
+- **Checked against the owner's pick:** on the first build of the three units, with no runtime patch, the joint at 5×
+  (dpr 1) has no pixel differing from the chosen prototype's.
+- **Gates:** every source gate green, no budget or table moved.
+- **Tests:** three ported: `macroInspectorSplitMovesByDividerAndByButton` (the tab 32 × 44 and the piece 44, the tab's
+  width held to the touch size less the divider's thickness), `macroInspectorTakenOutLeavesNoStraySplitter`, and
+  `macroInspectorResizingOKEvenWhenTakenApart` (307 | 12 | 204 by the test's own formula, the editor's header least
+  now 57); seven new lines (the piece's one pointer state read off the canvas, hovered and pressed; a drag on the
+  divider beside the tab; the tab alone on the desktop; the divider picked out; the button taken out first, then its
+  divider; the button destroyed), ONE new shot (the split test's image_3, a press held), eight plants. A finding of the
+  design, not a defect: with the divider picked out alone, the new divider's join already parts the old pair, so a
+  broken `noteLeftMyStack` shows only when the button is taken out FIRST, which is why that line exists. The
+  prediction, before any run: 20 tests, 62 shots per density and pointer (61 existing and the new one), every picture
+  with a division stack's divider or an inspector header holding a split button. The runs, each test alone under both
+  pointers: every assertion passes (the taken-apart test's 307 | 12 | 204 confirmed), every failure a picture on the
+  prediction's list, no aim missed. The eight plants, every member they copy read again against the source and none
+  copied again, each fail first on their own line under both pointers, with the values predicted but one: under the
+  finger, the plant that keeps a part from telling the other failed the hover line before the press line (the
+  divider, never told the tab's press ended, kept the press tone): the plant's own bug, seen on its line. The
+  taken-out test's three older plants (U3's) still fail first on their own lines, the one whose method moved with
+  this unit (`InspectorWdgt._reconcileSplitGripNoSettle`) copied again from it as it stands; they no longer fail only
+  their own line, since this unit's new lines fail after them (three, three and two lines each). Followers clean under
+  both pointers (no `WORLD_INVENTORY_` line). No product defect. Two tests of a divider alone ported in prose only, a
+  "paper plate" now "a flat grey strip, no outline, square ends" (`macroLayoutsAndVisibility`,
+  `macroStackDividerReproportionsCells`).
+- **Docs:** `visual-design-system.md` §1, §2, §4.1–§4.3 and §5 ("A split's piece"), §0.4 D11 and §5.5 and §5.10 here,
+  `MACRO-PATTERNS.md`'s three split entries, and its stack-divider entry rewritten to the closed-form solve
+  (`StackElementsSizeAdjustingWdgt.maxDimsPuttingMyLeadingEdgeAt`) in place of stale line numbers and the old drag's
+  claims.
+
+**The reviews' round (2026-11-26).** Two independent read-only reviews of the three units together: A of the source
+and the gates, B of the tests, the rigs and the docs (`review/REVIEW-A.txt`, `review/REVIEW-B.txt` in the follow-ups'
+scratch). Neither found a shape bent to a number or a gate, nor a test shaped to pass (every expected value a written
+literal; `307 | 12 | 204`'s arithmetic, the sweep's floor 87 inside its two bounds and the door test's ephemeral filter
+checked). Each finding was ruled by the coordinating session (the dated record:
+`Fizzygum-tests/.scratch/inspector-completion-loop/LEDGER.md`); the fixes:
+- **A1, the name rule (confirmed, medium).** A tool member could take any name the paint surface answers but its two
+  entries: Add… `width` threw at every pointer move over a drawing using the tool, and Add… `bounds`, `parent` or
+  `children` overwrote a field of the surface's and, at the next change of tool, deleted it, a state no person could
+  leave. The ruling that had put the derived rule off as low (H.9) was the wrong call; ruled to build it. Built: ONE
+  statement, `DrawingToolBase.nameTheSurfaceAnswers` (`name of CanvasGlassTopWdgt.prototype`), once it was read that no
+  stock member's name is on the surface's chain and that every field a surface owns is declared at class level;
+  `CanvasGlassTopWdgt.TOOL_ENTRIES` deleted; the gestures' bubble in words that fit every such name. WHERE it is
+  asked was ruled after the source agent stopped on it: at TWO doors and no third, the gestures, which say it to the
+  person, and the surface's take-up (`CanvasGlassTopWdgt._takeUpToolInReach`), the point of damage, so such a member
+  reaches no surface by construction whatever brought it into the tool, a file (review A's A3) or code run
+  elsewhere. Not at the load (core may not name the lazy part's class), not in `memberSources`, no part fetched at a
+  load. A record carrying such a member is inert; the inspector lists it, and its Remove removes it.
+- **A2, a tool that cannot be made (confirmed by reading).** A field member saved as a lazy part's class, in a world
+  loaded where that part is not, made every `DrawingTool.of` throw, the tool's own repair doors (its button's menu,
+  its edit mark) included. Ruled: the record remembered FIRST, every member tried, the first failure rethrown ONCE
+  by the road a person's code that throws already takes (the gesture's catch, the Error log); the member that cannot
+  be made stands as a do-nothing function that keeps the typed text (`DrawingToolBase._standInFor`: shown, mendable
+  by a Save, kept in the record); the surface's take-up in the same shape, each member in its own try, the code and
+  the names it made (`_takenUpMemberNames`, a new saved field) recorded whatever happens, one rethrow. No new world
+  verb, no new console token. A hand trace: one error at the making, one at each surface's take-up, none after. The
+  stand-in writes the kept-source store from outside `Widget`, so the store has one public writer,
+  `Widget.keepSourceWith`; and the Serializer writes a `{"$src"}` only for a kept source that spells a function
+  literal, the load's own test, so a world saved with an inspector open on a tool holding a stand-in is refused by
+  the member's name instead of written as a file its load refuses.
+- **A5, what a Save shows after (confirmed).** `MemberEditorWdgt.save` kept the typed text whenever a FUNCTION was
+  stored, right only for a function literal: a typed `Math.max` stayed shown, unmodified. Ruled: one rule, no test
+  of what kind of thing was stored: after a Save the editor shows what its member shows, and when that is the text
+  typed nothing moves (§5.6). A value typed exactly as it shows (`42`) no longer reloads; only the undo history
+  differs, and no test line pinned it.
+- **A6 (low).** The take-up put on members from a fresh reading of the tool and recorded a cached one; it takes up
+  and records ONE reading.
+- **A7 (a convention).** `LayoutChromeWdgt.noteJoinedBy` called the other part's PRIVATE `_holdJoinedPiece`. Ruled:
+  each part does its own half through the other's public introduction; `_holdJoinedPiece` is deleted, the repaints
+  the same (four hand traces).
+- **Filed, not fixed:** A4, an inspector restored open on a tool edits a detached copy whose Save can overwrite a
+  newer edit (a BACKLOG line); B1, older than this work, text NAMING a function saved into a widget's member, which
+  leaves a function with no source and blocks "Save world snapshot…" until the member goes (into the kept-source
+  family's ⛔ entry). Corrected in passing: the Widget ceiling's dated reason named a member Widget does not define;
+  it names the three it does.
+- **Review B's findings:** M-1 and M-2 (the tree had moved under it: the tool-code test still spelled the old refusal
+  and `TOOL_ENTRIES`, plants copied the old `save`) to the tests' agents; A-1 and A-2 (the split test's provenance
+  records no plant of its own below where it says one; the taken-out test's says its older plants fail "and only it")
+  to G's; A-3 (four lines of the edit-mark test with no plant of their own) to D's; A-4, A-5, A-6 and a true
+  past-tense record trimmed from `constructor-and-parameter-conventions.md` (restored as it was) to the docs; B-1 (the
+  serialization rig's world leg runs on the SWCanvas page only) noted.
+- **Gates moved:** Widget's method ceiling 395 → 396, dated (`keepSourceWith`, so a paint tool writes no private field
+  of Widget's). The sweep's prompt floor (85 → 87) is D's, above.
+- **Docs:** `toolbars.md` §4.2 and §4.3 (both doors of the name rule, the take-up's one reading and its own tries, the
+  stand-in), `widget-authoring-guidelines.md` §16 (why the injection's body is handed each holder's evaluation: the
+  body may not call a private one), `serialization-duplication-reference.md` (a `{"$src"}` only for a function
+  literal, the store's one writer, the take-up's names), `MACRO-PATTERNS.md` (the name rule, the door entry's count of
+  new children, what a Save shows after), §0.3, §5.6 and §5.10 here, the BACKLOG and this plan's ledger.
+- **Tests:** one new test, `macroToolMemberThatCannotBeMadeErrsOnce`, the one test that declares its error: a
+  tool one of whose members cannot be made errs once at its making and once at each paint surface's first
+  take-up, never after; the member stands in the inspector with its typed text, both edit doors still open, and a
+  Save of mended text ends it. `macroToolCodeSaveRefusesCodeThatDoesNotCompile` takes the refusal's new words and
+  gains the name rule's lines: Add… `width`, `bounds`, `parent` and `queue` refused and the drawing still painting;
+  a member written into a tool by code leaving nothing on the glass after a change of tool; a record stated as a
+  file would bring it (`User.replaceDrawingToolOverrides`, the load's own door) inert on the surface, listed by the
+  inspector and removed by its Remove. Each of `macroEditMarkAndMenuRowOpenTheSameMember`'s four lines that had no
+  plant of its own has one. The serialization rig refuses, by the member's name, a world saved with an inspector
+  open on a tool that holds such a stand-in. Every new assertion was seen failing first on its own line under a
+  one-change plant, the door lines under both pointers; the plants that copied a changed body were re-copied and
+  re-run (`CanvasGlassTopWdgt._takeUpToolInReach`, `MemberEditorWdgt.save`); the split piece's plants copy none of
+  the changed bodies and were re-run unchanged, each still failing first on its own line. The split test's and
+  the taken-out test's provenances record their plants as run.
 
 ---
 
@@ -2704,16 +3116,6 @@ lists share, `MemberListWdgt.MOST_ITEMS_LISTED`) and costs long tasks of about 7
 1000-row list; a 1000-row member list re-filtered costs 4.4 s too, so the cost is a long list's, not the new view's.
 The ways out: a lower cut, or rows built as they scroll in. Reachable, medium.
 
-### A Save of a value whose shown text is not code fails with no word
-
-Met by U4's browser probe on 2026-11-25, and older than this plan: a member editor shows a VALUE by its printed
-form (`MemberRef.shownText`), a Color as `rgb(80,80,80)`, which is not code. Edited and Saved, nothing is saved and
-nothing says why: `Widget._savingTypedCode` reports compile errors only, and the run's `ReferenceError` reaches the
-console as an `INPUT_ERROR`. It is of one family with the ⛔ line "A function held with no kept source shows
-compiled JavaScript in an editable CoffeeScript pane" (what an editor shows is not always code its Save can take).
-Two ways out, the owner's to choose: a value shown as code that evaluates, or a Save that says why it failed.
-Reachable, medium.
-
 ### A widget whose constructor throws stays registered in its classes' `instances`
 
 Read during U4, while its source review's finding about a view that cannot be built was fixed: `Widget`'s constructor registers the new widget in the `instances` of each class up its chain
@@ -2838,16 +3240,6 @@ chooser and Children list. An object list resolves a row by its place, so each s
 `SystemTest_macroInspectorChildrenViewWalksTheWidgetTree` asserts the two alike labels, so its line moves when the
 gap is closed. Reachable, low.
 
-### "Show selection" shows its result with a capital first letter
-
-Read on 2026-11-25, in the sweep that followed the refusal bubble's capitalised name (U5): `TextWdgt.showSelection`
-hands the value a person's typed code returns straight to `@inform`, and a pop-up shows its message as a sentence,
-its first character a capital (`FrameWdgt._titleDisplayCase`). A result that is a string in lower case, `color`,
-reads "Color": a value shown as if it were a sentence. The inspector's three messages that start with a member's
-name quote it (`MemberListWdgt._refusesAsAnAnsweredName` says the rule); a result is not a name, so what it should
-wear (quotes, or a message shown as it is) is a call of its own. `SliderWdgt`'s `@inform @value` shows a number,
-which has no capital. Reachable (any code pane's "Show selection"), low.
-
 ### The refusal bubble's "new member" draws its space about 2 px wide
 
 Seen in U4's browser probe (a note on its look): the refusal bubble that Add…, Duplicate… and Rename… show for a name the subject already
@@ -2865,6 +3257,49 @@ Found by U4's source review by reading, not reproduced: an "Add…" prompt a per
 since U2, the one a choice on the inspector's left destroys); its OK then adds the member and builds a list into the
 destroyed view. Reachable, low.
 
+### The "Edit layout" spacer and adder keep an outlined look beside the flat split
+
+Filed 2026-11-25 by the follow-ups (G). A split's piece is ONE flat grey plate with no outline
+(`SplitPieceAppearance`, §5.10): a division stack's divider (`StackElementsSizeAdjustingWdgt`, core) and an
+inspector's split tab (`SplitGripWdgt`). The two other pieces of layout chrome keep the handles' outlined plate
+(`LayoutChromeAppearance`: `layoutChromePlateFill` inside a 1 px `layoutChromePlateStroke` border, rounded at
+`layoutChromePlateRadius`, its glyph on it): the spacer (`LayoutSpacerWdgt`, its double arrow) and the adder or drop
+slot (`LayoutElementAdderOrDropletWdgt`, its plus), both in the lazy `authoring` part and shown by "Edit layout". On a
+division container that has dividers, a row of inspectors among them, the two looks stand side by side. All four
+are `LayoutChromeWdgt`s, and `LayoutChromeWdgt.createAppearance` is where a class picks its look. Whether the
+scaffold takes the flat look too (and its glyphs with it, which `SplitPieceAppearance` does not paint) is the owner's
+call. Reachable in dev mode (a division container's "Edit layout"), low.
+
+### The churn-set derivation ends INVALID on a no-picture test that fails its plant by design
+
+Met on 2026-11-26, re-deriving the churn set after the follow-ups (`node scripts/derive-inspector-churn-set.js
+--write`, in `Fizzygum-tests`). The derivation runs the suite with one more member on every widget and on EVERY
+class's prototype, and takes the tests that fail as the set; a test it would add must fail alone with a PIXEL
+signal, and one that fails without one makes the run INVALID, so nothing is written. The test
+`macroEditMarkAndMenuRowOpenTheSameMember` takes no screenshot and holds a paint tool's inspector to an exact list
+("the toothpaste's inspector lists its applyToolAt and the helpers it calls, and its class's constructor"): the
+design keeps every member off `DrawingTool` so that a tool's list shows only the tool's own, and that line is what
+catches a member declared there. The derivation's plant declares one there. So the plant is the test's own planted
+bug, and no wording of the line keeps its claim and survives the plant: every run of the derivation ends INVALID
+while both stand. The two additions it did confirm that day (`macroInspectorDoorOpensOnAMember`,
+`macroInspectorShowsAValueAsCode`) were applied to `scripts/inspector-churn-set.json` by hand, in the tool's own
+format. The rule is the owner's: (a) a test that takes no screenshot cannot be churn, so its failure is noted and
+does not invalidate the run (derived, no list; it would also quieten a future no-picture test that an extra member
+really breaks); (b) the plant's class half leaves out named classes (a hand list); (c) the test's line gives up
+its exactness, and the bug it catches its catcher. A tool that cannot complete; nothing in a gauntlet reads it.
+
+### An inspector saved open on a paint tool restores a detached copy of it
+
+Found by the follow-ups' review A (its A4, 2026-11-26), by reading, not pressed: a consequence of ruling H.3 (a tool in
+a file is an ordinary `DrawingTool` record, restored DETACHED, its Saves writing the loading person's tool by its
+key), whose reason, no change to the core serialization, holds, and which did not weigh this. A person saves the
+world with an inspector open on a paint tool (opened by a palette cell's edit mark) and loads it: the restored
+inspector holds a NEW tool object, made from the file's record, beside the person's own (`User.drawingTools`, which
+`DrawingTool.of` makes from the same loaded record). The person then edits that tool through the palette's edit mark,
+which opens an inspector on the person's own tool, and saves. A later Save in the restored inspector writes ITS tool's
+WHOLE member record over the person's (`DrawingToolBase.sourceChanged` → `User.overrideDrawingTool`), so the newer edit
+is lost. Reachable, low.
+
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] U1: the member reference (`MemberRef`, `ClassMemberRef`) under today's inspectors, no pixel change — CLOSED 2026-11-24 (inspector-overhaul loop, U1): the two classes landed under the old inspectors, each inspector class choosing its ref (`_memberRefOf`); presuite's failing set empty as predicted, no reference changed.
@@ -2873,8 +3308,14 @@ destroyed view. Reachable, low.
 - [x] U3: tests of what is new (a drill, the widening, the split by divider and by button, Duplicate, a copy and a snapshot) — CLOSED 2026-11-25 (inspector-overhaul loop, U3): six new SystemTests, 42 assertions, each seen failing first under a plant on its own line (46 plants: the split and taken-out tests' 22 under both pointers, the others under the mouse), four shots; the copy and the snapshot were already pinned by U2's ports and the serialization rig, so no test repeats them; the menu sweep sweeps each part of an inspector where it stands (twelve roots, its prompt floor 77); a split button taken out of its header comes back at its row's next reconcile (`InspectorWdgt.splitGrip`, read off the header: it shows while it leads).
 - [x] U4: object-list views (Children, Instances, Subclasses) and the view chooser — CLOSED 2026-11-25 (inspector-overhaul loop, U4): an inspector offers more than one view through a chooser band of toggles (a widget: Members, Children; a class: Members, Instances, Subclasses); `ObjectListWdgt` lists objects it derives and never carries; the default window 760 × 528; and the owner's rulings of that day: a new editor's normal width at a widening, a body behind a part taken out, a drill only into an object or a class, Add… / Duplicate… / Rename… refusing a name the subject already answers; 19 tests' 50 shots recaptured, the predicted set; three new tests and the rulings' lines, each seen failing under a plant.
 - [x] U5: architecture docs, the churn set, close — CLOSED 2026-11-25 (inspector-overhaul loop, U5): what the arc leaves open is filed under the plan's BACKLOG section, each bold-titled line's text in `## BACKLOG detail`; the Inherited-filter line re-worded for one inspector tool; the low items nobody reaches noted below; the architecture docs, the churn set and the owner's review page as §6 U5's Landed paragraph says.
+- [x] ⛔ **A Save of a value whose shown text is not code fails with no word** — a value shows by its printed form (a Color's `rgb(80,80,80)`); edited and Saved it saves nothing and says nothing; a value shown as code that evaluates, or a Save that says why: the owner's call — reachable, medium. — CLOSED 2026-11-25 (the follow-ups, S; the owner: "I trust your recommendation"): a value shows as code that evaluates back to it (`Utils.printedFormOf`, each value class's `codeForm`), so a Save of the text as shown stores what is held, and a Save of a value reads it back. ⚠ THE RECORD CORRECTED: this item's premise was WRONG. It did not fail "with no word" and did not "say nothing": one real press (2026-11-25) showed nothing saved and no bubble, but the Error log open on `ReferenceError: rgb is not defined` with its stack, where the house puts code a person typed that throws. U4's probe saw no bubble, and the filing read that as silence. So "a Save that says why" was not built (one failure would get two answers). The same unit answered half of the ⛔ "A function held with no kept source shows compiled JavaScript in an editable CoffeeScript pane": an editor takes typing exactly while a Save can apply it (`MemberEditorWdgt`: `MemberRef.canEdit` of its holder, and not `constructor`), so a read-only subject's pane (a class function's statics) takes no typing, and a field holding a Fizzygum class reads by its name; that line now holds what remains.
+- [x] **"Show selection" shows its result with a capital first letter** — `TextWdgt.showSelection` hands the value typed code returns to `@inform`, which shows a message as a sentence: the string `color` reads "Color"; quotes, or a result shown as it is — reachable, low. — CLOSED 2026-11-25 (the follow-ups, S): a value is shown AS A VALUE, through `Widget._informOfValue`, a bubble titled by the value's printed form with the title kind "value" (`MenuWdgt.titleKind`, in place of `titleIsAMessage`), never re-cased, pinned or not: "Show selection" shows every result so, `undefined` included (`color` reads `"color"`), and a slider's "Show value" goes through the same door.
+- [x] U3b: the finger icon on the split button — candidates, then the owner's choice (not run in the inspector-overhaul loop, by the owner's ruling of 2026-11-24: the button ships with the double arrow alone) — CLOSED UNRUN 2026-11-25 (the follow-ups, G): the owner's follow-up redrew the split button as a dotted tab joined to the divider, one flat piece with no glyph (§0.4 D11), so there is no arrow left to put a finger beside; nothing was drawn or built (§6 U3b). The owner's to reopen.
+- [x] ⛔ Plan §7d-D, deliberately left open: `Widget.textPrompt` keeps a `msg` operand its only receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one. (Filed under `archive/constructor-parameter-conformance-plan.md`, its detail moved from that plan's `## BACKLOG detail`.) — CLOSED 2026-11-25 (the follow-ups, D), moot: the door of 2026-11-25 deleted the prompt it described. The paint tools are edited in the inspector, opened on a member (`Widget.spawnInspector`'s `member:`), and `Widget.textPrompt` and `CodePromptWdgt` are gone with the one-text machinery they served, so no door keeps the operand.
+- [x] **A paint tool takes a member under any name its paint surface answers** — Add… `width` in the pencil's inspector (its edit mark) is not refused, so every drawing using it shadows its own `width` and the tool's `applyToolAt` throws at each pointer move — reachable, low-medium; by reading, not pressed. — CLOSED 2026-11-26 (the follow-ups' reviews' round, review A's A1, which found it worse than filed: under a field's name, `bounds` or `parent`, the next change of tool deleted the surface's own field for good): ONE derived rule, `DrawingToolBase.nameTheSurfaceAnswers` (`name of CanvasGlassTopWdgt.prototype`, owned or inherited), asked at TWO doors and no third: the gestures that make a member under a new name, which say it to the person (Add…, Duplicate…, Rename…: `_refusesAsAToolMemberName`), and the surface's take-up (`CanvasGlassTopWdgt._takeUpToolInReach`), which never puts such a member on a surface whatever brought it into the tool. The hand list `CanvasGlassTopWdgt.TOOL_ENTRIES` is deleted. No stock member's name is one the surface's chain answers (read before it was built).
 
-Noted, not queued (filed by the inspector-overhaul loop's U5 from U2's, U3's and U4's reviews):
+Noted, not queued (filed by the inspector-overhaul loop's U5 from U2's, U3's and U4's reviews, and by the follow-ups
+of 2026-11-25 and their reviews, the last four):
 
 - A member reference (`MemberRef`) cannot be inspected as an object (U2's first review).
 - An old one-class inspector's record (a file saved before U2) loads as a shell whose old controls throw at a
@@ -2900,3 +3341,14 @@ Noted, not queued (filed by the inspector-overhaul loop's U5 from U2's, U3's and
 - `docs/architecture/build-and-packaging.md` (where it says a lazy part needs only the meta-system) gives the reflective layer as
   ≈1.9 MB of a tree of ≈2.5 MB, measured in 2026-08; by the measure the build explainer's partition figure uses,
   the tree's own source is 4.3 MB on 2026-11-25. For the next docs audit.
+- `buildSystem/parts.json`'s `authoring` entry (its `//stays-in-core` note) counts `UpperRightTriangleIconicButtonWdgt`
+  among the eight window-chrome buttons that stayed in core, with "`EditableMarkWdgt` extends one" among the reasons;
+  both classes live in `src/authoring`, the part's own. Older than the follow-ups (seen by D). For the next docs audit.
+- A person's tool record carrying a member under a name the paint surface answers (only a hand-made file or code run
+  elsewhere can put one there: the gestures refuse it) is inert on every surface, which never takes it up
+  (`CanvasGlassTopWdgt._takeUpToolInReach`), while the inspector on the tool still lists it; its Remove removes it.
+- The serialization rig's world leg runs on the SWCanvas page only, so a round trip of an inspector on a tool
+  (`world.inspector.onAToolSurvivesSnapshot`) is never run on the native page; the check is structural and the
+  serialization backend-free (review B, its B-1).
+- `MenuWdgt.titleKind` takes any value unchecked: one that is none of `"name"`, `"message"`, `"value"` reads as a
+  sentence (`FrameWdgt._titleDisplayCase`); every writer in the tree passes one of the three.

@@ -20,6 +20,12 @@ class Point
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
 
+  # ME AS CODE (Utils.codeFormOf asks): CoffeeScript that makes a point equal to me, through my
+  # constructor, my coordinates as they are -- `new Point 12, 68.5`, where my display form above
+  # rounds them.
+  codeForm: ->
+    Utils.callFormOf "new Point", [@x, @y]
+
   # Point comparison:
   isZero: ->
     # ==

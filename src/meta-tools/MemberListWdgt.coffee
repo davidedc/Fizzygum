@@ -23,7 +23,8 @@
 #   Each edit is ONE step of the member's reference (MemberRef.of: an object's member through the
 # instance edit protocol, a class's through its meta-object, recorded), which makes the edit, tells
 # once, and answers whether it made it: a step that refuses (a class's member with no source to
-# copy) changes nothing, so the gesture neither re-filters nor drops the selection.
+# copy, a paint tool's member under a name its surface owns) changes nothing, so the gesture neither
+# re-filters nor drops the selection.
 #   A NEW member's name -- the one an Add…, a Duplicate… or a Rename… gives -- is one my subject does
 # not already answer, its own or inherited (_refusesAsAnAnsweredName refuses an answered one, in one
 # sentence): no gesture of mine overwrites a member or stands an own one over an inherited one. My
@@ -415,6 +416,25 @@ class MemberListWdgt extends Widget
     @_reflectMemberSelection()
     name = @_memberNamedBy selected
     InspectorRowWdgt.showChoice @, (if name? then MemberRef.of(@inspectedObject, name))
+
+  # A CHOICE MADE FOR THE PERSON, as their own clicks would make it (InspectorRowWdgt.chooseMember):
+  # the member `name` of my subject. Hidden by my filter -- a member a superclass declares, an own
+  # version of one included, while my Inherited toggle is off -- my Inherited toggle is turned on
+  # first, as its click turns it on (toggleShowingInherited). Then its row is clicked (my list's
+  # select, which hands me the row: selectionFromList), so my buttons follow it and its editor stands
+  # right of me, and last the row is scrolled WHOLE into my list's view (ListWdgt.scrollRowIntoView),
+  # read off the geometry that choice's settle left. A name my subject does not answer
+  # (_memberNamedBy) chooses nothing, and says nothing: the window stands with nothing chosen. So does
+  # a member my filter hides some other way (Fields, Methods or Own props only, a person's re-filter):
+  # only Inherited is turned on for it.
+  chooseMember: (name) ->
+    return unless @_memberNamedBy(name)?
+    @toggleShowingInherited()  unless @showingInherited or @list.rowLabelled(name)?
+    row = @list.rowLabelled name
+    return unless row?
+    @list.select row
+    @list.scrollRowIntoView row
+    return
 
   # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
   # chose the member): when the member's VALUE has members of its own to show -- an object, or a

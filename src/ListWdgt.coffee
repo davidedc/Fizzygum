@@ -176,6 +176,29 @@ class ListWdgt extends ViewportWdgt
     @listContents.noteShownSelectionChanged()
     return
 
+  # MY ROW LABELLED `label`, or undefined: a row of my rows panel, as select is handed one (a member
+  # list's door asks for its member's row: MemberListWdgt.chooseMember).
+  rowLabelled: (label) ->
+    (row for row in @listContents.children when row.labelString is label)[0]
+
+  # `row`, one of mine, scrolled WHOLE into my view, the least way: a row above my view's top comes to
+  # its top, one below its bottom to its bottom, one already whole in view moves nothing. Vertical
+  # only: a member list's rows are as wide as I am (_positionAndResizeChildren), and a plain list's
+  # sideways offset is left as it stands. A row is a resident of my plane, its top plane-local and
+  # never moved by a scroll, so it is read against the box my plane shows through, expressed in my
+  # plane (frame origin + offset, less my margin: the caret follow's arithmetic, scrollCaretIntoView),
+  # and the offset moves by how far past that box the row reaches. Through scrollTo, the one clamped
+  # scroll-to command with its post-scroll pair, so a row near my content's end stops where the
+  # content ends.
+  scrollRowIntoView: (row) ->
+    viewTop = @contents.top() + @scrollOffsetY + @planeMargin
+    viewBottom = @contents.top() + @scrollOffsetY + @height() - @planeMargin
+    if row.top() < viewTop
+      @scrollTo new Point @scrollOffsetX, @scrollOffsetY - (viewTop - row.top())
+    else if row.bottom() > viewBottom
+      @scrollTo new Point @scrollOffsetX, @scrollOffsetY + (row.bottom() - viewBottom)
+    return
+
   # A row's DOUBLE-click dispatches here, the row again in slot 1 (ButtonWdgt.triggerDoubleClick), and
   # follows the click that selected it: my target's doubleClickAction is run on the row's label and
   # its place, as select hands them.

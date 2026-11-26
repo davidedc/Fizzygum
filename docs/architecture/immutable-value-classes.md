@@ -2,7 +2,7 @@
 
 Fizzygum's value classes follow Joshua Bloch's *Effective Java* treatment: minimize mutability,
 share canonical instances, provide static factories where interning pays. This doc is the policy,
-the inventory, and the engine contracts. (History: `docs/archive/` — the immutability +
+the inventory, the engine contracts, and each class's code form (§6). (History: `docs/archive/` — the immutability +
 canonical-instances arc.)
 
 ## 1. The policy
@@ -38,7 +38,8 @@ Consequences, all load-bearing:
   every call — because a copy on the instance is out of the notification's reach: it would keep
   answering what the old code computed. A cache of such a derivation, if one is ever needed, is ONE
   container the class holds and `noteCodeChanged` empties. An
-  inspector on a value INSTANCE stays read-only: a value services no instance edit protocol (`MemberRef.canEdit`).
+  inspector on a value INSTANCE stays read-only: a value services no instance edit protocol (`MemberRef.canEdit`),
+  so its member editors have no Save and their text takes no typing.
 
 ## 2. The shortcut rule (canonical instances)
 
@@ -171,3 +172,33 @@ SHARED between controllers — a duplicated controller deep-copies its records, 
 policy would reach the other's), `MultiClickRecognizer` (its header mandates
 per-instance mutable state), `PreferencesAndSettings`, all containers
 (`LRUCache`, `TreeNode`, `InputEventsQueue`).
+
+## 6. A value as code: `codeForm`
+
+Each of the five fully immutable classes answers `codeForm()`: CoffeeScript that evaluates to a value EQUAL to
+the receiver, through the class's own constructor or factory, its numbers as they are (never rounded):
+
+| Class | `codeForm()` |
+|---|---|
+| `Point` | `new Point 12, 68.5` |
+| `Rectangle` | `new Rectangle 10, 20, 110, 70` — left, top, right, bottom (corners, not the extent) |
+| `Color` | `Color.create 128, 128, 128`, with a fourth number only when alpha is not 1 — never a named constant, since two constants can name one colour (`GRAY`/`GREY`) |
+| `ShadowInfo` | `new ShadowInfo (new Point 7, 7), 0.2` |
+| `TransformSpec` | `new TransformSpec 30, 2, "slot"`, and the anchor last, `(new Point 3, 4)`, only where there is one |
+
+`toString` stays each class's DISPLAY form, read by other code: `Color`'s `rgb(…)`/`rgba(…)` is the CSS string every
+appearance hands the canvas, `Point`'s `12@68` rounds, `Rectangle`'s shows its origin and extent.
+
+The method is the authority; the one PRINTER, `Utils.codeFormOf value` (core, beside `Utils.colloquialNameOf`),
+asks a value for it and answers for the values that carry none: a number (`-0`, `NaN` and `Infinity` included), a
+string (double-quoted, JSON-escaped, every `#` escaped so nothing interpolates — the spelling a member's name takes in
+an injection's assignment too, `Widget.propertyAssignmentSource`), a boolean, `undefined` (and `null`, read as
+`undefined`), an array, an object literal (an object whose prototype is `Object`'s), a `Date`, a `Map`, a `Set`, and a
+Fizzygum class by its name. A widget, a function, an object of any other class, an object with no prototype, a
+class's prototype, anything holding a value with no code form, and a cycle have none (`undefined`). A form standing
+inside another (an element, an object's value, a `Map`'s or `Set`'s entry, a call's argument) is parenthesised
+exactly when it is a call — CoffeeScript's implicit call would take what follows it as its own arguments — so a
+component's form goes through `Utils.callFormOf`, as each `codeForm` above does. `Utils.printedFormOf value` is the code
+form where there is one, else the value's printed form (its `toString`). It is what a member editor shows of a field
+(`MemberRef.shownText`), so a Save of the text as shown stores what is held, and what a value's bubble shows
+(`Widget._informOfValue`, a text's "Show selection").

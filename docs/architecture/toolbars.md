@@ -56,7 +56,7 @@ nothing: a docked toolbar never falls back to working for the person.
 - **A subclass is an item list.** `_toolbarItems` returns the items, each a literal `new X` so the boot
   dependency finder sees the edge, and `dockSide` names the edge slot it takes by default (`'left'`; the text
   bar, and the sheet bar with it, say `'top'`). Everything else (docking, the refresh, the transfers of a paint tool) is the
-  base's. `PaintToolbarWdgt` adds the stock paint-tool sources (§4.3).
+  base's. `PaintToolbarWdgt` adds the stock paint tools' members (§4.3).
 - **Born locked.** `_buildAndConnectChildrenNoSettle` adds the items and disables drags, drops and editing
   on the strip: its items are tools to use or to drag out, never editable content.
 - **Two homes, one object.** A toolbar is always a `FrameWdgt`'s payload. FLOATING, that frame is a desktop
@@ -255,11 +255,17 @@ Nothing pushes a tool onto a drawing. The paint surface, `CanvasGlassTopWdgt` ("
 drawing's canvas), owns the two pointer-move entries as CLASS methods, and both run one body:
 
 - `hoverMoved` / `pressMoved` → `_applyToolInReach` → `_takeUpToolInReach`, then `@applyToolAt? pos, mouseButton`.
-- `_takeUpToolInReach` compares the source it should carry now (`_sourceOfToolInReach`) with the one it last
-  took up (`_takenUpToolSource`, a plain saved field). Unchanged: a string compare. Changed: it removes every
-  member the previous source assigned, then injects the new one's, so two tools never mix on one surface.
-- `_sourceOfToolInReach`: none while the drawing sits in view-mode content (`Widget.sitsInViewModeContent`);
-  else what its holder's key means now (`PaintToolbarWdgt.sourceForToolKey`); none while the holder holds no key.
+- `_takeUpToolInReach` compares the member code (`DrawingToolBase.memberCode`, a JSON text of member name →
+  source) of the tool it should carry now (`_toolInReach`) with the code it last took up (`_takenUpToolCode`, a
+  plain saved field). Unchanged: one string compare, the same string while nothing changed. Changed: it removes
+  every member it put on itself at its last take-up (`_takenUpMemberNames`, saved beside the code), then compiles
+  the members of the new code, read once, on itself from their sources, so two tools never mix on one surface.
+  A member under a name the surface answers is never put on it (§4.3). Each other member is put on in its own
+  try, and the code and the names made are recorded whatever happens, so a member whose text throws as it is
+  evaluated is simply absent, the first such failure is rethrown once (the pointer event's catch says it in the
+  Error log), and no later move tries it again.
+- `_toolInReach`: none while the drawing sits in view-mode content (`Widget.sitsInViewModeContent`); else the
+  person's tool for its holder's key (`DrawingTool.of`, §4.3); none while the holder holds no key.
 - `_toolHolder`: climbing the surface's ancestors, the first window whose CONTENT the climb came through and
   that wears drawing tools; none, and the person. A bare drawing nested in a Docs Maker that wears a palette follows
   that window; a Drawings Maker nested there wears its own palette and follows its own window.
@@ -269,23 +275,47 @@ tool: the question is asked at the event that uses the answer. A finger has no h
 takes the tool up. A take-up compiles CoffeeScript, a few milliseconds once per change; every profile ships the
 compiler.
 
-### 4.3 What a tool key means: the sources and the one table of edits
+### 4.3 What a tool key means: the person's tool and the one table of edits
 
-- **A tool source** is a blurb of `name = value` assignments the surface carries as its own instance members:
-  `applyToolAt`, which both entries run, and any helpers it calls (the toothpaste's `paintBrush`, its queue's
-  initialiser and the `pressEnded` that drains it). The stock sources are `PaintToolbarWdgt.PENCIL_TOOL_SOURCE` and its three siblings, chosen by
-  `PaintToolbarWdgt.stockSourceForToolKey`. "No tool" is the absence of tool members.
-- **A source must never assign `hoverMoved` or `pressMoved`** (`CanvasGlassTopWdgt.TOOL_ENTRIES`): an instance
-  member of either name would shadow the class entry, and the drawing would never take its tool up again. The
-  edit mark's save refuses such a source by its line (`CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries`); a
-  loaded file's table is vetted only as text (§4.4, the load).
-- **Edited tool code lives in ONE table, the person's** (`User.drawingToolOverrides`, tool key → source text).
-  `PaintToolbarWdgt.sourceForToolKey` answers the person's edit, else the stock source. A palette cell's edit
-  mark, docked or floating, opens the whole source its key means now (`editInjectableSource`) and saves through
-  `modifyCodeToBeInjected`: the source is compiled as typed, read as assignments
-  (`Widget.compilePropertyAssignments`), checked for the two entries, and only then stored
-  (`User.overrideDrawingTool`). Every surface using that key takes the edit up at its next use. Holders hold
-  only a key, so a key means the same code for every holder.
+- **A tool is MEMBERS**: a record of member name → CoffeeScript source, each a function literal, which the
+  surface carries as its own instance members — `applyToolAt`, which both entries run, and any helpers it calls
+  (the toothpaste's `paintBrush`, its queue's initialiser and the `pressEnded` that drains it). The stock tools are
+  `PaintToolbarWdgt.PENCIL_TOOL` and its three siblings, chosen by `PaintToolbarWdgt.stockToolMembers`. "No
+  tool" is the absence of tool members.
+- **The person's tool for a key** is one object, a `DrawingTool` (`src/authoring`), kept on the person
+  (`User.drawingTools`) and made by `DrawingTool.of key` from what the key means now: the person's edit, else the
+  stock members, made again whenever that meaning is another record than the one it was made from. Its own
+  members ARE the tool, each a function kept with its source; every other member it has is its base's,
+  `DrawingToolBase`, which services the instance edit protocol (the inspector's: `MemberRef`'s header), so the
+  inspector edits a tool as it edits a widget's members — with no run rows: its members run with `@` the paint
+  surface, so a tool answers no run verb. A tool and its palette button share one name (`"pencil tool"`,
+  `DrawingToolBase.colloquialNameForKey`). A member whose text cannot be made (it does not compile, or it throws as
+  it is evaluated: a field holding a lazy part's class, loaded where the part is not) stands on the tool as a
+  STAND-IN, a function that does nothing and keeps the person's text as its source (`DrawingToolBase._standInFor`):
+  the making tries every member, remembers the record first, and rethrows the first failure once (the asking
+  gesture's catch says it in the Error log), so the tool's own doors (its button's menu, its edit mark) open
+  afterwards; the inspector shows the text, a Save of mended text makes the member, and the person's record keeps the
+  text throughout. No surface gets a stand-in: its take-up fails the same text once and leaves the member off (§4.2).
+- **No member takes a name the paint surface already answers**, owned or inherited
+  (`DrawingToolBase.nameTheSurfaceAnswers`: `name of CanvasGlassTopWdgt.prototype`): every member is put on
+  each surface that takes the tool up as an own member and deleted from it at the next change of tool, so under
+  such a name it would stand over the surface's own (`hoverMoved` / `pressMoved` over the class entries that take
+  the tool up; `width` over the width() the stock code calls) or overwrite a field of the surface's and then
+  delete it (`bounds`, `parent`). The one rule is asked at TWO doors and no third: the gestures that make a member
+  under a new name, which say it to the person (Add…, Duplicate…, Rename…: `DrawingToolBase._refusesAsAToolMemberName`),
+  and the surface's take-up, the point of damage, which never puts such a member on a surface, whatever brought it
+  into the tool (a loaded file's table, vetted only as text: §4.4, the load; code run elsewhere). A record carrying
+  one is inert on every surface; the inspector on the tool still lists the member, and its Remove removes it.
+- **Edited tools live in ONE table, the person's** (`User.drawingToolOverrides`, tool key → member record). A
+  palette cell's edit mark, docked or floating, and the tool button's "Edit code" row (its `_memberToEdit`,
+  `Widget.inspectMemberToEdit`) open the inspector on the person's tool for that key, its `applyToolAt` chosen
+  (`Widget.spawnInspector`'s `member:`). A Save there compiles the member as typed and keeps it only if it can be
+  written back as text (a function literal, or a value with a code form: `DrawingToolBase.injectProperty`), and
+  the tool then writes its member record to the person (`DrawingToolBase.sourceChanged` →
+  `User.overrideDrawingTool`). The record keeps exactly the members that can be read back as text, the same
+  test the Save asks (`DrawingToolBase._sourceOfMember`): a member with no source to state, which only code
+  run elsewhere can stitch onto a tool, is left out, stays on the tool for the session and reaches no drawing. Every surface using that key takes the edit up at its next use. Holders hold only a
+  key, so a key means the same tool for every holder.
 
 ### 4.4 Docking and undocking a palette
 
@@ -442,8 +472,9 @@ event stream, with no timer.
   `_actOn` only when the act is more than calling the verb (marking any subject setter call it names), and answer
   `isActiveTool` only when the tool toggles a state. Never read `world.editorFocusWdgt` directly: a reader that bypasses the door acts across windows and in
   view mode. The subject's setters must announce while it is the focus (`noteStyleChanged`), or no toolbar refreshes.
-- **A paint tool.** Add a stock source to `PaintToolbarWdgt` (`applyToolAt` and its helpers, never either entry),
-  map its key in `stockSourceForToolKey`, and build a `CodeInjectingSimpleRectangularButtonWdgt` with that key and an
+- **A paint tool.** Add a stock tool to `PaintToolbarWdgt`, a member record beside `PENCIL_TOOL` (`applyToolAt` and
+  its helpers, each a function literal, under neither entry's name: §4.3), map its key in `stockToolMembers`, and
+  build a `CodeInjectingSimpleRectangularButtonWdgt` with that key and an
   icon face built in `toolbarGlyph` in `_toolbarItems`, into a field of its own that `_tools` lists (the strip and the
   edit marks both come from `_tools`). Nothing else: holders, take-up, transfers and the refresh are keyed generically.
 - **A creator.** Subclass `CreatorButtonWdgt` (or `CreatorWdgt`) and answer `_createWidgetToBeHandled`. Placement
@@ -484,7 +515,7 @@ SystemTests:
   `SystemTest_macroBandStripOffersCollapseOnlyWhereItGivesRoom`;
 - holders, take-up, transfers, the one table: `SystemTest_macroTwoDrawingsKeepTheirOwnTools`,
   `SystemTest_macroPaletteDockUndockKeepsTheTool`, `SystemTest_macroDrawingToolReachesEveryDrawingOfItsHolder`;
-- the tool-code save and its refusal of the two entries: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;
+- the tool-code save and its refusal of a member under a name the surface answers: `SystemTest_macroToolCodeSaveRefusesCodeThatDoesNotCompile`;
 - one way out of a cell, at one size, and a refused copy carried nowhere:
   `SystemTest_macroToolCellHandsOutOneSizeHoweverTaken`, `SystemTest_macroTemplateDraggedOutOfToolbarInflates`,
   `SystemTest_macroRefusedToolCopyIsNotCarried`;

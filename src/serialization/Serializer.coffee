@@ -52,7 +52,8 @@ class Serializer
     new Set classStaticListMergedUpTheChain klass, "serializationTransients"
 
   # Can an instance of `klass` carry a {"$src"}, a method injected into it? Only a class whose
-  # instances answer injectProperty (a widget's): the load compiles a {"$src"} with that very method.
+  # instances answer injectProperty -- a widget's, and a non-widget's that services the instance edit
+  # protocol (a paint tool's, DrawingToolBase): the load compiles a {"$src"} with that very method.
   # The one test of it, asked by the save (encodeFunction), by the load's refusal
   # (Deserializer._functionSourceOnANonWidget), so a save cannot write one the load refuses, and by a copy,
   # which compiles afresh, on the same widgets, every injected method it holds (Duplicator._compileInjectedMethods).
@@ -241,12 +242,14 @@ class Serializer
 
   # One person's record in a world section's `users`: the tool in their hand, a KEY, as itself, and
   # their edits of the tools (User.drawingToolOverrides) as a plain record of its own entries, tool
-  # key -> source text, left out while they have none. Written entry by entry (Object.fromEntries), so
-  # each key is an own entry of the record whatever it spells: a key is data.
+  # key -> that tool's member record (member name -> source text, in the tool's member order), left out
+  # while they have none. Written entry by entry at both levels (Object.fromEntries), so each key and
+  # each member name is an own entry of its record whatever it spells: a name is data. The tools the
+  # person holds (User.drawingTools) are no part of it: they are made again from these records.
   @_userRecord: (user) ->
     record = {armedDrawingTool: user.armedDrawingTool}
     edits = Object.entries user.drawingToolOverrides ? {}
-    record.drawingToolOverrides = Object.fromEntries edits if edits.length > 0
+    record.drawingToolOverrides = Object.fromEntries ([toolKey, Object.fromEntries Object.entries members] for [toolKey, members] in edits) if edits.length > 0
     record
 
   # The per-class ID counters to restore. The SAME enumeration as
@@ -329,12 +332,16 @@ class Serializer
       {$r: encodeToSlot(value, path)}
 
     encodeFunction = (fn, owner, propName, path) ->
-      # a widget's INJECTED method is kept with its source (Widget.keptSourceOf), and that is the one
-      # function the load restores, with the widget's own injectProperty: so a {"$src"} is written for
-      # nothing else, and only from a widget's own field. The source is the function's, so it describes
-      # the function the field holds now: one a run assigned has none.
+      # an INJECTED method is kept with its source (Widget.keptSourceOf), and that is the one function
+      # the load restores, with its holder's own injectProperty: so a {"$src"} is written for nothing
+      # else, and only from the own field of a holder whose class takes injected methods (a widget's, a
+      # paint tool's). The source is the function's, so it describes the function the field holds now:
+      # one a run assigned has none. And it is written only where it spells a function literal, the load's
+      # own test of a {"$src"} (Deserializer._refProblem), so a save never writes one its load refuses: a
+      # paint tool's stand-in keeps a member's text that is none (DrawingToolBase._standInFor), and is
+      # refused below by its name, until it is mended or removed.
       keptSource = Widget.keptSourceOf fn
-      if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and typeof keptSource is "string"
+      if owner? and propName? and Serializer.classTakesInjectedMethods(owner.constructor) and typeof keptSource is "string" and Widget.spellsAFunctionLiteral keptSource
         return {$src: keptSource}
       # Any other function is refused, never dropped: no text restores it faithfully (a closure over
       # a run's locals, a native, a class member's body). The usual way a WIDGET comes to hold one is
@@ -346,7 +353,10 @@ class Serializer
       # has no property name: its path says where it is.
       held = if propName? then "the function-valued property ." + propName else "a function"
       if propName? and owner? and Serializer.classTakesInjectedMethods owner.constructor
-        remediation = "Remove ." + propName + " with an inspector on " + owner.uniqueIDString() + ", or Save it there as CoffeeScript (an inspector's Save keeps a method's source). If " + owner.constructor.name + "'s own code sets it, declare it in that class's @serializationTransients and recompute it on restore."
+        # the holder is named by its identity, a widget's; one with none by its class (a paint tool: no
+        # run is offered against it, but code a person runs elsewhere can reach it and leave it holding
+        # a function with no source)
+        remediation = "Remove ." + propName + " with an inspector on " + (owner.uniqueIDString?() ? owner.constructor.name) + ", or Save it there as CoffeeScript (an inspector's Save keeps a method's source). If " + owner.constructor.name + "'s own code sets it, declare it in that class's @serializationTransients and recompute it on restore."
         fail (held + " has no editable source and is not a serialization transient"), path, "a function (" + propName + ")", remediation
       fail (held + " has no editable source"), path, "a function",
            "Remove the field holding it -- on a widget, the field that follows the last widget the path names, with an inspector's Remove -- or, if a class's own code keeps it there, declare that field in the class's @serializationTransients and recompute it on restore."

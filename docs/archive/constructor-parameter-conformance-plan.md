@@ -1,9 +1,11 @@
 > **ARCHIVED 2026-08-16 — COMPLETE (P0–P9).** Kept verbatim as the arc's record. The living law is
 > [`../architecture/constructor-and-parameter-conventions.md`](../architecture/constructor-and-parameter-conventions.md);
 > the standing enforcement is `buildSystem/check-argument-holes.js` (at its FLOOR of 2) plus the
-> `positional-hole` stink (HARD 0). Two ⚖ items stayed open on purpose and live in `docs/BACKLOG.md`:
-> the sibling tests repo is ungated by decision (§7d-C), and `Widget.textPrompt` keeps a `msg`
-> operand its only receiver ignores (§7d-D).
+> `positional-hole` stink (HARD 0). Two ⚖ items stayed open on purpose: the sibling tests repo is
+> ungated by decision (§7d-C, recorded in this plan's ledger), and `Widget.textPrompt` kept a `msg`
+> operand its only receiver ignored (§7d-D) — CLOSED 2026-11-25, moot, when the inspector overhaul's
+> follow-ups deleted `Widget.textPrompt` and `CodePromptWdgt` (`../plans/inspector-overhaul-plan.md`'s
+> BACKLOG ledger).
 >
 > ⚠ This plan was archived ONCE BEFORE, prematurely, on the strength of a green ratchet — see the
 > re-opening note below. This archiving is backed by an accounting of **every** surviving hole site
@@ -1217,11 +1219,3 @@ its FLOOR, since both survivors are `undefined`-as-a-VALUE and annotated as such
   the genuine remainder is small (`setValue` ×5, `processKeyDown` ×2 in the serialization rig).
 
 ⚠⚠ Standing, and learned TWICE in this arc (P3, then P8 item 3 in the same class family): **"I checked the callers" is HALF a sweep — a signature is owned by its call sites AND its `super` sites.** `grep -rn "extends <Class>\b" src/`, then RECURSE, however small the caller count looks. P9 adds the companion: **sweep by the FAMILY name, not the one method the count flagged** — two flagged holes in `_createReferenceAndCloseNoSettle` turned out to be six methods sharing one core, all three implementations carrying the same triplicated type-sniff that a single menu item had forced on them. Also: ctor changes are serialization/duplication-SAFE (`Object.create`, ctor never run); sweep BOTH repos incl. the harness `.coffee`; reference churn is a red flag, not an expected cost.
-
-## BACKLOG detail (open items, moved from docs/BACKLOG.md)
-
-### Plan §7d-D: Widget.textPrompt keeps an undisplayed msg operand
-
-- [ ] Plan §7d-D, deliberately left open: `Widget.textPrompt` keeps a `msg` operand its only
-  receiver (`CodePromptWdgt`) has no title bar to display, so the value goes nowhere. The dead
-  FIELD is gone; whether the door should shed the operand is an owner call, not a unilateral one.

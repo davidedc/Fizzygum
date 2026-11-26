@@ -536,15 +536,31 @@ class Deserializer
 
   # One record of a world section's `users`, in the shape a save writes it (Serializer._userRecord): a plain
   # record whose armed tool, when present, is a key, and whose edits of the tools, when present, are a plain
-  # record whose every own value is a tool's source text -- the restore makes them the person's own
-  # (User.replaceDrawingToolOverrides). A clause naming `where`, or undefined.
+  # record whose every own value is a tool's MEMBERS (_toolMembersProblem) -- the restore makes them the
+  # person's own (User.replaceDrawingToolOverrides). A clause naming `where`, or undefined.
   @_userRecordProblem: (where, user) ->
     return where + " is " + @_shown(user) + ", not a user's record" unless @_isAPlainRecord(user) and (!user.armedDrawingTool? or typeof user.armedDrawingTool is "string")
     edits = user.drawingToolOverrides
     return undefined unless edits?
     return where + ".drawingToolOverrides is " + @_shown(edits) + ", not an object" unless @_isAPlainRecord edits
-    for own toolKey, source of edits when typeof source isnt "string"
-      return where + ".drawingToolOverrides[" + @_shown(toolKey) + "] is " + @_shown(source) + ", not a tool's source"
+    for own toolKey, members of edits
+      return problem if (problem = @_toolMembersProblem where + ".drawingToolOverrides[" + @_shown(toolKey) + "]", members)?
+    undefined
+
+  # One tool's MEMBERS in a user's record (_userRecordProblem), in the shape a save writes them: a plain
+  # record whose every own value is a member's source text. Each is injected again at every use of its
+  # tool, so a source with a statement after its function is refused here as a {"$src"} and a source-edit
+  # record are (no door stores one: Widget.refuseCodeAfterAFunction). Neither a source nor a member's
+  # NAME is judged further here: a source that does not compile, or throws as it is evaluated, stands in
+  # its tool as a stand-in, said once when the tool is made (DrawingToolBase._takeMembersFrom), and a
+  # member under a name the paint surface answers is kept off every surface (CanvasGlassTopWdgt
+  # ._takeUpToolInReach), both in the part that knows them. A clause naming `where`, or undefined.
+  @_toolMembersProblem: (where, members) ->
+    return where + " is " + @_shown(members) + ", not a tool's members" unless @_isAPlainRecord members
+    for own memberName, source of members
+      member = where + "[" + @_shown(memberName) + "]"
+      return member + " is " + @_shown(source) + ", not a member's source" unless typeof source is "string"
+      return member + " holds a member's code with a statement after its function, which no save writes" if Widget.functionLiteralReading(source)?.after?
     undefined
 
   @_sectionSourceEditsProblem: (section) ->

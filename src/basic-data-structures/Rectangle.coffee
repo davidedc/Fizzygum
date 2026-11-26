@@ -70,6 +70,12 @@ class Rectangle
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
 
+  # ME AS CODE (Utils.codeFormOf asks): CoffeeScript that makes a rectangle equal to me, through my
+  # constructor's all-numbers form -- my corners, not my extent: `new Rectangle 10, 20, 110, 70`,
+  # where my display form above shows my origin and my extent, rounded.
+  codeForm: ->
+    Utils.callFormOf "new Rectangle", [@left(), @top(), @right(), @bottom()]
+
   # Rectangle accessing - setting
   # This is used to create a bound with the specified
   # width and height: the corner needs to be displaced

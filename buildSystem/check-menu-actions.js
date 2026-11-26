@@ -20,8 +20,8 @@
 // clicks a slider's "floor..." — three such items sat broken behind that tripwire. A build-time
 // check needs no one to click.
 // RULE 1 has TWO doors, because there are two ways into a name-dispatched slot. Besides
-// addMenuItem, `prompt` / `textPrompt` take a `callback` that the prompt's save/Ok
-// dispatches by name (`PromptWdgt.deliverValue` / `CodePromptWdgt.deliverValue`:
+// addMenuItem, `prompt` takes a `callback` that the prompt's Ok
+// dispatches by name (`PromptWdgt.deliverValue`:
 // `@target[@callback].call @target, @_promptValue()`)
 // — the same proof one hop later, so the callbacks count as menu-dispatched verbs for RULE 3 as well.
 //
@@ -156,9 +156,9 @@ for (const p of files) {
   const rel = sourceName(p, ROOTS);
   const cls = path.basename(p, '.coffee');
   const { lines: allLines, code } = readingOf(p);
-  // ---- RULE 1, second door: prompt / textPrompt -------------------------------------------
+  // ---- RULE 1, second door: prompt ---------------------------------------------------------
   // `prompt: (msg, target, callback, opts = {})` does not dispatch the callback itself — the prompt's
-  // save/Ok does, by name (`PromptWdgt.deliverValue` / `CodePromptWdgt.deliverValue`:
+  // Ok does, by name (`PromptWdgt.deliverValue`:
   // `@target[@callback].call @target, @_promptValue()`),
   // so the callback slot IS an action slot and a function literal there is wrong for exactly the same
   // reason, one hop later. Same proof, same severity, so it lives here rather than in its own gate.
@@ -170,8 +170,8 @@ for (const p of files) {
     // from the definition `prompt: (msg, target, callback, opts = {}) ->`. ⚠ An earlier spelling
     // keyed on the first ARGUMENT instead and matched only quoted/`@` first args, so it silently
     // missed every real site — all of which open with an expression (`menuItem.parent.title + …`).
-    if (!/[@.](?:textPrompt|prompt)\s+\S/.test(code[i])) return;
-    const m = /[@.](?:textPrompt|prompt)\s+(.*)$/.exec(joinContinuation(allLines, code, i));
+    if (!/[@.]prompt\s+\S/.test(code[i])) return;
+    const m = /[@.]prompt\s+(.*)$/.exec(joinContinuation(allLines, code, i));
     if (!m) return;
     const parts = splitTopLevel(m[1]);
     if (parts.length < 3) return;

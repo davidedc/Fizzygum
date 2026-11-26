@@ -1,17 +1,15 @@
 # Shared base for the "code/text area + footer band of buttons" widget family:
 # ConsoleWdgt ("dev -> console"), ScriptWdgt (a standalone script on the desktop),
-# CodePromptWdgt (the code-entry popup), ErrorsLogViewerWdgt (the error log) and
-# MemberEditorWdgt (an inspector's view of one member).
+# ErrorsLogViewerWdgt (the error log) and MemberEditorWdgt (an inspector's view of one member).
 # It carries what is common to the family: the code-area fields + the padding, the build
 # settle-wrapper, the two code-area builder variants (the EDITABLE panel with
-# modified-content tracking -- Script/CodePrompt/MemberEditor -- and the plain mono panel --
+# modified-content tracking -- Script/MemberEditor -- and the plain mono panel --
 # Console/ErrorsLog, both in the code pane's roles),
 # my look, and my ARRANGEMENT: the code area on top, then my footer band (FooterBandLayout), whose
 # rule is my one seam -- or, when my build made no footer button at all (_hasAFooterBand), the code
 # area alone, down to my bottom, and no seam. Everything that differs per class stays on the
 # subclass: the constructor signature, the buttons, which of them sit in the footer's left group and
-# which in its right (_footerLeftButtons / _footerRightButtons), and what their actions DO
-# (CodePromptWdgt alone carries a target/callback pair, delivered through its deliverValue pair).
+# which in its right (_footerLeftButtons / _footerRightButtons), and what their actions DO.
 class CodeAreaWdgt extends Widget
 
   tempPromptEntryField: undefined
@@ -46,7 +44,7 @@ class CodeAreaWdgt extends Widget
     codeArea.wearPaneRoles fill: "codePaneFill", stroke: "codePaneStroke"
     codeArea
 
-  # the EDITABLE code-area variant (ScriptWdgt / CodePromptWdgt): my code area (_newCodeArea), drops
+  # the EDITABLE code-area variant (ScriptWdgt / MemberEditorWdgt): my code area (_newCodeArea), drops
   # disabled, modified-content indicator, its text transparent, editable, with selection enabled. The
   # text it opens with is the text it compares against, so it starts UNMODIFIED: the indicator stays
   # hidden, and a save button the notified widget keeps in step starts disabled, until the text

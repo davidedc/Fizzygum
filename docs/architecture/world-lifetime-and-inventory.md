@@ -242,6 +242,7 @@ is exactly when the subject can die, and acting anyway silently mounts fresh chr
 corpse the destroy cascade can never reach (measured on `index.html`: `editLayout` +
 destroy-mid-load left a permanent escaped widget pinning its corpse parent, with zero
 errors). The guards live at each funnel-callback head (`Widget.editLayout`,
-`spawnInspector`/`createConsole`, `ExamplesFolderWindowWdgt.whenReadyToBeBroughtUp`,
-`WorldWdgt.popUpDemoTestMenu`); the runtime gate is the destroy-mid-load race in
+`spawnInspector`/`createConsole` — the inspector's member choice, `member:`, runs under the same guard —
+`ExamplesFolderWindowWdgt.whenReadyToBeBroughtUp`, `WorldWdgt.popUpDemoTestMenu`); the runtime gate is the
+destroy-mid-load race in
 `Fizzygum-tests/scripts/parts-lazy-load-headless.js` (the `parts` leg).

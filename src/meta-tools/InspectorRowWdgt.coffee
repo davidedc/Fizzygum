@@ -115,6 +115,15 @@ class InspectorRowWdgt extends ClippingWdgt
       world.openFrameWith fresh, fresh.extent(), world.hand.position().subtract new Point 50, 100
     return
 
+  # THE MEMBER `name` CHOSEN IN MY FIRST INSPECTOR, as a person's click on its row chooses it: the
+  # door that opens me ON a member (Widget.spawnInspector's opts.member). My first inspector's view
+  # chooses it when it lists members (MemberListWdgt.chooseMember); an inspector on one member (a
+  # MemberRef subject: a lone editor) lists none and chooses nothing. No settle of my own: each step
+  # the choice takes settles itself, one after the other.
+  chooseMember: (name) ->
+    @inspectors()[0]?.view?.chooseMember? name
+    return
+
   # `subject` shown right of `inspector`, mine, as one settle (showChoice says what that means).
   showNextTo: (inspector, subject) ->
     @_settleLayoutsAfter => @_showNextToNoSettle inspector, subject
@@ -257,11 +266,15 @@ class InspectorRowWdgt extends ClippingWdgt
     return
 
   # A CHILD OF MINE LEFT ME (destroyed, or re-homed: a "Pick up", an "Attach", a drop into another
-  # widget -- or re-added to me elsewhere, which also tells me). Not while I am destroyed or being
-  # destroyed as a whole, and not while my own reconcile is removing it. An inspector that LEFT -- not
-  # destroyed, not back in me -- re-derives its split button where it stands; then my splitters
-  # are reconciled.
+  # widget -- or re-added to me elsewhere, which also tells me). A splitter that left me, however it
+  # left (my own reconcile's removals and my teardown included), is told so first, and parts from the
+  # split button joined to it (StackElementsSizeAdjustingWdgt.noteLeftMyStack): it divides nothing of
+  # mine. The rest not while I am destroyed or being destroyed as a whole, and not while my own
+  # reconcile is removing it: an inspector that LEFT -- not destroyed, not back in me -- re-derives
+  # its split button where it stands; then my splitters are reconciled, which joins each inspector's
+  # button to the splitter before it.
   _reactToChildRemoved: (child) ->
+    child.noteLeftMyStack?()
     return if @destroyed or @_beingFullDestroyed or @_reconcilingSplitters
     child._reconcileSplitGripNoSettle?()  unless child.destroyed or child.parent is @
     @_reconcileSplittersNoSettle()

@@ -5,10 +5,12 @@
 # armDrawingTool), so I never ask which kind I found. I push nothing onto any drawing: a paint surface
 # takes its tool up when it is used, from its own nearest holder (CanvasGlassTopWdgt).
 #
-# MY EDIT MARK opens what my key means NOW (PaintToolbarWdgt.sourceForToolKey) and saves an edit into
-# the person's ONE table of edited tool code (User.overrideDrawingTool), so every palette's cell for my
-# key, docked or floating, opens the same code, and every surface using my key takes the edit up at its
-# next use.
+# WHAT A PERSON EDITS OF ME is the person's tool my key names (_memberToEdit: DrawingTool.of, one per
+# key per person), opened on its applyToolAt: my EDIT MARK opens the inspector on it, and so does my
+# menu's "Edit code" row (Widget.inspectMemberToEdit). A Save there writes the person's ONE table of
+# edited tools (DrawingToolBase.sourceChanged -> User.overrideDrawingTool), so every palette's cell for
+# my key, docked or floating, opens the same tool, and every surface using my key takes the edit up at
+# its next use.
 #
 # I LOOK LIKE EVERY OTHER TOOL: I paint nothing of my own -- my face is my picture, in the
 # toolbarGlyph ink (my palette builds it so), and my hover / press state shows on the tool cell I
@@ -50,6 +52,12 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
     @strokeColor = undefined
     @toolName = face.toolName
     @toolTipMessage = face.toolName
+
+  # WHAT A PERSON CALLS ME: the tool my key names, in the very words that tool answers
+  # (DrawingToolBase.colloquialNameForKey: "pencil tool"), so my own menu's title, the row naming me in a
+  # hierarchy menu or a chooser, and an inspector's window title say what my edit mark opens.
+  colloquialName: ->
+    DrawingToolBase.colloquialNameForKey @drawingToolKey
 
   # MY HOVER AND PRESS show on the tool cell I stand in, never on me (GlassBoxBottomWdgt.fillForToolState
   # asks this of the widget whose state a cell shows).
@@ -105,25 +113,10 @@ class CodeInjectingSimpleRectangularButtonWdgt extends SimpleRectangularButtonWd
     holder.armDrawingTool (if @drawingToolKey is holder.armedDrawingTool then undefined else @drawingToolKey)
     return
 
-  editInjectableSource: ->
-    @textPrompt "Code", @, "modifyCodeToBeInjected", defaultContents: PaintToolbarWdgt.sourceForToolKey @drawingToolKey
-
-  # The textPrompt callback: the prompt delivers ONE argument, the composed source text
-  # (CodePromptWdgt.deliverValue — the same value delivery every prompt makes).
-  # The new source is CHECKED before it is stored -- first compiled as the person typed it, which
-  # places an error in the text they see, then read as a blurb exactly as it will be injected
-  # (Widget.compilePropertyAssignments): code outside its `name = value` assignments is refused by
-  # its line, and each assignment is compiled; last, a source assigning one of the paint surface's
-  # two entries is refused by its line (CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries), since
-  # it would shadow them. Source that fails any of these throws here, stores nothing, and the prompt
-  # reports it (CodePromptWdgt.deliverValue). Without this, the person's table would keep it
-  # silently: code that does not compile would throw at the next use of the tool, and code outside an
-  # assignment would never run.
-  #   What is stored is the person's edit of my KEY (User.overrideDrawingTool): every surface using
-  # that key takes it up at its next use.
-  modifyCodeToBeInjected: (newSource) ->
-    compileFGCode newSource, true
-    assignments = Widget.compilePropertyAssignments newSource
-    CanvasGlassTopWdgt.refuseToolCodeAssigningMyEntries newSource, assignments
-    world.user.overrideDrawingTool @drawingToolKey, newSource
-    return
+  # WHAT A PERSON EDITS OF ME: the person's tool my key names (DrawingTool.of: one per key per person,
+  # whichever palette's cell asks, docked or floating), opened on applyToolAt, the one body a tool
+  # runs at every pointer move (CanvasGlassTopWdgt). Asked by my edit mark and by my menu's "Edit code"
+  # row (Widget.inspectMemberToEdit). A key naming no tool answers nothing.
+  _memberToEdit: ->
+    tool = DrawingTool.of @drawingToolKey
+    {subject: tool, member: "applyToolAt"}  if tool?

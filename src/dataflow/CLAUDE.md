@@ -144,7 +144,7 @@ A node with neither `dataflowRecompute` nor `dataflowValue` is treated as **alwa
 
 `User` (`world.users`, core) is a live non-widget node on this seam beside `DataflowSource`: it
 holds no `dataflowRecompute`, only `markNonValueChange`s when `armedDrawingTool` or its edits of the paint
-tools (`drawingToolOverrides`) change. Every toolbar holds one `firesOnAnyChange` edge to it and one to the world
+tools (`drawingToolOverrides`, tool key → member record) change. Every toolbar holds one `firesOnAnyChange` edge to it and one to the world
 (which announces the editor focus, its style and the mode holding it): on either announcement its cells re-derive
 their looks and it re-announces itself (`ToolbarWdgt.noteToolStatesChanged`), so a toolbar mixing tool kinds keeps
 every look current. A window holding a tool of its own (`FrameWdgt.armDrawingTool`) is no dataflow node: it tells
