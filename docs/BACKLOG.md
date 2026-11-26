@@ -276,7 +276,6 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 - [ ] ⛔ The Smalltalk talk plan's U3 (an explorer beside the inspector) is superseded by this plan's row of inspectors, and the talk plan does not say so: both plans claim the explorer — the owner's plan, the owner's edit.
 - [ ] §11: a touch-sized way to move every division stack's split (the halo's layout adjusters, "Edit layout"), not only an inspector row's — a general stack has no header band to stand a grip in, so the shape is still to design — reachable by finger.
 - [ ] §11: one footer-band mechanism — `FooterBandLayout` (the `CodeAreaWdgt` family, the member editor among it, and `BinWdgt`) beside `BandWdgt`: both on `BandWdgt`, `FooterBandLayout` deleted.
-- [ ] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24)
 - [ ] **An inspector attached into a row is not reconciled at once** — attached (its developer menu's "Attach"), it waits for the row's next choice or for something to leave the row, and one attached free-floating counts as a cell — reachable in dev mode, low.
 - [ ] **A view attached back onto its inspector shares the height with its place** — a view a person took out and attached back stands beside the place kept for it (`InspectorWdgt.viewsPlace`) — reachable in dev mode, low.
 - [ ] **A row whose only inspector was picked up stays a blank window titled "Inspector"** — "Pick up" of the one inspector leaves its window holding an empty row — reachable in dev mode, low.
@@ -292,6 +291,21 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 - [ ] **The "Edit layout" spacer and adder keep an outlined look beside the flat split** — `LayoutSpacerWdgt` and `LayoutElementAdderOrDropletWdgt` keep a bordered plate (`LayoutChromeAppearance`) beside the flat grey divider and tab: two looks of layout chrome; the owner's call — reachable in dev mode, low.
 - [ ] ⛔ **The churn-set derivation ends INVALID on a no-picture test that fails its plant by design** — `macroEditMarkAndMenuRowOpenTheSameMember` holds a tool's list to its own members, and the plant declares a member on every class; the tool has no outcome for it (the owner's rule) — a tool that cannot complete.
 - [ ] **An inspector saved open on a paint tool restores a detached copy of it** — the copy's Save writes its whole member record over the person's, so an edit made since through the palette's edit mark is lost — reachable, low; by reading, not pressed.
+
+### `plans/inspector-browser-plan.md`
+AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; NOTHING BUILT. The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
+- [ ] U1: the set of columns scrolls sideways and stops on a column, and the tool is a browser that owns the rule of choice; the window widening itself and the trading of width between columns deleted (§5.3, §5.4).
+- [ ] U2: the body below the lists as a setting of the browser, the where-you-are band, the default window, the class named by a plain button (§5.4 to §5.6, §5.13).
+- [ ] U3: every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule; the four marks are placeholders (§5.7).
+- [ ] U4: "Open in a new inspector" by a menu row and by Cmd-click (§5.8).
+- [ ] U5: the meta-object keeps a class's comments and its methods' categories, edits and snapshots keep them, and a build gate holds the `#:` marker (§5.9, §5.10).
+- [ ] U6: the 64 classes a person opens first get their categories, as marker comments only (decision D1).
+- [ ] U7: the code browser: packages, classes, method categories, a class's comment, a member's comment above its code, and its door in the Dev tools menu (§5.11, §5.12).
+- [ ] U8: the verbs of categories (add, rename, remove an empty one) and a method moved to another category (§5.14).
+- [ ] U9: the verbs of classes: add, and remove of a class made at run time, with the snapshot record that carries such a class (§5.14, decision D2).
+- [ ] U10: finding a class or a member by name: two candidates on a review page for the owner to choose between (decision D7); the build follows the choice.
+- [ ] U11: close: the docs, the churn set, this file, the review page.
+- [ ] §11: writing an edit back to a `.coffee` file; duplicate and rename of a class; a class's statics as a second face of its column; the rest of the tree's categories (the gate's budget, falling); the final icons of the four verbs.
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.

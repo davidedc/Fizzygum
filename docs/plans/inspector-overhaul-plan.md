@@ -7,7 +7,11 @@ here; U3b, the finger icon on the split button, closed unrun on 2026-11-25 (§6 
 has no glyph to put a finger beside); and the owner's three follow-ups of 2026-11-25, a value shown as code, a door
 that opens the inspector on a member, the split's one flat piece, landed after the loop (§6, "Follow-ups"). The plan
 stays in `docs/plans/` until the owner closes the arc. What the arc leaves open is filed in its BACKLOG section, each
-item's text in `## BACKLOG detail` below. Every fact in §1 and §7 was read off the tree at
+item's text in `## BACKLOG detail` below.
+**`docs/plans/inspector-browser-plan.md` (authored 2026-11-26, nothing of it built) follows this plan and OVERTURNS
+five of its statements, each marked where it stands with "OVERTURNED 2026-11-26": reframe 5 and D4 (a drill widens
+the window), D9 (the default window), the §10 row that rejects a scrolling row, and §11's sketch of how packages,
+categories and comments sit. Until that plan's units land, §5 here is still the tool as built.** Every fact in §1 and §7 was read off the tree at
 Fizzygum `f7aed9e0` / Fizzygum-tests `e78dc3e50` (471 SystemTests) on 2026-11-24, but the test names, counts and
 rig numbers §7 gives as U2 left them; §5 states the tool as built through the follow-ups. Line numbers drift:
 the quoted method or symbol name is authoritative, so grep it fresh before trusting a number.
@@ -99,6 +103,9 @@ Workspace routing: the umbrella `CLAUDE.md` at `/Users/davidedellacasa/code/Fizz
    kept its own height when the window grew (measured, §4). The row instead **widens its window**
    when a drill does not fit. Nothing is ever dropped from the left, so no inspector with unsaved
    typing disappears on its own.
+   **OVERTURNED 2026-11-26** (`inspector-browser-plan.md`, reframe 3 and §5.3): the row measured here had declared
+   nothing to its viewport; a row that declares its measure to be its whole frame was run as a viewport's content
+   and settled at the first attempt at every size. The set of columns scrolls, and nothing widens itself.
 6. **Nothing may hold a closure or an off-tree widget.** A widget field holding a function makes the
    world unsaveable (`ListWdgt`'s header says so of its own format predicates), and
    `serialization-duplication-reference.md` §2 says "an owner keeps no widget OFF its tree". Every
@@ -126,19 +133,19 @@ default (its prompt: "use the defaults"), and each row below says how it stands 
 | D1 | One tool: "Inspect" opens the row of inspectors; the old inspectors are deleted | **LOCKED** (owner, 2026-11-24) |
 | D2 | Decompose into member list + member editor; the object/class split in a member reference | **LOCKED** (owner, 2026-11-24) |
 | D3 | The row (pager) is the core shape | **LOCKED** (owner, 2026-11-24) |
-| D4 | A drill that does not fit **widens the window**, no further than the desktop's right edge; past that the inspectors narrow. Nothing is dropped from the left | **Default taken**, built (§5.4): when the row no longer fits, the window widens toward the width at which the inspector the choice added has its NORMAL width (an editor 374, as beside a list in the default window; a list its desired width), by the owner's ruling A2 of 2026-11-25 (U4), as far as the desktop's right edge (the alternative, horizontal scroll, needs new viewport code: §10) |
+| D4 | A drill that does not fit **widens the window**, no further than the desktop's right edge; past that the inspectors narrow. Nothing is dropped from the left | **Default taken**, built (§5.4): when the row no longer fits, the window widens toward the width at which the inspector the choice added has its NORMAL width (an editor 374, as beside a list in the default window; a list its desired width), by the owner's ruling A2 of 2026-11-25 (U4), as far as the desktop's right edge (the alternative, horizontal scroll, needs new viewport code: §10). **OVERTURNED 2026-11-26** by the owner ("typically widgets don't expand on their own"): the window's size is the person's and the set of columns scrolls (`inspector-browser-plan.md` §0.4, §5.3), whose U1 deletes the widening |
 | D5 | **One class chip per inspector** (an object's class; a class's superclass) in the header, in place of the whole breadcrumb. Walking up the chain is one click per class, each a new inspector | **Default taken**, built (§5.5). A wrapping breadcrumb cannot be a stack band (its height would depend on its width), and each class is its own inspector anyway |
 | D6 | The four filter toggles (Methods, Fields, Inherited, Own props only) keep their meaning and their look, in the member list | **Default taken**: unchanged (§5.6). The parked BACKLOG question on what "Inherited" hides stays parked |
 | D7 | **Rename… and Remove sit with Add… under the member list**; Save sits under the editor | **Default taken**, built, Duplicate… among them (D15; §5.6). The list then owns every gesture that changes the member set, and no inspector has to refresh another |
 | D8 | **No resizer of its own for a row with no window.** Its two hooks and their readers are deleted (§6 U2.2) | **Default taken**: U2.2 deleted the two hooks and their readers. Nothing in the product makes a windowless inspector any more (a drill used to); one picked out of its window resizes by the halo, as any widget |
-| D9 | Starting window **760 × 480** (before U2: 560 × 410) | **Default taken**, then made **760 × 528** in U4 (the owner, 2026-11-25: 48 px taller, so a widget's or a class's member list keeps its five whole rows under the chooser band): `InspectorRowWdgt.defaultExtent()` states it once (two inspectors at their least widths, 663 together, fit its 758 px row) |
+| D9 | Starting window **760 × 480** (before U2: 560 × 410) | **Default taken**, then made **760 × 528** in U4 (the owner, 2026-11-25: 48 px taller, so a widget's or a class's member list keeps its five whole rows under the chooser band): `InspectorRowWdgt.defaultExtent()` states it once (two inspectors at their least widths, 663 together, fit its 758 px row). **OVERTURNED 2026-11-26**: with the body below the lists 760 × 528 shows one line of it; the default is `inspector-browser-plan.md`'s decision D5 |
 | D10 | One window title for every subject: **"Inspector — <name>"** (before U2: "Object Inspector — …" / "Class Inspector — …") | **Default taken**, built (`InspectorWdgt.colloquialName`; the window takes its row's first inspector's) |
 | D11 | **A split's two controls, both always present** (owner, 2026-11-24, final): the divider slightly thicker with grip dots, for a mouse; and a 44 × 44 button in the header of the inspector on its right, a double arrow (with a finger icon once U3b draws one), for a finger. Both are there at all times, because some devices have both a mouse and a touch screen (§5.10) | **LOCKED**. Details as built: the divider 12 px with a 2 × 4 dot field (U1b). The look, by the owner's ruling of 2026-11-25 (two rounds of pictures, the follow-ups' G; §5.10): the divider and the button ONE flat grey piece with no outline, the button a TAB 32 × 44 (`splitButtonWidth` by `minimumTargetSize`) on the divider's right, its two right corners rounded while joined, its face a 4 × 4 field of the divider's dots centred across divider and tab, with no glyph. So U3b, the finger icon, closed unrun (§6 U3b) |
 | D12 | Second phase (U4): the first object-list views, **Children**, **Instances**, **Subclasses**, and the view chooser they need | **Default taken**, built in U4 (§5.5, §5.11): a chooser band of toggles under the header, one view class for the three lists of objects (`ObjectListWdgt`), each by the owner's rulings B1–B8 of 2026-11-25. Senders, implementors and protocols stay out (§11) |
 | D13 | Commits | Per house rule, **ask before every commit and push**. At the start, ask whether this plan gets a standing grant ("commit and continue while gates pass; ask before push"). The inspector-overhaul loop runs under its prompt's grant: commit and push each unit after its green gauntlet |
 | D14 | The dotted divider is the look of **every** division stack's splitter (the halo's layout adjusters, "Edit layout"), not a look of the inspector's own | **Default taken**, landed in U1b: one splitter class, one look. It recaptured the five tests that photograph a splitter (18 shots; the grep of U1b step 4 names 23 sources, ten of which build one) |
 | D15 | **Duplicate…** beside Add… Rename… Remove (owner, 2026-11-24): a copy of the selected member under a new name | **LOCKED** for members; built in U2 (§5.3 b, §5.6). Its detail as built, the default: a duplicated field that holds an object holds the SAME object (a copy of the slot, not of the thing). Duplicating a class waits for class-level verbs (§11) |
-| D16 | Packages, categories, families of members, and comments (owner, 2026-11-24) | **Wanted; a plan of its own, authored AFTER this plan's switch (U2) has landed** (owner, 2026-11-24). §11 says how they sit on what this plan builds, and what is missing underneath |
+| D16 | Packages, categories, families of members, and comments (owner, 2026-11-24) | **Wanted; a plan of its own, authored AFTER this plan's switch (U2) has landed** (owner, 2026-11-24). §11 says how they sit on what this plan builds, and what is missing underneath. **That plan is `docs/plans/inspector-browser-plan.md`** (authored 2026-11-26), which overturns part of §11's sketch |
 
 ### 0.5 Cold-execution protocol (read and run in this order)
 
@@ -2919,7 +2926,7 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
 | Alternative | Why rejected |
 |---|---|
 | A second tool ("Explore") beside the inspector, embedding `InspectorWdgt` and `ClassInspectorWdgt` as views (the talk plan's U3) | Two tools, two doors, two drill behaviours; a whole class inspector per method to show one method. Owner, 2026-11-24 |
-| A horizontally scrolling row (Finder columns, the GT pager) | Measured: as a viewport's content the row does not follow the viewport's height. It needs a new arrange in the viewport family, whose two-writer law (`viewports-and-planes.md`, the scrolled-content contract) has a history of livelocks |
+| A horizontally scrolling row (Finder columns, the GT pager) | Measured: as a viewport's content the row does not follow the viewport's height. It needs a new arrange in the viewport family, whose two-writer law (`viewports-and-planes.md`, the scrolled-content contract) has a history of livelocks. **OVERTURNED 2026-11-26: no longer rejected.** Run for the first time (the comparison of 2026-11-26, `Fizzygum-tests/.scratch/inspector-columns/compare/`), a row that declares its measure to be its frame settled at every size; `inspector-browser-plan.md` builds it |
 | Dropping inspectors off the left when the row is full | An inspector with unsaved typing would vanish on its own; keeping it alive off the tree is forbidden (`serialization-duplication-reference.md` §2: an owner keeps no widget off its tree) |
 | One window per drill, placed to the right of its parent (the talk plan's D3 default) | Windows clutter and the path is lost; the row gives the same picture in one window |
 | A hand-written `_reLayout` for the inspector's bands (mirroring `_bandsIn`) | ~200 lines of it are what this plan deletes; the same shape once produced a dpr-2 lag flake and a gate to hold it |
@@ -2943,7 +2950,12 @@ Each is present-tense and must be true when U5 ends. Lines are of 2026-11-24.
   `InspectorWdgt._views` and one query, on U4's object lists. A list of senders is a list of
   `MemberRef`s; choosing one opens its editor.
 - **Code organisation: packages, categories, families of members, and comments** (owner,
-  2026-11-24, D16). The owner's frame: the metadata lives in the ordinary source as standard or
+  2026-11-24, D16). **This is now `docs/plans/inspector-browser-plan.md` (authored 2026-11-26). The sketch below is
+  as written on 2026-11-24, and that plan OVERTURNS three parts of it, by the owner's rulings of 2026-11-26:** a
+  "category" is a METHOD category in the Smalltalk manner ("initialization", "accessing"), a list of its own between
+  a class and its members, where the table below has the source folder as a category of classes and a "family" as a
+  heading inside a list; the levels do not each cost a full column beside the editor (the editor stands below the
+  lists); and what is missing underneath is re-measured there (its §4). The owner's frame: the metadata lives in the ordinary source as standard or
   special comments, a lint at build time enforces it, and an edit made in the inspector keeps it
   right. The row of inspectors holds all of it without a new mechanism, because each level is one
   more KIND of subject with a list view, and choosing a row is already how one gets to the next:
