@@ -71,10 +71,11 @@ class InspectorRowViewportWdgt extends ViewportWdgt
   # least height, which Widget derives for a row from its cells' least sizes, fields all the way down
   # (getRecursiveMinDim: the tallest of them) -- the tallest least height of my set's columns, each its
   # own cells' (its header, its chooser where one stands, its view's bands and its list's least) -- so
-  # the strip of lists is never squeezed below what a column of it needs, and with no column (a
-  # browser opened on a member) my box's least stands alone. Read by my browser's division stack, in
-  # each of its regimes, and by the divider below me as the floor of its solve
-  # (InspectorDividerWdgt.sizeDraggedTo), so the two agree. Collapsed, my base's answer (nothing).
+  # the strip of lists is never squeezed below what a column of it needs, and with no column my box's
+  # least stands alone. Read by my browser's division stack, in each of its regimes, and by the divider
+  # below me as the floor of its solve (InspectorDividerWdgt.sizeDraggedTo), so the two agree.
+  # Collapsed, my base's answer (nothing): my browser hides me, its body below, while my set holds no
+  # column (a browser opened on a member: InspectorBrowserWdgt._reconcileMyStripNoSettle).
   getMinDim: ->
     least = super()
     return least  if @isInCollapsedSubtree()

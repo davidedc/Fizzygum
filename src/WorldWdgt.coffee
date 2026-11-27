@@ -3657,10 +3657,20 @@ class WorldWdgt extends IconGridPanelWdgt
     menu.popUpAtHand()
     
   
+  # THE DEVELOPER MODE SWITCHED, either way (my menu's "Switch to user mode" and "Switch to dev mode").
+  # What the mode decides is read where it is used -- a menu asks it as it is built -- so whatever is
+  # built after the switch is the new mode's by itself. A widget already SHOWING something by the mode is
+  # told, in ONE settle, as a code change tells every widget (noteCodeChanged): every widget that answers
+  # _devModeChangedNoSettle (an inspector's Children list, whose verbs band stands in developer mode
+  # only: ObjectListWdgt). A write of the flag itself (boot's, a world snapshot's, a test's) tells no
+  # one.
   toggleDevMode: ->
     @isDevMode = not @isDevMode
+    @_settleLayoutsAfter =>
+      Widget.instances.forEach (eachWidget) -> eachWidget._devModeChangedNoSettle?()
+    return
 
-  
+
   # edit self-settles via the public add / fullDestroy (EACH opens its own settle) exactly as it always has --
   # every event-time editing caller (inspectors, text fields) depends on that unchanged timing. _editNoSettle
   # shares the IDENTICAL caret-teardown-and-creation body via a strategy thunk (the _stopEditingTearingCaretDownWith

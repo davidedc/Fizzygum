@@ -19,11 +19,21 @@
 # that showed its instances is refused, and no copy shares them. A row is honoured only while it is true
 # (chooseRow): a copy or a restore of me, holding no objects, derives them at its first press; and an
 # object that is not in my subject's list as it stands is no choice. Nothing refreshes my list but my
-# inspector's lit chooser toggle (_rereadNoSettle) and a copy's first press that finds it stale.
+# inspector's lit chooser toggle (_rereadNoSettle), a copy's first press that finds it stale, and my
+# own verbs, each of which reads it again once it has acted.
+#   MY VERBS are the widget menu's own, where that menu offers them: a CHILDREN list, in developer mode,
+# offers DUPLICATE -- a copy of the chosen child beside it, in the same parent (Widget.duplicateBesideMe),
+# so my list, read again, shows it, offered only where the parent has a place for that copy -- and
+# REMOVE, the menu's Delete (Widget.close: into the bin, or onto the shelf when a shortcut or a wire
+# points at the child -- the storage drain's rule, as for the menu's Delete --, from where a person
+# takes it back), each on a child that menu acts on as itself (verbApplies). An INSTANCES list spans
+# the whole world -- the hand, the bin and the shelf, menus, this tool's own parts -- and a SUBCLASSES
+# list lists classes, which no widget verb acts on: neither offers a verb.
 #   Top to bottom, the elements of a vertical DIVISION stack (StackLayoutEngine): my LIST, which takes
-# the slack, dressed as every view's list is (MemberListWdgt.dressAsAViewsList), and my CUT-NOTICE band
-# when I list only the first MemberListWdgt.MOST_ITEMS_LISTED. In an inspector I paint nothing;
-# standing anywhere else I paint the inspector's body (InspectorBodyAppearance).
+# the slack, dressed as every view's list is (MemberListWdgt.dressAsAViewsList), my CUT-NOTICE band
+# when I list only the first MemberListWdgt.MOST_ITEMS_LISTED, and my VERBS band (ListVerbsBandWdgt: a
+# drawn icon button per verb I offer) while I offer one. In an inspector I paint nothing; standing
+# anywhere else I paint the inspector's body (InspectorBodyAppearance).
 class ObjectListWdgt extends Widget
 
   # the object whose objects I list, and deliberately not called `target` (MemberListWdgt says why)
@@ -35,6 +45,10 @@ class ObjectListWdgt extends Widget
   list: undefined
   # my band saying I list only the first objects, built only when I do
   cutNoticeBand: undefined
+  # my VERBS band (ListVerbsBandWdgt), my last cell, standing exactly while I offer a verb (verbsOffered):
+  # built and taken away by its reconcile (_reconcileMyVerbsBandNoSettle), its buttons following my
+  # chosen row's child (verbApplies) whenever I ask it to reflect them
+  verbsBand: undefined
   # my objects, in my list's rows' order, parallel to my labels: transient for both walkers (below)
   objects: undefined
   # the labels my list was built from, in its rows' order (possibly none: my list then shows its
@@ -82,26 +96,134 @@ class ObjectListWdgt extends Widget
   # MY LIST READ AGAIN from my subject as it stands, in this order: what it replaces goes FIRST -- my
   # list and my cut-notice band, each destroyed where it stands in me (one a person took out is theirs,
   # and stays where they put it), and the place my new list takes remembered: where my list stood, else
-  # where my band stood, else my end --; THEN my objects and labels derived; then my list built
-  # from them in that place, and my cut-notice band after it. A list is derived only once what it
-  # replaces is gone: a derivation that runs while they stand lists and counts them (a class's
+  # where my cut-notice band stood, else right before my verbs band, else my end --; THEN my objects and
+  # labels derived; then my list built from them in that place, my cut-notice band after it, and my
+  # verbs band reconciled, my last cell (_reconcileMyVerbsBandNoSettle). A list is derived only once
+  # what it replaces is gone: a derivation that runs while they stand lists and counts them (a class's
   # instances include my old list's own rows and labels), though they are destroyed a moment later.
   # At my build, at my inspector's lit chooser toggle (InspectorWdgt._showViewNoSettle, which asks
-  # every view this by this name), and at a copy's first press that finds my list stale (chooseRow). A
-  # fresh list selects nothing.
+  # every view this by this name), at a copy's first press that finds my list stale (chooseRow), and
+  # after each of my verbs. A fresh list selects nothing.
   _rereadNoSettle: ->
     if @list?.parent is @
       at = @children.indexOf @list
       @list._fullDestroyNoSettle()
     else if @cutNoticeBand?.parent is @
       at = @children.indexOf @cutNoticeBand
+    else
+      at = @_indexOfMyVerbsBand()
     @cutNoticeBand._fullDestroyNoSettle()  if @cutNoticeBand?.parent is @
     {objects, labels, count} = @_derivedRows()
     @objects = objects
     @labels = labels
     @_buildListNoSettle at
     @_buildCutNoticeNoSettle objects.length, count
+    @_reconcileMyVerbsBandNoSettle()
     @_invalidateLayout()
+
+  # where my verbs band stands among my children, or undefined while none of mine does: the place a
+  # cell built after my list goes, so my band stays my last cell
+  _indexOfMyVerbsBand: ->
+    @children.indexOf @verbsBand  if @verbsBand?.parent is @
+
+  # MY VERBS BAND, its one rule: it stands, my last cell, exactly while I offer a verb (verbsOffered) --
+  # built when none stands, taken away when I offer none -- and its buttons then reflect my verbs
+  # (ListVerbsBandWdgt.reflectVerbs). A band a person took out of me is theirs, and stays where they put
+  # it: I let go of it, and build my own again while I offer a verb. Builds nothing when nothing is out
+  # of place. At every read of my list (_rereadNoSettle), and when the developer mode switches
+  # (_devModeChangedNoSettle). A core, inside the settle of whatever asks it.
+  _reconcileMyVerbsBandNoSettle: ->
+    @verbsBand = undefined  unless @verbsBand?.parent is @
+    offers = (Object.keys @verbsOffered()).length > 0
+    if offers and !@verbsBand?
+      @verbsBand = new ListVerbsBandWdgt @
+      @_addNoSettle @verbsBand, layoutSpec: @verbsBand.divisionBox('y')
+      @_invalidateLayout()
+    else if !offers and @verbsBand?
+      @verbsBand._fullDestroyNoSettle()
+      @verbsBand = undefined
+      @_invalidateLayout()
+    @verbsBand?.reflectVerbs()
+    return
+
+  # THE DEVELOPER MODE SWITCHED (WorldWdgt.toggleDevMode tells every widget that answers this): the verbs I
+  # offer are developer mode's (verbsOffered), so my verbs band follows it at once, built or taken away
+  # (_reconcileMyVerbsBandNoSettle). A core, inside the world's one settle.
+  _devModeChangedNoSettle: ->
+    @_reconcileMyVerbsBandNoSettle()
+
+  # MY VERBS (my verbs band's protocol, ListVerbsBandWdgt): the TABLE of the verbs I offer, each the name
+  # of my method that performs it and the words that say it. A CHILDREN list offers the widget menu's two
+  # verbs, DUPLICATE and REMOVE (the menu's Delete), where that menu offers them: in developer mode,
+  # since user mode builds no widget's menu (Widget.buildContextMenu). Any other list of mine offers
+  # none, and then I have no band (my header says why). Neither verb asks anything, so neither's words
+  # end in "…". Read as my band is reconciled, and as every verb is asked whether it applies.
+  verbsOffered: ->
+    return {}  unless @derivationName is "_childrenOfMySubject" and world.isDevMode
+    {
+      duplicate: {action: "duplicateChosenChild", words: "Duplicate"}
+      remove: {action: "removeChosenChild", words: "Remove"}
+    }
+
+  # DOES `verb` APPLY NOW? Both act on the CHILD my chosen row stands for (_chosenObject), so they apply
+  # only while I offer them (verbsOffered) and that row names a child of my subject still, one the
+  # widget menu reaches and acts on as itself (Widget.developerMenuReachesMe: a right-click reaches its
+  # own menu -- not a construct's internal structure, nor a widget whose container takes its menu over --
+  # and the figure both its rows act on is the child, not a transform island it is the sole content of).
+  # Then each verb asks its own row's guards:
+  #   DUPLICATE, a child that does not refuse a copy, as the menu's Duplicate row asks (refusesDuplication:
+  #   the bin's opener), and whose parent has a place for a copy beside it (Widget.copyPlaceBesideMe: the
+  #   next cell of a stack, or free on a surface that places its children freely; none in a window's
+  #   content slot, a docked band, a viewport's bars, where an add would land the copy elsewhere);
+  #   REMOVE, a child the menu's Delete removes as itself, not a part of a window, whose Delete closes the
+  #   window in its place (Widget.windowClosedInMyPlace).
+  # My verbs band asks it at each seat I know of where that changes: every read of my list, whose fresh
+  # list selects nothing (_rereadNoSettle); each choice of a row (chooseRow); my choice dropped
+  # (clearChoice, and my reload: _reloadNoSettle); the developer mode switched. A change to the child
+  # that none of them sees -- moved, closed or wrapped by another gesture -- shows at my next seat; my
+  # actions ask again when pressed, so a button that shows a stale state never acts on a child the menu
+  # would not act on.
+  verbApplies: (verb) ->
+    child = @_chosenObject()
+    return false  unless @verbsOffered()[verb]? and child?.developerMenuReachesMe()
+    if verb is "duplicate"
+      !child.refusesDuplication?() and child.copyPlaceBesideMe()?
+    else
+      !child.windowClosedInMyPlace()?
+
+  # THE OBJECT MY CHOSEN ROW STANDS FOR, or undefined: my list's selected row (ListWdgt.selected),
+  # honoured as a press on it is (_objectOfRow: my label at its place the row's own, the object there
+  # still in my derivation), among the objects I hold -- none while I hold none (a copy or a restore of
+  # me, before its first press), as what a row opens in a new inspector reads.
+  _chosenObject: ->
+    row = @list?.selected
+    @_objectOfRow @objects, row.labelString, row.argumentToAction1  if row? and @objects?
+
+  # MY VERBS' ACTIONS, my verbs band's buttons' (each hands me its verb, which names nothing more I
+  # need). Each acts only while its verb applies (verbApplies): a press on a disabled button, or a call
+  # another caller makes, on a child the widget menu would not act on, does nothing. It acts through the
+  # widget's own verb, as the menu's row does; then my list is read again from my subject as it stands,
+  # in one settle (_rereadNoSettle: a fresh list selects nothing), and what followed my inspector for my
+  # old list's choice goes (InspectorBrowserWdgt.showChoice, with no subject), after that settle.
+  #   DUPLICATE: a copy of the chosen child beside it, in the same parent (Widget.duplicateBesideMe: the
+  # next cell of a stack, or on top of what stands in a free surface, 10 px right of and below the
+  # child, as the menu's copy stands on the desktop), so my list, read again, shows it.
+  duplicateChosenChild: ->
+    if @verbApplies "duplicate"
+      @_chosenObject().duplicateBesideMe()
+      @_settleLayoutsAfter => @_rereadNoSettle()
+      InspectorBrowserWdgt.showChoice @, undefined
+    return
+
+  #   REMOVE: the widget menu's Delete, exactly (Widget.close: into the bin, or onto the shelf when a
+  # shortcut or a wire points at the child, as the storage drain files what is closed; from either a
+  # person takes it back), so my list, read again, holds it no more.
+  removeChosenChild: ->
+    if @verbApplies "remove"
+      @_chosenObject().close()
+      @_settleLayoutsAfter => @_rereadNoSettle()
+      InspectorBrowserWdgt.showChoice @, undefined
+    return
 
   # THE ONE DERIVATION, objects and labels together: every object my derivation answers, the first
   # MOST_ITEMS_LISTED of them kept, their labels, and how many there are in all.
@@ -147,11 +269,11 @@ class ObjectListWdgt extends Widget
     @_addNoSettle @list, atIndex: atIndex, layoutSpec: @list.divisionBox('y')
 
   # my cut-notice band in step with my list (_rereadNoSettle has removed the one standing in me): a
-  # fresh one at my end, after my list, when I list `listed` of `count` objects
-  # (MemberListWdgt.cutNoticeBandFor), and none otherwise
+  # fresh one after my list, before my verbs band (else at my end), when I list `listed` of `count`
+  # objects (MemberListWdgt.cutNoticeBandFor), and none otherwise
   _buildCutNoticeNoSettle: (listed, count) ->
     @cutNoticeBand = MemberListWdgt.cutNoticeBandFor listed, count
-    @_addNoSettle @cutNoticeBand, layoutSpec: @cutNoticeBand.divisionBox('y')  if @cutNoticeBand?
+    @_addNoSettle @cutNoticeBand, atIndex: @_indexOfMyVerbsBand(), layoutSpec: @cutNoticeBand.divisionBox('y')  if @cutNoticeBand?
 
   # WHAT MY LIST SHOWS BESIDE A ROW'S NAME (my list's memberFactsQuery): no kind tag, and not dimmed.
   objectRowFactsOf: (ignored) ->
@@ -178,7 +300,8 @@ class ObjectListWdgt extends Widget
   # what a row opens in a new inspector asks too, of the objects I hold (objectToOpenInANewInspector);
   # the first rule's derivation, which labels every object again and so runs a person's code (a listed
   # widget's injected colloquialName), is the press's alone, as holding the objects and building my list
-  # again are.
+  # again are. My verbs follow the row chosen, once I hold my objects (a stale list read again reflects
+  # them itself).
   chooseRow: (label, place) ->
     unless @objects?
       {objects, labels} = @_derivedRows()
@@ -188,6 +311,7 @@ class ObjectListWdgt extends Widget
         @_settleLayoutsAfter => @_rereadNoSettle()
         InspectorBrowserWdgt.showChoice @, undefined
         return
+    @verbsBand?.reflectVerbs()
     InspectorBrowserWdgt.showChoice @, @_objectOfRow(@objects, label, place)
 
   # THE OBJECT A PRESSED ROW STANDS FOR among `objects` (mine, parallel to my labels), or undefined:
@@ -236,11 +360,12 @@ class ObjectListWdgt extends Widget
     row.labelString  unless @objects? and @objects[row.argumentToAction1] isnt subject
 
   # NO ROW OF MINE IS CHOSEN any more (my inspector's class button pressed: InspectorWdgt.chooseMyClass;
-  # or my subject chosen again: my inspector's reload). My list drops its selection; nothing is derived
-  # again. Paint only, so a core both doors reach.
+  # or my subject chosen again: my inspector's reload). My list drops its selection, and my verbs follow;
+  # nothing is derived again. Paint only, so a core both doors reach.
   clearChoice: ->
     @_reloadNoSettle()
 
   _reloadNoSettle: ->
     @list?.clearSelection()
+    @verbsBand?.reflectVerbs()
     return

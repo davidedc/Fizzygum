@@ -40,8 +40,9 @@ class BinOpenerWdgt extends DesktopLinkWdgt
   # The arrow contract (reference-widgets plan §4.4): the bin refuses duplication. There is ONE
   # bin singleton; a copy of me could only be a second alias to it, while my arrow-less icon
   # promises the thing itself. Consulted by Widget's context-menu assembly (?-dispatched,
-  # nothing on Widget), which drops the "Duplicate" row.
-  _refusesDuplication: ->
+  # nothing on Widget), which drops the "Duplicate" row, and by an inspector's Children list, which
+  # offers no Duplicate of me (ObjectListWdgt.verbApplies).
+  refusesDuplication: ->
     true
 
   # what a press on my tile does: open the bin (WidgetHolderWithCaptionWdgt.activated decides tile

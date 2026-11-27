@@ -1106,7 +1106,13 @@ assertion a recapture after a regression silently stores two different hashes an
   then one wheel if the row does not show whole), faults a row that still does not show whole, and never presses a row
   with no visible slice — never a hand-rolled thumb drag plus a blind click,
   which on a long list (one thumb pixel worth whole rows, a thin indicator changing its thumb's size under the drag) lands
-  anywhere and selects nothing while the test stays green. The two member lists are told apart by where they stand: the
+  anywhere and selects nothing while the test stays green. ⚠ Where the verb leaves the list depends on the row AND the list:
+  the thumb goes to the row's share of the list's length, rounded to a thumb pixel, so a member added ANYWHERE in the list
+  moves where a row the drag leaves whole comes to rest. A new member of a widely inherited class (a `Widget` method, listed
+  with Inherited on) therefore moves the scroll in every later picture of such a list — this test's and
+  `macroInspectorShowsAValueAsCode`'s, both in the inspector churn set (`Fizzygum-tests/scripts/inspector-churn-set.json`) —
+  though the product scrolls nothing there (the scroll is the toolkit's drag): trace such a moved rest to the list's length
+  (a control hiding the new names gives the old picture back) before recapturing, never by eye. The two member lists are told apart by where they stand: the
   original's from `@topMemberList()` before the duplicate, the copy's inside the copied panel by the same capability
   (`copyPanel.topWdgtSuchThat (w) -> w.selectionFromList? and w.list?`), and each one's editor, after its choice, by
   `@memberEditorFedBy memberList`. Give that list HEIGHT: a finger's translated scroll is a bounded
@@ -1690,7 +1696,8 @@ assertion a recapture after a regression silently stores two different hashes an
   before it are the last layout's, which no missing place can change); nothing comes back into the gaps; (2) a member list picked out feeds
   NO browser — a choice in it (`bringInViewAndClickOnListItem_InputEvents_Macro
   memberList.list, name`) opens the member in a window of its OWN (find it by diffing the windows on the desktop across the choice), whose
-  browser stands its first inspector, on the member, as its body, and leaves the gutted browser alone; (3) a view standing alone lays itself out at whatever size its HALO gives it — reach "Resize/move…" through
+  browser stands its first inspector, on the member, as its body — its set holding no column, so its strip of lists hidden and no
+  divider standing (`InspectorBrowserWdgt._reconcileMyStripNoSettle`) — and leaves the gutted browser alone; (3) a view standing alone lays itself out at whatever size its HALO gives it — reach "Resize/move…" through
   its own menu as "Pick up" is reached, drag with `@resizeWidgetBy_InputEvents view, delta`, take the halo down with a click on bare
   desktop: the member list's bands keep their heights and its list takes the change, the editor's code area takes it and its Save stays at
   its footer's right (assert both as values). Choose in the picked-out list BEFORE shrinking it: a finger cannot scroll a short list to a
@@ -1909,9 +1916,35 @@ assertion a recapture after a regression silently stores two different hashes an
   one subject: a member step through one list's verb shows in the other list's verbs at once, with no choice made there
   (every step's one tail tells every member list on the holder, `MemberListWdgt.noteMembersMayHaveChanged`). The same band
   and rule on the class's PROTOTYPE (as built, on a member the class defines, on `constructor`). The lists with NO band: a value's member list (a Point's, built by
-  code and never shown, `verbsBand` undefined and its list its last cell) and the object lists (Children, Instances, Subclasses,
-  each pressed by `clickViewToggle_InputEvents_Macro` and read by `@listVerbsOf`). Its verbs are the toolkit's list-verb pair and
+  code and never shown, `verbsBand` undefined and its list its last cell), an Instances and a Subclasses list (each pressed by
+  `clickViewToggle_InputEvents_Macro` and read by `@listVerbsOf`). A CHILDREN list offers exactly the widget menu's two verbs,
+  duplicate and remove, in developer mode: read `world.isDevMode` in the same line, so a world in the other mode cannot pass
+  for the rule; what the two do is the next entry's. Its verbs are the toolkit's list-verb pair and
   locators (`src/macros/CLAUDE.md`, the inspector entry); no test-local verb.
+- **A Children list duplicates and removes where the widget menu does; a browser with no column hides its strip**
+  (`macroInspectorChildrenListDuplicatesAndRemoves`, assertion-only, both pointers, no `pointerKinds`): read the band as the
+  entry above reads it (`bandOf`, `statesOf`: the verbs as the band answers them, each button's `isEnabled`, its words, a
+  missing button "none"), with nothing chosen, on each child chosen by a click on its row
+  (`bringInViewAndClickOnListItem_InputEvents_Macro list, label`: "Rectangle", "Rectangle 2", … by the house rule), and after
+  each press (`clickListVerb_InputEvents_Macro list, verb`). Build each PARENT by code for the place it gives a copy
+  (`Widget.copyPlaceBesideMe`): a `PanelWdgt` on the desktop for the FREE place — a plain rectangle answers no
+  `childrenCanLockToMe`, so a free child of one offers no Duplicate at all — read as the panel's children (the copy its LAST
+  child, `isFreeFloating()`, 10, 10 from the original, at its extent); a rectangle holding its children as cells of a division
+  row (`add each, layoutSpec: each.divisionBox('x')`) for the NEXT place, read as the row's children in order, the copy's spec a
+  division element of its own (`isnt` the original's, its `element` the copy) and the three boxes from the engine's
+  arithmetic. Read a Remove off the copy's parent, `world.binWdgt.holds copy` and `copy.destroyed` (filed, alive), and the list
+  read again (`labelsOf`, `list.objects`, nothing chosen). A window's PARTS and its docked band: a second window docked along the
+  first's bottom by code (`FrameWdgt.dockFrame`), the band's row label read off the list by the object it stands for
+  (`list.labels[list.objects.indexOf band]`: a frame's row names its kind and its title), the title bar's row "Title bar".
+  Switch the mode through the DESKTOP'S rows by real input (a right-click, a hold under a finger, at a bare desktop point,
+  `@getMostRecentlyOpenedMenu()`, the row brought into view, `moveToItemOfMenuAndClick_InputEvents menu, words`) and read the
+  SAME list at once, never a fresh one: the list stays the inspector's view and only its band follows the switch
+  (`WorldWdgt.toggleDevMode` tells every widget). An Instances list through the class button, then its toggle. L16: a member list moved to the desktop by code
+  (`world.add`, as a drop re-homes it) and a click on its "constructor" row open ONE window whose browser holds no column; read
+  `row.columns().length`, `viewport.parent is browser` and `viewport.isInCollapsedSubtree()`, `browser.splitterBefore body`
+  (undefined) and the body's `splitGrip` (none), and the boxes: the trail at the browser's top, the body from the trail's foot to
+  the browser's. Keep everything built in one list and destroy, in a `finally`, each one not yet destroyed — the copy the bin
+  holds and the window the click opened among them. No new verb.
 - **A member editor shows a value as CODE, and takes typing exactly while a Save can apply it**
   (`macroInspectorShowsAValueAsCode`, one picture): give a never-mounted widget own fields of each kind (`subject.probePoint =
   new Point 12, 68.5`, …), open the product's browser on it in a window (`new InspectorBrowserWdgt subject`, `world.openFrameWith

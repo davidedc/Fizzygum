@@ -83,7 +83,14 @@ const METHOD_CEILINGS = {
   // one writer, so a paint tool keeping the text of a member it could not make writes no private field of Widget's
   // Lowered 396 -> 395 on 2026-11-27: _moveBottomSideTo went with its one caller, ListWdgt._applyExtent (a list's
   // growth moved its rows inside its pinned plane, by whichever extent a frame applied: a render the cadence chose).
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 395 },
+  // raised 395 -> 401 on 2026-11-27 under the owner's standing ruling of 2026-11-16 (the right shape over the count; the
+  // inspector-browser plan's U3.2, the owner's ruling L15): a Children list offers the widget menu's Duplicate and Delete
+  // where the menu offers them, so the menu's guards are statements both ask — _widgetToAskMenuTo (which widget a
+  // right-click asks), developerMenuReachesMe (does the right-click reach my own menu), windowClosedInMyPlace (the close
+  // redirect, three inline copies made one) — and Duplicate asks its OWN question: copyPlaceBesideMe (the next place,
+  // free, or none) with duplicateBesideMe (a copy beside its original) and _standCopyFreeIn (a free copy's treatment, one
+  // statement the menu's Duplicate shares)
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 401 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
   // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on

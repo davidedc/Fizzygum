@@ -308,7 +308,8 @@ de-arrowed icons churn every screenshot showing them).
   referent — the friendly `saveToFile` dialog; cross-file identity = BACKLOG).
 - **Bin refuses duplication**: `BinOpenerWdgt._refusesDuplication` (an opt-out capability,
   `?()`-dispatched, nothing on Widget) suppresses the "duplicate" row in
-  `Widget.buildBaseWidgetClassContextMenu`.
+  `Widget.buildBaseWidgetClassContextMenu`. (Public as `refusesDuplication` since the inspector-browser
+  plan's U3.2, 2026-11-27: an inspector's Children list asks it too before offering its Duplicate.)
 - **The shortcut-class SEAM (same-day follow-up, found in the execution's caller census)**:
   `Widget._buildShortcutWidget(referenceName, opts)` — THE ONE place deciding which shortcut
   class represents a widget, consulted by `_createReferenceNoSettle` — so the answer holds on

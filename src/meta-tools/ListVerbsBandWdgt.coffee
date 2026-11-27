@@ -15,7 +15,9 @@
 #     verbsOffered()     a TABLE keyed by verb, an entry for each verb the view can ever offer, each
 #                        {action, words}: the NAME of the view's method that performs the verb, and the
 #                        words that say it ("Add…", "Remove": "…" where a prompt follows, §4.9). Read
-#                        once, as I am built: which verbs a view can ever offer is its subject's to say.
+#                        once, as I am built: which verbs a view can ever offer is its subject's to say
+#                        -- and, for a list of a widget's children, the developer mode's, so that view
+#                        builds me or takes me away as the mode switches (ObjectListWdgt).
 #     verbApplies(verb)  whether the verb applies now, asked at every reflectVerbs, which my view asks
 #                        of me at the seats it knows of where what its verbs act on changes (its
 #                        verbApplies names them, and what they do not see).
@@ -64,8 +66,9 @@ class ListVerbsBandWdgt extends BandWdgt
 
   # EACH OF MY BUTTONS ENABLED exactly while its verb applies now, as its target, my view, answers
   # (verbApplies: a connection by method name on a target). My view asks this at the seats where it
-  # knows what its verbs act on changes (MemberListWdgt.verbApplies names them). A button a person
-  # took out of me is not mine to reflect. Paint only: a button's enabled flag changes nothing's size.
+  # knows what its verbs act on changes (its verbApplies names them: MemberListWdgt's, ObjectListWdgt's).
+  # A button a person took out of me is not mine to reflect. Paint only: a button's enabled flag
+  # changes nothing's size.
   reflectVerbs: ->
     for each in @children when each.argumentToAction1?
       each.setEnabled each.target.verbApplies each.argumentToAction1

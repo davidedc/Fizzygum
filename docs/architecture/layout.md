@@ -428,7 +428,10 @@ is), which takes every pixel the other cells leave; the browser reconciles that 
 STATED: its division box holds its least and a desired its most equals (spreadability 0), 312 as the browser is built
 (`InspectorBrowserWdgt._stateMyStripNoSettle`) and then wherever a drag of that divider states it, so the person's split
 stands when the window is resized and only a browser too short for every cell's desired size takes some of it, the
-engine's own way. Its least is DERIVED, never below the tallest least of the set's columns, read from their cells'
+engine's own way. While the set holds no column (a browser opened on a member) the strip is COLLAPSED, taking no room,
+and no divider stands, so the body takes every pixel the trail leaves; the strip shows again at its stated height once a
+column stands (`InspectorBrowserWdgt._reconcileMyStripNoSettle`, run where the browser's sequence may have changed). Its
+least is DERIVED, never below the tallest least of the set's columns, read from their cells'
 fields (`InspectorRowViewportWdgt.getMinDim`, with `getDesiredDim` never below it), so no drag squeezes a column's
 bands. The set (`InspectorRowWdgt`, that viewport's plane) is an 'x' division row of inspectors with a divider
 (`InspectorDividerWdgt`, across) between each two, which the set derives from its inspectors itself

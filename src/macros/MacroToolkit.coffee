@@ -2946,9 +2946,12 @@ class MacroToolkit
         # thumb drag carries the window to the row's share of the list in one gesture, however long the
         # list, which no wheel stands in for: a finger's wheel is a bounded number of swipes, each no
         # longer than the pane. The drag runs even when the row already shows, so where the list comes
-        # to rest depends on the row alone, never on how the list was scrolled before. It lands within
-        # one thumb pixel, and on a long list that pixel is worth whole rows, so a row it leaves not
-        # whole is centred by ONE wheel, which scrolls by content pixels (wheelListTowardItem_InputEvents).
+        # to rest depends on the row and the list (its length and the row's index in it), never on how
+        # the list was scrolled before. It lands within one thumb pixel, and on a long list that pixel is
+        # worth whole rows — so a member added ANYWHERE in the list (a new method of a widely inherited
+        # class, shown with Inherited on) can move where a row it leaves whole comes to rest; a row it
+        # leaves not whole is centred by ONE wheel, which scrolls by content pixels
+        # (wheelListTowardItem_InputEvents).
         # A row still not whole after that is a fault, recorded (assertListItemInView), never a scroll to
         # try again. It acts on the list it is GIVEN, so a test holding two member lists (two windows,
         # or two in one row) names the one it means instead of arranging which one is on top.

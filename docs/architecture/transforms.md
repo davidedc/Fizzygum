@@ -538,11 +538,15 @@ outermost island (or the widget itself off any island, byte-identical dormant). 
 (`src/basic-widgets/Widget.coffee`):
 
 - **Duplicate** (`duplicateMenuAction`) — `fullCopy` the figure (its `deepCopy` deep-copies the
-  `TransformSpec` for free), offset from the figure's position; the copy's `_applyMoveTo` rides a
-  pinned anchor along.
+  `TransformSpec` for free), stood free on the desktop, offset from the figure's position
+  (`_standCopyFreeIn`); the copy's `_applyMoveTo` rides a pinned anchor along.
+- **Duplicate beside** (`duplicateBesideMe`, an inspector's Children list's Duplicate) — the same figure
+  copied, put beside it in its parent (`copyPlaceBesideMe`); the list offers it only on a child that IS
+  its figure (`developerMenuReachesMe`), so the sole content of an island is never copied apart from it.
 - **Duplicate + pick up** (`duplicateAndPickItUp`) — same figure resolution, then
   `_normalizePinnedAnchorNoSettle` first (the hand-carry pipeline assumes a slot-centre pivot). Public
-  API with no menu item since arc 3 phase 7 — the one "Duplicate" item means copy-in-place.
+  API with no menu item since arc 3 phase 7 — the one "Duplicate" item leaves its copy standing, never
+  carried.
 - **Pick up** (`pickUpMenuAction`) — `_resolvePickUpFigure` (the same resolution the drag pipeline's
   `determineGrabs` uses, so a menu pick-up and a drag grab take the same thing), then `pickUp`. A genuine
   sub-part is EXTRACTED into a fresh island inside a settle of the resolution's own: the holder it leaves hears it go

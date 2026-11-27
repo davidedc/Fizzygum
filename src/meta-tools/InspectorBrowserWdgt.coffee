@@ -13,8 +13,8 @@
 # puts it under my set, at my full width, a divider between them that a person drags; "beside" leaves
 # it my set's last column. The set owns its structure, the splitters between its columns and each
 # column's split button, and tells me when a reconcile of it may have changed my sequence
-# (_noteMySequenceMayHaveChangedNoSettle); MY structure -- my trail, and, with my body below, my body's
-# place -- is mine (_reconcileMyStructureNoSettle).
+# (_noteMySequenceMayHaveChangedNoSettle); MY structure -- my trail, and, with my body below, my strip
+# of lists, its divider and my body's place -- is mine (_reconcileMyStructureNoSettle).
 #   My set is the PLANE of its own viewport (InspectorRowViewportWdgt, my `viewport`), which scrolls it
 # sideways: each column stands at its own width, the last one taking the room the others leave, and
 # a set wider than its viewport overflows it rather than narrowing a column. After a choice the
@@ -52,14 +52,18 @@
 # leaves it where they put it, and only a box too short for every cell's desired size takes some of it
 # away, the engine's own way, giving it back as I grow again; a drag of my divider while I am no taller
 # than my cells' least sizes states nothing, so the height they stated stands
-# (InspectorDividerWdgt.sizeDraggedTo).
+# (InspectorDividerWdgt.sizeDraggedTo). While my set holds NO column -- a browser opened on a member,
+# one whose last column a person took out -- there is no list to show: my strip HIDES (collapsed, it
+# draws nothing and takes no room), no divider stands, and my body takes every pixel my trail leaves;
+# the strip shows again, at the height it had, once a column stands (_reconcileMyStripNoSettle).
 #   The body's place is NEVER EMPTY: while nothing shown as one text is chosen it holds an EMPTY BODY,
 # an inspector on no subject ("(nothing chosen)", InspectorWdgt), no step of my sequence, which needs
 # and desires the height a member's body does, so the strip keeps its height whether a member is chosen
-# or not. Whenever my body leaves me I rebuild what is missing -- an empty body, exactly one divider
-# right before it, and its tab -- in the reconcile of my structure (_reconcileMyStructureNoSettle): a
-# choice that removes it runs that reconcile itself, once, at its end (_showNextToNoSettle), and a
-# person's "Pick up" or "Destroy" of it runs it as the body leaves me (_reactToChildRemoved).
+# or not. Whenever my body leaves me I rebuild what is missing -- an empty body in the reconcile of my
+# structure (_reconcileMyStructureNoSettle), then, while my strip shows, exactly one divider right
+# before it, and its tab (_reconcileMyStripNoSettle) --: a choice that removes it runs that reconcile
+# itself, once, at its end (_showNextToNoSettle), and a person's "Pick up" or "Destroy" of it runs it
+# as the body leaves me (_reactToChildRemoved).
 #   I paint the BODY every part of the tool in me stands on (inspectorBodyFill), and say so to my parts
 # (laysTheInspectorBodyUnderItsParts); a part of the tool standing anywhere else paints a body of its
 # own (InspectorBodyAppearance).
@@ -102,11 +106,11 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # am I being destroyed as a whole (_fullDestroyNoSettle)? Then a child of mine leaving me is my
   # teardown, and nothing of mine is rebuilt on the way out (as my set's flag, InspectorRowWdgt)
   _beingFullDestroyed: undefined
-  # am I changing my own cells -- my build, a choice (_showNextToNoSettle), the reconcile of my structure
-  # (_reconcileMyStructureNoSettle) or the rebuild of my trail (_rebuildMyTrailNoSettle)? Their own
-  # removals tell me a child left, and must not rebuild anything inside them; nor is my trail reconciled
-  # inside the first two, each of which ends with one reconcile of my structure, which reconciles it
-  # once. True only inside one synchronous call, so no copy or save carries it true.
+  # am I changing my own cells -- my build, a choice (_showNextToNoSettle), the reconcile of my strip
+  # (_reconcileMyStripNoSettle) or the rebuild of my trail (_rebuildMyTrailNoSettle)? Their own
+  # removals tell me a child left, and must not rebuild anything inside them; nor are my strip and my
+  # trail reconciled inside the first two, each of which ends with one reconcile of my structure, which
+  # reconciles them once. True only inside one synchronous call, so no copy or save carries it true.
   _changingMyCells: false
 
   # THE DEFAULT EXTENT, its one statement: a browser built with no window gives itself this extent, and
@@ -166,12 +170,14 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # first, by my setting: with my body below, the strip's height, _stateMyStripNoSettle; beside, a box
   # whose most is unbounded, _stateMyViewportBesideNoSettle), then my first inspector, placed where I
   # place one, while I am changing my cells (the flag: my set's reconcile, which the placing runs,
-  # builds no trail of mine yet), then my structure reconciled (_reconcileMyStructureNoSettle): with my body below, an empty
-  # body when my first inspector is no body, and my divider before the body; and either way my trail,
-  # built there once, my first cell. The subject is handed to the build rather than read from a field
-  # of mine, where the canonical pair reads one: it is my first inspector's subject, held by that
-  # inspector (InspectorWdgt.inspectedObject), and a field of mine holding it would go on naming it after
-  # that inspector is gone.
+  # reconciles no strip and builds no trail of mine yet), then my structure reconciled
+  # (_reconcileMyStructureNoSettle): with my body below, an empty body when my first inspector is no
+  # body, then my strip shown with my divider before the body while my set holds a column, hidden while
+  # it holds none (a browser opened on a member); and either way my trail, built there once, my first
+  # cell. So a browser on a member is first laid out with its strip hidden. The subject is handed to the
+  # build rather than read from a field of mine, where the canonical pair reads one: it is my first
+  # inspector's subject, held by that inspector (InspectorWdgt.inspectedObject), and a field of mine
+  # holding it would go on naming it after that inspector is gone.
   _buildAndConnectChildren: (subject) ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle subject
 
@@ -199,8 +205,9 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # chooser (every widget's column, every class's: header 44, chooser 48, the list's toggles 48, its
   # rows' least 44, its verbs band 52). So my own least, my cells'
   # summed -- my trail's 52, the strip's, my divider's 12 and my body's 96 (header 44, an editor's least
-  # 52) -- is 396 while such a column stands, 350 while none does; given less, my division stack
-  # squeezes every cell (its first regime).
+  # 52) -- is 396 while such a column stands, 350 while none does, and 148 while my set holds no column
+  # at all, my strip hidden and no divider standing (_reconcileMyStripNoSettle); given less, my division
+  # stack squeezes every cell (its first regime).
   #   NATURAL, the height I am built with: the bands' 144 and four rows' 168, 312, which the rows'
   # panel's padding cuts to THREE whole member rows and 38 px of a fourth; in a column with a chooser
   # (48 more) two whole rows and 32 px of a third.
@@ -267,7 +274,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     cells[at - 1]  if at > 0
 
   # The divider standing just before `inspector` among my cells, or undefined: what its split button
-  # drags (InspectorWdgt._splitterBeforeMe asks) -- my divider, before my body.
+  # drags (InspectorWdgt._splitterBeforeMe asks) -- my divider, before my body (none stands while my
+  # strip hides: _reconcileMyStripNoSettle).
   splitterBefore: (inspector) ->
     before = @_cellBefore inspector
     before  if before? and @_isMySplitter before
@@ -390,9 +398,10 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # changes nothing); its reconcile tells me, at its end, that my sequence may have changed.
   #   All of it while I am CHANGING MY CELLS (the flag): a body the choice removes builds no empty body
   # as it leaves, nor does an empty body a fresh body replaces, so no choice builds a body only to
-  # destroy it a moment later; and the reconciles of my set the choice runs reconcile no trail of mine.
-  # My structure is reconciled ONCE, after (_reconcileMyStructureNoSettle): the body the choice placed,
-  # or an empty one where it left none, its divider and its tab, and my trail, reconciled there once.
+  # destroy it a moment later; and the reconciles of my set the choice runs reconcile no strip and no
+  # trail of mine. My structure is reconciled ONCE, after (_reconcileMyStructureNoSettle): the body the
+  # choice placed, or an empty one where it left none; my strip shown or hidden as my set holds a column
+  # or none, with its divider and its tab while it shows; and my trail, reconciled there once.
   #   LAST, A WALK KEEPS ITS VIEW: the fresh inspector shows the view of the title `inspector` names for
   # the choice (InspectorWdgt.titleOfMyChoice: the title of a list of objects the choice was made in,
   # read as the choice finds it), when its subject offers that view
@@ -460,7 +469,7 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # `inspector`, a body, put in my body's place as a cell of my division stack: where the body standing
   # there stands (an empty one: a choice has removed any other), which is destroyed only THEN, so its
   # departure finds a body standing and needs nothing built; with none standing, after my last cell.
-  # Its divider and its tab are my structure's reconcile's, which my build and a choice run after.
+  # Its divider and its tab are my strip's reconcile's, which my build and a choice run after.
   _placeBodyNoSettle: (inspector) ->
     standing = @_bodyStanding()
     at = if standing? then @children.indexOf(standing) else undefined
@@ -477,27 +486,14 @@ class InspectorBrowserWdgt extends ClippingWdgt
     return
 
   # MY STRUCTURE, its one rule, in two parts. With my body below (with it beside, I have no body's
-  # place), MY BODY'S PLACE: a body always stands, an EMPTY body built when none does; exactly one
-  # divider stands, right before it -- every other divider of mine destroyed, one added there when none
-  # stands there --; the body's header re-derives its split button from it, joined to it
-  # (InspectorWdgt._reconcileSplitGripNoSettle). Run under my flag, in a try/finally: the dividers it
-  # destroys tell me they left, and that must not reconcile again inside this run. Then, my body below
-  # or beside, WHAT FOLLOWS FROM MY SEQUENCE, which may have changed (a body I was opened on may have
-  # gone, a choice may have placed one), mine to judge (_noteMySequenceMayHaveChangedNoSettle): my
-  # window's title, and my trail, once for my build and once for each choice. Builds nothing when
-  # nothing is out of place. Cores only: my build, a choice and a child's departure run it inside their
-  # own settle.
+  # place), MY BODY'S PLACE is never empty: an EMPTY body is built when no body stands. Then, my body
+  # below or beside, WHAT FOLLOWS FROM MY SEQUENCE, which may have changed (a body I was opened on may
+  # have gone, a choice may have placed one, or a column), mine to judge
+  # (_noteMySequenceMayHaveChangedNoSettle): my window's title, my strip and its divider, and my trail,
+  # once for my build and once for each choice. Builds nothing when nothing is out of place. Cores only:
+  # my build, a choice and a child's departure run it inside their own settle.
   _reconcileMyStructureNoSettle: ->
-    if @bodyPlace is "below"
-      @_changingMyCells = true
-      try
-        @_addEmptyBodyNoSettle()  unless @_bodyStanding()?
-        body = @_bodyStanding()
-        @_dropStrayDividersNoSettle body
-        @_addDividerBeforeNoSettle body  unless @splitterBefore(body)?
-        body._reconcileSplitGripNoSettle()
-      finally
-        @_changingMyCells = false
+    @_addEmptyBodyNoSettle()  if @bodyPlace is "below" and !@_bodyStanding()?
     @_noteMySequenceMayHaveChangedNoSettle()
     return
 
@@ -507,11 +503,33 @@ class InspectorBrowserWdgt extends ClippingWdgt
     @_addNoSettle empty, layoutSpec: empty.divisionBox('y')
     return
 
-  # every divider of mine but the one right before `body` destroyed: a stray one before my set's
-  # viewport, a second one before the body, one a person attached anywhere else in my stack
-  _dropStrayDividersNoSettle: (body) ->
-    kept = @splitterBefore body
-    each._fullDestroyNoSettle()  for each in @_divisionCells() when @_isMySplitter(each) and each isnt kept
+  # MY STRIP AND ITS DIVIDER, with my body below, their one rule. My STRIP OF LISTS, my set's viewport,
+  # SHOWS exactly while my set holds a column (InspectorRowWdgt.columns), and HIDES while it holds none
+  # -- collapsed (Widget._collapseNoSettle: it draws nothing and takes no room, so my body takes every
+  # pixel my trail leaves) --: a browser opened on a member (a member list picked out of its inspector,
+  # a member clicked in it: showChoice), or one whose last column a person took out. While it shows,
+  # exactly one DIVIDER stands, right before my body -- every other divider of mine destroyed (a stray
+  # one before my set's viewport, a second one before the body, one a person attached anywhere else in
+  # my stack), one added there when none stands there --; while it hides, none does, since there is no
+  # strip to size. Then my body's header re-derives its split button, the divider's tab, from it
+  # (InspectorWdgt._reconcileSplitGripNoSettle: with no divider before the body, no tab). A set's viewport
+  # a person took out of me is theirs, and stands as they left it. Run under my flag, in a try/finally:
+  # the dividers it destroys tell me they left, and that must reconcile nothing again inside this run.
+  # Builds nothing when nothing is out of place. A core, run where my sequence's note runs, inside the
+  # settle of what told it, so the strip a choice hides or brings back is never laid out on the way.
+  _reconcileMyStripNoSettle: ->
+    return  unless @bodyPlace is "below" and (body = @_bodyStanding())?
+    shows = @row.columns().length > 0
+    @_changingMyCells = true
+    try
+      if @viewport.parent is @
+        if shows then @viewport._unCollapseNoSettle() else @viewport._collapseNoSettle()
+      kept = @splitterBefore body  if shows
+      each._fullDestroyNoSettle()  for each in @_divisionCells() when @_isMySplitter(each) and each isnt kept
+      @_addDividerBeforeNoSettle body  if shows and !kept?
+      body._reconcileSplitGripNoSettle()
+    finally
+      @_changingMyCells = false
     return
 
   # a divider (InspectorDividerWdgt, down my stack) added right before `body`
@@ -525,12 +543,13 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # (my reconcile's own removals and my teardown included), is told so first, and parts from the split
   # button joined to it (StackElementsSizeAdjustingWdgt.noteLeftMyStack). The rest not while I am
   # destroyed or being destroyed as a whole, not while I am changing my own cells (my build, a choice,
-  # my reconcile, my trail's rebuild: each rebuilds what it must itself), and not inside a layout pass
+  # my strip's reconcile, my trail's rebuild: each rebuilds what it must itself), and not inside a layout pass
   # (an "Edit layout" slot the pass takes away tells me a child left, and what I would build there would
   # schedule layout mid-pass: my next reconcile outside a pass builds it): an inspector that left me,
   # not destroyed, re-derives its split button where it stands now (a body picked out sheds its tab);
-  # then my structure is reconciled, which builds an empty body when my body left, and re-joins the
-  # tab, and reconciles my trail (a fresh one first in me when it was my trail that left).
+  # then my structure is reconciled, which builds an empty body when my body left, then reconciles my
+  # strip, its divider and the tab, and my trail (a fresh one first in me when it was my trail that
+  # left).
   _reactToChildRemoved: (child) ->
     child.noteLeftMyStack?()
     return if @destroyed or @_beingFullDestroyed or @_changingMyCells or world?._recalculatingLayouts
@@ -546,24 +565,27 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # MY SEQUENCE MAY HAVE CHANGED: the ONE seat of what follows from it, told by my set at the end of
   # every reconcile of it (a choice's, and a person's "Pick up" or "Destroy" of a column's, which reaches
   # only my set) and by the reconcile of my structure (my build's, a choice's, and a child's departure
-  # from me). Two things follow:
+  # from me). Three things follow:
   #   MY NAME: when my first inspector is another than the one my name was last taken from, the window
   # whose content I am re-derives its title from my name, through its label's NoSettle cores, settling
   # nothing; while it is the same, that window's title is left as it stands.
-  #   MY TRAIL, reconciled (_reconcileMyTrailNoSettle) -- but not while I am changing my cells (my build
-  # and a choice each reconcile it once, at their end, in the reconcile of my structure), not once I am
-  # destroyed or while I am torn down whole (nothing is built into a dying browser), and not inside a
-  # layout pass (an "Edit layout" slot the pass takes away tells my set a child left, and a band built
-  # there would schedule layout mid-pass). There I change nothing, as an inspector's split button waits
-  # (InspectorWdgt._reconcileSplitGripNoSettle): a skipped rebuild leaves my band as it stood until my
-  # next reconcile outside a pass, naming the levels it was built for; a press on it derives my levels
-  # again (revealTrailLevel), so its index meets a real level or reveals nothing.
+  #   MY STRIP AND ITS DIVIDER, with my body below: shown while my set holds a column, hidden while it
+  # holds none (_reconcileMyStripNoSettle), and MY TRAIL (_reconcileMyTrailNoSettle), each reconciled --
+  # but not while I am changing my cells (my build and a choice each reconcile them once, at their end,
+  # in the reconcile of my structure), not once I am destroyed or while I am torn down whole (nothing is
+  # built into a dying browser), and not inside a layout pass (an "Edit layout" slot the pass takes away
+  # tells my set a child left, and a band built there would schedule layout mid-pass). There I change
+  # nothing, as an inspector's split button waits (InspectorWdgt._reconcileSplitGripNoSettle): a skipped
+  # rebuild leaves my band as it stood until my next reconcile outside a pass, naming the levels it was
+  # built for; a press on it derives my levels again (revealTrailLevel), so its index meets a real level
+  # or reveals nothing. A slot leaves my set's columns as they stood, so my strip has nothing to follow.
   _noteMySequenceMayHaveChangedNoSettle: ->
     first = @inspectors()[0]
     unless first is @_inspectorNamingMe
       @_inspectorNamingMe = first
       @parent.noteContentsNameMayHaveChanged()  if @parent?.isMyContents?(@) and @parent.noteContentsNameMayHaveChanged?
     return if @_changingMyCells or @destroyed or @_beingFullDestroyed or world?._recalculatingLayouts
+    @_reconcileMyStripNoSettle()
     @_reconcileMyTrailNoSettle()
     return
 

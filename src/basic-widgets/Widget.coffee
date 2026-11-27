@@ -670,15 +670,10 @@ class Widget extends TreeNode
   # exists, so filing there just skips the bin hop the sort would fix up.
   _closeNoSettle: (restingContainer) ->
 
-    # closing a frame's content closes the FRAME: the chrome is there to manipulate what it
-    # holds, so the two leave together. The frame is the one I really live in, seen through any
-    # transform island I am the sole content of (_parentThroughIslands), so a tilted or scaled
-    # content closes its window exactly as an upright one does. A nested FRAME is not that kind of
-    # content -- it is its own thing, with its own chrome and its own identity -- so it closes ALONE
-    # and its host stays, reverting to an empty frame. ONE step either way: the frame reached here
-    # is a frame, so it does not redirect again.
-    frame = @_parentThroughIslands()
-    if !@isFrame?() and frame?.isFrame?()
+    # closing a frame's content closes the FRAME (windowClosedInMyPlace says which, and why); a
+    # nested frame closes alone, and its host stays, reverting to an empty frame
+    frame = @windowClosedInMyPlace()
+    if frame?
       # private chain: the core, not public close() -- we are already inside close()'s settle batch.
       frame._closeNoSettle restingContainer
       return
@@ -721,11 +716,10 @@ class Widget extends TreeNode
 
   _moveToTrashNoSettle: ->
     # trashing a frame's content trashes the FRAME — the same one-step redirect _closeNoSettle
-    # makes, to the same frame (seen through any transform island I am the sole content of), and
-    # with the same exemption: a nested frame is its own thing and is trashed alone (the frame
-    # reached here is a frame, so it does not redirect again).
-    frame = @_parentThroughIslands()
-    if !@isFrame?() and frame?.isFrame?()
+    # makes, to the same frame, with the same exemption: a nested frame is trashed alone
+    # (windowClosedInMyPlace)
+    frame = @windowClosedInMyPlace()
+    if frame?
       # private chain: the core, not public moveToTrash() -- we are already inside its settle batch.
       frame._moveToTrashNoSettle()
       return
@@ -739,14 +733,30 @@ class Widget extends TreeNode
   # Redirects like _closeNoSettle/_moveToTrashNoSettle so the question is asked about the same
   # figure the trash would file.
   _wouldTrashSeverAnything: ->
-    frame = @_parentThroughIslands()
-    if !@isFrame?() and frame?.isFrame?()
+    frame = @windowClosedInMyPlace()
+    if frame?
       # private chain: the same one-step content-to-frame redirect as _moveToTrashNoSettle, to the
-      # same frame through any island, nested frames exempt for the same reason.
+      # same frame (windowClosedInMyPlace), nested frames exempt for the same reason.
       return frame._wouldTrashSeverAnything()
     # public-call-sanctioned: anyReferenceOrWireIntoWdgt is a pure read (a tree walk that
     # mutates nothing and settles nothing), the same ask the close sites make.
     world.anyReferenceOrWireIntoWdgt @_enclosingIslandFigure()
+
+  # THE WINDOW A CLOSE OF ME CLOSES IN MY PLACE, or undefined. Closing a frame's content closes the
+  # FRAME: the chrome is there to manipulate what it holds, so the two leave together -- and so does
+  # any other part of it that is no frame (its strip, its resizer). The frame is the one I really live
+  # in, seen through any transform island I am the sole content of (_parentThroughIslands), so a tilted
+  # or scaled content closes its window exactly as an upright one does. A nested FRAME is not that kind
+  # of content -- it is its own thing, with its own chrome and its own identity -- so it closes ALONE
+  # (undefined) and its host stays. ONE step: the frame answered is a frame, which answers undefined
+  # itself. The one statement of that redirect, asked by every close path -- a close (_closeNoSettle), a
+  # trash (_moveToTrashNoSettle), whether a trash differs from a close (_wouldTrashSeverAnything) -- and
+  # by an inspector's Children list, which offers its Remove, the widget menu's Delete, only on a child
+  # this redirect leaves as itself (ObjectListWdgt.verbApplies): on a window's part, the menu's Delete
+  # closes the window itself, the subject whose children that list shows.
+  windowClosedInMyPlace: ->
+    frame = @_parentThroughIslands()
+    frame  if !@isFrame?() and frame?.isFrame?()
 
   # The window title-bar edit toggle announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
@@ -4057,27 +4067,77 @@ class Widget extends TreeNode
   # Duplication and Serialization /////////////////////////////////////////
 
 
-  # Duplicate the whole FIGURE — the widget PLUS any enclosing transform-island plumbing — not just the
-  # content widget. A widget's rotation/scale does not live on the widget: it lives on an enclosing
-  # TransformFrameWdgt island of which the widget is the sole content (materialized by the
-  # setRotationDegrees/setScaleFactor sugar). @fullCopy's scope is my own subtree (subtreeCarriedByCopiesAndSaves)
-  # — so copying the CONTENT leaves the island out and the copy "resets" its transform.
-  # _enclosingIslandFigure() resolves that island (or returns me off any island — the entire
-  # un-transformed population, so this is byte-identical dormant there). The island's fullCopy deep-copies
-  # the transform for free (§1a: TransformSpec rides the Duplicator walk). Offset the copy from the
-  # FIGURE's position; the island's _applyMoveTo rides a pinned anchor along (Bug-G), so a plain offset
-  # move of the copied figure is anchor-safe.
+  # The widget menu's Duplicate: a copy of my whole FIGURE — the widget PLUS any enclosing transform-island
+  # plumbing — not just the content widget, standing free on the DESKTOP (_standCopyFreeIn). A widget's
+  # rotation/scale does not live on the widget: it lives on an enclosing TransformFrameWdgt island of which
+  # the widget is the sole content (materialized by the setRotationDegrees/setScaleFactor sugar).
+  # @fullCopy's scope is my own subtree (subtreeCarriedByCopiesAndSaves) — so copying the CONTENT leaves
+  # the island out and the copy "resets" its transform. _enclosingIslandFigure() resolves that island (or
+  # returns me off any island — the entire un-transformed population). The island's fullCopy deep-copies
+  # the transform for free (§1a: TransformSpec rides the Duplicator walk).
   duplicateMenuAction: ->
     figure = @_enclosingIslandFigure()
     aFullCopy = figure.fullCopy()
-    return if !aFullCopy?
+    @_standCopyFreeIn aFullCopy, figure, world  if aFullCopy?
+    return
+
+  # `aFullCopy`, a fresh copy of `original` (a figure), STANDING FREE IN `container`, ON TOP of what stands
+  # there: the one statement of a copy's treatment, for the widget menu's Duplicate (duplicateMenuAction,
+  # on the desktop) and for a copy made beside me in a parent whose children stand where they are put
+  # (duplicateBesideMe, its "free" place). The copy is unlocked from panels and added with no spec of its
+  # own, so it stands free whatever placed the original (a corner-anchored desktop widget's copy is a free
+  # one), then offset 10 px right of and below the original's position; an island's _applyMoveTo rides a
+  # pinned anchor along (Bug-G), so a plain offset move of a copied figure is anchor-safe. Called at event
+  # time, outside any settle: the add settles itself.
+  _standCopyFreeIn: (aFullCopy, original, container) ->
     aFullCopy._unlockFromPanels()
-    world.add aFullCopy
-    aFullCopy._applyMoveTo figure.position().add new Point 10, 10
+    container.add aFullCopy
+    aFullCopy._applyMoveTo original.position().add new Point 10, 10
     # RE-RECORD (the F6 family, auto-bookkeeping arc): the copy deep-copied the ORIGINAL's
     # fractional bookkeeping, which the fill-only seed respects -- re-derive at the offset
     # position or the next desktop reflow snaps the copy onto the original.
     aFullCopy._rememberFractionalSituationInHoldingPanel()
+    return
+
+  # WHERE A COPY OF MY FIGURE GOES BESIDE IT, in the parent that holds it -- the question the widget
+  # menu's Duplicate never asks (its copy stands on the desktop), which a copy made where I stand must:
+  #   "next" where a spec PLACES my figure among its parent's cells -- an element of a division stack, an
+  #   active element of a content stack -- the copy taking the next place, by its own copy of that spec;
+  #   "free" where my figure's parent is a surface whose children stand where they are put: one that
+  #   answers childrenCanLockToMe, the question the menu's "Lock to desktop"/"Lock to panel" row asks of
+  #   it (the desktop, a panel), the copy then treated as the menu's own (_standCopyFreeIn: on top,
+  #   unlocked, 10 px right of and below my figure);
+  #   undefined anywhere else -- a window's content slot or a band docked on it, a viewport's bars and
+  #   plane, a parent whose add would put the copy somewhere other than beside me (a frame takes an add as
+  #   its new content, detaching the content it holds; a viewport sends it into its plane) -- and there no
+  #   copy is made beside me.
+  # Asked by my copy beside me (duplicateBesideMe) and by an inspector's Children list, which offers its
+  # Duplicate exactly where this answers a place (ObjectListWdgt.verbApplies).
+  copyPlaceBesideMe: ->
+    figure = @_enclosingIslandFigure()
+    spec = figure.layoutSpec
+    return "next"  if spec?.isDivisionElement?() or spec?.isStackElementActive?()
+    return "free"  if figure.parent?.childrenCanLockToMe?() is true
+    undefined
+
+  # A COPY OF MY FIGURE BESIDE IT, in the parent that holds it: the widget menu's Duplicate made where I
+  # stand rather than on the desktop -- an inspector's Children list's Duplicate
+  # (ObjectListWdgt.duplicateChosenChild) -- at the place copyPlaceBesideMe answers. The copy is my
+  # figure's fullCopy, as the menu's is (duplicateMenuAction says why the figure). At the NEXT place it is
+  # inserted right after my figure by the house's sibling insert (addAsSiblingAfterMe, in a settle of its
+  # own: a core add, so no public add's redirect sends the copy elsewhere), its own copy of my spec
+  # carrying my sizes; FREE, it stands in my figure's parent as the menu's copy stands on the desktop
+  # (_standCopyFreeIn). Where no place stands beside me, nothing is copied. Answers the copy, or
+  # undefined when there is none: no place, or fullCopy refused (and said why).
+  duplicateBesideMe: ->
+    place = @copyPlaceBesideMe()
+    figure = @_enclosingIslandFigure()
+    aFullCopy = figure.fullCopy()  if place?
+    if aFullCopy? and place is "free"
+      @_standCopyFreeIn aFullCopy, figure, figure.parent
+    else if aFullCopy?
+      @_settleLayoutsAfter => figure.addAsSiblingAfterMe aFullCopy, layoutSpec: aFullCopy.layoutSpec
+    aFullCopy
 
   # The OTHER duplication verb: same figure resolution as duplicateMenuAction (see its comment above for
   # why the copy must be the FIGURE and not the bare content), but the copy goes ONTO THE HAND instead of
@@ -5002,21 +5062,9 @@ class Widget extends TreeNode
   # widget it's being selected...
   buildContextMenu: ->
 
-    widgetToAskMenuTo = @
-
-    # check if a parent wants to take over my menu (and hopefully
-    # merge some of my entries!). In such case let it open the
-    # menu. Used for example for scrollable text (which is text inside
-    # a ViewportWdgt).
-    # the FIELD is the single truth (Widget default false; TextAreaWdgt sets
-    # it true) — the `instanceof ViewportWdgt` qualifier is dropped, and the one non-scroll
-    # writer (SimpleTextPanelWdgt's dead constructor write) deleted with it; old saved
-    # documents are normalized at load (type-test-elimination ε; see
-    # SimpleTextPanelWdgt._afterDeserialization)
-    anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
-      m.takesOverAndMergesChildrensMenus
-    if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
-      widgetToAskMenuTo = anyParentsTakingOverMyMenu[0]
+    # a parent may take over my menu (and merge some of my entries): then it opens the menu
+    # (_widgetToAskMenuTo)
+    widgetToAskMenuTo = @_widgetToAskMenuTo()
 
     if world.isDevMode
       hierarchyMenuWidgets = widgetToAskMenuTo.getHierarchyMenuWidgets()
@@ -5051,6 +5099,32 @@ class Widget extends TreeNode
       menu = new MenuWdgt @, target: @, title: thing.name, titleKind: "value"
       @addOpenInANewInspectorMenuEntry menu
       menu
+
+  # THE WIDGET A RIGHT-CLICK ON ME ASKS FOR ITS MENU: the innermost of me and my parents that takes over
+  # and merges its children's menus, else me -- scrollable text, text inside a ViewportWdgt, opens its
+  # viewport's menu, which merges the text's entries. The FIELD is the single truth
+  # (takesOverAndMergesChildrensMenus: Widget's default false, TextAreaWdgt sets it true); old saved
+  # documents are normalized at load (SimpleTextPanelWdgt._afterDeserialization). Asked by my menu's build
+  # (buildContextMenu) and by whether a developer's right-click reaches my own menu (developerMenuReachesMe).
+  _widgetToAskMenuTo: ->
+    (@allParentsTopToBottomSuchThat (m) -> m.takesOverAndMergesChildrensMenus)[0] ? @
+
+  # DOES A DEVELOPER'S RIGHT-CLICK REACH MY OWN MENU, its rows acting on ME? My menu is reached while no
+  # container above me takes it over (_widgetToAskMenuTo answers me, as my menu's build asks it) and I
+  # stand on the desktop or among the widgets the hierarchy menu lists for me (getHierarchyMenuWidgets,
+  # which leaves out a construct's internal structure: a viewport's plane, a window's strip, a band's
+  # spaces); and its Duplicate and its Delete both act on my FIGURE (_enclosingIslandFigure: the copy
+  # duplicateMenuAction makes, the widget _closeNoSettle files), which must be me: the sole content of a
+  # transform island is copied and filed WITH its island, never on its own. This is all the two rows
+  # share; each has a guard of its own, which the asker asks beside this: the Duplicate row's opt-out
+  # (refusesDuplication), and where a copy made beside me can go (copyPlaceBesideMe); the Delete's
+  # redirect to my window (windowClosedInMyPlace). In developer mode only does the menu stand
+  # (buildContextMenu); the mode is the asker's to read. Asked by an inspector's Children list
+  # (ObjectListWdgt.verbApplies).
+  developerMenuReachesMe: ->
+    return false  unless @_widgetToAskMenuTo() is @
+    return false  unless @parent is world or @ in @getHierarchyMenuWidgets()
+    @_enclosingIslandFigure() is @
 
   getHierarchyMenuWidgets: ->
     hierarchyMenuWidgets = []
@@ -5148,8 +5222,9 @@ class Widget extends TreeNode
     menu.addLine()
     # opt-out capability (?-dispatched, nothing on Widget): the bin opener refuses duplication —
     # the bin is one singleton, so a second opener could only alias it while its arrow-less icon
-    # promises the thing itself (the arrow contract, reference-widgets plan §4.4).
-    if !@_refusesDuplication?()
+    # promises the thing itself (the arrow contract, reference-widgets plan §4.4). An inspector's
+    # Children list asks the same capability before it offers its Duplicate (ObjectListWdgt.verbApplies).
+    if !@refusesDuplication?()
       menu.addMenuItem "Duplicate", @, "duplicateMenuAction", toolTip: "make a copy"
     menu.addMenuItem "Save to file…", @, "saveToFile", toolTip: "save this widget\nto a *.fzw.json file"
     menu.addMenuItem "Create shortcut", @, "createReferenceFromMenu", toolTip: "creates a reference to this wdgt and leaves it on the desktop"

@@ -125,6 +125,11 @@ words win):
 | L12 | The where-you-are band's labels are in SENTENCE case ("Class RectangleWdgt", "Child Rectangle 2"), data never re-cased; its buttons are the house's 36 px button in a 52 px band (2026-11-26) |
 | L13 | The strip of lists stands 312 px tall over the body below (a member list's three whole rows and most of a fourth; an object column's about two); a divider's drag sets it and it stays (2026-11-26) |
 | L14 | The marker gate's budget counts CLASSES holding an unmarked method, not methods (2026-11-26; §5.10) |
+| L15 | A Children list offers Duplicate (the copy beside the original, in the same parent) and Remove (the widget menu's Delete: into the bin, so it can be undone), where the widget menu offers them — in developer mode; an Instances list offers no verb (it spans the whole world) (2026-11-27; §5.7, U3.2) |
+| L16 | A browser whose set holds no column hides its strip of lists (no empty 312 px strip above a member opened straight in the browser) (2026-11-27; §5.4) |
+| L17 | A trail longer than its browser shows its LAST levels, the earlier ones folded behind a leading "…" button that opens them as a menu — low priority, a later pass (2026-11-27; §5.5) |
+| L18 | No second shortcut for "Open in a new inspector" on PC keyboards (Ctrl+click opens the context menu, which carries the row); revisit if PC users ask (2026-11-27; §5.8) |
+| L19 | The build's shared method-header matcher is fixed in its OWN change (it misses 7 real methods: a header with no space after the colon, one continued by a backslash; ten gates never read those bodies) — before U5, its own gauntlet and commit (2026-11-27) |
 
 **OPEN: ask the owner at the start. On "use the defaults", run on the default of each row.** D1 and D2 decide the
 arc's size; the rest are a pass of yes or no.
@@ -140,7 +145,7 @@ arc's size; the rest are a pass of yes or no.
 | D7 | Finding by name (a class in another package costs about a hundred wheel notches; a widget's `color` about 250 rows) | NOT built unseen. U10 builds two candidates on the real build patched at load (a filter line over a long list; a "Find…" prompt that jumps to a class or a member by name), puts them on the review page with counted gestures, and PARKS for the owner's choice |
 | D8 | The Fields toggle inside a category | ABSENT there (a category lists methods); under "all" the list is today's. Round 5 pictured both (`compare/img5/b5-alt-laptop-category.png` is this one). The Methods toggle stays, as pictured, though a category holds only methods: say if it should go too |
 | D9 | The object flows' rough edges (§4.1's last bullet): which are fixed here | FIXED: the trail's wording (a level made through the class button or a list of objects says its relation: "class RectangleWdgt", "instance Rectangle", "child Rectangle 2", §5.5); a walk keeps its view (a subject chosen in a list of objects opens on the view of the same title when it offers one that is not empty: a subclass chosen in Subclasses opens on its Subclasses, a child on its Children, a leaf on its first view). FILED, each a BACKLOG line: an instance named "Rectangle" in a list and "rectangle" in its header; a drilled value leaving the body empty (it is the model: the body is the set's last column); a class's view toggle closing what stands right of the class; a separately opened window that looks like its original |
-| D10 | The table of which buttons, and when (§5.7) | As §5.7: the product's rule for members unchanged; children and instances duplicate and remove (never a window's content) — PARKED as U3.2 and asked of the owner 2026-11-27: the premise does not hold (§5.7 "As built in U3"); categories add, rename, remove-when-empty, never duplicate, nothing on "all"; packages no button; classes by D2 |
+| D10 | The table of which buttons, and when (§5.7) | As §5.7: the product's rule for members unchanged; children and instances duplicate and remove (never a window's content) — ruled 2026-11-27 (L15): Children Duplicate beside the original and Remove into the bin, in developer mode; Instances none; categories add, rename, remove-when-empty, never duplicate, nothing on "all"; packages no button; classes by D2 |
 | D11 | The icons | The arc ships four simple drawn marks. Final icons are the owner's (the umbrella's `/convert-icon-size-aware` way), filed |
 | D12 | Where a separately opened inspector lands, and its title | Beside the original where the desktop has room (right, then left, then below), else cascaded 48 px; inside the desktop always. Its title names the thing alone ("Inspector — color") |
 | D13 | A class with no category | Its list shows "all" alone, and that row is chosen as the list opens (L4's "not chosen" is about a list with more than one row) |
@@ -282,6 +287,7 @@ otherwise. The research that read all of it, every fact with its line, is
   branch for `_memberToEdit`: a one-row menu titled with the widget's name). Developer mode builds the hierarchy
   menu.
 - **The widget menu's "Duplicate" is a copy in place** (`duplicateMenuAction`), its "Close" / "Delete" is `close`.
+  (Corrected by U3's research: the copy stands on the DESKTOP, whatever holds the original, §5.7 "As built in U3".)
 
 ### 1.3 The model: what the meta-object keeps, and what it throws away
 
@@ -741,6 +747,20 @@ class InspectorBrowserWdgt extends ClippingWdgt
 - **With no window** the browser stands on the desktop as any widget and is resized by the halo; a column picked
   out of the set keeps today's rule (its choice opens a window of its own); the plane picked out of its viewport, or
   the body picked out of its place, must leave nothing that throws (U1 and U2 each probe their own).
+- **As built in U3.2** (the owner's ruling L16): with the body below, a browser whose set holds NO column — one opened
+  straight on a member (a choice in a member list standing in no browser: `showChoice` opens it, its first inspector
+  the body), one whose last column a person took out — HIDES its strip of lists. ONE rule,
+  `InspectorBrowserWdgt._reconcileMyStripNoSettle`, run from the sequence's one seat
+  (`_noteMySequenceMayHaveChangedNoSettle`, which the reconcile of the structure, the set's reconcile and a child's
+  departure all reach), inside the settle of what changed the set, so a strip a choice hides or brings back is never laid
+  out on the way: the set's viewport SHOWS exactly while the set holds a column (`InspectorRowWdgt.columns`) and is
+  otherwise COLLAPSED (`Widget._collapseNoSettle`: still the browser's child, it draws nothing and takes no room, its
+  stated height kept, so it comes back at the height it had); while it shows exactly one divider stands, right before
+  the body, and while it hides none does, so the body's header has no tab (`InspectorWdgt._reconcileSplitGripNoSettle`).
+  A viewport a person took out of the browser is theirs. The divider's rule moved here from
+  `_reconcileMyStructureNoSettle`, which now builds only the empty body (`_dropStrayDividersNoSettle` folded in). The
+  browser's least with no column is its trail's 52 and its body's 96, 148 (with columns, 396 while a member list stands
+  under a chooser and 350 while none does).
 
 ### 5.5 The where-you-are band (U2)
 
@@ -826,7 +846,7 @@ open and their refusals (`addPropertyPopout` and its twins) stay as they are.
     only, the inspector in every mode; and an Instances list reaches the world, the hand, the bin and shelf, menus and
     the inspector's own parts, which neither verb refuses. What the two verbs mean there is a product decision; until it
     is ruled, a Children, Instances or Subclasses list offers no verb and builds no band (the table's own rule for a list
-    that offers none).
+    that offers none). Ruled 2026-11-27 (L15) and built in U3.2: "As built in U3.2", after this list.
   - **The buttons are 44 × 36, not 44 × 44**: the house's rule for every button. `SimpleButtonWdgt.preferredExtent` holds
     every text button to `max(minimumTargetSize, …)` wide and the house's one button height (`buttonHeight`, 36) tall, and a
     mark-faced one is (`max(minimumTargetSize, buttonHeight)`, `buttonHeight`): the button meets the 44 rule across by
@@ -873,6 +893,48 @@ open and their refusals (`addPropertyPopout` and its twins) stay as they are.
     0..286 in the view and the press about 243 in, so 300 ends past the view's edge, off the set; 200 ends inside and
     still carries the set past the midpoint, 577, nearer 675); DividerSizes' drag 200 → 300 (200 would leave the set
     644 + 12 + 286 = 942 inside the 998 viewport, so the no-squeeze line would see no overflow; 300 makes it 1042).
+- **As built in U3.2** (the owner's ruling L15, which un-parked the table's children and instances rows; §6 U3.2):
+  - **A CHILDREN list offers the widget menu's own two verbs, in developer mode only** (`ObjectListWdgt.verbsOffered`: the
+    table `duplicate` → `duplicateChosenChild`, "Duplicate", and `remove` → `removeChosenChild`, "Remove"; user mode builds
+    no widget's menu, so there the list offers none and has no band). Neither asks anything, so neither's words end in
+    "…" (the member list's "Duplicate…" opens a prompt). The band is the member list's `ListVerbsBandWdgt`, two buttons,
+    desiring 121; it stands as the list's last cell exactly while the list offers a verb, built or taken away by ONE rule
+    (`ObjectListWdgt._reconcileMyVerbsBandNoSettle`) at every read of the list and when the mode switches. An INSTANCES
+    list offers none (it spans the whole world: the hand, the bin and the shelf, menus, this tool's own parts), and a
+    SUBCLASSES list none (classes; D2 decides their verbs). So, against the table above: its instances row is "—"
+    throughout, and its children row holds in developer mode only, duplicate further asking a place beside the child
+    (below), remove refused on any part of a window (its content, its title bar, its grip), not on its content alone.
+  - **Where: exactly where the widget menu offers its Duplicate and its Delete, asking the menu's own guards**, each now
+    ONE statement on `Widget` that the menu and the list both ask (`ObjectListWdgt.verbApplies`, on the child the chosen
+    row stands for, `_chosenObject`). What the two rows share is `Widget.developerMenuReachesMe`: no container above the
+    child takes its menu over (`_widgetToAskMenuTo`, the innermost parent with `takesOverAndMergesChildrensMenus`, else the
+    child, extracted from `buildContextMenu`); the child stands on the desktop or among the widgets the hierarchy menu lists
+    for it (`getHierarchyMenuWidgets`, which leaves out a viewport's plane, a window's strip, a band's spaces); and it IS
+    its own figure (`_enclosingIslandFigure`), since both rows act on the figure. Then each verb's own guard: Duplicate, a
+    child that refuses no copy (`refusesDuplication`, the bin's opener; public now, since the list asks it from outside)
+    and whose parent has a place for one beside it (below); Remove, a child the menu's Delete closes as itself
+    (`windowClosedInMyPlace`: undefined for a frame, which closes alone, and for any widget that is no window's part —
+    the content-to-frame redirect `_closeNoSettle`, `_moveToTrashNoSettle` and `_wouldTrashSeverAnything` each spelled
+    inline, made one statement).
+  - **Duplicate asks its OWN question, `Widget.copyPlaceBesideMe`** (the orchestrator's ruling within L15's words, "beside
+    the original, in the same parent", after Review A): "next" where a spec places the figure among its parent's cells (a
+    division element, an active content-stack element), and the copy (`duplicateBesideMe`) is inserted right after the
+    figure by the house's sibling insert, `addAsSiblingAfterMe`, in a settle of its own, by its own copy of the spec;
+    "free" where the parent answers `childrenCanLockToMe` (the desktop, a panel), and the copy is treated as the widget
+    menu's own, ONE statement the two share (`_standCopyFreeIn`: on top, unlocked from panels, added with no spec of its
+    own, 10 px right of and below the original, its fractional situation re-recorded); and no place anywhere else — a
+    window's content slot, a band docked on it, a nested window, a viewport's bars and plane, a free child of a plain
+    rectangle — so no Duplicate there. The widget menu's Duplicate is unchanged: `duplicateMenuAction` stands its copy on
+    the desktop through the same `_standCopyFreeIn`.
+  - **Remove is the menu's Delete exactly** (`Widget.close`: into the bin, or onto the shelf when a shortcut or a wire
+    points at the child, as the storage drain files what is closed), so it can be undone from there.
+  - **After either verb** the list is read again from its subject in one settle (`_rereadNoSettle`: it shows the copy, or
+    holds the removed child no more, and chooses nothing), and what followed the old choice goes (`showChoice` with no
+    subject). Each action asks `verbApplies` again when pressed, so a button showing a stale state never acts. The seats
+    the band reflects at: every read of the list, a row's choice (`chooseRow`), a choice dropped (`clearChoice`), and the
+    mode's switch: `WorldWdgt.toggleDevMode` tells every widget that answers `_devModeChangedNoSettle`, in ONE settle, as
+    `noteCodeChanged` tells every widget; a write of the flag itself (boot's, a world snapshot's, a test's) tells no
+    one. A change to the child that no seat sees (moved, closed or wrapped by another gesture) shows at the next seat.
 
 ### 5.8 "Open in a new inspector" (U4)
 
@@ -1225,7 +1287,7 @@ rig and doc it touches before any edit (§7 is the starting list).
 | U0 | Orient: read, verify, ask the open decisions | — | 0.5 | |
 | U1 | The set scrolls, and the tool is a browser (the body still beside); the widening and the trading deleted | — | 2–3 | ✓ 2026-11-26 |
 | U2 | The body below, the where-you-are band, the default window, the class button | U1 | 2–3 | ✓ 2026-11-27 |
-| U3 | Every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule | U2 | 1–1.5 | ✓ 2026-11-27 (U3.2 parked) |
+| U3 | Every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule | U2 | 1–1.5 | ✓ 2026-11-27 (U3.2 parked, then ruled: ✓ 2026-11-27, its own section below) |
 | U4 | "Open in a new inspector": the menu row and Cmd-click | U2 | 1–1.5 | ✓ 2026-11-27 |
 | U5 | The meta-object keeps comments and method categories; edits and snapshots keep them; the marker gate | — | 2 | |
 | U6 | The first classes get their categories (comment-only edits, D1) | U5 | 1–2 | |
@@ -1507,6 +1569,106 @@ looked at: between the two rounds every render changed only inside the band's 36
 dpr-2 region twice its dpr-1 one. Recaptured by name, mouse then finger, dpr 1 and 2: exactly the 25 tests, each run COMPLETE (the full
 suite green); `fg gauntlet` OK, 20 legs, clean; `fg homepage` OK. **Ratchets moved**: the tests' CLAUDE.md byte ceiling
 66319 → 66313 (lowered).
+
+### U3.2. The Children list's verbs; no empty strip over a member (the owner's rulings L15, L16)
+
+**Goal.** L15 and L16 (§0.4), as a unit of its own after U4, with its own gauntlet and commit, before U5's
+implementation: a Children list offers Duplicate (the copy beside the original, in the same parent) and Remove (the
+widget menu's Delete, into the bin) where the widget menu offers them, in developer mode, and an Instances list offers
+no verb (§5.7, "As built in U3.2"); a browser whose set holds no column hides its strip of lists (§5.4, "As built in
+U3.2").
+
+**Landed 2026-11-27** (inspector-browser loop; one commit per repo, this unit's: CP1 the product and its probe, CP2 the
+tests, the sweep's root and the plants). **Built**: `ObjectListWdgt`'s verbs — `verbsOffered` (a table: a Children list in
+developer mode offers `duplicate` "Duplicate" and `remove` "Remove", any other list none), `verbApplies` (on the child
+its chosen row stands for, `_chosenObject`: the menu's shared guard, then each verb's own), `verbsBand` and ONE rule
+for it, `_reconcileMyVerbsBandNoSettle` (the list's last cell exactly while it offers a verb; `_indexOfMyVerbsBand` keeps
+a re-read list and a cut-notice band before it), `_devModeChangedNoSettle`, the two actions `duplicateChosenChild` and
+`removeChosenChild` (each only while its verb applies, through the widget's own verb, then the list read again in one
+settle and the old choice's column gone), and the seats in `chooseRow` and `_reloadNoSettle`; on `Widget`, the menu's
+guards as statements both ask — `_widgetToAskMenuTo` (out of `buildContextMenu`), `developerMenuReachesMe`,
+`windowClosedInMyPlace` (the content-to-frame redirect of `_closeNoSettle`, `_moveToTrashNoSettle` and
+`_wouldTrashSeverAnything`, three inline copies made one) — and Duplicate's own question and act, `copyPlaceBesideMe`,
+`duplicateBesideMe` and `_standCopyFreeIn` (the free copy's one treatment, which `duplicateMenuAction` now stands on);
+`BinOpenerWdgt.refusesDuplication` (public: the list asks it from outside); `WorldWdgt.toggleDevMode` telling every widget
+that answers `_devModeChangedNoSettle`, in one settle; `InspectorBrowserWdgt._reconcileMyStripNoSettle` (L16, from the
+sequence's one seat; the divider's rule moved into it out of `_reconcileMyStructureNoSettle`, which builds the empty
+body and tells that seat); the comments of
+`InspectorRowViewportWdgt.getMinDim` and `ListVerbsBandWdgt` (a Children list's verbs are the mode's too; `reflectVerbs`
+names both views' `verbApplies`); the toolkit's `bringListItemInView` comment made true (where a row comes to rest
+depends on the row AND the list); the menu sweep's root `ObjectListWdgt[a children list in developer mode]` (a panel
+holding two rectangles, so both verbs act: every button of the band pressed, its words judged for sentence case, ASCII
+"..." and "…", a missing one `BUTTON_WORDS_MISSING`) and its self-test's UNBUILT plant seen on that band's duplicate
+button by a line of its own. **Deleted**: `_dropStrayDividersNoSettle` (folded into the strip's rule); the three inline
+redirects and `buildContextMenu`'s inline take-over search (each now one statement); the name `_refusesDuplication`.
+**Ruled in the loop** (the LEDGER): L15's "where the widget menu offers them" read as the menu's own guards, ONE
+statement each; what both verbs share is `developerMenuReachesMe` alone, each verb's own guard asked beside it (Review A's
+Q1: CP1's single predicate answered both, Duplicate's half borrowed from the close redirect); THE DUPLICATE RULE, within
+L15's words "beside the original, in the same parent", after Review A — (a) a division or active stack element: the NEXT
+place, through the house's `addAsSiblingAfterMe` in a settle, by the copy's own copy of the spec; (b) a parent placing
+its children freely (`childrenCanLockToMe`: the desktop, a panel): the widget menu's own copy treatment in that parent,
+one statement with `duplicateMenuAction` (on top, unlocked, +10, +10, re-recorded); (c) anywhere else NOT offered;
+Remove is `close` exactly; no "…" on either word; the mode followed by a broadcast at the switch only (a write of the flag
+itself tells no one); L16 as a collapse of the set's viewport (still the browser's child, its stated height kept), the
+divider destroyed and rebuilt, a viewport a person took out theirs; the new test's free parent a PANEL (a free child of a
+plain rectangle offers no Duplicate now); the toolkit change the investigation offered (always end a bring with the
+centring wheel) NOT taken — it amends a prior ruling and nothing needs it. **Reviews**: Review A (the source, read-only)
+found the budgets honest (exactly the members named; the U-query's lowering strict, the rename and the divider rule's
+move on their merits), the one bent shape above, and: **A1** (high) Duplicate on a frame inside a frame — a docked band
+(the Sheets Maker's toolbar), a nested window — went through `FrameWdgt._addNoSettle`, which takes an add as its new
+CONTENT, orphaning the host's content with no bin and no undo (→ the Duplicate rule: a frame's slot is neither a stack
+cell nor a free surface, so no place; the probe's docked-band and nested-window flows, the test's docked-band line);
+**A2** the desktop clock's copy stood exactly on the clock, its corner-anchoring spec cloned with it (→ a free copy is added
+with no spec of its own, 10 px right and down; the probe's clock flow); **A3** a scroll bar's copy went into the scrolled
+contents, since `ViewportWdgt.add` sends an add into its plane (→ no place among a viewport's bars and plane; the probe's
+scroll-panel flow); **A4** comments untrue (→ made true); **A8** the free copy inserted at z + 1, under the windows
+overlapping its original, its lock to its panel kept (→ the menu's own treatment, `_standCopyFreeIn`: on top, unlocked,
+re-recorded; the test's on-top line); **A9** Remove's shelf case unsaid (→ said: the bin, or the shelf when a shortcut or a
+wire points at the child); **A5** (a verb's re-read runs a person's throwing `colloquialName` with the list already
+destroyed), **A6** (a band taken out outlives its view, U3's shape) and **A7** (a widget file loaded in the other mode keeps
+a stale band), each low → BACKLOG at close. Checked clean: every menu guard, the other placements, the broadcast, the
+lazy-part law, L16 whole.
+Review B (the tests, the plants, the rigs, read-only) found every line right, able to fail and clean, the 34 plant runs each on its line, the sweep's new root leaving every existing root's counts as they were, and the failing set wholly explained — and gaps of COVERAGE: **B-A1** (medium) `developerMenuReachesMe` decided no line (a plant making it always true left everything green; it is what keeps Remove off a scroll panel's plane, whose close would bin the pane's contents) (→ a line where it alone refuses both verbs: a scroll panel's plane and a transform island's content); **B-A2** the clock's free copy, a viewport's bars, a nested window, a content stack's next place, the bin's opener and a plain parent's child held by the probe alone (→ a line each, the clock LOCKED with its corner knob armed so the free treatment is what the line reads); **B-A3** L16's last column taken out untested (→ a line, by a real "Pick up"); B-A4 and B-A5 two nits (→ fixed); B a retired plant still in the glob (→ moved to `superseded/`). Each new line has its plant.
+**Tests**: new `macroInspectorChildrenListDuplicatesAndRemoves` (assertion-only, both pointers, no `pointerKinds`, 20
+assertions, every expected value derived from the code before any run): the band (duplicate then remove, their words,
+the list's last cell), nothing chosen, a plain child, Duplicate in a panel (one copy, its last child, free, 10, 10 from
+the original) and in a division row (the next place, three cells of 120: 30 + (360 − 3 × 30) × 300 / 900), Remove into the
+bin, the list read again each time, the desktop's Switch to user mode and Switch to dev mode by real input (the band
+gone, then back), an Instances list with no band, a window's parts (both disabled) and its docked band (Remove alone), and
+L16 (a browser opened by a click in a member list moved to the desktop: no column, the viewport collapsed, no divider, no
+tab, the body from the trail's foot to the browser's); after Review B, a content stack's next place, a plain parent's
+child and a nested window (no Duplicate), a scroll panel's bars, its plane and a transform island's content (neither
+verb), the clock's free copy, the bin's opener, and L16's last column taken out by a real "Pick up"; 24 plants. Ported: `macroInspectorListFootersOfferOnlyTheirVerbs`
+line 14 (a Children list in developer mode offers duplicate and remove, `true|true|Rectangle|duplicate remove`), its
+object-list plant re-pointed at the Instances list and one for line 14 (2 plants); comments re-derived in
+`macroInspectorChildrenViewWalksTheWidgetTree` (the Children band desires 121, the column still its chooser band's 182)
+and `macroInspectorTrailNamesAndRevealsEachLevel` (the Children list's pane 312 − 44 − 48 − 52 = 168). **Evidence** (so
+far): CP1's probe (`u3b/cp1/probe-children-verbs.js`, real mouse and finger input, eight flows under each pointer: a
+panel, a division row, a window's parts and its docked band, a nested window, a scroll panel's plane and bars, the
+desktop's children — the bin's opener, a corner-anchored clock, a rectangle —, and L16's two, a member opened straight in
+a browser and the last column taken out, the strip hidden and restored at its height) VERDICT OK, and again after the fix
+pass with its frame, nested-window, scroll-bar and clock flows, no console, page or paint error. On CP2's build: the new
+test and ListFooters passing under both pointers; the presuite (dpr 1; paint audit and fracplane rider PASS) and the
+finger suite each failing the SAME four tests, with no assertion failure — ChildrenView and OpensAThingInANewInspector as
+predicted (the Children band in developer mode in their pictures), DuplicatedInspectorDrivesCopiedTargetOnly and
+ShowsAValueAsCode NOT predicted; followers clean under both pointers (no `WORLD_INVENTORY_` line); the menu sweep OK
+(8386 items, 128 prompt OKs, 20 of 20 contributors) and its self-test 59 cases, 24 of 24 rules; the serialization rig OK
+(198 expectations); 34 plant runs (17 plants, both pointers), every one applied and failing first on the line its header
+names. The difference page (`u3b/diffpage/`, the four tests at dpr 1 and 2: 8 groups, 12 shots): the predicted shots show
+the Children band; the two unpredicted, a member list's scroll offset. Not benign until explained, so an investigation
+(`u3b/investigate/`) PROVED the cause two ways, no regression: the unit's six new `Widget` members lengthen a rectangle's
+member list with Inherited on, and the toolkit's `bringListItemInView` drags the thumb to the row's share of the list's
+length, rounded to a thumb pixel (about 4.7 rows), centring by a wheel only when the row is not whole, so where it rests
+depends on the list's length; the product scrolls nothing there. Control A (the six names hidden from member lists, the
+unit otherwise whole) gave the committed pictures, control B (only the six names, inert, on the previous head) the new
+ones, and the virtual clock at P = 4 and P = 33 the same pictures (no cadence); ShowsAValueAsCode had sat 0.002 thumb px
+from a rounding edge. The prediction corrected with that evidence: the recapture set is the four tests.
+On the final build (after Review B): the new test's 20 lines passing under both pointers; 52 plant runs (26 plants, both pointers), every one applied and failing first on its header's line; followers clean under both pointers; `fg recapture` by name of exactly the four tests, mouse then finger, dpr 1 and 2, each `RECAPTURE COMPLETE` (the full suite green at every recaptured density); `fg gauntlet` OK, 19 of 20 legs in-wave (vmtruth no suspect, the finger leg 483 tests, 0 failed) and `refs` killed by its 600-s alarm in wave B with nothing reported before the kill, at a load of 19 on 16 cores, then passing alone, every reference decoded and verified (a load flake: a time-out, no verdict on a file); `fg homepage` OK (the production tree booted, its snapshot round trip and source-edit loads clean).
+**Ratchets moved**: `METHOD_CEILINGS.Widget` 395 → 401, one dated reason under the owner's standing ruling of 2026-11-16
+(the right shape over the count), the six members named; `BASELINE_U_QUERY` lowered 101 → 100 inside the unit
+(`TreeNode.positionAmongSiblings` gained an outside reader) and back to 101 once the next place went through
+`addAsSiblingAfterMe`, so unchanged at the commit; `PROMPTS_DRIVEN_FLOOR` 101 unchanged (neither Children verb opens a
+prompt); the tests' CLAUDE.md byte ceiling 66307 unchanged.
 
 ### U4. "Open in a new inspector" (1–1.5 days)
 

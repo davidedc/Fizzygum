@@ -449,7 +449,11 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   the SET `browser.row` (`InspectorRowWdgt`, `row.columns()`); a divider (`InspectorDividerWdgt`, 12); and the BODY,
   every pixel left (343), at the browser's full width — the setting `bodyPlace: "below"`, the default (`new
   InspectorBrowserWdgt target, bodyPlace: "beside"` keeps the body as the set's last column, with no divider below the
-  set). `browser.inspectors()` is its SEQUENCE: the set's columns left to right (a divider, `InspectorDividerWdgt`,
+  set). While its set holds NO column — a browser opened straight on a member (a choice in a list standing in no
+  browser), one whose last column a person took out — its strip HIDES (`InspectorBrowserWdgt._reconcileMyStripNoSettle`:
+  `browser.viewport`, still the browser's child, collapsed, `isInCollapsedSubtree()`; no divider, so no tab on the body),
+  and the body stands right under the trail down to the browser's foot; once a column stands the strip shows again, at
+  the height it had. `browser.inspectors()` is its SEQUENCE: the set's columns left to right (a divider, `InspectorDividerWdgt`,
   between two), then the body while it shows a member; while none is chosen the body is an EMPTY one ("(nothing
   chosen)", an inspector on no subject), no step of the sequence. Each step has its `inspectedObject`,
   a `header` (`headerTitle`, and a `classButton`, a plain `SimpleButtonWdgt` whose face is the name of the class its
@@ -459,8 +463,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   ONE `view`. The first view is always the **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s,
   `cutNoticeBand`, and `verbsBand`, its BAND OF VERBS, a `ListVerbsBandWdgt` of drawn icon buttons — add, duplicate,
   rename, remove, always in that order, each button's words its tooltip, `toolTipMessage` ("Add…", "Duplicate…",
-  "Rename…", "Remove") — built only while its subject's members are edited, `MemberRef.canEdit`: a value's list and an
-  object list have none), so `inspectors()[0].view` read right after the build is a member list; on a
+  "Rename…", "Remove") — built only while its subject's members are edited, `MemberRef.canEdit`: a value's list has
+  none), so `inspectors()[0].view` read right after the build is a member list; on a
   subject with a chooser it stands 48 px lower (header 44, chooser 48, then its toggles 48, its list 120, its band of
   verbs 52 in the strip's 312: two whole member rows). **Reach a verb by the toolkit, never by a field or a place**:
   `@listVerbButtonOf memberList, verb` is the LOCATOR (the band's button that performs `verb`, found by what it answers,
@@ -478,7 +482,22 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   it (all of it selected first), then its OK; NO PROMPT where the press opens none. A press on another toggle (`clickViewToggle_InputEvents_Macro inspector, face`) shows that view in the same inspector (an `ObjectListWdgt`
   for Children, Instances, Subclasses: rows of objects, a press on one opens THAT object in the column after it, on
   the view of the same title when the object offers one that lists something: a walk keeps its view), a press on
-  the lit toggle has the view read its list again, and either closes what followed it. A
+  the lit toggle has the view read its list again, and either closes what followed it. A CHILDREN list in DEVELOPER mode
+  (every harness world's: `finishWorldSetup`) ends in a band of verbs too, `verbsBand`, the widget menu's own two,
+  duplicate then remove (`ObjectListWdgt.verbsOffered`), their words "Duplicate" and "Remove" (no "…": neither asks
+  anything), reached by the same locators and verbs as a member list's; in user mode, and on an Instances or a
+  Subclasses list, there is none. Both act on the child the chosen row stands for, enabled only where the widget menu acts on that child as itself
+  (`ObjectListWdgt.verbApplies`, through `Widget.developerMenuReachesMe`), so never on a window's part (its Delete closes
+  the window in its place, `Widget.windowClosedInMyPlace`, and a window holds no place for a copy); Duplicate only on a
+  child that refuses no copy (`refusesDuplication`: the bin's opener) whose parent has a place for one beside it
+  (`Widget.copyPlaceBesideMe`: the NEXT place in a division or content stack, by the copy's own copy of
+  the spec; FREE in a parent whose children stand where they are put — the desktop, a panel — where the copy is the
+  menu's own, on top, 10 px right of and below the child; none in a window's content slot, a docked band or a
+  viewport's bars, so a free child of a plain rectangle offers none either); Remove is the menu's Delete (`close`: into the
+  bin, or onto the shelf when a shortcut or a wire points at the child). After either the list is read again and
+  chooses nothing. The desktop's "Switch to user mode" takes the band away at once and "Switch to dev mode" builds it
+  back (`WorldWdgt.toggleDevMode` tells every widget that answers `_devModeChangedNoSettle`); a write of
+  `world.isDevMode` itself tells no list. A
   CHOICE in an inspector replaces whatever follows it in the sequence: a click on a member row (`selectionFromList`)
   puts an inspector on THAT member in the BODY, below the lists, its view a **member editor** (`MemberEditorWdgt`:
   `.memberRef`, the code area `.tempPromptEntryField`, its `.textWidget`, `.saveButton`; an editor's inspector offers
@@ -564,9 +583,11 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   division). A part picked out of its
   browser stands alone, on a body it paints itself: an inspector whose view is picked out of it shows no subject (it keeps
   its header and its chooser, and its column falls to their width), a choice in a list in no browser opens a window of
-  its own, and a split button anywhere but at the lead of its inspector's header moves nothing. When the body leaves
+  its own (its browser on what was chosen; a MEMBER chosen stands there as its body alone, its set holding no column,
+  so its strip hidden),
+  and a split button anywhere but at the lead of its inspector's header moves nothing. When the body leaves
   the browser (a choice that removes it, a person's "Pick up" or "Destroy" of it), the browser rebuilds what is
-  missing: an empty body, exactly one divider right before it, and its tab.
+  missing: an empty body and, while its strip shows, exactly one divider right before it, and its tab.
   **With no window** (`world.add new InspectorBrowserWdgt target`) the browser paints its own body (`inspectorBodyFill`)
   and chooses, scrolls and edits the same way, found by the same locators; it has NO resizer of its own. Resize it as
   any widget, by the halo its "Resize/move…" gives it (`@resizeWidgetBy_InputEvents browser, delta`). Two gotchas (learned in

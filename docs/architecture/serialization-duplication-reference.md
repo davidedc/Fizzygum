@@ -115,7 +115,13 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
 - **A root's `parent` is the one external widget neither walker keeps.** Serialization writes
   `null` for a detach-root's parent (§4, rule 3) and duplication sets the clone's `parent` to
   `undefined` (`Duplicator._cloneContentInto`), so a copy comes back DETACHED, an orphan until
-  its caller places it. Kept, it would point at a parent that does not hold it: the copy would
+  its caller places it. The two Duplicate verbs place it two ways, both copying the FIGURE: the widget
+  menu's (`Widget.duplicateMenuAction`) stands it free on the DESKTOP, and an inspector's Children list's
+  (`Widget.duplicateBesideMe`) BESIDE its original in the same parent, at the place
+  `Widget.copyPlaceBesideMe` answers (the next cell of a stack, by the copy's own copy of the spec; or free,
+  where the parent's children stand where they are put); a free copy has ONE treatment,
+  `Widget._standCopyFreeIn` — on top, unlocked from panels, added with no spec of its own, 10 px right of
+  and below the original, its fractional situation re-recorded. Kept, it would point at a parent that does not hold it: the copy would
   answer `isOrphan()` false and `root()` the world, so resizing or destroying it would push layout
   into the original's tree, and code reading where it came from would read the original's place.
   A caller that carries a fresh copy away states where the pick-up starts instead
