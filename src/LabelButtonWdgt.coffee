@@ -172,14 +172,18 @@ class LabelButtonWdgt extends ButtonWdgt
       @centered = false
       @_reLayoutSelf()
 
-  # MY CLICK: raised, any unpinned pop-up I sit in closed, my action triggered (and not escalated).
+  # MY CLICK: raised, any unpinned pop-up I sit in closed, then my click's act -- my action, or, with Cmd
+  # held, what I name opened apart (ButtonWdgt._actOnClick, the one seat of that rule) -- and not
+  # escalated, whichever it was, so its answer (whether a click goes on up) is not mine to read. The
+  # hand hands me the release's facts and whether this click continues a double or a triple click; only
+  # the modifier and those two are mine to read.
   # My pointer LOOK is neither a click's to set nor a press's: it is the state I show
   # (ButtonWdgt._shownState), read by my appearance as it paints -- hovered while the pointer rests
   # on me, pressed while the hand presses me, at rest otherwise -- so a press, its release, a click,
   # a cancel and a copy of me leave no look of their own behind. A press on me raises me and goes on
   # up as any widget's does (Widget.pressBegan).
-  activated: ->
+  activated: (ignored_pos, ignored_button, ignored_buttons, ignored_ctrlKey, ignored_shiftKey, ignored_altKey, metaKey, partOfDoubleClick, partOfTripleClick) ->
     @bringToForeground()
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
-    @trigger()
+    @_actOnClick metaKey, partOfDoubleClick, partOfTripleClick

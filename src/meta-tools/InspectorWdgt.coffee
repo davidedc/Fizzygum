@@ -537,6 +537,14 @@ class InspectorWdgt extends Widget
     @view?.clearChoice?()
     InspectorBrowserWdgt.showChoice @, @_classAbove()
 
+  # WHAT MY CLASS BUTTON OPENS IN A NEW INSPECTOR (ButtonWdgt.toOpenInANewInspector asks me, the
+  # button's target): the class above my subject (_classAbove, what its press chooses), named by the
+  # class's name, the button's face. Any other button of mine -- a toggle of my chooser -- opens nothing
+  # apart.
+  toOpenInANewInspectorBy: (button) ->
+    return undefined  unless button is @classButton and (theClass = @_classAbove())?
+    {subject: theClass, name: theClass.constructor.name}
+
   # HOW I NAME `subject`, the choice made in me that the inspector after me in my browser's sequence
   # shows, as my browser's trail names that step (InspectorBrowserWdgt._nameOfLevel); undefined when
   # that step names itself by its own subject. Chosen by my CLASS BUTTON (_choseMyClass: no row of my

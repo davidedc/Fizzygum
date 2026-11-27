@@ -23,10 +23,12 @@ class MenuWdgt extends FrameWdgt
 
   target: undefined
   title: undefined
-  # WHAT MY TITLE IS, one of three: "name" -- it NAMES what I am about (a widget, a section, a
-  # chooser); "message" -- it SAYS something (an inform, the empty state of a chooser, a question
-  # such as the bin's confirmation); "value" -- it IS a value somebody asked to see, as code
-  # (Widget._informOfValue). A name shows in capitals while I am a pop-up, a message reads as a
+  # WHAT MY TITLE IS, one of three: "name" -- it NAMES what I am about in our words (a widget, a
+  # section, a chooser); "message" -- it SAYS something (an inform, the empty state of a chooser, a
+  # question such as the bin's confirmation); "value" -- it IS DATA, words written as they are: a value
+  # somebody asked to see, as code (Widget._informOfValue), or a thing's name as the thing itself
+  # shows it, a member's or a class's among them (the one-row menu over what an inspector names,
+  # Widget.buildContextMenu). A name shows in capitals while I am a pop-up, a message reads as a
   # sentence, and a value as it is, in either lifetime: data is never re-cased
   # (FrameWdgt._titleDisplayCase). Its opener says which, through the `titleKind` option: a title is
   # a name unless its opener says otherwise.

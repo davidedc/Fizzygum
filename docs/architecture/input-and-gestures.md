@@ -86,10 +86,55 @@ see at a glance whether a verb carries a certified meaning or a raw phase:
 - **Gestures — the guarantee the hand CERTIFIES before dispatching.** `activated(pos, …)` means
   "this stroke, examined, meant an activation": multi-click recognition ran, a drag away
   suppressed it (`w == @mouseDownWdgt`), a hold or a drag-scroll suppressed it
-  (`_strokeOwesNoClick()`). `doubleActivated(pos)` / `tripleActivated(pos)` are the folded
-  multi-click; `contextMenuRequested(pos)` is the context gesture from either trigger;
+  (`_strokeOwesNoClick()`), and so did a gesture one click of which already acted for the whole of it
+  (`_releaseGoesOnWithAnActedGesture`: one gesture, one act, below). `doubleActivated(pos, …)` /
+  `tripleActivated(pos, …)` are the folded multi-click, told after the click that completes it;
+  `contextMenuRequested(pos)` is the context gesture from either trigger;
   `scrolledBy(deltaX, deltaY, deltaZ, altKey, button, buttons)` is "a scroll step was asked of
   you". Buttons, toggles and menus consume gestures and never facts.
+
+**The modifiers at a click are the RELEASE's.** A click is handed the facts of the release that made it —
+`activated(pos, button, buttons, ctrlKey, shiftKey, altKey, metaKey, partOfDoubleClick, partOfTripleClick)`, the last
+two saying whether it continues a double or a triple click — and the double or triple click that release completes
+is handed the same seven facts (`processDoubleClick w, e` / `processTripleClick w, e`: `doubleActivated(pos, button,
+buttons, ctrlKey, shiftKey, altKey, metaKey)`), so a gesture made with a key held is known as one at every verb it
+reaches; a text that escalates its double click hands the facts on (`StringWdgt.doubleActivated`). No double or triple
+click's receiver reads a key: the facts ride every click verb alike. A modifier is the
+KEYBOARD's state, not the pointer's: a finger's tap carries the flags a mouse's click carries (a tablet with a keyboard
+attached has both). Each key has its readers. **Shift** at a click EXTENDS an editable text's selection to the click
+point instead of moving its caret (`StringWdgt.activated`; a scrolled pane holding one text hands the flag on with the
+click, `ScrolledPaneWdgt.activated`). **Meta** — the key a Mac's keyboard calls Cmd — on a gesture's FIRST click, at a
+button that names a thing to open in a new inspector (`ButtonWdgt.toOpenInANewInspector`: a row of an inspector's list,
+its class button, a step of its trail), opens that thing in a window of its own INSTEAD of the button's action, before
+any of it runs (`ButtonWdgt._opensApartOnClick`, read by `ButtonWdgt._actOnClick`, the one seat for both clicks of the
+button family, `ButtonWdgt.activated` and `LabelButtonWdgt.activated`). That click is CONSUMED: it escalates no
+further (`ButtonWdgt.activated` escalates only a click its act lets go on), so no holder it would climb to raises
+itself over the new window (`PanelWdgt.activated`), and it tells the hand that it acted for its whole gesture
+(`ActivePointerWdgt.noteClickActsForItsGesture`), whose later clicks then do nothing at all (one gesture, one act,
+below): a Cmd-double-click opens one window and changes nothing else. A gesture whose first click was plain stays
+plain: Cmd held on its second click does the plain double, the button's action, then its double action
+(`ButtonWdgt.doubleActivated`). **Ctrl** is read at the PRESS, never at a click: a press with Ctrl held is a secondary press
+(`processPointerDown`: `e.button is 2 or e.ctrlKey`), whose release dispatches the context gesture, so no `activated`
+follows it. A PC keyboard therefore has no Ctrl+click left to give a click verb: on a PC a thing an inspector names
+opens apart through its context menu's "Open in a new inspector" row, which a Cmd-click only shortens. A KEYSTROKE's
+modifiers are another matter: the caret's chord table reads them (the keyboard family, below).
+
+**One gesture, one act.** A click that acts for its whole gesture (the opening click above, told by its widget at the
+click, never guessed from what the click left) arms the hand's record of that gesture, `_actedGesture` — a
+`MultiClickRecognizer` armed with that release's position and EVENT time — and every later press and release of the
+gesture is consumed, wherever it lands and whatever keys it carries. "Later" is measured as a double click is folded,
+by the gesture's own measures and never by the widget under the pointer, which the act may just have covered with a
+window of its own: a PRIMARY press or release (the left button, no Ctrl) within `doubleClickWindowMs` (300) of EVENT
+time and `grabDragThreshold` (7 px) of the gesture's click before it (`MultiClickRecognizer.continuedBy`), read through
+ONE query at both ends of a click, `_pointerContinuesAnActedGesture`. Such a PRESS takes no audience
+(`processPointerDown`'s own branch): no `pressBegan`, so nothing is raised over the window just opened
+(`Widget.pressBegan`); no edit ended, no menu or handle put away, nothing booked to grab, drag or hold, and it lands on
+no widget (`mouseDownWdgt` cleared), so no release of it is a click. Every RELEASE meets the record once, before
+`processPointerUp` picks its branch (`_releaseGoesOnWithAnActedGesture`): a later click carries the record on to
+itself, so the click after it is measured from it, as a triple click's third is from its second, and takes the branch
+that owes no click; any other release ends the gesture and forgets the record. Arming the record forgets the double
+and triple candidates the opening release armed, so the gesture folds into no double or triple click either. A teardown
+and a cancelled stroke forget it with the rest of a press's bookkeeping (`_forgetPressBookkeeping`).
 
 A gesture is named for what it certifies, never for the presumed use — `activated`, not `chosen`
 or `buttonPressed`, because whether the consumer treats an activation as a choice is the
@@ -100,7 +145,8 @@ where the device is the literal truth.
 ### The press lifecycle — one beginning, exactly one ending
 
 A primary press is a BEGINNING told to an AUDIENCE, and every member of that audience is told
-exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
+exactly one ENDING (but for a later press of a gesture that acted, which begins nothing and takes no audience: one
+gesture, one act, above). The contract lives once, beside the hand's `_pressAudience`:
 
 - **The climb.** The hand drives it (`_climbPressFrom`): `pressBegan` goes to the widget the press
   hit, with the pointer in its own plane, then to its parent, for as long as each receiver answers
@@ -401,7 +447,8 @@ payload leaves (that pick-up can be the template the payload was copied from), a
 press's AUDIENCE the same way, so no ending reaches a widget that has left. The stroke goes on
 without them. Not forgotten: the over-list (the next dispatch re-derives it, and it owes the leaving
 widget its last `hoverExited`), the multi-click candidates (they recognize only the widget a release
-lands on), and the drag-embed state (the next dispatch takes it down once nothing rides the hand).
+lands on), the record of a gesture that acted (it compares no widget at all), and the drag-embed
+state (the next dispatch takes it down once nothing rides the hand).
 No built-in gesture closes a booked widget mid-stroke — every close control fires at a release or a
 drop —; a program does (a formula fed by the stroke's own slider, a timer). Test:
 `SystemTest_macroWidgetDestroyedOrClosedMidStrokeIsNotPickedUpAgain`.

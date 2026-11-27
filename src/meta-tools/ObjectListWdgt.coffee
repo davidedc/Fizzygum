@@ -135,13 +135,14 @@ class ObjectListWdgt extends Widget
 
   # MY LIST, built from my labels and added at `atIndex` among my children (_rereadNoSettle says where,
   # and has removed what it replaces). A member list's look, its tag column empty (objectRowFactsOf); a
-  # click dispatches chooseRow; no double-click of its own (a click already opens the object). Dressed
-  # as a view's list.
+  # click dispatches chooseRow; no double-click of its own (a click already opens the object); a row
+  # asked what it opens in a new inspector asks objectToOpenInANewInspector. Dressed as a view's list.
   _buildListNoSettle: (atIndex) ->
     @list = new ListWdgt @labels.slice(),
       target: @
       action: "chooseRow"
       memberFactsQuery: "objectRowFactsOf"
+      newInspectorQuery: "objectToOpenInANewInspector"
     MemberListWdgt.dressAsAViewsList @list
     @_addNoSettle @list, atIndex: atIndex, layoutSpec: @list.divisionBox('y')
 
@@ -173,7 +174,11 @@ class ObjectListWdgt extends Widget
   #   registered, still a subclass); one that is not is NO choice, as a member list's label that names
   #   no member is.
   # No choice removes what followed my inspector (InspectorBrowserWdgt.showChoice, with no subject), after any
-  # settle of mine, as every gesture asks it.
+  # settle of mine, as every gesture asks it. The second and third rules are a query (_objectOfRow), which
+  # what a row opens in a new inspector asks too, of the objects I hold (objectToOpenInANewInspector);
+  # the first rule's derivation, which labels every object again and so runs a person's code (a listed
+  # widget's injected colloquialName), is the press's alone, as holding the objects and building my list
+  # again are.
   chooseRow: (label, place) ->
     unless @objects?
       {objects, labels} = @_derivedRows()
@@ -183,9 +188,31 @@ class ObjectListWdgt extends Widget
         @_settleLayoutsAfter => @_rereadNoSettle()
         InspectorBrowserWdgt.showChoice @, undefined
         return
-    object = @objects[place]  if @labels[place] is label
-    stillThere = object? and object in @[@derivationName]()
-    InspectorBrowserWdgt.showChoice @, (if stillThere then object)
+    InspectorBrowserWdgt.showChoice @, @_objectOfRow(@objects, label, place)
+
+  # THE OBJECT A PRESSED ROW STANDS FOR among `objects` (mine, parallel to my labels), or undefined:
+  # the object at the row's `place` while my label there is the row's `label`, and only while it is
+  # still in my derivation as it stands now (chooseRow's second and third rules). A query.
+  _objectOfRow: (objects, label, place) ->
+    object = objects[place]  if @labels[place] is label
+    object  if object? and object in @[@derivationName]()
+
+  # WHAT A ROW OF MINE OPENS IN A NEW INSPECTOR (my list's newInspectorQuery:
+  # ListWdgt.toOpenInANewInspectorBy hands me the row's label and place): the object its press would
+  # choose among the objects I HOLD, by chooseRow's second and third rules (_objectOfRow: my label at
+  # the row's place the row's, the object still in my derivation), named by the row's label, the words
+  # it shows; undefined where that press would choose nothing. Holding no objects -- a copy or a
+  # restore of me, before its first press -- my rows name nothing yet: I derive no rows again for the
+  # question. A menu that offers the row is built on its answer (Widget.buildContextMenu,
+  # buildHierarchyMenu), and deriving my rows LABELS every listed object (_derivedRows), running a
+  # person's code (a listed widget's injected colloquialName, which can throw), so the answer reads what
+  # I hold -- the third rule reads my derivation's objects alone, labelling none -- and a menu build
+  # runs nothing of a person's. A Cmd-click on such a row is a plain press, whose own derivation holds
+  # the objects from then on (chooseRow's first rule). A query, as the press is not: it never builds my
+  # list again, and holds no objects.
+  objectToOpenInANewInspector: (label, place) ->
+    object = @_objectOfRow @objects, label, place  if @objects?
+    {subject: object, name: label}  if object?
 
   # DO I LIST NOTHING? My derivation answered no object as I last read it: my labels, parallel to my
   # objects and carried by copies and files, are none (my list then shows its placeholder row). Asked by

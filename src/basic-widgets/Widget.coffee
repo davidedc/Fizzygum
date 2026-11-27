@@ -4959,6 +4959,10 @@ class Widget extends TreeNode
   # chosen in it as a person's click on its row chooses it (InspectorBrowserWdgt.chooseMember), in
   # the same call as the open and under the same guard. A member the inspectee does not answer
   # chooses nothing, and the window stands with nothing chosen.
+  #   opts.beside names a widget the inspector is opened APART from (ButtonWdgt.openInANewInspector):
+  # the window lands beside the one that widget stands in rather than by the hand
+  # (InspectorBrowserWdgt.openInAWindowOn says where, and what it does when that widget stands on no
+  # desktop any more by the time the window opens).
   spawnInspector: (inspectee, opts = {}) ->
     return unless world.parts.isAvailable "meta-tools"
     world.parts.whenAllLoaded ["meta-tools"], ->
@@ -4967,7 +4971,7 @@ class Widget extends TreeNode
         # whenAllLoaded hop because this closure runs after a SECOND await (the reflective
         # layer) — one guard at the acting site covers both waits
         return if inspectee.destroyed
-        browser = InspectorBrowserWdgt.openInAWindowOn inspectee
+        browser = InspectorBrowserWdgt.openInAWindowOn inspectee, beside: opts.beside
         browser.chooseMember opts.member  if opts.member?
       if reflectiveLayerIsLoaded() then openTheInspector() else ensureReflectiveLayerLoaded().then openTheInspector
 
@@ -5032,10 +5036,20 @@ class Widget extends TreeNode
     # USER MODE builds no widget's menu, so a right-click or a press-and-hold climbs on to the desktop's
     # (ActivePointerWdgt.openContextMenuAtPointer) -- unless I name code a person edits (_memberToEdit):
     # then I build a menu of my own holding that ONE row, titled by my name, the way a finger reaches
-    # what my edit mark opens (_addEditCodeMenuEntry).
+    # what my edit mark opens (_addEditCodeMenuEntry). Or unless I name a thing to open in a new
+    # inspector (ButtonWdgt.toOpenInANewInspector: a row of an inspector's list, its class button, a step
+    # of its trail; asked where I offer the row it builds, the method sent): then a menu of my own
+    # holding that ONE row (ButtonWdgt.addOpenInANewInspectorMenuEntry), titled by the thing's name AS
+    # IT IS WRITTEN, the words I show -- data, never re-cased (titleKind "value": a member's name, a
+    # class's, shown as the list and the trail show them, FrameWdgt._titleDisplayCase). The climb from
+    # my label reaches me first.
     else if @_memberToEdit?()?
       menu = new MenuWdgt @, target: @, title: @colloquialName()
       @_addEditCodeMenuEntry menu
+      menu
+    else if @addOpenInANewInspectorMenuEntry? and (thing = @toOpenInANewInspector())?
+      menu = new MenuWdgt @, target: @, title: thing.name, titleKind: "value"
+      @addOpenInANewInspectorMenuEntry menu
       menu
 
   getHierarchyMenuWidgets: ->
@@ -5074,11 +5088,19 @@ class Widget extends TreeNode
   # the text widget contained in it?
   # This menu lets her disambiguate.
   # One row per widget, innermost first, each reading the widget's row name, told apart from the
-  # other rows' (CommandPanelWdgt.rowLabelsNaming).
+  # other rows' (CommandPanelWdgt.rowLabelsNaming). Led, while a widget of the hierarchy names a thing
+  # to open in a new inspector (the first that does, innermost first, asked where it offers the row
+  # it builds, the method sent: ButtonWdgt.toOpenInANewInspector), by that thing's row and a line
+  # (ButtonWdgt.addOpenInANewInspectorMenuEntry): the one more row, first, of the menu a developer's
+  # right-click on it already opens.
   buildHierarchyMenu: (widgetsHierarchy) ->
     if !widgetsHierarchy?
       widgetsHierarchy = @getHierarchyMenuWidgets()
     menu = new MenuWdgt @, target: @
+    opener = widgetsHierarchy.find (each) -> each.addOpenInANewInspectorMenuEntry? and each.toOpenInANewInspector()?
+    if opener?
+      opener.addOpenInANewInspectorMenuEntry menu
+      menu.addLine()
     labels = CommandPanelWdgt.rowLabelsNaming widgetsHierarchy
     widgetsHierarchy.forEach (each, i) ->
       menu.addMenuItem labels[i], each, "popupDeveloperMenu", closesUnpinnedPopUps: false, opensSubmenu: true, representsAWidget: true

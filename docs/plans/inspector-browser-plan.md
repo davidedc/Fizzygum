@@ -902,6 +902,128 @@ names the thing alone, as any inspector's does.
 
 No pop-out button stands in a column's header (owner, 2026-11-26).
 
+- **As built in U4** (the loop's rulings, `u4/PREP.md` §2, on the research's findings, `u4/research/R4-A-product.md`,
+  `R4-B-tests-rigs.md`, and on the two reviews' findings, `u4/REVIEWS-FINDINGS.md`, fixed in the unit's fix pass):
+  - **FIVE cases, not four.** A row of an object list opens its OBJECT; a member row whose member holds an object worth
+    a list of its own opens that VALUE; any other member row opens the MEMBER as the door on a member opens it, its
+    holder with the member chosen in it (`Widget.spawnInspector`'s `member:`); the class button opens the CLASS (the
+    prototype its press chooses, `InspectorWdgt._classAbove`); a trail level opens its step's subject, and the body's
+    level the member it shows, in its holder. "Worth a list" is the double press's own test, which stood inline in
+    `inspectMemberValue`, extracted into ONE query both read (`MemberListWdgt._valueWithMembersToShow`: an object, or a
+    Fizzygum class function, the `constructor` row included, as the double press takes it).
+  - **The capability answers `{subject, member, name}`, not the door's two operands alone**: the user-mode menu's title
+    is the thing's name, the words it shows (a row's label, a button's face), and core cannot restate the inspector's
+    naming rule. It is ONE question on `ButtonWdgt`, `toOpenInANewInspector()`, asked of the button's TARGET by a method
+    name, `toOpenInANewInspectorBy button` (never a closure, never a type test on an inspector in a generic row):
+    `ListWdgt`'s, for a row whose action is its `select`, forwards to its view through a query NAME, `newInspectorQuery`
+    (the `memberFactsQuery` precedent): `ObjectListWdgt.objectToOpenInANewInspector` and
+    `MemberListWdgt.memberToOpenInANewInspector`; `InspectorWdgt`'s answers for its class button alone,
+    `InspectorBrowserWdgt`'s for a trail button (`revealTrailLevel`, the step its index names as the sequence stands).
+    Every other button names nothing and keeps its plain click. **A menu build runs nothing of a person's** (Review A's
+    A5: building a menu now runs this query, and an object list holding no objects — a copy, a restore — derived its
+    rows again, labelling every listed object, which runs a widget's injected `colloquialName` and can throw): the
+    object list answers from the objects it HOLDS, by `chooseRow`'s second and third rules extracted into the query
+    `_objectOfRow` (the list's label at the row's place still the row's, the object still in the derivation: a check
+    that labels none), so a list holding none names nothing until its first press, a Cmd-click on its row being a plain
+    press; the trail names a step by its button's FACE, read off the button rather than derived again (`_trailLevels`).
+    Neither ask rebuilds a list or holds objects, as a press does.
+  - **The row**, "Open in a new inspector" (no "…": it asks nothing; no submenu; standing for no widget, since a second
+    row standing for the thing would meet every step that finds a hierarchy row by its widget, `rowOfMenuStandingFor`,
+    with two), one statement, `ButtonWdgt.addOpenInANewInspectorMenuEntry`, its tooltip "open it in a window of its
+    own", asking nothing again (both callers have just asked, and each probes the method it sends). In USER mode, a
+    branch of `Widget.buildContextMenu` beside `_memberToEdit`'s: a one-row menu of the thing's own, targeting it,
+    titled with its name AS WRITTEN (`titleKind: "value"`: data, never re-cased, `visual-design-system.md` §4.9 — PREP
+    §2's "capitals included" was Review A's A6, the member "aProbePoint" shown "APROBEPOINT"; `MenuWdgt`'s and
+    `FrameWdgt._titleDisplayCase`'s comments widened: a "value" title is DATA, a value or a thing's name as the thing
+    shows it). In DEVELOPER mode the row goes FIRST in the HIERARCHY menu, then a line — the innermost widget of the
+    hierarchy that names a thing supplies it (`Widget.buildHierarchyMenu`), a press on a row meeting the row's label
+    first — and not in the thing's own widget menu: round 5's shape, one more row first of the menu a developer's
+    right-click already opens. A finger's hold reaches the same menus.
+  - **Cmd-click**: ONE seat, `ButtonWdgt._actOnClick`, called by both clicks of the button family
+    (`ButtonWdgt.activated`, `LabelButtonWdgt.activated`, the only two places a click triggers a button's action) BEFORE
+    any action runs: with `metaKey`, on a gesture's FIRST click, and a thing named (`_opensApartOnClick`), the thing
+    opens apart INSTEAD (`openInANewInspector`, through the door with `beside:`), so nothing is chosen, selected or
+    scrolled in the original. That click is CONSUMED (Review A's A4: `activated` escalated after the act, and inside a
+    panel-based holder the climb reached `PanelWdgt.activated`, which raised the holder over the new window):
+    `ButtonWdgt.activated` escalates only a click `_actOnClick` answers goes on. §1.2's "no widget reads `metaKey` at a
+    click" held until this unit; Ctrl, though, is read at the PRESS (below).
+  - **ONE GESTURE, ONE ACT** (the research's hazard, then Review A's A1–A3). The hazard: the second click of a
+    Cmd-double-click fired `doubleActivated` with no modifiers, a member row's double action (`openRow` →
+    `inspectMemberValue`) added the value's column, and the original changed after all. CP1 guarded it per CLICK — the
+    hand handing `doubleActivated` / `tripleActivated` the same release's facts it hands `activated`
+    (`processDoubleClick w, e` / `processTripleClick w, e`, a text escalating its double handing them on,
+    `StringWdgt.doubleActivated`), `ButtonWdgt.doubleActivated` skipping its double while Cmd opened apart,
+    `_actOnClick` opening nothing more on a click that continues a double or a triple. Review A found the per-click
+    guard wrong in three ways: in the CASCADE a default-size original's new window lands over the row pressed, so the
+    double's second click landed on the NEW window, and the recognizer, matching widget identity
+    (`MultiClickRecognizer.recognizes`), took it for a fresh Cmd-click there (a second window, or a toggle flipped in
+    it: A1, reached on the suite's desktop and any laptop); a plain click then a Cmd click did neither the open nor the
+    double (A2); a Cmd click then a plain one chose the row and added the column in the original (A3). As built, the
+    rule lives where gestures are known, the HAND: a click that opened apart tells it so
+    (`ActivePointerWdgt.noteClickActsForItsGesture`, from `_actOnClick`), which arms the gesture's record
+    (`_actedGesture`, a third `MultiClickRecognizer`) and forgets the double and triple candidates; every later press
+    and release of the gesture — a primary one within `doubleClickWindowMs` of EVENT time and the grab radius of the
+    gesture's click before it, `MultiClickRecognizer.continuedBy`, never the widget under the pointer — is read through
+    ONE query, `_pointerContinuesAnActedGesture`, and consumed: the PRESS takes no audience (`processPointerDown`'s own
+    branch: no `pressBegan`, no raise, no focus change, no grab or hold booked, `mouseDownWdgt` cleared), the RELEASE
+    owes no click (`_releaseGoesOnWithAnActedGesture`, asked once per release before `processPointerUp` picks its
+    branch: a later click carries the record on, any other release ends it), so no click, no double and no triple. The
+    press half was the orchestrator's ruling, after CP4a's first return named a gap and the trace of its worst outcome
+    refused it: in the cascade, a Cmd-double on the original's first trail level lands its second press on the strip of
+    the button the new window leaves uncovered, and a press with an audience raises the original over the window just
+    opened, which vanishes behind it. A gesture whose first click was PLAIN stays plain: `_opensApartOnClick` opens only
+    on a gesture's first click, and a Cmd second click on a plain gesture does the plain double (A2's ruling). Deleted
+    with the seat: `doubleActivated`'s `metaKey` skip and `_actOnClick`'s own skip of a continuing click (the
+    continuing-click test stands once, in `_opensApartOnClick`); the hand still hands the double and the triple the
+    release's facts (uniform plumbing; nothing reads a key there now). A Cmd-double-click, a Cmd-click then a plain
+    click, and a Cmd-double whose later press lands on the original or on the new window each open ONE window and leave
+    the original as it was.
+  - **D12's alignment**: RIGHT of the original, else LEFT of it, their TOPS level, else BELOW it, their LEFTS level,
+    `InspectorBrowserWdgt.APART_GAP` (16) between — the first where the whole window lies inside the desktop — else
+    CASCADED `CASCADE_STEP` (48) right and down from the original's top-left, a place `openFrameWith` then keeps inside
+    the desktop by moving the window, never shrinking it (a default-size original at (0, 40) on the suite's 1920 × 880:
+    (48, 88), kept at (48, 72)). One static reads three values alone, `InspectorBrowserWdgt._landingBeside original,
+    desktop, extent` (no other window is read, so where a window lands never hangs on what else stands there), reached
+    through `opts.beside` on `Widget.spawnInspector` and `InspectorBrowserWdgt.openInAWindowOn(subject, opts)`: the box
+    of the top widget on the desktop holding the pressed thing (`rootForFocus`), read once as the window opens; a thing
+    held by nothing on the desktop opens it by the hand.
+  - **The title, by the door's rule**: the new window is titled by its first inspector, as every window the door opens
+    is (`InspectorBrowserWdgt.colloquialName`). D12's "Inspector — color" is the VALUE case; a member opened apart is
+    titled by its HOLDER ("Inspector — apart probe"), as the door on a member titles one. The new browser opens as the
+    door opens one, at its default extent and its class's `bodyPlace`, whatever the original's.
+  - **PC keyboards**: Ctrl+click opens the context menu at the press (`ActivePointerWdgt.processPointerDown`, `e.button
+    is 2 or e.ctrlKey`), so a PC has no Ctrl+click to give, and that menu carries the row: on a PC the row IS the way,
+    one click more. No other shortcut (a note for the owner on the review page, PREP §0).
+  - **`pointerKinds` is per TEST**, so "`pointerKinds: ["mouse"]` only for the Cmd-click half" (§6 U4) cannot be
+    written, and the Cmd-click is no mouse mechanism anyway: a modifier is the keyboard's, the product reads `metaKey`
+    whatever the pointer, and the toolkit's modifier click is a tap with the key held under a finger. So
+    `macroInspectorOpensAThingInANewInspector` is ONE test, run under both pointers, with no `pointerKinds`. The
+    toolkit's modifier click is Shift's generalised (`syntheticEventsMouseClickHolding_InputEvents keysHeld`, the keys
+    named by the caller and read by one reader, `_keysHeldNamed`, which looks a name up among its table's OWN names,
+    `modifierFlagsByName`: Review B 7), with ONE widget-aimed verb on it, `cmdClickOn_InputEvents widget` — one click;
+    CP2's `numberOfClicks` went in the fix pass (Review B 6 had found the docs saying its two-click form rode the one
+    modifier click, which it did not), so a Cmd-double is made one way: the multi-click takes the keys CLICK BY CLICK
+    (`keysOfEachClick` on `_syntheticEventsConsecutiveLeftClicks_InputEvents` and `_nLeftClicksAt_InputEvents`), through
+    the L2 verb `multiClickOnHolding_InputEvents positionOrWidget, keysOfEachClick` (`["Meta", "Meta"]` a Cmd-double,
+    `["Meta", ""]` and `["", "Meta"]` the mixed ones), aimed at a widget's centre or at a point — not a new mechanism.
+  - **The second test's desktop**: on the suite's 1920 × 880 a default-size original leaves no room on any side, and
+    BELOW needs 808 + 16 + 808 of height, so `macroInspectorNewInspectorLandsBesideItsOriginal` declares a desktop of
+    its own (`testScreenExtent`), 2600 × 1400 — CP2's 1600 × 1400 read only one of the three orders, right before below
+    (Review B 4) — on which a 560 × 500 original at (1020, 40) has room right, left and below (it lands right), one at
+    (1030, 40) left and below, not right (it lands left), a 600 × 500 one at (1000, 40) below alone, and a default-size
+    one at (800, 300) none (the cascade). The first test's first original stands 880 wide so its right has room on the
+    suite's desktop (880 + 16 + 1000 = 1896), and every opening from it lands right; its default-size original reads the
+    cascade there.
+  - **The menu sweep**: the row is no contributor's (`addWidgetSpecificMenuEntries` adds it nowhere), so the sweep's
+    derivation demands no root for it: seven roots of its own, each in a fresh window — six in user mode (an object
+    list's row, a member list's row on a value worth a list and on any other member, the class button, the body's step
+    of the trail and a PLAIN step: Review B's nearby note, no root dispatched the trail's plain branch) and one in
+    developer mode (the hierarchy menu over a member row's name). Each builder checks the menu's shape AND what the
+    thing names (in developer mode, what the row the menu leads with names: Review B 5, the docs having claimed it for a
+    builder that checked the shape only; the "Edit code" root's builder checks the shape only), else `ROOT_UNBUILT`; the
+    window the row's dispatch opens goes with the root's teardown. The developer-mode root drives two more prompt OKs
+    (the hierarchy's later rows reach a list row label's developer menu, its Color… and Transparency…): a full run 128.
+
 ### 5.9 The meta-object keeps comments and categories (U5)
 
 **What a class's record gains**, beside its two stores of sources (every store keyed by member names made with
@@ -1104,7 +1226,7 @@ rig and doc it touches before any edit (§7 is the starting list).
 | U1 | The set scrolls, and the tool is a browser (the body still beside); the widening and the trading deleted | — | 2–3 | ✓ 2026-11-26 |
 | U2 | The body below, the where-you-are band, the default window, the class button | U1 | 2–3 | ✓ 2026-11-27 |
 | U3 | Every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule | U2 | 1–1.5 | ✓ 2026-11-27 (U3.2 parked) |
-| U4 | "Open in a new inspector": the menu row and Cmd-click | U2 | 1–1.5 | |
+| U4 | "Open in a new inspector": the menu row and Cmd-click | U2 | 1–1.5 | ✓ 2026-11-27 |
 | U5 | The meta-object keeps comments and method categories; edits and snapshots keep them; the marker gate | — | 2 | |
 | U6 | The first classes get their categories (comment-only edits, D1) | U5 | 1–2 | |
 | U7 | The code browser: packages, classes, categories, a class's comment, comments above code, its door | U2, U3, U5, U6 | 2–3 | |
@@ -1402,6 +1524,98 @@ holder. The menu row by a finger's hold. `pointerKinds: ["mouse"]` only for the 
 
 **Predicted failing set**: none beyond the new test's first captures, unless a test opens a developer-mode menu
 over an inspector's list row (the research greps for one).
+
+**Landed 2026-11-27** (inspector-browser loop; one commit per repo, this unit's: U4.1–U4.4). **Built**: the capability
+`ButtonWdgt.toOpenInANewInspector()` (`{subject, member, name}` or undefined, asked of the button's target by name,
+`toOpenInANewInspectorBy button`) and its answerers — `ListWdgt` for a `select` row through its view's new
+`newInspectorQuery` (`ObjectListWdgt.objectToOpenInANewInspector`, from the objects the list holds, on `chooseRow`'s
+lookup extracted into the query `_objectOfRow`; `MemberListWdgt.memberToOpenInANewInspector`, on the double press's test
+extracted into `_valueWithMembersToShow`, which `inspectMemberValue` reads too), `InspectorWdgt` for its class button,
+`InspectorBrowserWdgt` for a trail button (the step named by its button's face); `openInANewInspector` (the door,
+`member:` and `beside:`) and the row's one statement `addOpenInANewInspectorMenuEntry`, offered by
+`Widget.buildContextMenu`'s user branch (a one-row menu titled with the thing's name as written, `titleKind: "value"`)
+and led by `Widget.buildHierarchyMenu` (the row, then a line), each probing the method it sends; the Cmd core
+`ButtonWdgt._actOnClick` / `_opensApartOnClick` in place of `@trigger()` in both `activated`s (a gesture's first click
+only; `ButtonWdgt.activated` escalating only a click that goes on); the gesture's record in the hand —
+`ActivePointerWdgt._actedGesture`, `noteClickActsForItsGesture`, `_pointerContinuesAnActedGesture`,
+`_releaseGoesOnWithAnActedGesture`, `processPointerDown`'s branch for a later press and `processPointerUp`'s no-click
+branch taking a later release, on `MultiClickRecognizer.continuedBy`; the release's facts handed to `processDoubleClick`
+/ `processTripleClick` (`w, e`; their unused `w` defaults gone) and on to `doubleActivated` / `tripleActivated`,
+escalated by `StringWdgt.doubleActivated`; `InspectorBrowserWdgt._landingBeside` with `APART_GAP` 16 and `CASCADE_STEP`
+48, reached through `openInAWindowOn(subject, opts)`'s `beside` and `spawnInspector`'s; the comments of `MenuWdgt`'s
+title kinds and `FrameWdgt._titleDisplayCase` (a "value" title is data); the toolkit's one modifier click
+`syntheticEventsMouseClickHolding_InputEvents keysHeld` (Shift's click generalised, the keys riding each press and
+release, a finger's touch down and up included, its hold floored as the plain click's is; the names read by ONE reader,
+`_keysHeldNamed`, among `MacroToolkit.modifierFlagsByName`'s own names, which the key-combination verb reads too, and
+which throws on a name that is no modifier), `keysHeld` on `syntheticEventsMouseDown_InputEvents` /
+`…MouseUp_InputEvents`, `keysOfEachClick` on the consecutive clicks and `_nLeftClicksAt_InputEvents`, and the L2 verbs
+`cmdClickOn_InputEvents widget` (one click) and `multiClickOnHolding_InputEvents positionOrWidget, keysOfEachClick` (one
+gesture, keys per click, at a widget or a point), each with its aim-census row; the menu sweep's seven roots of the row
+(§5.8 as built) and its self-test's plants (the row's action gone, an `UNRESOLVED_ACTION` line per root; each kind of
+thing naming nothing in user mode, and the hierarchy menu asking no widget, a `ROOT_UNBUILT` line per root; the EMPTIED
+plant's comment naming the developer-mode root among its knock-ons). **Deleted**:
+`syntheticEventsMouseShiftClick_InputEvents` (its allowlist entry follows the rename); CP1's per-click guards of the
+double never reach the commit (the gesture's record took their place in the fix pass, §5.8). **Ruled in the loop** (PREP
+§2 and the LEDGER): §5.8 as built — five cases; `{subject, member, name}`; ONE extracted "worth a list"; the row's
+words, no "…", no submenu, standing for no widget; the developer's row first in the hierarchy menu, then a line; ONE Cmd
+seat before any action; ONE GESTURE, ONE ACT, kept by the hand by the gesture's event-time measures, its later presses
+taking no audience; a plain first click keeping the gesture plain; the opening click consumed; a menu build running
+nothing of a person's; the title as data; D12's alignment (tops level beside, lefts level below) and the static reading
+three values alone; the window titled by the door's rule; on a PC the menu row is the way; ONE test under both pointers,
+no `pointerKinds`; a second test on a desktop of its own; the churn set re-derived in U11, not here. **Reviews**
+(`u4/REVIEWS-FINDINGS.md`: A read the source, B the tests, plants, rigs and docs; nothing bent for a number, nothing
+blocking), each finding and what it led to: A1 (medium-low, reached), A2 and A3 → one gesture, one act (§5.8); A4 → the
+opening click consumed, test 1's panel-holder lines; A5 → the object list answering from the objects it holds, the trail
+from its button's face; A6 → `titleKind: "value"`, the menu titled as written (image_3 with it); the nits → each menu
+builder probing the method it sends, `memberToOpenInANewInspector`'s comment true of the "(empty)" exception, the row's
+statement asking nothing again. B1 → the gesture rule's plants (the record removed, every later click delivered as a
+fresh gesture, a later press given an audience, a later press raising the original), and CP2's
+`the-double-click-hears-no-keys` plant moved to `plants/superseded/` (the gesture's record consumes the click before any
+double is handed out); still, no line plays a triple click, so the `partOfTripleClick` half of `_opensApartOnClick`'s
+continuing-click test is seen by none. B2 → the original's set read SCROLLED where a plain press on the step would move
+it; B3 → plants for the class button's subject, a plain trail level's and the new window's extent; B4 → test 2 on 2600 ×
+1400, all three orders read; B5 → the developer-mode root's builder checking what its row names, and the docs saying
+which builder checks what; B6 → `cmdClickOn` one click, `multiClickOnHolding` for a gesture; B7 → `_keysHeldNamed`
+reading own names only; B8 → the EMPTIED comment; B's nearby note → the plain-step root. Two more holes, found by the
+loop's own runs: CP4a's named gap (a later press on the strip of the original the cascade leaves uncovered raising the
+original over the new window), refused on its worst outcome and closed by the press half of the gesture rule; and the
+probe's control 1 not biting on the cascade (the record removed, the second press flipped the NEW window's "Methods"
+toggle, which neither the probe's cascade judge nor test 1's cascade lines read), closed by reading the new window as
+ONE string, identical to the single Cmd-click's. **Tests**: new `macroInspectorOpensAThingInANewInspector` (both
+pointers, no `pointerKinds`, 79 assertions, three shots: seventeen openings beside a first original 880 wide — the
+developer's hierarchy row, six Cmd-clicks, a Cmd-double-click and a Cmd-click then a plain click on one row, six
+user-mode one-row menus titled as written, two Cmd-clicks with the original's set scrolled — each read as the new
+browser's subject and choice, one window titled by the thing at 1000 × 808 at (896, 40), and the original's one string
+unchanged, its steps' lit toggles and rows among its facts; a plain click then a Cmd-click staying a plain double; a
+button that names nothing still opening the desktop's menu; a panel holder 700 × 700 at (20, 40) whose class button and
+trail level each open a window at (736, 40), on top; a default-size original whose new window cascades to (48, 72), a
+Cmd-click and a Cmd-double-click on its column-1 row and on its first trail level — that double's second press aimed at
+the strip the new window leaves uncovered — each ONE window on top, each double's new window read as one string
+identical to the single click's; its own class, deleted in its `finally`) and
+`macroInspectorNewInspectorLandsBesideItsOriginal` (both pointers, `testScreenExtent` 2600 × 1400, five assertions, no
+shot: right (1596, 40) with room on all three sides, left (14, 40) with room left and below, below (1000, 556) alone,
+the cascade (848, 348), each derived before any run); 29 plants (20 and 9: CP2's 16 still standing and the fix pass's
+13), each naming the line it must fail first; `macroShiftClickExtendsSelection` on the generalised click (its provenance
+names it). **Evidence** (so far): the CP1 probe on real mouse and finger input (`u4/cp1/probe-open-apart.js`, VERDICT
+OK: every case by the user-mode menu and by Cmd-click, one by the developer's row, a Cmd-double-click, exactly one new
+window each and the original's string identical, D12 on four stated desktops, and the double's control changing the
+original without the fix); on CP2's build, the presuite and the finger suite failing exactly the predicted test 1 (no
+references yet) with no assertion failure, followers clean for both new tests, the menu sweep at 128 prompt OKs and its
+self-test passing, 34 plant runs each failing first on its header's line; on the fix pass's build, the probe again
+VERDICT OK (the cascade Cmd-double and the uncovered-strip trail double each ONE window identical to the single
+Cmd-click's, the mixed doubles, the panel holder, A5 by code) with its three controls each biting (the gesture's record
+removed, the escalation put back, a later press given an audience), and both new tests with no assertion failure under
+both pointers (test 1 then at 78 lines, before its two cascade lines came to read the new window whole; its three shots
+awaiting their first captures; test 2 passing). Then: the presuite (dpr 1, paint audit and fracplane rider PASS) and the finger suite each failing exactly the predicted ONE test, test 1, for its first captures, with no assertion failure; followers clean for both new tests under both pointers; the menu sweep OK (128 prompt OKs) and its self-test, the serialization rig OK. A DETERMINISM defect found by looking at the first shots: run ALONE under the mouse, test 1 counted a TOOLTIP as a second new window (while a test plays a tooltip is created at once on hover, so whether one stands depended on where the previous test left the hand): every read of new desktop children and of "on top" now leaves out the world's tooltips, the pointer parked at a bare point at the start, a no-tooltip line before each picture; proved alone and after a predecessor, both pointers, the same three picture hashes either way. The first captures (dpr 1 and 2, mouse then finger, each verified). 60 plant runs on the final tests, every one failing first on its header's line under both pointers (the orchestrator added one: a plain gesture opening apart on its Cmd second click). `fg gauntlet` OK, 20 legs (the self-tests and refs legs passed only alone: in-wave, the parts snapshot rig's self-test timed out and one stall-timing case of the sequence runner's self-test failed, and the refs leg hit its 600 s alarm, under a load averaging ~300 on 16 cores from outside the loop — none touching what U4 changed); `fg homepage` OK. The tests' CLAUDE.md byte ceiling 66313 → 66307 (lowered). **Ratchets moved**, each with its dated reason beside the
+number: `CROSS_PLANE_MIX_BASELINE` 30 → 31 (plane discipline B: `openInAWindowOn` hands `_landingBeside` the box of a
+desktop child with the world's own, guarded `original.parent is world` — one plane by construction, the rule's own
+answer); `METHOD_CEILINGS.ActivePointerWdgt` 74 → 77 (under the owner's standing ruling of 2026-11-16, the right shape
+over the count: the gesture rule lives where presses and releases are decided, in three methods,
+`noteClickActsForItsGesture`, `_pointerContinuesAnActedGesture`, `_releaseGoesOnWithAnActedGesture`);
+`RECORDED['ActivePointerWdgt#processPointerDown']` 17 → 19 (the later press's own branch) and `#processPointerUp` 76 →
+77 (the no-click branch also taking a later release); `PROMPTS_DRIVEN_FLOOR` 99 → 101 (a floor raised is a ratchet tightened: the
+developer-mode root's two prompt OKs; a full run 128, the bounds measured under the self-test's plants, EMPTIED 37 below
+it and UNBUILT 120 at or above it).
 
 ### U5. The meta-object keeps comments and categories; the marker gate (2 days)
 
@@ -1900,4 +2114,5 @@ way; the list's rebuild already reads both only while the list is their parent (
 - [x] U1: the set of columns scrolls sideways and stops on a column, and the tool is a browser that owns the rule of choice; the window widening itself and the trading of width between columns deleted (§5.3, §5.4). — CLOSED 2026-11-26 (inspector-browser loop, U1): `InspectorBrowserWdgt`, `InspectorRowViewportWdgt`, `InspectorColumnDividerWdgt`, the set as a viewport's plane; the widening and the trade deleted (§6 U1, its Landed paragraph).
 - [x] U2: the body below the lists as a setting of the browser, the where-you-are band, the default window, the class named by a plain button (§5.4 to §5.6, §5.13). — CLOSED 2026-11-27 (inspector-browser loop, U2): the body below, the trail, the class button, the clamped window, the held scroll (§6 U2, its Landed paragraph).
 - [x] U3: every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule; the four marks are placeholders (§5.7). — CLOSED 2026-11-27 (inspector-browser loop, U3): the member lists' band of drawn icon buttons, one seat for what a member step changes; U3.2 (the object lists') PARKED (§6 U3, its Landed paragraph).
+- [x] U4: "Open in a new inspector" by a menu row and by Cmd-click (§5.8). — CLOSED 2026-11-27 (inspector-browser loop, U4): the capability, the row in both modes, Cmd-click, one gesture opening apart once, D12's landing (§6 U4, its Landed paragraph).
 - [x] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24) — CLOSED 2026-11-26: this plan is that plan (moved from the `plans/inspector-overhaul-plan.md` section; the work itself is this plan's units, each with its own line).

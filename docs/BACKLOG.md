@@ -293,9 +293,9 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 - [ ] **An inspector saved open on a paint tool restores a detached copy of it** — the copy's Save writes its whole member record over the person's, so an edit made since through the palette's edit mark is lost — reachable, low; by reading, not pressed.
 
 ### `plans/inspector-browser-plan.md`
-AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; IN PROGRESS (U1, U2, U3 landed; U3.2 parked). The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
+AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; IN PROGRESS (U1–U4 landed; U3.2 parked). The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
 - [ ] U3.2: the Children and Instances lists' verbs (duplicate, remove) — PARKED, asked 2026-11-27: the menu's Duplicate puts the copy on the desktop and its Delete closes into the bin, so the plan's premise does not hold (§5.7, As built in U3).
-- [ ] U4: "Open in a new inspector" by a menu row and by Cmd-click (§5.8).
+- [ ] Filed by the inspector browser's U4: raising a window puts it over a tooltip that is showing (`Widget._bandAboveMe` counts pop-ups and ephemeral overlays above a window, not tooltips) — low, reachable (§5.8, As built in U4).
 - [ ] U5: the meta-object keeps a class's comments and its methods' categories, edits and snapshots keep them, and a build gate holds the `#:` marker (§5.9, §5.10).
 - [ ] U6: the 64 classes a person opens first get their categories, as marker comments only (decision D1).
 - [ ] U7: the code browser: packages, classes, method categories, a class's comment, a member's comment above its code, and its door in the Dev tools menu (§5.11, §5.12).

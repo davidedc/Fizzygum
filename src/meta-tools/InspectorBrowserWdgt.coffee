@@ -32,7 +32,9 @@
 # as it is where they are data ("Rectangle", "Point", "color", "RectangleWdgt":
 # InspectorWdgt.trailNameOfMySubject), its name read as its header reads its title, so my trail is
 # never what stops me opening. A press on a step's button brings the column that step was chosen in
-# whole into view, and the row chosen in it into its list's view (revealTrailLevel). It is DERIVED,
+# whole into view, and the row chosen in it into its list's view (revealTrailLevel); a press with Cmd
+# held, or the button's "Open in a new inspector" row, opens that step in a new browser of its own
+# instead, beside me (toOpenInANewInspectorBy, openInAWindowOn's opts.beside). It is DERIVED,
 # never stored: whenever my sequence may have changed, its levels are derived again and, when the band
 # standing first in me does not name them, a fresh band stands where it stood
 # (_reconcileMyTrailNoSettle), so it holds no name a later change could leave stale. A trail longer
@@ -117,6 +119,32 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # A method, never a class-level Point: a class constant may not name another class.
   @defaultExtent: ->
     (new Point 1000, 808).min world.extent()
+
+  # WHERE A WINDOW OPENED APART LANDS, this tool's own two numbers (_landingBeside): the gap between it
+  # and the window it was opened apart from, and how far it cascades from that window's corner when no
+  # side has room.
+  @APART_GAP: 16
+  @CASCADE_STEP: 48
+
+  # WHERE A WINDOW OPENED APART FROM ANOTHER LANDS, its top-left, read from three values alone:
+  # `original`, the box of the window it is opened apart from; `desktop`, the world's box; and `extent`,
+  # the new window's (my default extent: defaultExtent). RIGHT of the original, else LEFT of it, their
+  # tops level, else BELOW it, their lefts level, APART_GAP between the two -- the first of the three
+  # where the whole window lies inside the desktop. Room is the desktop's alone: no other
+  # window is read, so where a window lands never hangs on what else stands there. With room on no side,
+  # CASCADED: CASCADE_STEP right of and below the original's top-left, a place that may run past the
+  # desktop, since opening keeps a window inside it, moving it and never shrinking it
+  # (WorldWdgt.openFrameWith). Whole numbers in, a whole point out.
+  @_landingBeside: (original, desktop, extent) ->
+    gap = InspectorBrowserWdgt.APART_GAP
+    sides = [
+      (new Point original.right() + gap, original.top())
+      (new Point original.left() - gap - extent.x, original.top())
+      (new Point original.left(), original.bottom() + gap)
+    ]
+    for place in sides
+      return place  if desktop.containsRectangle place.extent extent
+    original.topLeft().add InspectorBrowserWdgt.CASCADE_STEP
 
   # The subject is my identity, my one positional parameter: the subject of my first inspector.
   # opts.bodyPlace is my setting ("below" or "beside"), assigned only when given, so my class's default
@@ -316,12 +344,21 @@ class InspectorBrowserWdgt extends ClippingWdgt
     return
 
   # A BROWSER ON `subject` IN A WINDOW of its own, at my default extent (the browser states it, and its
-  # window opens at it), by the hand, its body where my class puts it (bodyPlace's default): the ONE
-  # statement of that opening, for the door (Widget.spawnInspector) and for a choice made under no
-  # browser (showChoice). Answers the browser.
-  @openInAWindowOn: (subject) ->
+  # window opens at it), its body where my class puts it (bodyPlace's default): the ONE statement of
+  # that opening, for the door (Widget.spawnInspector) and for a choice made under no browser
+  # (showChoice). It opens by the hand -- or, opened APART from what `opts.beside` (a widget) stands in,
+  # beside the window holding it: the top widget on the desktop that holds it (rootForFocus), its box
+  # read once, as the window opens, and nothing of it kept (_landingBeside says where). One that stands
+  # on no desktop -- carried, held by nothing, gone -- leaves the window by the hand. Answers the browser.
+  @openInAWindowOn: (subject, opts = {}) ->
     browser = new InspectorBrowserWdgt subject
-    world.openFrameWith browser, browser.extent(), world.hand.position().subtract new Point 50, 100
+    original = opts.beside?.rootForFocus()
+    position =
+      if original?.parent is world
+        InspectorBrowserWdgt._landingBeside original.bounds, world.bounds, browser.extent()
+      else
+        world.hand.position().subtract new Point 50, 100
+    world.openFrameWith browser, browser.extent(), position
     browser
 
   # THE MEMBER `name` CHOSEN IN MY FIRST INSPECTOR, as a person's click on its row chooses it: the
@@ -638,3 +675,21 @@ class InspectorBrowserWdgt extends ClippingWdgt
     @viewport.revealColumn level.column
     level.column.revealMyChosenRow()
     return
+
+  # WHAT A STEP OF MY TRAIL OPENS IN A NEW INSPECTOR (ButtonWdgt.toOpenInANewInspector asks me, the
+  # button's target): the subject of the step its index names, as my sequence stands now -- the
+  # sequence a press on it reveals in (revealTrailLevel) -- and a step showing one MEMBER (my body: its
+  # inspector showsOneText) as the door on a member opens it, the member's holder with the member chosen
+  # in it (its reference's holder and name: MemberRef), as a member row of a list opens one; named by
+  # the words its button SHOWS, its face's text, read off the button rather than derived again
+  # (_trailLevels): naming a step reads its subject's name, a person's code where the subject is their
+  # widget (an injected colloquialName, which can throw), and a menu that offers the row is built on this
+  # answer, so a menu build runs nothing of a person's. Any other button of mine, and an index past my
+  # steps, opens nothing apart.
+  toOpenInANewInspectorBy: (button) ->
+    return undefined  unless button.action is "revealTrailLevel"
+    step = @inspectors()[button.argumentToAction1]
+    return undefined  unless step?
+    name = button.faceWidget?.text
+    shown = step.inspectedObject
+    if step.showsOneText() then {subject: shown.holder, member: shown.name, name: name} else {subject: shown, name: name}

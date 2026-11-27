@@ -92,6 +92,13 @@ class ActivePointerWdgt extends Widget
   # per-instance in the constructor (mutable state — must not be shared prototype objects).
   doubleClick: undefined
   tripleClick: undefined
+  # ONE GESTURE, ONE ACT: the record of a gesture one click of which acted for the whole of it
+  # (noteClickActsForItsGesture: a button opened what it names apart), a MultiClickRecognizer armed at
+  # that click's release and carried on to each later click of the gesture, whose press and release
+  # it consumes (_pointerContinuesAnActedGesture); empty otherwise. Matched by the gesture's own
+  # measures alone -- the multi-click window in EVENT time, the grab radius -- never by the widget a
+  # later click lands on. Instantiated per-instance in the constructor, as the two candidates are.
+  _actedGesture: undefined
   # The multi-click recognition window: two same-spot left clicks fold into a double-
   # / triple-click only if they land within this many ms of each other. Enforced by the
   # EVENT-TIME forget gate in processPointerUp (deterministic, load-immune).
@@ -107,6 +114,7 @@ class ActivePointerWdgt extends Widget
     @_pressAudience = []
     @doubleClick = new MultiClickRecognizer 2
     @tripleClick = new MultiClickRecognizer 3
+    @_actedGesture = new MultiClickRecognizer()
     super()
     @minimumExtent = new Point 0,0
     @_commitBounds Rectangle.EMPTY
@@ -151,11 +159,12 @@ class ActivePointerWdgt extends Widget
 
   # The widget-referencing bookkeeping of a PRESS: which widget the button went down on, what a
   # drag would pick up, what is being non-float-dragged, the press's audience, the armed
-  # multi-click candidates — and, through the recognizer's own clear, the pane that took the press
-  # and the one its stroke latched. Shared by the two occasions a press ends without a release — a
-  # world teardown (above) and a cancelled stroke (processPointerCancel) — each of which then clears
-  # what only it owns. The audience is forgotten, not told an ending: a cancelled stroke has told it
-  # already, and a teardown's audience died with its world. Whoever loses a press answer here is told
+  # multi-click candidates and an acted gesture's record (a later tap neither folds with nor is
+  # consumed by a gesture a press ended so) — and, through the recognizer's own clear, the pane that
+  # took the press and the one its stroke latched. Shared by the two occasions a press ends without a
+  # release — a world teardown (above) and a cancelled stroke (processPointerCancel) — each of which
+  # then clears what only it owns. The audience is forgotten, not told an ending: a cancelled stroke
+  # has told it already, and a teardown's audience died with its world. Whoever loses a press answer here is told
   # that my answers moved (the widget a cancelled stroke was non-float dragging, a slider's thumb).
   _forgetPressBookkeeping: ->
     forgottenPress = @_pressAudience.concat [@nonFloatDraggedWdgt]
@@ -166,6 +175,7 @@ class ActivePointerWdgt extends Widget
     @_tellPointerStateChanged forgottenPress
     @doubleClick.forget()
     @tripleClick.forget()
+    @_actedGesture.forget()
     @_forgetPressAndHoldRecognition()
     return
 
@@ -228,8 +238,10 @@ class ActivePointerWdgt extends Widget
   #   Not forgotten here: the over-list, which the next dispatch re-derives from the tree and which
   # owes the leaving widget its last hoverExited (a menu row takes down the highlight on the widget it
   # stands for, and I take down the tooltip of a widget that carries one); the multi-click
-  # candidates, which recognize only the widget a release lands on; and the drag-embed state, which
-  # the next dispatch takes down once nothing rides me (_dispatchEventsFollowingMouseMove).
+  # candidates, which recognize only the widget a release lands on; the acted gesture's record
+  # (_actedGesture), which names no widget — only the time and place its later clicks are measured
+  # from; and the drag-embed state, which the next dispatch takes down once nothing rides me
+  # (_dispatchEventsFollowingMouseMove).
   #   What leaves the press's audience or stops being non-float dragged here loses a press answer, so
   # it is told my answers moved (_tellPointerStateChanged), once both bookings are forgotten: a widget
   # put away comes back showing no press. A corpse is told nothing.
@@ -1153,7 +1165,9 @@ class ActivePointerWdgt extends Widget
   #    widget its press landed on, and the `w == @mouseDownWdgt` test below cannot tell the two
   #    apart. Without this, every scroll ends in a click on the row, cell or paragraph it scrolled
   #    past — firing menu actions and taking editor focus mid-scroll.
-  # A TAP or a CLICK never answers true: neither travels, and neither holds.
+  # A TAP or a CLICK never answers true: neither travels, and neither holds. (A click whose release
+  # owes none all the same, a later click of a gesture that acted, is told so by its GESTURE, not by its
+  # stroke: _releaseGoesOnWithAnActedGesture.)
   _strokeOwesNoClick: ->
     @_pressHoldFired or @_strokeScrolls()
 
@@ -1177,6 +1191,51 @@ class ActivePointerWdgt extends Widget
     return false unless @_pressTravelledPastDragThreshold
     return not @_pressArmedForMouseSemantics  if @pointerType is 'touch'
     @_strokeScrollPane? and not @nonFloatDraggedWdgt?.nonFloatDragging?
+
+  # PUBLIC notification — the click I am handing out, `actor`'s, ACTED FOR ITS WHOLE GESTURE: a button
+  # opened what it names in a window of its own (ButtonWdgt._actOnClick). ONE GESTURE, ONE ACT: the
+  # gesture's later clicks are consumed, press and release, wherever they land — on the window that
+  # click just opened over the pointer too — and whatever keys they carry
+  # (_pointerContinuesAnActedGesture: processPointerDown, _releaseGoesOnWithAnActedGesture). So the
+  # gesture's record is armed at this release (its position, its EVENT time; `actor` is kept as a
+  # candidate keeps its widget, and never compared), and the double and triple candidates this release
+  # armed are forgotten: no click of the gesture folds with this one into a double or a triple click.
+  # Told by the one widget that knows its click acted, at the click, rather than guessed here from what
+  # the click left: a widget's act is its own business.
+  noteClickActsForItsGesture: (actor) ->
+    @doubleClick.forget()
+    @tripleClick.forget()
+    @_actedGesture.arm actor, @position(), WorldWdgt.timeOfEventBeingProcessed
+    return
+
+  # DOES THE POINTER, AS THIS EVENT FINDS IT, CONTINUE THE GESTURE THAT ACTED
+  # (noteClickActsForItsGesture)? A PRIMARY press or release (`primary`: the left button, no Ctrl —
+  # the only kind a multi-click gesture is made of, as the double and triple candidates fold none
+  # other) within doubleClickWindowMs of EVENT time and grabDragThreshold of the gesture's click before
+  # it (MultiClickRecognizer.continuedBy: the measures a double click is folded by, never the widget
+  # under the pointer, which the gesture's act may have just covered with a window of its own). The
+  # ONE statement of that measure, read at a press (processPointerDown: a later press takes no
+  # audience) and at a release (_releaseGoesOnWithAnActedGesture: a later click owes no click), so a
+  # later click is judged alike at both of its ends. Read from the event stream alone (event times,
+  # positions, the button), never from a clock: a pure function of what happened
+  # (Fizzygum-tests/DETERMINISM.md §3).
+  _pointerContinuesAnActedGesture: (primary) ->
+    primary and
+      @_actedGesture.continuedBy @position(), WorldWdgt.timeOfEventBeingProcessed, @doubleClickWindowMs, WorldWdgt.preferencesAndSettings.grabDragThreshold
+
+  # A RELEASE MEETS THE GESTURE THAT ACTED, and answers whether it is a LATER CLICK of it
+  # (_pointerContinuesAnActedGesture, for a release of the left button). One that is GOES ON with the
+  # gesture: its record moves to this release, landed on `w`, so the click after it is measured from
+  # it, as a triple click's third from its second. Any other release ENDS the gesture — its record is
+  # forgotten, so no press or click after it is taken for one of the gesture's. Asked once per
+  # release, before processPointerUp picks its branch: a later click owes no click.
+  _releaseGoesOnWithAnActedGesture: (w) ->
+    goesOn = @_pointerContinuesAnActedGesture @mouseButton is "left"
+    if goesOn
+      @_actedGesture.arm w, @position(), WorldWdgt.timeOfEventBeingProcessed
+    else
+      @_actedGesture.forget()
+    goesOn
 
   # THE FINGER LEFT THE GLASS. A touch stroke has no between-strokes position — nothing rests under
   # a lifted finger — so at its end every widget the stroke walked over is told the pointer left,
@@ -1348,6 +1407,17 @@ class ActivePointerWdgt extends Widget
     if @isThisPointerFloatDraggingSomething()
       @drop()
       @mouseButton = undefined
+    else if @_pointerContinuesAnActedGesture not (e.button is 2 or e.ctrlKey)
+      # A LATER PRESS OF A GESTURE THAT ACTED (noteClickActsForItsGesture): one gesture, one act, so
+      # it takes NO audience, wherever it lands -- on the window the gesture's act just opened, or on
+      # the original where that window leaves it uncovered, which a press would raise over it
+      # (Widget.pressBegan) -- as its release, a later click of the same gesture, owes no click
+      # (_releaseGoesOnWithAnActedGesture). So nothing is pressed or raised, no edit is ended, no
+      # menu or handle is put away, nothing is booked to grab, drag or hold, and the press lands on
+      # no widget (mouseDownWdgt): no release of it can be a click, a release past the gesture's
+      # measures included. It is a primary press still, which its release reads.
+      @mouseButton = "left"
+      @mouseDownWdgt = undefined
     else
       w = @topWdgtUnderPointer()
 
@@ -1403,6 +1473,9 @@ class ActivePointerWdgt extends Widget
     world.destroyToolTips()
     world.freshlyCreatedPopUps.clear()
 
+    # every release meets the gesture that acted, if one did: it is a later click of it or it ends it
+    # (_releaseGoesOnWithAnActedGesture), decided here, before any branch, from this release alone
+    laterClickOfAnActedGesture = @_releaseGoesOnWithAnActedGesture w
 
     # Each branch below ENDS the press for whatever of its audience is still owed an ending (the press
     # lifecycle, above), wherever the release lands: once its drag is over, and before any click.
@@ -1411,8 +1484,10 @@ class ActivePointerWdgt extends Widget
       # the lift that began this float-drag cancelled the whole audience, so nobody is owed here; the
       # seat keeps "every release ends what is still owed" true on this branch as on the others
       @_endPressAt e
-    else if @_strokeOwesNoClick()
-      # THE STROKE OWES NO CLICK — either the hold consumed it or it was a scroll (see the query).
+    else if laterClickOfAnActedGesture or @_strokeOwesNoClick()
+      # THE STROKE OWES NO CLICK — it is a later click of a gesture one click of which acted for the
+      # whole of it (above: one gesture, one act, wherever this click landed and whatever keys it
+      # carries), or the hold consumed it, or it was a scroll (see the query).
       # Its release dispatches no click and dismisses nothing — the same shape a right press has,
       # which never fires activated either. A hold menu still standing (the finger let go without
       # moving) stays: it is an ordinary transient menu from here on, and the next tap outside it
@@ -1543,11 +1618,11 @@ class ActivePointerWdgt extends Widget
             world._setEditorFocusNoSettle w
           w[expectedClick] @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey, doubleClickInvocation, tripleClickInvocation
 
-          # now send the double/triple clicks
+          # now send the double/triple clicks, each with the facts of the same release
           if doubleClickInvocation
-            @processDoubleClick w
+            @processDoubleClick w, e
           if tripleClickInvocation
-            @processTripleClick w
+            @processTripleClick w, e
 
 
       # some pop-overs can contain horizontal sliders
@@ -1663,22 +1738,29 @@ class ActivePointerWdgt extends Widget
           if eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachWdgtWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
-  processDoubleClick: (w = @topWdgtUnderPointer()) ->
+  # A DOUBLE (a TRIPLE) CLICK on `w`, the widget the release's click was handed to, told to the first
+  # widget from it up that takes one -- with the same facts of the RELEASE `e` the click was handed: the
+  # pointer in that widget's plane, the button, the buttons and the four modifiers, so a gesture made
+  # with a key held is known as one at every verb it reaches, as its click is. A gesture one click of
+  # which ACTED for the whole of it folds into no double or triple click: its later clicks are
+  # consumed before any is handed out (noteClickActsForItsGesture). While a payload is carried, the
+  # payload is dropped instead.
+  processDoubleClick: (w, e) ->
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
       @drop()
     else
       w = w.parent  while w and not w.doubleActivated
-      w.doubleActivated @_pointerPositionInPlaneOf(w) if w
+      w.doubleActivated @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey if w
     @mouseButton = undefined
 
-  processTripleClick: (w = @topWdgtUnderPointer()) ->
+  processTripleClick: (w, e) ->
     world.destroyToolTips()
     if @isThisPointerFloatDraggingSomething()
       @drop()
     else
       w = w.parent  while w and not w.tripleActivated
-      w.tripleActivated @_pointerPositionInPlaneOf(w) if w
+      w.tripleActivated @_pointerPositionInPlaneOf(w), e.button, e.buttons, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey if w
     @mouseButton = undefined
   
   # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel

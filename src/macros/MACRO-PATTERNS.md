@@ -2044,8 +2044,8 @@ assertion a recapture after a regression silently stores two different hashes an
   tool` — a hold under a finger — opens the HIERARCHY menu; its row standing for the button, `@rowOfMenuStandingFor`, reads the
   button's own name, "Pencil tool"; that row's menu holds "Edit code" right after "Inspect"), and in USER mode by the one-row menu
   the button builds itself (the same right-click; the menu's `target` is the button, its `title` "pencil tool",
-  `@assertTopMenuItemStrings ["Edit code"]`), while any other widget in user mode still opens the desktop's menu (`target is
-  world`, title "Desktop"). Switch modes as a person does, through the desktop's own rows ("Switch to user mode", "Switch to dev
+  `@assertTopMenuItemStrings ["Edit code"]`), while any other widget in user mode — one naming no thing to open in a new
+  inspector either (the next entry) — still opens the desktop's menu (`target is world`, title "Desktop"). Switch modes as a person does, through the desktop's own rows ("Switch to user mode", "Switch to dev
   mode", from `@clickOnDesktopAt_InputEvents point, "right button"`), and come back to dev mode before the end. Every way
   opens a window of its OWN on the SAME tool object (`memberList.inspectedObject is world.user.drawingTools.pencil`), its
   title "Inspector — pencil tool": hold each title and name to a WRITTEN string, never to a call of the product's naming method.
@@ -2054,6 +2054,80 @@ assertion a recapture after a regression silently stores two different hashes an
   member record), and the glass takes it up at its next move (one mouse move queued as itself, as in
   `macroToolCodeSaveRefusesCodeThatDoesNotCompile`). Put `world.user.drawingToolOverrides` and `world.user.drawingTools` back
   at the end.
+- **Open a thing in a new inspector: a menu row in each mode, a Cmd-click, one gesture one window — the original untouched**
+  (`macroInspectorOpensAThingInANewInspector`, three shots, both pointers): every thing an inspector browser names
+  (`ButtonWdgt.toOpenInANewInspector`, asked of the button's target) — column 1's object row (it opens that object), column
+  2's member row on a Point (a value worth a list: it opens the VALUE), column 2's member row on a number (it opens the
+  MEMBER, as the door on a member opens it: its holder, the member chosen, its row selected and its editor below the list on
+  it), column 2's class button (the class's prototype), a trail level (its step's subject) and the body's trail level (the
+  member it shows, in its holder) — opened SEVENTEEN times beside a first original: once by the developer's hierarchy menu
+  (over the Point's row: its FIRST row "Open in a new inspector", standing for no widget — no `representedWidget` — and
+  opening no submenu, a line second, then still one row standing for the member row and one for the window,
+  `@rowsOfMenuStandingFor`); by six Cmd-clicks (`@cmdClickOn_InputEvents thing`, a Cmd-tap under a finger); by two
+  gestures on the Point's row whose FIRST click is the Cmd one, a Cmd-double-click and a Cmd-click then a plain click
+  (`@multiClickOnHolding_InputEvents thing, ["Meta", "Meta"]` and `["Meta", ""]`: ONE window each, the later click
+  consumed — no choice of the row, no column for the value); by six user-mode one-row menus (`@openMenuOf_InputEvents
+  thing`, a hold under a finger: `menu.target is thing`, `menu.title` the words the thing shows AS WRITTEN — 'aProbePoint',
+  'ApartProbeWdgt', 'Child Apart probe', never re-cased —, its rows exactly "Open in a new inspector"), each menu's row
+  pressed after `bringMenuRowIntoView_InputEvents_Macro`; and by two Cmd-clicks with the original's set SCROLLED where a
+  plain press on the step would move it (the walk gone on into the Point, a third column, so the set rests at 194: the
+  trail level whose column is scrolled out; then, the set brought back to 0, the body's level 'x', whose column reaches
+  past the viewport). After each: ONE new desktop child that is no ephemeral overlay (`!w.isEphemeral()`), a window whose
+  browser's first inspector is on the thing, its title by the door's rule held to a WRITTEN string ('Inspector —
+  rectangle', 'Inspector — point', 'Inspector — apart probe', 'Inspector — ApartProbeWdgt'), '1000x808' (the default extent
+  against 1920 × 880, the smaller of each) at '896,40' (right of the original, 0 + 880 + 16, its top 40); and the ORIGINAL
+  read as ONE string before the gesture and after it — its window's box and title, its trail's faces, each step's place
+  among the steps held BEFORE the gesture (the same inspector object, or -1), its subject, view, width, lit toggles, chosen
+  row, list scroll and rows, body text and Save state, and the set's scroll. A gesture whose first click is PLAIN stays
+  plain: a plain click then a Cmd-click on the Point's row (`["", "Meta"]`) opens no window and does the plain double (the
+  member chosen, the Point opened as a third column, the set resting at 194). A button that names nothing (column 2's lit
+  Members toggle) still opens the desktop's menu in user mode, with no such row. Then two originals, each standing where
+  what must not happen would show: a PANEL holder (a `PanelWdgt` 700 × 700 at (20, 40), which raises itself when a click
+  reaches it, `PanelWdgt.activated`, a browser over its whole box), whose class button and trail level each open a window
+  right of the panel, at '736,40', standing on top (`Widget.isInForeground`): the opening click climbs to no holder; and a
+  DEFAULT-size original (1000 × 808 at (0, 40)), no side with room, so the new window CASCADES to (48, 88) and is kept
+  inside the desktop at '48,72', over what was pressed — a Cmd-click on column 1's row, then a Cmd-double-click whose
+  second click lands ON the new window, that window read as ONE string (each step's lit toggles among its facts) and
+  required identical to the single Cmd-click's; and its first trail level, Cmd-clicked, then Cmd-double-clicked at a point
+  the cascade leaves uncovered (`@pressMustLandOn rootLevel`, then `@multiClickOnHolding_InputEvents uncoveredAim,
+  ["Meta", "Meta"]`, the aim's premise a line of its own), so the gesture's later PRESS lands on the original beside the
+  new window, which stays on top: that press took no audience and raised nothing. Fixture: a class of the test's OWN, made
+  in the page (`new Class source, false, true`, deleted from `window` in the `finally`, as
+  `macroInspectorTrailNamesAndRevealsEachLevel` makes its own), so the class button opens and pictures a class no other
+  test or product change touches; a holder RectangleWdgt (never mounted) holding an instance of it with three fields of
+  its own (a number, a Point, a string) and a plain rectangle; the product's browser on the holder in a window 880 × 808
+  at (0, 40) — 880 so its RIGHT has room (880 + 16 + 1000 = 1896 ≤ 1920, 40 + 808 = 848 ≤ 880) and every opening from it
+  lands there; the walk a person walks: Children, the instance's row, its string field (three steps, the body on the
+  member). Find each thing where it stands NOW, never kept from before a gesture; destroy each new window right after its
+  checks (it covers the original's right, and where a window lands is read off the original alone); switch modes through
+  the desktop's rows (the entry above). Shots: image_1 the hierarchy menu over the Point's row, image_2 the class's new
+  window beside the original with the pointer parked off both, image_3 the user-mode menu over the Point's row, titled
+  'aProbePoint' as the member's name is written. Where a window lands on the other sides is the next entry's. New verbs
+  (L2): `cmdClickOn_InputEvents widget`, ONE click, on the ONE modifier click `syntheticEventsMouseClickHolding_InputEvents
+  keysHeld` (L1, Shift's click generalised: `shiftClickOnTextSlot` rides it too); and `multiClickOnHolding_InputEvents
+  positionOrWidget, keysOfEachClick`, one gesture of several clicks, each with its own keys held, through
+  `_nLeftClicksAt_InputEvents` and `_syntheticEventsConsecutiveLeftClicks_InputEvents` (its `keysOfEachClick`), aimed at a
+  widget's centre or at a point.
+- **Where a new inspector lands, on a desktop of the test's own** (`macroInspectorNewInspectorLandsBesideItsOriginal`,
+  assertion-only, both pointers): `InspectorBrowserWdgt._landingBeside` reads three values alone — the original window's box,
+  the desktop's and the new window's extent — and answers RIGHT of the original, else LEFT of it (tops level), else BELOW it
+  (lefts level), `APART_GAP` 16 between, the first where the whole window lies inside the desktop, else CASCADED
+  `CASCADE_STEP` 48 right and down from the original's top-left. The suite's 1920 × 880 has no room below any original for
+  an 808-tall window, nor room on both sides of one, so the test declares 2600 × 1400 (`testScreenExtent`,
+  `macroInspectorOpensInsideATabletDesktop`'s precedent; its first assertion reads it): wide enough that a 560-wide original
+  has room on BOTH its sides (1016 + 560 + 1016 = 2592 ≤ 2600), tall enough for room below a 500-tall one (40 + 500 + 16 +
+  808 = 1364 ≤ 1400). It states four originals, each a RectangleWdgt (never mounted) in the product's browser in a window
+  at a stated box, each opened ONCE by a Cmd-click on its first inspector's class button
+  (`@cmdClickOn_InputEvents browser.inspectors()[0].classButton`: a Cmd-click puts no pop-up on the desktop, and the menu
+  row runs the same action), so each of the three ORDERS is read where both of its sides have room: 560 × 500 at
+  (1020, 40), room on all three sides, lands RIGHT, '1596,40' (1580 + 16, to 2596; left had room at (4, 40), below at
+  (1020, 556): RIGHT before LEFT and before BELOW); 560 × 500 at (1030, 40), room left and below, not right (1590 + 16 +
+  1000 = 2606 > 2600), lands LEFT, '14,40' (1030 - 16 - 1000: LEFT before BELOW); 600 × 500 at (1000, 40) BELOW alone,
+  '1000,556' (right 2616 > 2600, left -16 < 0; 540 + 16, to 2000 and 1364); 1000 × 808 at (800, 300) the CASCADE,
+  '848,348' (no side has room; to 1848 and 1156, inside the desktop, so moved nowhere). Each: ONE new desktop child, a
+  window holding a browser on `RectangleWdgt.prototype`, '1000x808', at the top-left the rule gives, the original's box
+  unchanged; each original and its window destroyed before the next, so each placing reads its own original alone. Every
+  expected value a written string, its arithmetic in the macro. No new verb.
 - **Resizing a button via its handle does NOT trigger it** (`macroResizingButtonDoesntCauseItToClick`): dragging a widget's resize
   handle runs `HandleWdgt.nonFloatDragging → @target.setExtent`, never a click — `HandleWdgt.activated` is EMPTY and its
   `pressBegan` doesn't propagate ("otherwise the handle on a button will trigger the button when resizing"), so resizing a

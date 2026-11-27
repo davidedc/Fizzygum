@@ -84,7 +84,11 @@ const { methodBoundary, methodSpans } = require('./lib/coffee-method-header');
 // magnetFollowing, and magnetFollowing's reciprocity test). Every magnet compared there is a child of the
 // one fridge, so all share its plane — the same comparison as the fridge's edge tests
 // (`m.right() < aMagnet.right()`) counted beside them.
-const CROSS_PLANE_MIX_BASELINE = 30;
+// Raised 30 -> 31 on 2026-11-27 (inspector-browser plan, U4): `InspectorBrowserWdgt.openInAWindowOn` hands
+// `_landingBeside` the box of the window it opens beside together with the world's own box, guarded
+// `original.parent is world` — a desktop child's bounds are in the world's plane, the world's own the same:
+// one plane by construction.
+const CROSS_PLANE_MIX_BASELINE = 31;
 
 // ---- POSITIONAL: Widget's own position queries, READ from Widget.coffee, never hand-listed ----
 // THE RULE: a Widget instance method taking no parameter that answers a point, an edge or a rectangle

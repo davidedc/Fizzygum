@@ -217,7 +217,8 @@ hold menus where right-click menus were), so finger runs match references on the
 axis — see `../../../Fizzygum-tests/CLAUDE.md`.
 
 The design rule every translated verb follows: **the verb's NAME states the user's intent, and the
-translation preserves that intent, never the raw events** — a click becomes a tap, a right-click
+translation preserves that intent, never the raw events** — a click becomes a tap (a click with keys
+held, a tap with them held: a modifier is the keyboard's state, not the pointer's), a right-click
 becomes a press-and-hold (the touch grammar's own context-menu trigger,
 [`../../docs/architecture/input-and-gestures.md`](../../docs/architecture/input-and-gestures.md)),
 a wheel becomes a drag over the part of the resolved pane that shows (delivered as successive swipes, each an even share
@@ -240,10 +241,20 @@ the `Fizzygum-tests` side) rather than silently failing under `--pointer=finger`
 Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; usage patterns are in
 **`MACRO-PATTERNS.md`**. The families:
 
-- **L1 primitives** (`syntheticEvents…_InputEvents`): `MouseMove`, `MouseClick`, `MouseShiftClick`,
+- **L1 primitives** (`syntheticEvents…_InputEvents`): `MouseMove`, `MouseClick`, `MouseClickHolding keysHeld`,
   `MouseMovePressDragRelease`, `MouseMoveWhileDragging`, `MouseDown`, `MouseUp`, `PointerCancel`, `Wheel`,
   `ConsecutiveLeftClicks`, `StringKeys`,
   `ShortcutsAndSpecialKeys` ("Shift+ArrowRight" | "Meta+a" | "Enter" | …); plus `repeatSpecialKey`, `moveToAndMouseDown`.
+  `MouseClickHolding` is the ONE modifier click: `MouseClick`'s left click (guarded, its hold floored) with the keys
+  `keysHeld` names held through its press and its release ("Shift", "Meta", "Shift+Meta"), a TAP with them held
+  under a finger, since a modifier is the keyboard's, whatever the pointer. `MouseDown` and `MouseUp` take the same
+  `keysHeld` (default `""`, none); `ConsecutiveLeftClicks` takes `keysOfEachClick`, the keys CLICK BY CLICK (default
+  `[]`, none held; an entry it lacks holds none): `["Meta", "Meta"]` Cmd held through both clicks of a double,
+  `["Meta", ""]` and `["", "Meta"]` the key let go of, or pressed, between them. ONE reader turns the names into the
+  four flags an event carries, `_keysHeldNamed`, for these and for the key names before a combination's key: "Shift",
+  "Ctrl" (or "Control"), "Alt", "Meta" (or "Cmd"), "+"-joined, each looked up among its table's OWN names
+  (`MacroToolkit.modifierFlagsByName`); a name that is no modifier THROWS, naming it ("constructor" and "toString"
+  among them).
   The four **touch primitives** — `TouchTap`, `TouchHold` (`alsoRelease:`), `TouchDrag`,
   `TouchDragFromHeldPress` — are the finger's own gestures, used directly by finger witness tests
   and composed by finger-mode translation inside the mouse-named verbs above (see "Pointer kind" above).
@@ -281,7 +292,15 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `tripleClickAtFractionOf`, `clickOnDesktopAt` — bare desktop, verified; `dropCarriedWidgetAt` — the drop of what
   the hand carries; `clickAfterHoldingStill holdMs` — a click whose press lands exactly holdMs of EVENT time after
   the pointer came to rest); text by slot (`clickOnTextSlot`, `doubleClickOnTextSlot`, `tripleClickOnTextSlot`,
-  `shiftClickOnTextSlot`); the aim declaration `pressMustLandOn widget` (rule 4); `pressToCarry` — the press that
+  `shiftClickOnTextSlot`); a Cmd-click (`cmdClickOn widget` — a move to the widget's centre, then ONE left click with
+  Meta held, `MouseClickHolding "Meta"`, a Cmd-tap under a finger, its press verified on the widget) and its
+  many-click twin, `multiClickOnHolding positionOrWidget, keysOfEachClick` — ONE gesture of as many clicks as entries,
+  each with its own keys held (`ConsecutiveLeftClicks`' words: `["Meta", "Meta"]` a Cmd-DOUBLE-click), spaced as the
+  double-click verbs space theirs so the hand folds them into one double or triple click; aimed at a widget's centre
+  (its first press verified on it) or at a screen point (a part of a widget its centre does not stand in, the first
+  press checked against the `pressMustLandOn` declared before it), its later presses pressing the same spot, whatever
+  stands there by then, unchecked: the inspector entry below); the aim declaration `pressMustLandOn widget` (rule 4);
+  `pressToCarry` — the press that
   starts carrying something away, continued by "left button" moves and a mouse-up (a mouse's `moveToAndMouseDown`; a
   finger's press-and-HOLD, since a plain finger drag over a scrolling pane SCROLLS it — use it whenever a split
   press-then-carry means "lift this"); drag/resize (`dragWidgetTo`,
@@ -420,7 +439,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 - **One inspector tool — a BROWSER of inspectors, in a window by default, and a widget like any other with none:** "Dev →
   Inspect" (`inspect` → `Widget.spawnInspector`, the one door; `spawnInspector subject, member: name` opens it with that
   member chosen as a click on its row chooses it, its row scrolled whole into view and Inherited turned on where only that
-  hid it — `InspectorBrowserWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open) opens a window at
+  hid it — `InspectorBrowserWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open; `beside: widget`
+  lands the window beside the one holding that widget instead of by the hand, "Open in a new inspector" below) opens a
+  window at
   `InspectorBrowserWdgt.defaultExtent()`, `(new Point 1000, 808).min world.extent()` — in the test world 1000 × 808, its
   browser 998 × 719 — whose content is an `InspectorBrowserWdgt` (a `ClippingWdgt`), titled by its first inspector
   ("Inspector — analog clock"). Its cells, top to bottom: the TRAIL `browser.trail` (a `BandWdgt`, 52 tall); the
@@ -485,7 +506,40 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   chevron (`MenuRowIndicatorWdgt`) between two: each step named as the step before it names the choice made in it
   ("Class RectangleWdgt", "Child Rectangle 2", "Instance Rectangle"), else by its own subject's name ("Rectangle",
   "color", "RectangleWdgt"); a press on a step brings the column it was chosen in whole into view and the row chosen
-  there into its list's view. A press
+  there into its list's view. **"Open in a new inspector"**: each thing a press adds a column for names what it opens
+  apart, `thing.toOpenInANewInspector()` (`{subject, member, name}`, or undefined; asked of the button's TARGET: the
+  list for its row, the inspector for its class button, the browser for a trail step) — a row of an object list its
+  object; a member row its member's VALUE when that is worth a list of its own (what a double click adds as a column,
+  `MemberListWdgt._valueWithMembersToShow`), else the MEMBER as the door on a member opens it (its holder, the member
+  chosen in it); the class button its class; a trail step its subject (the body's step the member it shows, in its
+  holder). Three ways open it in a browser of its OWN and leave the original EXACTLY as it was: in USER mode a
+  right-click on it (a hold under a finger) builds a one-row menu of its own, `target` the thing, `title` the words it
+  shows (a row's label, a button's face) AS WRITTEN, data and never re-cased (`titleKind: "value"`: the menu over a member
+  row named `color` shows "color", not "COLOR"), its row "Open in a new inspector"; in DEVELOPER mode that row LEADS the
+  hierarchy menu, then a line, standing for no widget and opening no submenu; and a Cmd-click, `@cmdClickOn_InputEvents
+  thing` (a Cmd-tap under a finger), opens it INSTEAD of choosing it — nothing chosen, selected or scrolled in the
+  original. ONE GESTURE OPENS ONE WINDOW: a gesture whose FIRST click opened apart consumes its later clicks, press
+  and release, wherever they land — on the new window too, which a default-size original's cascade lays over the row
+  pressed — and whatever keys they carry (`@multiClickOnHolding_InputEvents thing, ["Meta", "Meta"]`, a
+  Cmd-double-click, and `["Meta", ""]` each open ONE window), its later presses taking no audience, so nothing is
+  raised over the new window (`ActivePointerWdgt.noteClickActsForItsGesture`, matched by event time and distance,
+  never by the widget under the pointer); a gesture whose first click was PLAIN stays plain (`["", "Meta"]` does the
+  plain double: on a member row the member chosen and its value opened as the next column, no window). The opening
+  click climbs to no holder, so the new window stands on top of a panel holding the original too
+  (`Widget.isInForeground` reads it). A button that names nothing keeps its plain
+  click, and in user mode its right-click climbs on to the desktop's menu, as any widget's does that names no code to
+  edit either (`_memberToEdit`). Each way opens ONE window, titled by its
+  first inspector as the door titles one (a widget by its colloquial name, a value by its class's, "Inspector — point",
+  a class's prototype by the class's name), at the default extent, landing BESIDE the top widget on the desktop that
+  holds the thing, its window (`rootForFocus`; `InspectorBrowserWdgt._landingBeside`: right of it, else left of it,
+  tops level, else below it, lefts level, `APART_GAP` 16 between — the first where the whole window lies inside the
+  desktop —, else cascaded `CASCADE_STEP` 48 right and down from its corner; no other window is read; a thing held by
+  nothing on the desktop opens it by the hand). The 1920 × 880 test world leaves a default-size original no room on
+  any side — one at (0, 40) cascades its new window to (48, 88), which opening keeps inside the desktop at (48, 72) —
+  so a test reading a side states a narrower original (880 wide leaves its right: 880 + 16 + 1000 = 1896) or a
+  desktop of its own (`testScreenExtent`).
+  Read what opened as the desktop's children not there before that are no ephemeral overlay (`isEphemeral()` left out),
+  and destroy each new window after its checks (MACRO-PATTERNS.md, "Open a thing in a new inspector"). A press
   at a column the set scrolled out misses (AIM MISSED): bring it in first, as a person does,
   `bringColumnIntoView_InputEvents_Macro column` (a notch, or a swipe under a finger). "Add…", "Duplicate…" and "Rename…" refuse a new name the
   subject already answers, its own or inherited, with an inform (a rename to the member's own name does nothing and

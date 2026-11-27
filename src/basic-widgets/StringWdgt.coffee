@@ -1963,14 +1963,16 @@ class StringWdgt extends ControllerWdgt
   # (TextSlots.wordAround: letters, digits and underscores); one that takes none escalates (the same
   # else-escalate activated has), so a double-click on a passive label reaches the first ancestor that
   # wants it — e.g. a spreadsheet cell's scalar-text child escalating to the CellWdgt, which starts a
-  # caret edit at the clicked slot.
-  doubleActivated: (pos) ->
+  # caret edit at the clicked slot. It escalates every fact of the release the hand handed it, as the
+  # click does, so the widget that takes the double click knows the keys it was made with
+  # (ActivePointerWdgt.processDoubleClick).
+  doubleActivated: (pos, arg2, arg3, arg4, arg5, arg6, arg7) ->
     if @isTextEntryField()
       [start, end] = TextSlots.wordAround @text, world.caret?.slot
       @selectBetween start, end
       world.caret?.gotoSlot end
     else
-      @escalateEvent "doubleActivated", pos
+      @escalateEvent "doubleActivated", pos, arg2, arg3, arg4, arg5, arg6, arg7
 
   tripleActivated: ->
     if @isTextEntryField()

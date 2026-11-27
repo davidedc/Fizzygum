@@ -277,7 +277,8 @@ class MemberListWdgt extends Widget
   # properties (_subjectsItemsAndNames), and the placeholder is none -- unless my subject has a member
   # of that very name, one my filter hides, which the placeholder then names. Asked as an object, so a
   # string's items are found. Every reader of a label of mine asks here: a choice (selectionFromList,
-  # inspectMemberValue) and my verbs, through my selection (_selectedMemberName).
+  # and the value a double click chooses, _valueWithMembersToShow), what a row opens in a new inspector
+  # (memberToOpenInANewInspector), and my verbs, through my selection (_selectedMemberName).
   _memberNamedBy: (label) ->
     label  if label? and label of Object @inspectedObject
 
@@ -363,7 +364,8 @@ class MemberListWdgt extends Widget
   #   A MEMBER list: each row a kind tag and the member's name, as wide as the list (MemberRowWdgt),
   # told what each member is by my memberFactsOf. Everything the list reaches me through is a method
   # NAME -- a click selects a member (selectionFromList), a double-click opens its value
-  # (inspectMemberValue) -- so a copy of me is reached by its own list, and the list holds no
+  # (inspectMemberValue), a row asked what it opens in a new inspector asks me
+  # (memberToOpenInANewInspector) -- so a copy of me is reached by its own list, and the list holds no
   # closure. It is dressed as a view's list (dressAsAViewsList): no drops, the inspector's pane roles,
   # kept by name, so the body and my bands' rules show through it and a list taken out of me keeps
   # them, and a division box a chrome target's side square at least, growing to any size: the slack of
@@ -380,6 +382,7 @@ class MemberListWdgt extends Widget
       action: "selectionFromList"
       doubleClickAction: "inspectMemberValue"
       memberFactsQuery: "memberFactsOf"
+      newInspectorQuery: "memberToOpenInANewInspector"
     MemberListWdgt.dressAsAViewsList @list
     @_addNoSettle @list, atIndex: atIndex, layoutSpec: @list.divisionBox('y')
 
@@ -435,18 +438,38 @@ class MemberListWdgt extends Widget
     return
 
   # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
-  # chose the member): when the member's VALUE has members of its own to show -- an object, or a
-  # Fizzygum CLASS (a function carrying the class marker, as classNamed tells it: a widget's
-  # `constructor` row) -- that value is my choice, in place of the member, so the inspector after mine
-  # shows it (a class function's `__super__` its superclass's prototype, edited as that class,
-  # MemberRef.of). Any other value -- a method, a number, a string -- opens nothing more: the click
-  # already chose the row, and its editor stands. So does a label that names no member (_memberNamedBy).
+  # chose the member): when the member's VALUE has members of its own to show (_valueWithMembersToShow)
+  # that value is my choice, in place of the member, so the inspector after mine shows it (a class
+  # function's `__super__` its superclass's prototype, edited as that class, MemberRef.of). Any other
+  # value -- a method, a number, a string -- opens nothing more: the click already chose the row, and its
+  # editor stands. So does a label that names no member (_memberNamedBy).
   inspectMemberValue: (memberName) ->
-    return unless (name = @_memberNamedBy memberName)?
+    value = @_valueWithMembersToShow memberName
+    InspectorBrowserWdgt.showChoice @, value  if value?
+
+  # THE VALUE OF THE MEMBER A LABEL OF MINE NAMES (_memberNamedBy), when it has members of its own to
+  # show -- an object, or a Fizzygum CLASS (a function carrying the class marker, as classNamed tells
+  # it: a widget's `constructor` row) -- else undefined: a method, a number, a string, nothing at all,
+  # or a label that names no member. The ONE statement of what is worth a list of its own, read by my
+  # double click, which adds it as a column (inspectMemberValue), and by what a row of mine opens in a
+  # new inspector, which opens it apart (memberToOpenInANewInspector).
+  _valueWithMembersToShow: (label) ->
+    return undefined  unless (name = @_memberNamedBy label)?
     value = @inspectedObject[name]
-    hasMembersToShow = value? and (typeof value is "object" or (Utils.isFunction(value) and classNamed(value.name) is value))
-    return unless hasMembersToShow
-    InspectorBrowserWdgt.showChoice @, value
+    value  if value? and (typeof value is "object" or (Utils.isFunction(value) and classNamed(value.name) is value))
+
+  # WHAT A ROW OF MINE OPENS IN A NEW INSPECTOR (my list's newInspectorQuery: ListWdgt.toOpenInANewInspectorBy
+  # hands me the row's label): for a label that names a member (_memberNamedBy), the member's VALUE when
+  # it has members of its own to show (_valueWithMembersToShow: what my double click adds as a column),
+  # else the MEMBER, opened as the door on a member opens it -- its holder, my subject, with the member
+  # chosen in it (Widget.spawnInspector's opts.member); named, either way, by the member's name, the
+  # words its row shows. A label that names no member opens nothing: my placeholder row, "(empty)" --
+  # unless my subject has a member of that very name, one my filter hides, which the placeholder then
+  # names and opens, as a press on it chooses it (_memberNamedBy).
+  memberToOpenInANewInspector: (label) ->
+    return undefined  unless (name = @_memberNamedBy label)?
+    value = @_valueWithMembersToShow name
+    if value? then {subject: value, name: name} else {subject: @inspectedObject, member: name, name: name}
 
   # NO ROW OF MINE IS CHOSEN any more: what follows my inspector shows something other than my choice,
   # or nothing, so my list drops its selection (ListWdgt.clearSelection) and my verbs follow.

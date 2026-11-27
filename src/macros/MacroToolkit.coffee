@@ -155,6 +155,16 @@ class MacroToolkit
   @maxScrollSwipes: 12
   @scrollSwipeMarginPx: 2
 
+  # THE MODIFIER KEYS BY THE NAMES A TEST WRITES, each the flag it sets on an input event (_keysHeldNamed,
+  # the one reader). Two spellings name Ctrl and two name Meta, the key a Mac's keyboard calls Cmd.
+  @modifierFlagsByName:
+    Shift: "shiftKey"
+    Ctrl: "ctrlKey"
+    Control: "ctrlKey"
+    Alt: "altKey"
+    Meta: "metaKey"
+    Cmd: "metaKey"
+
   # The active speed level (a key of @spanFactors). Read LAZILY from
   # window.FIZZYGUM_MACRO_SPEED (set at boot from ?speed=), validated against
   # @spanFactors, falling back to @defaultSpeed — so an absent/invalid value is
@@ -400,10 +410,7 @@ class MacroToolkit
   syntheticEventsShortcutsAndSpecialKeys_InputEvents: (whichShortcutOrSpecialKey, millisecondsBetweenKeys = 35, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     parts = whichShortcutOrSpecialKey.split "+"
     key = parts.pop()
-    shiftKey = ("Shift" in parts)
-    ctrlKey  = ("Ctrl" in parts) or ("Control" in parts)
-    altKey   = ("Alt" in parts)
-    metaKey  = ("Meta" in parts) or ("Cmd" in parts)
+    held = @_keysHeldNamed parts.join "+"
     # the "code" is the physical key; a 1:1 key->code is fine for synthetic events
     # (Shift uses "ShiftLeft" to match syntheticEventsStringKeys_InputEvents) -- except where a
     # rule reads the code: CaretWdgt.keystrokeMayType tells a PC's AltGr character from a
@@ -411,8 +418,28 @@ class MacroToolkit
     # is no ASCII letter or digit by the place its code names ("Meta+я" sent here carries the code
     # "я" and finds no verb), so a test of either queues KeydownInputEvents with real codes ("KeyA").
     code = if key == "Shift" then "ShiftLeft" else key
-    @queueInputEvent new KeydownInputEvent key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime
-    @queueInputEvent new KeyupInputEvent  key, code, shiftKey, ctrlKey, altKey, metaKey, true, startTime + millisecondsBetweenKeys
+    @queueInputEvent new KeydownInputEvent key, code, held.shiftKey, held.ctrlKey, held.altKey, held.metaKey, true, startTime
+    @queueInputEvent new KeyupInputEvent  key, code, held.shiftKey, held.ctrlKey, held.altKey, held.metaKey, true, startTime + millisecondsBetweenKeys
+
+  # THE KEYS HELD DOWN THAT A TEST NAMES, as the four modifier flags an input event carries: `keysHeld`
+  # is the names "+"-joined, in the key verb's own words -- "Shift", "Ctrl" (or "Control"), "Alt", "Meta"
+  # (or "Cmd"): "Meta", "Shift+Meta" -- and "" holds none. The ONE reading of those names, for a key
+  # combination (the names before its key, syntheticEventsShortcutsAndSpecialKeys_InputEvents) and for
+  # every press and release a pointer verb queues with keys held (syntheticEventsMouseDown_InputEvents,
+  # syntheticEventsMouseUp_InputEvents and the finger's pushes, _queueTouchDown and _queueTouchUp). A
+  # name that is no modifier throws, naming it: a key the test means to hold that the event does not
+  # carry would play as a plain press, and the test would pass or fail for another reason. A name is
+  # looked up among the table's OWN names only (modifierFlagsByName): "constructor", "toString" or
+  # "__proto__", which every plain object answers, are no modifier and throw like any other.
+  _keysHeldNamed: (keysHeld) ->
+    held = {shiftKey: false, ctrlKey: false, altKey: false, metaKey: false}
+    return held  if keysHeld is ""
+    for name in keysHeld.split "+"
+      flag = if Object::hasOwnProperty.call(MacroToolkit.modifierFlagsByName, name) then MacroToolkit.modifierFlagsByName[name]
+      unless flag?
+        throw new Error "'#{name}' is no modifier key: a key held is named Shift, Ctrl (or Control), Alt or Meta (or Cmd), several joined by '+'"
+      held[flag] = true
+    held
 
   # Press a special key/combo `count` times, staggered in time so each press is a
   # distinct event (e.g. "ArrowLeft" ×8 to walk the caret). Composes
@@ -806,37 +833,31 @@ class MacroToolkit
     @syntheticEventsMouseDown_InputEvents "left button", downAbs, true
     @syntheticEventsMouseUp_InputEvents "left button", upAbs, true
 
-  # A SHIFT-modified left click: the same down+up as syntheticEventsMouseClick_InputEvents, but with the
-  # event's shiftKey flag set (the 4th parameter of Pointer{down,up}InputEvent.synthetic — button, buttons,
-  # ctrlKey, shiftKey, altKey, metaKey, time, and the optional worldX/worldY a down/up omits: a synthesised
-  # press states no place, so the pointer keeps the position it holds). A click carrying shiftKey makes an editable
-  # StringWdgt/TextWdgt EXTEND its selection to the click point (activated reads shiftKey) instead
-  # of just repositioning the caret. Left button only (down buttons=1, up buttons=0). The down goes
-  # through _queuePress, so it is verified when the verb that positioned it said what it must meet.
-  syntheticEventsMouseShiftClick_InputEvents: (milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
-    # absolute (scaled) times + guard + non-scaled push, like syntheticEventsMouseClick —
-    # a shift-click is still a left-button click and would otherwise fold into a false
-    # double-click with a prior same-spot click once recognition is ungated.
+  # A LEFT CLICK WITH KEYS HELD, at wherever the pointer stands: the left click
+  # syntheticEventsMouseClick_InputEvents queues -- its down guarded against folding into a false double
+  # click with a prior same-spot click, its hold floored, the gesture remembered for the next guard --
+  # with each key `keysHeld` names held through its press and its release ("Shift", "Meta", "Shift+Meta":
+  # _keysHeldNamed reads the names), the flags riding each event, where the hand reads them (a click's
+  # flags are its release's). A FINGER's is a TAP WITH THE KEYS HELD: a modifier is a keyboard state, not a
+  # pointer one -- a tablet with a keyboard attached has both -- so the tap carries the flags the mouse's
+  # click carries. Shift makes an editable text EXTEND its selection to the click point instead of moving
+  # its caret (StringWdgt.activated); Meta makes a thing an inspector names open in a new inspector instead
+  # of being chosen (ButtonWdgt._actOnClick). The press goes through _queuePress (a finger's through
+  # _queueTouchDown), so it is verified when the verb that positioned it said what it must meet.
+  syntheticEventsMouseClickHolding_InputEvents: (keysHeld, milliseconds = 100, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     downAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
-    upAbs = downAbs + milliseconds * @spanFactor()
+    upAbs = downAbs + @clickHoldWithFloor milliseconds
     @_rememberClickGesture upAbs, @currentPointerTarget
-    if @fingerMode()
-      # A TAP WITH SHIFT HELD: the modifier is a keyboard state, not a pointer one — a tablet with
-      # a keyboard attached has both — so the finger's tap carries the same flag the mouse's click
-      # does. Built here rather than through the tap verb because that verb bakes no modifiers.
-      place = @currentPointerTarget
-      @_queuePress (PointerdownInputEvent.syntheticTouch 0, 1, false, true, false, false, downAbs, place.x, place.y), true
-      @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, true, false, false, upAbs, place.x, place.y), true
-      return
-    @_queuePress (PointerdownInputEvent.synthetic 0, 1, false, true, false, false, downAbs), true
-    @queueInputEvent (PointerupInputEvent.synthetic 0, 0, false, true, false, false, upAbs), true
+    @syntheticEventsMouseDown_InputEvents "left button", downAbs, true, keysHeld
+    @syntheticEventsMouseUp_InputEvents "left button", upAbs, true, keysHeld
 
   # nonScaled (default false): when true the startTime is already an absolute, scaled
   # time (the click verbs pre-compute it so the false-double-click guard can shift it),
-  # so queueInputEvent must NOT scale it again.
+  # so queueInputEvent must NOT scale it again. keysHeld (default "", none) names the modifier keys
+  # the press carries, as _keysHeldNamed reads them -- a finger's press carries them too.
   # The press goes through _queuePress (a finger's through _queueTouchDown), so it is verified when
   # the verb that aimed it said what it must land on, and checks nothing otherwise.
-  syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
+  syntheticEventsMouseDown_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false, keysHeld = "") ->
     if whichButton == "left button"
       button = 0
       buttons = 1
@@ -852,16 +873,19 @@ class MacroToolkit
     # is scheduled with it and the matching up is held back past the crossing.
     if @fingerMode()
       pressAbs = if nonScaled then startTime else @scaledAbs startTime
-      @_queueTouchDown @currentPointerTarget, pressAbs
+      @_queueTouchDown @currentPointerTarget, pressAbs, keysHeld
       return if whichButton == "left button"
       @popUpIdWhenHoldScheduled = @_highestOpenPopUpId()
       @pendingTouchHoldCrossedTime = pressAbs + WorldWdgt.preferencesAndSettings.pressAndHoldMs + MacroToolkit.holdWindowMarginMs
       @_queueTouchMove @currentPointerTarget, @pendingTouchHoldCrossedTime
       return
 
-    @_queuePress (PointerdownInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
+    held = @_keysHeldNamed keysHeld
+    @_queuePress (PointerdownInputEvent.synthetic button, buttons, held.ctrlKey, held.shiftKey, held.altKey, held.metaKey, startTime), nonScaled
 
-  syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false) ->
+  # The release twin of syntheticEventsMouseDown_InputEvents, its parameters the same: keysHeld names the
+  # modifier keys the release carries (a click hands its widget the release's flags).
+  syntheticEventsMouseUp_InputEvents: (whichButton = "left button", startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), nonScaled = false, keysHeld = "") ->
     if whichButton == "left button"
       button = 0
       buttons = 0
@@ -880,10 +904,11 @@ class MacroToolkit
       if @pendingTouchHoldCrossedTime?
         releaseAbs = Math.max releaseAbs, @pendingTouchHoldCrossedTime + MacroToolkit.holdWindowMarginMs
         @pendingTouchHoldCrossedTime = undefined
-      @_queueTouchUp @currentPointerTarget, releaseAbs
+      @_queueTouchUp @currentPointerTarget, releaseAbs, keysHeld
       return
 
-    @queueInputEvent (PointerupInputEvent.synthetic button, buttons, false, false, false, false, startTime), nonScaled
+    held = @_keysHeldNamed keysHeld
+    @queueInputEvent (PointerupInputEvent.synthetic button, buttons, held.ctrlKey, held.shiftKey, held.altKey, held.metaKey, startTime), nonScaled
 
   # The browser CONFISCATING the stroke in progress (a system gesture takes it over, a palm is
   # rejected, the tab goes away). It states no place — like a synthesised down/up, so the hand keeps
@@ -925,8 +950,11 @@ class MacroToolkit
   # eased. Rounding at these three pushes is the same rule in the same place for both devices.
   #   The down is a PRESS, so it is queued through _queuePress, which puts an aim check in front of
   # it whenever the verb that aimed it said what it must land on.
-  _queueTouchDown: (place, timeAbs) ->
-    @_queuePress (PointerdownInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
+  #   The down and the up carry the modifier keys `keysHeld` names (default "", none: _keysHeldNamed), a
+  # keyboard's state that rides a finger's press and release as it rides a mouse's.
+  _queueTouchDown: (place, timeAbs, keysHeld = "") ->
+    held = @_keysHeldNamed keysHeld
+    @_queuePress (PointerdownInputEvent.syntheticTouch 0, 1, held.ctrlKey, held.shiftKey, held.altKey, held.metaKey, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
   _queueTouchMove: (place, timeAbs) ->
     @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 1, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
@@ -936,8 +964,9 @@ class MacroToolkit
   _queueTouchCarryMove: (place, timeAbs) ->
     @queueInputEvent (PointermoveInputEvent.syntheticTouch 0, 0, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
-  _queueTouchUp: (place, timeAbs) ->
-    @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, false, false, false, false, timeAbs, (Math.round place.x), (Math.round place.y)), true
+  _queueTouchUp: (place, timeAbs, keysHeld = "") ->
+    held = @_keysHeldNamed keysHeld
+    @queueInputEvent (PointerupInputEvent.syntheticTouch 0, 0, held.ctrlKey, held.shiftKey, held.altKey, held.metaKey, timeAbs, (Math.round place.x), (Math.round place.y)), true
 
   # A TAP: a position-carrying down and up with nothing before either — the grammar's "a tap is a
   # click" row. Guarded and hold-floored exactly like a mouse click, so two taps in the same spot
@@ -1149,14 +1178,19 @@ class MacroToolkit
   # inter-click 120ms / 50ms spacing is kept NON-scaled so the clicks always land inside the 300ms
   # event-time window at every speed. The false-double-click guard is applied ONCE to the first click (vs a prior
   # distinct gesture); clicks 2..N are the DELIBERATE repeats that MUST fold, so they skip it.
-  _syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
+  # `keysOfEachClick` (default [], none held) names, click by click, the modifier keys held through that
+  # click's press and release -- its entry i the keys of click i, in _keysHeldNamed's words, an entry it
+  # lacks holding none: ["Meta", "Meta"] as a person holds Cmd through both clicks of a Cmd-double-click,
+  # ["Meta", ""] or ["", "Meta"] as one presses or lets go of the key between the two.
+  _syntheticEventsConsecutiveLeftClicks_InputEvents: (numberOfClicks = 2, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime(), keysOfEachClick = [], millisecondsBetweenClicks = 120, clickMilliseconds = 50) ->
     # public-call-sanctioned: syntheticEventsMouseDown/Up_InputEvents are L1 event-synthesis primitives (they
     # push queued presses and releases, not any settling/orchestration) — the clicks this helper spaces in time.
     firstDownAbs = @guardedClickStart (@scaledAbs startTime), @currentPointerTarget
     for i in [0...numberOfClicks]
       t = firstDownAbs + i * millisecondsBetweenClicks
-      @syntheticEventsMouseDown_InputEvents "left button", t, true
-      @syntheticEventsMouseUp_InputEvents "left button", t + clickMilliseconds, true
+      keysHeld = keysOfEachClick[i] ? ""
+      @syntheticEventsMouseDown_InputEvents "left button", t, true, keysHeld
+      @syntheticEventsMouseUp_InputEvents "left button", t + clickMilliseconds, true, keysHeld
     @_rememberClickGesture (firstDownAbs + (numberOfClicks - 1) * millisecondsBetweenClicks + clickMilliseconds), @currentPointerTarget
 
   # Double- / triple-click at a fractional point inside a located widget, driven through the INPUT-EVENT
@@ -1185,15 +1219,17 @@ class MacroToolkit
   # fake pointer shows), then fire `numberOfClicks` consecutive left clicks that the hand folds into a double/triple
   # click. The +100ms lead-in after the positioning move is non-scaled at every speed level (see the comment above
   # on the deterministic event-time recognition window). Verifies that the FIRST press lands on `widget` or on
-  # something inside it; the repeats press the same spot and are not checked again. `setBy` names the verb in the
-  # failure message.
-  _nLeftClicksAt_InputEvents: (numberOfClicks, widget, screenPoint, setBy, milliseconds, startTime) ->
+  # something inside it (handed a point there instead, it checks that press against what the macro declared, as
+  # _aimingAt does for every point aim); the repeats press the same spot and are not checked again. `setBy`
+  # names the verb in the failure message; `keysOfEachClick` (default [], none held) the modifier keys each click
+  # is made with, click by click (_syntheticEventsConsecutiveLeftClicks_InputEvents).
+  _nLeftClicksAt_InputEvents: (numberOfClicks, widget, screenPoint, setBy, milliseconds, startTime, keysOfEachClick = []) ->
     # public-call-sanctioned: syntheticEventsMouseMove_InputEvents is an L1 event-synthesis primitive (it
     # pushes a queued mouse-move, not any settling/orchestration) — the positioning move every multi-click
     # verb makes before its clicks.
     @_aimingAt widget, setBy, =>
       @syntheticEventsMouseMove_InputEvents screenPoint, "no button", milliseconds, startTime
-      @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100
+      @_syntheticEventsConsecutiveLeftClicks_InputEvents numberOfClicks, startTime + milliseconds + 100, keysOfEachClick
 
   # ── CLICKS INTO TEXT, BY SLOT ───────────────────────────────────────────────────────────────
   # A fraction of a text widget's box picks whichever glyph the font happens to put there, so a font or a
@@ -1247,14 +1283,42 @@ class MacroToolkit
     @_nLeftClicksAt_InputEvents 3, text, (@textSlotScreenPoint text, slot), "tripleClickOnTextSlot", milliseconds, startTime
 
   # SHIFT+left-click a text widget where a press picks `slot` — a move there, then a left click with Shift held
-  # (syntheticEventsMouseShiftClick_InputEvents): in editable text a plain click sets the caret, while a
-  # shift-click EXTENDS the selection from the caret to that slot. Verifies that the
-  # press lands on the text or on something inside it. Name the slot by meaning and assert the selection it
-  # produces (see the rule above). Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  # (syntheticEventsMouseClickHolding_InputEvents "Shift"; a tap with Shift held under a finger): in editable
+  # text a plain click sets the caret, while a shift-click EXTENDS the selection from the caret to that slot.
+  # Verifies that the press lands on the text or on something inside it. Name the slot by meaning and assert
+  # the selection it produces (see the rule above). Queues input events — follow with `yield "waitNoInputsOngoing"`.
   shiftClickOnTextSlot_InputEvents: (text, slot, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
     @_aimingAt text, "shiftClickOnTextSlot", =>
       @syntheticEventsMouseMove_InputEvents (@textSlotScreenPoint text, slot), "no button", milliseconds, startTime
-      @syntheticEventsMouseShiftClick_InputEvents 100, startTime + milliseconds + 100
+      @syntheticEventsMouseClickHolding_InputEvents "Shift", 100, startTime + milliseconds + 100
+
+  # CMD-CLICK A WIDGET, as a person clicks it with Cmd held (the key a Mac's keyboard calls Cmd, "Meta" in
+  # the toolkit's words): a move to its centre, then a left click with Meta held through its press and its
+  # release (syntheticEventsMouseClickHolding_InputEvents "Meta") -- under a finger a TAP with the key held,
+  # the modifier being the keyboard's, whatever the pointer. A Cmd-click on a thing an inspector names (a row
+  # of its lists, its class button, a step of its trail) opens it in a new inspector instead of choosing it
+  # (ButtonWdgt._actOnClick). One click: a gesture of several clicks, Cmd held through all of them or some, is
+  # multiClickOnHolding_InputEvents's. Verifies that the press lands on the widget or on something inside it.
+  # Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  cmdClickOn_InputEvents: (widget, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_aimingAt widget, "cmdClickOn", =>
+      @syntheticEventsMouseMove_InputEvents widget, "no button", milliseconds, startTime
+      @syntheticEventsMouseClickHolding_InputEvents "Meta", 100, startTime + milliseconds + 100
+
+  # ONE GESTURE OF SEVERAL CLICKS, each click with the keys its entry of `keysOfEachClick` names held through
+  # its press and its release (_keysHeldNamed's words, "" none): as many clicks as entries, at a widget's
+  # centre or at a screen point (`positionOrWidget`), spaced as the double-click verbs space theirs
+  # (_nLeftClicksAt_InputEvents), so the hand folds them into one double (two entries) or triple (three) click.
+  # ["Meta", "Meta"] is a Cmd-DOUBLE-click, the key held through both clicks; ["Meta", ""] a person letting go of
+  # Cmd before the second click, ["", "Meta"] pressing it only for the second. Under a finger each click is a TAP
+  # with its keys held, the modifier being the keyboard's, whatever the pointer. Aimed at a widget, it verifies
+  # that the first press lands on the widget or on something inside it; aimed at a point -- a part of a widget
+  # its centre does not stand in, where the gesture's later presses must land -- it checks the first press
+  # against what the macro declares on the line before (`@pressMustLandOn widget`), as every point aim is. The
+  # later presses press the same spot, whatever stands there by then, and are not checked again.
+  # Queues input events — follow with `yield "waitNoInputsOngoing"`.
+  multiClickOnHolding_InputEvents: (positionOrWidget, keysOfEachClick, milliseconds = 1000, startTime = WorldWdgt.dateOfCurrentCycleStart.getTime()) ->
+    @_nLeftClicksAt_InputEvents keysOfEachClick.length, positionOrWidget, (@_screenPointOfTarget positionOrWidget), "multiClickOnHolding", milliseconds, startTime, keysOfEachClick
 
   # Push ONE synthetic WheelInputEvent onto the input queue — the queued primitive behind
   # wheelOn_InputEvents. This is exactly how the browser delivers a real wheel: WorldWdgt's onwheel

@@ -445,7 +445,20 @@ blind spot is structural:
   neither side's dock rows), and the NESTED shapes whose rows exist only inside a container, among them each part of
   an inspector where it stands (the browser, an inspector, a member list, a member editor, a header band, a chooser band,
   an object list, the trail band, a split button and the body's turned tab, a column divider and the divider between the
-  lists and the body), so a class not among them is unreached. That is why
+  lists and the body), and the menus of rows no contributor adds (below): the user-mode one-row menus a widget builds
+  itself (`Widget.buildContextMenu`'s user branch — a tool button's "Edit code", and "Open in a new inspector" on each
+  kind of thing an inspector names: an object list's row, a member list's row on a value worth a list and on any other
+  member, an inspector's class button, the body's step of the trail and a plain step, one root for each shape of an
+  answer) and the developer's hierarchy menu over a member row's name, which that row LEADS, then a line
+  (`Widget.buildHierarchyMenu`). Each "Open in a new inspector" builder checks the menu's whole shape AND what the thing
+  names (`toOpenInANewInspector`: in developer mode, what the row the menu leads with names), the premise its dispatch is
+  judged on; the "Edit code" builder checks the SHAPE alone (a plain widget builds no menu of its own; the tool button's
+  menu is exactly its title and its one row), not which member the button names. Either way a premise that does not
+  hold is `ROOT_UNBUILT`, and the window the row's dispatch opens goes with the root's teardown. So a
+  class not among them is unreached — but a menu CONTRIBUTOR (a class whose prototype owns
+  `addWidgetSpecificMenuEntries`, derived in the page, the rows each one's call adds tagged with it) none of whose rows
+  the walk dispatched fails the run (`MENU_CONTRIBUTOR_UNSWEPT`): the derivation says which contributors must be
+  covered, and a row added through any other hook is swept only where a root stands in its menu. That is why
   it and the pin sweep are complementary rather than redundant — with the corner-radius defect planted back in, this rig
   catches 2 of the 16 affected classes and the pin sweep catches all 16.
   ⚠⚠ **A menu built behind a BRANCH is only swept in the branch the rig happens to be standing in**, and an action can

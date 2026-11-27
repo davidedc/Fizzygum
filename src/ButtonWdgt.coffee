@@ -186,14 +186,88 @@ class ButtonWdgt extends Widget
     if @target?.graphEdgesOut? then super().concat [{kind: 'command', to: @target}] else super()
 
   
+  # MY CLICK: any unpinned pop-up I sit in closed, my click's act (_actOnClick: my action, or, with Cmd
+  # held, what I name opened apart), and the click escalated -- unless my act opened a thing apart: that
+  # click is CONSUMED and goes no further, for a holder it climbs to may raise itself
+  # (PanelWdgt.activated), and would raise the original over the window the click just opened. The hand
+  # hands me the release's facts (pos, button, buttons, ctrlKey, shiftKey, altKey, metaKey) and whether
+  # this click continues a double or a triple click.
   activated: (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) ->
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
       @propagateKillPopUps()
-    @trigger()
-    @escalateEvent "activated", arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9
+    @escalateEvent "activated", arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9  if @_actOnClick arg7, arg8, arg9
 
+  # MY DOUBLE CLICK: my doubleClickAction (triggerDoubleClick), with Cmd held or not. A double click
+  # reaches me only in a gesture whose FIRST click was plain -- the hand consumes every later click of a
+  # gesture whose first click opened a thing apart (ActivePointerWdgt.noteClickActsForItsGesture) -- and a
+  # plain gesture stays plain: a Cmd second click on it does the plain double (_opensApartOnClick).
   doubleActivated: ->
     @triggerDoubleClick()
+
+  # MY CLICK'S ACT, after what every click of my family does first (a pop-up I sit in closed; a label
+  # button raised), answering whether the click GOES ON up, as a press's receiver states whether its
+  # press goes on (Widget.pressBegan): my action (trigger), and the click goes on -- or, when my click
+  # opens apart (_opensApartOnClick), what I name opened in a window of its own INSTEAD
+  # (openInANewInspector), before any action of mine runs: a list's select writes its selection before
+  # it dispatches, a class button's action drops its view's choice first, a trail button's scrolls the
+  # set, so nothing is chosen, selected or scrolled in the original. That click is CONSUMED: it goes no
+  # further, and the hand is told it acted for its whole gesture
+  # (ActivePointerWdgt.noteClickActsForItsGesture), so the gesture's later clicks do nothing at all,
+  # wherever they land -- on the window it opened too -- and whatever keys they carry: one gesture, one
+  # window (as one double click on a creator makes one widget: CreatorWdgt.activated). The ONE seat of
+  # that rule, for both clicks of my family: mine and LabelButtonWdgt's.
+  _actOnClick: (metaKey, partOfDoubleClick, partOfTripleClick) ->
+    if @_opensApartOnClick metaKey, partOfDoubleClick, partOfTripleClick
+      @openInANewInspector()
+      world.hand.noteClickActsForItsGesture @
+      false
+    else
+      @trigger()
+      true
+
+  # DOES THIS CLICK OF MINE OPEN APART? With Cmd held (metaKey: a mouse's click or a finger's tap, the
+  # modifier being the keyboard's, whatever the pointer), on the FIRST click of a gesture, while I name a
+  # thing to open in a new inspector (toOpenInANewInspector). A click that continues a double or a triple
+  # click reaches me only in a gesture whose first click was plain (the hand consumes the rest of a
+  # gesture whose first click opened apart), and a plain gesture stays plain: Cmd held on its second
+  # click does the plain double -- my action, then my double action (doubleActivated) -- as it does with
+  # no key held. The one statement of when, read by my click's act (_actOnClick); the facts the hand
+  # handed me first, what I name asked last.
+  _opensApartOnClick: (metaKey, partOfDoubleClick, partOfTripleClick) ->
+    metaKey and not (partOfDoubleClick or partOfTripleClick) and @toOpenInANewInspector()?
+
+  # WHAT I OPEN IN A NEW INSPECTOR, asked of my TARGET, the widget that built me and knows what I mean
+  # (toOpenInANewInspectorBy, handed me): {subject, member, name} -- the door's two operands
+  # (Widget.spawnInspector: the subject, and the member chosen in it, or none) and the words I show,
+  # which title the menu that offers it -- or undefined. Only a target that answers names anything: an
+  # inspector's list for its row (ListWdgt, through its view), an inspector for its class button
+  # (InspectorWdgt), a browser for a step of its trail (InspectorBrowserWdgt); every other button names
+  # nothing and keeps its plain click. Asked by the menus that offer it (Widget.buildContextMenu,
+  # buildHierarchyMenu, each where it finds my addOpenInANewInspectorMenuEntry, the method they send)
+  # and by my click, and asked again at the press of what it offers, so I hold nothing of it. A
+  # QUERY that runs nothing of a person's while a menu is built: where deriving an answer again would
+  # label a person's widgets, its answerer reads what it holds or shows instead (an object list the
+  # objects it holds, a trail the words its button shows).
+  toOpenInANewInspector: ->
+    @target?.toOpenInANewInspectorBy? @
+
+  # WHAT I NAME, OPENED IN A NEW INSPECTOR, through the one door (Widget.spawnInspector): a browser of its
+  # own on the thing, in a window that lands BESIDE the one I stand in (opts.beside: me), the member
+  # chosen in it when I name one. The original is left as it was. The action of my "Open in a new
+  # inspector" row (addOpenInANewInspectorMenuEntry) and of my click with Cmd held (_actOnClick). I
+  # name nothing: nothing opens.
+  openInANewInspector: ->
+    thing = @toOpenInANewInspector()
+    @spawnInspector thing.subject, member: thing.member, beside: @  if thing?
+
+  # MY "Open in a new inspector" ROW: its one statement, in the two menus that offer it -- the one-row
+  # menu user mode builds over me (Widget.buildContextMenu) and the developer's hierarchy menu over what
+  # I hold, which it leads (Widget.buildHierarchyMenu). Each of them has just asked whether I name a
+  # thing to open in a new inspector (toOpenInANewInspector), and sends this only when I do, so nothing
+  # is asked again here. No "…": opening a window asks nothing more. It opens no submenu and stands for
+  # no widget.
+  addOpenInANewInspectorMenuEntry: (menu) ->
+    menu.addMenuItem "Open in a new inspector", @, "openInANewInspector", toolTip: "open it in a window\nof its own"
 
   # you shouldn't be able to drag a compound
   # widgets containing a button by dragging the button

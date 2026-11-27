@@ -50,6 +50,11 @@ class ListWdgt extends ViewportWdgt
   # look: each a kind tag and the element's name cropped to the row, as wide as I am
   # (_positionAndResizeChildren). Asked once per element, as my rows are built.
   memberFactsQuery: undefined
+  # the name of my target's query that tells what a row of mine OPENS IN A NEW INSPECTOR, or undefined
+  # for a list whose rows open nothing apart. Handed a row's label and its place, as select hands them
+  # on, it answers {subject, member, name} or undefined (toOpenInANewInspectorBy). Asked at each ask,
+  # never as my rows are built.
+  newInspectorQuery: undefined
 
   # The rows are the operand: every caller supplies them, while target/action are configuration,
   # supplied by a member list (MemberListWdgt) and by an object list (ObjectListWdgt, which reads the
@@ -61,6 +66,7 @@ class ListWdgt extends ViewportWdgt
     @format = opts.format ? []
     @doubleClickAction = opts.doubleClickAction
     @memberFactsQuery = opts.memberFactsQuery  if opts.memberFactsQuery?
+    @newInspectorQuery = opts.newInspectorQuery  if opts.newInspectorQuery?
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:
@@ -207,6 +213,15 @@ class ListWdgt extends ViewportWdgt
   openRow: (row) ->
     @target[@doubleClickAction].call @target, row.labelString, row.argumentToAction1
     return
+
+  # WHAT A ROW OF MINE OPENS IN A NEW INSPECTOR (ButtonWdgt.toOpenInANewInspector asks me, the row's
+  # target): my target's newInspectorQuery answer for the row's label and its place, the two facts
+  # select hands on, so what opens apart is the thing a press of that row would add a column for; or
+  # undefined, while I have no such query. Only a ROW of mine names anything -- a button whose action is
+  # my select: a hierarchy menu's row standing for me targets me too.
+  toOpenInANewInspectorBy: (button) ->
+    return undefined  unless @newInspectorQuery? and button.action is "select"
+    @target[@newInspectorQuery] button.labelString, button.argumentToAction1
 
   # MY MEMBER ROWS ARE AS WIDE AS I AM. At every arrange of mine -- the settle of my build, a resize,
   # a re-fit -- and before my viewport's arrange measures my plane, my rows panel takes my width and

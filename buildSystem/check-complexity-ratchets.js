@@ -99,7 +99,12 @@ const METHOD_CEILINGS = {
   // _attachSnapshotChildrenNoSettle inside the attach's settle after it), and its notice's text is composed by _sourceEditsNoticeFor,
   // pure; the guards, every settle and the try that guarantees a bin and a shelf stay in the public method
   WorldWdgt: { file: 'WorldWdgt.coffee', ceiling: 136 },
-  ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 74 },
+  // raised 74 -> 77 on 2026-11-27 under the owner's standing ruling of 2026-11-16 (the right shape over the count; the
+  // inspector-browser plan's U4): a gesture whose first click opened a thing apart consumes its later clicks, and the hand
+  // is where presses and releases are decided — noteClickActsForItsGesture (a button's opening click tells the hand),
+  // _pointerContinuesAnActedGesture (the one event-time measure, read at the press and the release) and
+  // _releaseGoesOnWithAnActedGesture (the record carried on or ended at each release)
+  ActivePointerWdgt: { file: 'ActivePointerWdgt.coffee', ceiling: 77 },
   // raised 170 -> 171 on 2026-11-17 under the owner's standing ruling of 2026-11-16 (the right shape over the count): a
   // window is a holder of a paint tool and answers the person's pair (armedDrawingTool / armDrawingTool), offers its
   // docked payloads (dockedPayloads) and the window whose edge slot it occupies (dockHost) as generic queries, so a
@@ -164,8 +169,10 @@ const RECORDED = {
   // this arm (toolbar-template-one-size plan, Phase 2)
   'ActivePointerWdgt#determineGrabs': 41,
   'ActivePointerWdgt#drop': 42,
-  'ActivePointerWdgt#processPointerDown': 17,
-  'ActivePointerWdgt#processPointerUp': 76,
+  // 17 -> 19 on 2026-11-27 (U4): the press that continues an opened-apart gesture takes no audience, its own branch
+  'ActivePointerWdgt#processPointerDown': 19,
+  // 76 -> 77 on 2026-11-27 (U4): the no-click branch also takes a later release of an opened-apart gesture
+  'ActivePointerWdgt#processPointerUp': 77,
   'CaretWdgt#_oneScrollCaretIntoViewPassNoSettle': 21,
   'CaretWdgt#processKeyDown': 26,
   'Class#constructor': 61,

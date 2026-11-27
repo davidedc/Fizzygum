@@ -1,12 +1,15 @@
 # Remembers one multi-click candidate for ActivePointerWdgt.processPointerUp: the widget a
 # recent click landed on, that click's position, and the EVENT-TIME (never wall-clock) it was
-# armed at. Two of these live on the hand — one for double-click (clickCount 2), one for
-# triple-click (clickCount 3) — replacing six hand-mirrored fields.
+# armed at. Three of these live on the hand — one for double-click (clickCount 2), one for
+# triple-click (clickCount 3), replacing six hand-mirrored fields, and the record of a gesture
+# whose click ACTED for the whole of it (no click count: it folds nothing, its later clicks are
+# consumed — ActivePointerWdgt.noteClickActsForItsGesture).
 #
 # Recognition is a same-widget match within a proximity radius; the EVENT-TIME window is
 # applied separately by the caller's forget gate (isStale), keeping that the SINGLE
 # deterministic, load-immune forget the multi-click algorithm relies on (see
-# ActivePointerWdgt.processPointerUp and memory multiclick-event-time-forget).
+# ActivePointerWdgt.processPointerUp and memory multiclick-event-time-forget). A gesture's
+# record is matched by those two measures alone, never by its widget (continuedBy).
 #
 # A plain state-holder: no settling, no layout, and never serialized/duplicated (it lives on
 # the well-known hand, whose fields are never snapshotted — see Serializer / serialization
@@ -42,3 +45,13 @@ class MultiClickRecognizer
   # separately via isStale, exactly as the original inline recognition did.)
   recognizes: (wdgt, position, proximityPx) ->
     @wdgt == wdgt and (@position.distanceTo position) < proximityPx
+
+  # Does a click at `position`, made at `eventTime`, CONTINUE the gesture that armed me, WHATEVER
+  # widget it lands on? I am armed, not stale (isStale: within windowMs of EVENT time), and the click
+  # is within proximityPx of where I was armed: the two measures recognizes and its forget gate fold a
+  # double click by, without the widget. Asked of the record of a gesture that has acted, at each
+  # press and each release (ActivePointerWdgt._pointerContinuesAnActedGesture), whose act may have laid
+  # a window of its own over the widget its click landed on. A pure function of the event stream:
+  # event times and positions only.
+  continuedBy: (position, eventTime, windowMs, proximityPx) ->
+    @wdgt? and !(@isStale eventTime, windowMs) and (@position.distanceTo position) < proximityPx

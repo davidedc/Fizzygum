@@ -944,11 +944,12 @@ class FrameWdgt extends ClippingWdgt
   # the words my title stores, which stay as they are for every reader of them -- a pinned menu's
   # window title, a prompt's title built from a menu's, a saved file's name. The ONE place the case
   # is decided: my bar builds every title piece in it, in either style, and I re-assert it whenever
-  # I re-title. A title that IS a value (a value's bubble, Widget._informOfValue) shows as it is, in
-  # either lifetime, pinned too: data is never re-cased. A pop-up's header that NAMES something
-  # shows in capitals ("RECTANGLE", "DESKTOP", "FONTS"); every other title reads as a sentence, its
-  # first character a capital: a window's, a pinned or collapsed one's, a card's, a prompt's question
-  # and a pop-up's message.
+  # I re-title. A title that IS data -- a value (a value's bubble, Widget._informOfValue), or a thing's
+  # name as the thing shows it (the one-row menu over what an inspector names, Widget.buildContextMenu)
+  # -- shows as it is, in either lifetime, pinned too: data is never re-cased. A pop-up's header that
+  # NAMES something in our words shows in capitals ("RECTANGLE", "DESKTOP", "FONTS"); every other title
+  # reads as a sentence, its first character a capital: a window's, a pinned or collapsed one's, a
+  # card's, a prompt's question and a pop-up's message.
   _titleDisplayCase: ->
     switch @_titleKind()
       when "value" then undefined

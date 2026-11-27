@@ -531,7 +531,9 @@ mark after `add` + `setExtent` adds nothing.
   `hoverMoved(pos)`, `hoverExited()`, plus the in-place drag pair `nonFloatDragging` / `endOfNonFloatDrag`. The
   GESTURE tier hands you a meaning the hand has already certified: `activated(pos, …)` (the stroke
   was examined and meant an activation — multi-click recognition ran, a drag away or a hold
-  suppressed it), `doubleActivated(pos)`, `tripleActivated(pos)`, `contextMenuRequested(pos)`
+  suppressed it; it, and the double or triple click it completes, carry the release's facts: its button, buttons and
+  four modifier keys),
+  `doubleActivated(pos, …)`, `tripleActivated(pos, …)`, `contextMenuRequested(pos)`
   (either trigger — a secondary press or a press-and-hold), `scrolledBy(deltaX, deltaY, deltaZ,
   altKey, button, buttons)`. A button, a toggle or a menu item wants a gesture; a paint canvas, a
   slider, a text selection or a hover highlight wants the raw facts. Deep home:

@@ -16,7 +16,7 @@ reactToTargetConnection   # connection protocol hook
 # Deliberate end-user API (inspector / live-code surface):
 setHeading          # PenWdgt turtle API
 forward             # PenWdgt turtle API, sibling of setHeading
-syntheticEventsMouseShiftClick_InputEvents  # MacroToolkit L1 synthetic-input primitive, the test-authoring family (syntheticEvents…_InputEvents); shiftClickOnTextSlot builds on it
+syntheticEventsMouseClickHolding_InputEvents  # MacroToolkit L1 synthetic-input primitive, the test-authoring family (syntheticEvents…_InputEvents); shiftClickOnTextSlot and cmdClickOn build on it
 setProgram          # LCLProgramRunner programming API
 # Kept public for structural reasons (T5 execution findings, 2026-07-12):
 processDoubleClick  # ActivePointerWdgt public process* event-dispatch family (dispatches to the settling drop)

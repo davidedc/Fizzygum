@@ -470,7 +470,11 @@ actions and error states only.
   inform, an empty chooser's "no targets available", the bin's confirmation) reads as a sentence, as does every other
   title — a window's, a pinned or collapsed one's, a card's, a prompt's question — its first character a capital; a
   VALUE (a value's bubble, `Widget._informOfValue`: a text's "Show selection", a slider's "Show value") shows as it is,
-  pinned too, since it is data: `"color"` keeps its quotes, `true` and `new Point 3, 4` their lower case.
+  pinned too, since it is data: `"color"` keeps its quotes, `true` and `new Point 3, 4` their lower case. A thing's name
+  as the thing itself shows it is data too, and takes the same kind: the one-row menu a user-mode right-click opens over
+  what an inspector names ("Open in a new inspector", `Widget.buildContextMenu`) is titled by the words its row or
+  button shows, a member's name, a class's, a step of the trail ("color", "RectangleWdgt", "Child Rectangle 2"), never
+  re-cased.
 - **Human names, never class names.** A widget's menu is headed by its `colloquialName()` ("RECTANGLE", "DESKTOP"); a
   chooser's header names what its rows offer ("NEW PARENT", "TARGET", "TARGET PROPERTY", "CONNECT", "BIND WITH").
   `colloquialName` answers lowercase words by contract (they go mid-sentence too); a proper name keeps its capitals; a
