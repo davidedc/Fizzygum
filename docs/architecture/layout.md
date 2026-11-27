@@ -420,15 +420,27 @@ through the cell's own step, `Widget._addMyDivisionCellMenuEntries`, which the c
 nothing.
 A border layout is COMPOSITION, not an engine: a 'y' division stack whose middle cell is an 'x' row, dividers at the seams
 (`WidgetFactory.createBorderLayoutScaffold`; pinned by `macroVerticalDivisionBorderSkeleton`).
-A TOOL is composition the same way. The inspector (`InspectorBrowserWdgt`) is a 'y' division stack whose cell is the
-viewport of its SET (`InspectorRowViewportWdgt`), and the set (`InspectorRowWdgt`, that viewport's plane) an 'x' division
-row of inspectors with a column divider between each two, which the set derives from its inspectors itself
+A TOOL is composition the same way. The inspector (`InspectorBrowserWdgt`) is a 'y' division stack of its TRAIL band,
+the viewport of its SET (`InspectorRowViewportWdgt`) and, with its body below (`bodyPlace`, its default), a divider
+(`InspectorDividerWdgt`, down) and its BODY, the inspector of its sequence shown as one text (an empty one while none
+is), which takes every pixel the other cells leave; the browser reconciles that structure itself
+(`InspectorBrowserWdgt._reconcileMyStructureNoSettle`). There the viewport is the STRIP OF LISTS, a cell whose height is
+STATED: its division box holds its least and a desired its most equals (spreadability 0), 312 as the browser is built
+(`InspectorBrowserWdgt._stateMyStripNoSettle`) and then wherever a drag of that divider states it, so the person's split
+stands when the window is resized and only a browser too short for every cell's desired size takes some of it, the
+engine's own way. Its least is DERIVED, never below the tallest least of the set's columns, read from their cells'
+fields (`InspectorRowViewportWdgt.getMinDim`, with `getDesiredDim` never below it), so no drag squeezes a column's
+bands. The set (`InspectorRowWdgt`, that viewport's plane) is an 'x' division row of inspectors with a divider
+(`InspectorDividerWdgt`, across) between each two, which the set derives from its inspectors itself
 (`InspectorRowWdgt._reconcileSplittersNoSettle`). The set is no division of a given width: its viewport commits the set's
 own measure, every column at the width it answers (`InspectorWdgt.getDesiredDim`: what its cells desire, or a width a
-person stated by a divider) and the last column the rest, so the set overflows and scrolls rather than squeeze a column
-(`viewports-and-planes.md`, "The scrolled-content contract"). Each inspector (`InspectorWdgt`) is a 'y' division stack of its header band, its
+person stated by a divider) and the last column the rest, so the set overflows and scrolls rather than squeeze a column;
+while a choice that removed columns HOLDS the viewport's scroll (`InspectorRowWdgt._heldScrollOffset`, a field the
+measure reads, honoured only at the viewport width it was written at), the set is at least that offset plus the view's
+width, so the clamp leaves the offset standing until the viewport's next scroll lets go of it (a stroke, where it comes to
+rest) (`viewports-and-planes.md`, "The scrolled-content contract"). Each inspector (`InspectorWdgt`) is a 'y' division stack of its header band, its
 chooser band when its subject offers more than one view, and one view at a time (a member list or an object list, each a 'y' stack in turn: its list with its bands; or, when its subject is one member, a member editor, a code area that lays out its own pane and footer band); each band (`BandWdgt`) an 'x' row of controls fixed at their own sizes, centred down it, with gaps
-(`BandSpaceWdgt`) and ONE piece that takes the slack, a spring or a text that gives. None of the three has a
+(`BandSpaceWdgt`) and ONE piece that takes the slack, a spring or a text that gives. None of them, the browser included, has a
 `_reLayout`: every cell is sized by its division box, and a holder's least width is its cells' (`getRecursiveMinDim`).
 Three rules such a row keeps: a piece meant to stay FIXED pins least = desired = max with spreadability 0
 (`SPREADABILITY_NONE` still leaves a tenth of the desired size to take slack, and a "fixed" piece would wobble a

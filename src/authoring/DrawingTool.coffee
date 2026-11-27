@@ -1,7 +1,7 @@
 # THE PERSON'S PAINT TOOL for one key, what `new` makes: every member a tool's prototype has is
 # DrawingToolBase's, and I declare none of my own beyond the constructor every class's prototype owns,
 # so an inspector on a tool lists the tool's own members alone (DrawingToolBase's header says why) and
-# its class chip reads my name. My CLASS side makes and keeps the tools (of); statics live on the class
+# its class button reads my name. My CLASS side makes and keeps the tools (of); statics live on the class
 # function, which no member list of a tool enumerates.
 class DrawingTool extends DrawingToolBase
 

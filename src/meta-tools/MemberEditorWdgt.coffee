@@ -2,7 +2,9 @@
 # its source, or its value, as CoffeeScript text, and the Save that writes my text back as that
 # member. I am the code area family's (CodeAreaWdgt: the code area on top, my footer band of buttons
 # below), the member's inspector is the one I stand in (InspectorWdgt), and that inspector's subject
-# is my memberRef too: chosen in the member list on its left (MemberListWdgt.selectionFromList).
+# is my memberRef too: chosen in the member list before it in its browser's sequence
+# (MemberListWdgt.selectionFromList); that inspector stands where its browser's body goes, below the
+# lists or beside them (InspectorBrowserWdgt.bodyPlace).
 #   HOW my member is edited is my memberRef's to know (its save: an object's member through the
 # instance edit protocol, a class's through its meta-object, recorded), and so is whether it is
 # edited at all (MemberRef.canEdit): a member no Save edits -- of a number, a Point, a plain object,

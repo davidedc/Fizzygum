@@ -24,11 +24,18 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # my look: a split's piece, one flat plate (LayoutChromeWdgt.createAppearance)
   createAppearance: -> new SplitPieceAppearance @
 
+  # THE AXIS I SPLIT ALONG: my division spec's ('x', across a row's cells; 'y', down a column's), 'x'
+  # while I stand in no division stack. Asked by my drag and its solve, my cursor, an inspector's
+  # divider's solve (InspectorDividerWdgt), and an inspector building the split button that turns with
+  # me (InspectorWdgt._reconcileSplitGripNoSettle).
+  splitAxis: ->
+    @layoutSpec?.axis ? 'x'
+
   # I LEFT THE STACK I DIVIDE -- picked out, attached elsewhere or destroyed -- told by it (an
-  # inspector row: InspectorRowWdgt._reactToChildRemoved): the button joined to me stays in its header
-  # and is no piece with me any more, so we part (LayoutChromeWdgt.joinedPiece's rule) and I stand as a
-  # divider alone; the row's next divider before that button's inspector is joined to it by that
-  # inspector's reconcile.
+  # inspector browser's set, InspectorRowWdgt._reactToChildRemoved, or the browser itself,
+  # InspectorBrowserWdgt._reactToChildRemoved): the button joined to me stays in its header and is no
+  # piece with me any more, so we part (LayoutChromeWdgt.joinedPiece's rule) and I stand as a divider
+  # alone; the next divider before that button's inspector is joined to it by that inspector's reconcile.
   noteLeftMyStack: ->
     @notePartedFrom @joinedPiece
 
@@ -53,10 +60,10 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # A drag on me: re-apportion the split so my left edge lands EXACTLY where the pointer says. The
   # pointer is mapped into my plane on the line that reads it, my grab point taken off it, and the
   # split this asks for is my query's (_maxDimsPuttingMyLeadingEdgeAt, below); I make its two writes
-  # myself, the declared deferrer of my own stream. (Between two columns of an inspector browser's set
-  # nothing is apportioned: the column divider there, InspectorColumnDividerWdgt, a kind of me, sizes
-  # the column on its left by a drag of its own, and the split button joined to it asks that divider's
-  # solve, never mine.)
+  # myself, the declared deferrer of my own stream. (In an inspector browser nothing is apportioned:
+  # the divider there, InspectorDividerWdgt, a kind of me, sizes the cell before it -- a column of the
+  # set, or the strip of lists above the body -- by a drag of its own, and the split button joined to it
+  # asks that divider's solve, never mine.)
   #
   # WHY ABSOLUTE, NOT INCREMENTAL. The old code integrated deltaDragFromPreviousCall, so every move
   # rejected or halved at a limit discarded that mouse travel FOREVER: drag past the bound and back and
@@ -74,7 +81,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
       return
 
     # MY division axis, as my query reads it: "left" reads as "before me along the axis".
-    horizontal = (@layoutSpec?.axis ? 'x') == 'x'
+    horizontal = @splitAxis() == 'x'
     mainOf = (point) -> if horizontal then point.x else point.y
 
     # Where the pointer says my LEADING EDGE should be, in MY plane. nonFloatDragPositionWithinWdgtAtStart
@@ -134,7 +141,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # MY division axis: in an 'x' row I split widths dragging horizontally; in a 'y'
     # division stack I split heights dragging vertically. Same closed form, transposed —
     # "left/right" below reads as "before/after me along the axis".
-    horizontal = (@layoutSpec?.axis ? 'x') == 'x'
+    horizontal = @splitAxis() == 'x'
     mainOf = (point) -> if horizontal then point.x else point.y
 
     leftWidget = @lastSiblingBeforeMeSuchThat (m) ->
@@ -204,7 +211,7 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # my hover shows the resize cursor of my axis (LayoutChromeWdgt.hoverEntered): across a row's split,
   # down a column's
   _resizeCursor: ->
-    if (@layoutSpec?.axis ? 'x') == 'x' then "col-resize" else "row-resize"
+    if @splitAxis() == 'x' then "col-resize" else "row-resize"
 
 
   # MY PLATE'S CORNERS (SplitPieceAppearance): square, ends included -- a divider is a strip from

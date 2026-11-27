@@ -1,9 +1,11 @@
 # AN OBJECT LIST: an inspector's view of the OBJECTS its subject holds in one way, one row per object
 # -- a widget's CHILDREN (the parts copies and saves carry), a class's INSTANCES (its subclasses'
 # included, as its class's instances set holds them), or a class's direct SUBCLASSES (sorted by name).
-# A row chosen is a CHOICE (InspectorBrowserWdgt.showChoice): the inspector to my right shows that object.
-# I stand in an inspector (InspectorWdgt), whose chooser builds me; picked out of it, I still list and
-# choose.
+# A row chosen is a CHOICE (InspectorBrowserWdgt.showChoice): the inspector after mine shows that
+# object, on the view of my own title when the object offers one that lists something (a walk keeps
+# its view: InspectorWdgt._keepTheWalksViewNoSettle), and its browser's trail names it by my relation
+# and the row's label (chosenRowLabelFor, InspectorWdgt.nameOfMyChoice). I stand in an inspector
+# (InspectorWdgt), whose chooser builds me; picked out of it, I still list and choose.
 #   WHICH objects I list is my derivation, named as my inspector builds me (derivationName: one of my
 # three methods below), so a copy or a restore of me knows it. A row READS by the house rule for rows
 # that name widgets (CommandPanelWdgt.rowLabelsNaming: "Rectangle", "Rectangle 2"), and a class by its
@@ -170,7 +172,7 @@ class ObjectListWdgt extends Widget
   #   the object must still be in my derivation as it stands now (a child of my subject still, still
   #   registered, still a subclass); one that is not is NO choice, as a member list's label that names
   #   no member is.
-  # No choice removes what stood on my right (InspectorBrowserWdgt.showChoice, with no subject), after any
+  # No choice removes what followed my inspector (InspectorBrowserWdgt.showChoice, with no subject), after any
   # settle of mine, as every gesture asks it.
   chooseRow: (label, place) ->
     unless @objects?
@@ -185,7 +187,28 @@ class ObjectListWdgt extends Widget
     stillThere = object? and object in @[@derivationName]()
     InspectorBrowserWdgt.showChoice @, (if stillThere then object)
 
-  # NO ROW OF MINE IS CHOSEN any more (my inspector's class chip pressed: InspectorWdgt.chooseMyClass;
+  # DO I LIST NOTHING? My derivation answered no object as I last read it: my labels, parallel to my
+  # objects and carried by copies and files, are none (my list then shows its placeholder row). Asked by
+  # the inspector that shows me as the view a walk keeps (InspectorWdgt._keepTheWalksViewNoSettle: a
+  # walk whose view lists nothing shows its first view instead).
+  listsNothing: ->
+    @labels.length is 0
+
+  # THE LABEL OF MY CHOSEN ROW, while that row chose `subject`, else undefined: my list's selected row
+  # (ListWdgt.selected), honoured as chooseRow honours a press -- my label at the row's place is the
+  # row's own -- and, while I hold my objects, only when my object there IS `subject`: the step after
+  # my inspector in its browser may be another than the one my row chose (a person took the inspector
+  # my row chose out of the browser, and the next one now follows mine), and that step names nothing of
+  # mine. A copy or a restore of me holds no objects until its first press (my header says why), and
+  # its row, true at its place, is taken for what it chose. Asked by my inspector, as it names the
+  # choice made in me on its browser's trail and keeps a walk's view (InspectorWdgt.nameOfMyChoice,
+  # titleOfMyChoice).
+  chosenRowLabelFor: (subject) ->
+    row = @list?.selected
+    return undefined  unless row? and @labels[row.argumentToAction1] is row.labelString
+    row.labelString  unless @objects? and @objects[row.argumentToAction1] isnt subject
+
+  # NO ROW OF MINE IS CHOSEN any more (my inspector's class button pressed: InspectorWdgt.chooseMyClass;
   # or my subject chosen again: my inspector's reload). My list drops its selection; nothing is derived
   # again. Paint only, so a core both doors reach.
   clearChoice: ->

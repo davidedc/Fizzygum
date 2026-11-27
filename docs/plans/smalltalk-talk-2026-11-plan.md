@@ -272,7 +272,7 @@ against the current tree. This plan is its executable distillation.
     is listed by the inspector and churns references.
 - **Inspector SystemTests (16):** AnalogClockInspectEdit, InspectorSaveOfAClassMemberRefusesCodeThatDoesNotCompile,
   DuplicatedInspectorDrivesCopiedTargetOnly, DuplicatedInspectorsCloseIndependently,
-  ErrorConsolePopsClean, InspectorClassChipShowsTheClassBesideIt, InspectorOnNonWidgetIsReadOnly,
+  ErrorConsolePopsClean, InspectorClassButtonShowsTheClassBesideIt, InspectorOnNonWidgetIsReadOnly,
   InspectorRejectsDrops, InspectorResizingOKEvenWhenTakenApart,
   InspectorSaveRefusesCodeThatDoesNotCompile, InspectorScrollbarUnplugged,
   InspectorWorkAreaEvaluatesCoffeeScript, NakedInspectorRendersResizesAndEdits,

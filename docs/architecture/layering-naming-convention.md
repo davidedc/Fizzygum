@@ -90,7 +90,7 @@ listing it would false-trip rule [C] on its `moveWithin → moveTo` call.)
 ### 2.3 Core vs convenience
 Scheme ② names the four CORNER PRIMITIVES. The many *convenience/composite* movers and setters that merely delegate to
 a corner just drop any prefix and become plain `_<verb>` (no `Base` suffix — they delegate to the polymorphic corner and
-inherit its behaviour): the movers `_moveLeftSideTo` · `_moveRightSideTo` · `_moveTopSideTo` · `_moveBottomSideTo` · `_moveToSideOf`
+inherit its behaviour): the movers `_moveLeftSideTo` · `_moveRightSideTo` · `_moveToSideOf`
 · `_moveFullCenterTo` · `_moveWithin` · `_moveInDesktopToFractionalPosition` (the desktop imposes position only —
 the stretchable panel's own two imposers died with `StretchLayoutSpec`, which grants whole boxes through the child's
 `_reLayout` instead); the setters/resizer `_setWidthSizeHeightAccordingly` · `_resizeToWithoutSpacing`.

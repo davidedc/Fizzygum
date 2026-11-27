@@ -36,7 +36,7 @@ const GROUPS = {
   bypassTwins:        ['_applyExtentBase', '_applyMoveByBase', '_applyMoveToBase'],
   commitCorners:      ['_commitBounds'],
   // hand-list-sanctioned: immediateMutators() throws STALE_ALLOWLIST_ENTRY on an entry naming no src method — check-layering.js and census-nosettle-naming.js exit 2
-  conveniences:       ['_moveLeftSideTo', '_moveRightSideTo', '_moveBottomSideTo', '_moveToSideOf', '_moveFullCenterTo', '_moveWithin',
+  conveniences:       ['_moveLeftSideTo', '_moveRightSideTo', '_moveToSideOf', '_moveFullCenterTo', '_moveWithin',
                        '_moveInDesktopToFractionalPosition', '_setWidthSizeHeightAccordingly', '_resizeToWithoutSpacing'],
 };
 

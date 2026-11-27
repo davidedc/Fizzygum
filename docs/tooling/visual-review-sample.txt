@@ -36,7 +36,7 @@ SystemTest_macroSaveAsPromptAboveTiltedWindow
 # lists and scrollbars
 SystemTest_macroListWdgtAutoScrollsNearDraggedEdge
 SystemTest_macroScrollIndicatorFattensAndDrags
-# the inspector
+# the inspector: its trail band, its strip of lists, the divider and its turned tab, the body below
 SystemTest_macroAddEditSaveRenameRemoveProperty
 SystemTest_macroNakedInspectorRendersResizesAndEdits
 # documents
@@ -49,7 +49,7 @@ SystemTest_macroSpreadsheetOpenGrid
 SystemTest_macroTwoEditsOnOneRingInOneCycle
 SystemTest_macroSampleDashboardPlots
 # W3: buttons in footer bands (error log, console), prompt buttons (number + colour prompts), the inspector
-# (its header and class chip, toggles, member rows, footers, taken apart),
+# (its header and class button, toggles, member rows, footers, taken apart),
 # a two-button toggle fixture, and a mono patch node (fonts.code)
 SystemTest_macroErrorConsolePopsClean
 SystemTest_macroInspectorWorkAreaEvaluatesCoffeeScript

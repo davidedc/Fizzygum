@@ -1,17 +1,26 @@
 # THE SET of an inspector browser (InspectorBrowserWdgt): the ROW OF COLUMNS its inspectors stand in,
 # in the order of its sequence, and the column dividers between them. The browser owns the sequence and
-# the rule of choice, and places each inspector it adds at my end (_addColumnNoSettle); I own the set's
-# STRUCTURE. Built empty (`new InspectorRowWdgt()`): a subject is an inspector's, never mine.
+# the rule of choice, and places each inspector it adds as a column at my end (_addColumnNoSettle) --
+# every one but its body, while its body stands below me --; I own the set's STRUCTURE. Built empty
+# (`new InspectorRowWdgt()`): a subject is an inspector's, never mine.
 #   I am the PLANE of my browser's set viewport (InspectorRowViewportWdgt), which clips me and scrolls
 # me sideways. My columns, inspectors (InspectorWdgt), are the elements of a horizontal DIVISION row
-# (StackLayoutEngine), a column divider between two of them (InspectorColumnDividerWdgt), and that
+# (StackLayoutEngine), a column divider between two of them (InspectorDividerWdgt, across), and that
 # arrange is all the layout I have. My viewport commits my MEASURE as my frame
 # (scrolledContentMeasure), read from fields only: every column at the width it answers
 # (InspectorWdgt.getDesiredDim: what its cells desire, or the width a person stated), every divider
 # at its own, the whole never narrower than my viewport and exactly as tall; only my LAST column
 # takes more than its own width (takesMySlack): the room my viewport has to spare and, while my
 # columns overflow my viewport, as much more as stands the end of my scroll on a column's left edge
-# (columnLefts). So no column narrows to fit my viewport: I overflow it, and it scrolls me. A
+# (columnLefts). So no column narrows to fit my viewport: I overflow it, and it scrolls me. A choice
+# that REMOVES columns of mine leaves my viewport's scroll where the choice found it: my browser
+# HOLDS that offset in me (_holdScrollAtNoSettle), my measure keeps it in reach, my last column
+# taking the room the removed ones leave, so the column the person chose in stands still under the
+# pointer for a second click. A choice that removes none of my columns keeps that hold (a reload,
+# another member shown in my browser's body: nothing in me changed, so nothing may slide); my
+# viewport's next scroll lets go of it -- the reveal of a column a choice adds among them, when it
+# moves my viewport; a stroke, as it comes to rest --, and my viewport's clamp then closes that room,
+# as it does once my viewport stands at another width than the hold was written at. A
 # divider's drag SIZES the one column on its left (states its width) and the columns right of it
 # shift: nothing trades width between two columns, and in me a column's width is its own answer. A
 # drag on a divider is measured in the plane my scroll leaves still (planeItsScrollLeavesStill). I
@@ -31,13 +40,13 @@
 # its title) included. A child a person attaches to me is no moment of its own: it waits for the next
 # of those, an inspector attached to me as a cell of my row ("Attach with horizontal layout") standing
 # as my last column with no divider until then. My CELLS, the only children that reconcile reads or
-# touches, are my columns and my dividers (my division cells that answer a column divider's solve,
-# columnWidthDraggedTo); any other child of mine (a halo's handle or its trading adjuster, an "Edit
+# touches, are my columns and my dividers (my division cells that answer a divider's solve,
+# sizeDraggedTo); any other child of mine (a halo's handle or its trading adjuster, an "Edit
 # layout" slot, an inspector attached to me free-floating, a widget attached to me that is neither) is
 # left where it is. Every reconcile ends by
-# telling my browser, whose name is its first inspector's, that its first inspector may be another one
-# (InspectorBrowserWdgt._noteFirstInspectorMayHaveChangedNoSettle): a person's "Pick up" of my first
-# column reaches only me.
+# telling my browser that its sequence may have changed (InspectorBrowserWdgt.
+# _noteMySequenceMayHaveChangedNoSettle: its name is its first inspector's, and its trail names every
+# step of it): a person's "Pick up" of a column of mine reaches only me.
 class InspectorRowWdgt extends Widget
 
   # am I being destroyed as a whole (_fullDestroyNoSettle)? Then a child of mine leaving me is my
@@ -46,6 +55,25 @@ class InspectorRowWdgt extends Widget
   # is my reconcile running? Its own splitter removals tell me a child left, and must not reconcile
   # again inside it. True only inside one synchronous call, so no copy or save carries it true.
   _reconcilingSplitters: false
+  # THE OFFSET MY VIEWPORT'S SCROLL IS HELD AT, in whole px, or undefined: the offset a choice that
+  # removes columns of mine finds my viewport at (my header says why), which my measure keeps in reach
+  # (scrolledContentMeasure) -- and, beside it, THE WIDTH MY VIEWPORT STOOD AT as that choice held it,
+  # the one width at which my measure honours the hold. Both written by my browser's choice that
+  # removes a column of mine -- any other choice leaves them as they stand, so a reload or another
+  # member shown in my browser's body slides nothing under the pointer -- and both let go of by my
+  # viewport's next scroll, whatever moves it: a wheel notch and my bar's write as they move it, a
+  # stroke at its ending, where it comes to rest (InspectorRowViewportWdgt._scrollX, _restAfterAStroke),
+  # and a reveal of a column, a choice's of the column it adds or my browser's trail's of a level, in
+  # its own settle, when it moves my viewport (InspectorRowViewportWdgt.revealColumn). A resize that
+  # changes my viewport's width lets go of what the hold keeps without writing either field: at any
+  # other width my measure reads past the hold, so the room it kept closes by my viewport's clamp, and
+  # it is honoured again only were my viewport to stand at that width once more before its next scroll.
+  # They mean something only between one click and the next, so neither a copy nor a save carries
+  # them: a restored or copied set stands at its own measure.
+  _heldScrollOffset: undefined
+  _heldAtViewWidth: undefined
+  @serializationTransients: ["_heldScrollOffset", "_heldAtViewWidth"]
+  @copyTransients: ["_heldScrollOffset", "_heldAtViewWidth"]
 
   # I lay the inspector's body under my parts: my browser paints it, under me and so under all of
   # them, so an inspector of mine paints none of its own (InspectorBodyAppearance asks, as it paints).
@@ -73,14 +101,34 @@ class InspectorRowWdgt extends Widget
   # widened to the first of my columns' left edges at or past the scroll that shows my content's end,
   # plus `viewWidth`, so the end of my scroll is that column's left edge and my last column takes the
   # extra room (takesMySlack). A last column wider than my viewport leaves no such edge, and I am then
-  # my content wide. As tall as my viewport, at my own origin, which the commit never moves.
+  # my content wide. While my viewport's scroll is HELD (_heldScrollOffset) and my viewport stands at
+  # the width it stood at as the hold was written (_heldAtViewWidth), I am at least that offset plus
+  # `viewWidth` wide, my last column taking that room too, so my viewport's clamp leaves the held offset
+  # standing; let go of, or at any other width, I am my own width again, and the clamp brings my
+  # viewport's offset back within it, to my new end, a rest point. No input is a size my own commit
+  # changes: the held offset and its width are fields, and `viewWidth` my viewport's own, which the
+  # hold never changes. As tall as my viewport, at my own origin, which the commit never moves.
   scrolledContentMeasure: (viewWidth) ->
     content = Math.ceil @getRecursiveDesiredDim().x
     width = Math.max content, viewWidth
     if content > viewWidth
       end = (left for left in @columnLefts() when left >= content - viewWidth)[0]
       width = end + viewWidth  if end?
+    width = Math.max width, @_heldScrollOffset + viewWidth  if @_heldScrollOffset? and viewWidth is @_heldAtViewWidth
     new Rectangle @left(), @top(), @left() + width, @top() + @parent.height()
+
+  # MY VIEWPORT'S SCROLL HELD AT `offset`, a whole px, with my viewport standing `viewWidth` wide, or
+  # let go of (both undefined: no argument): my fields' comment says who writes them and when. A change
+  # invalidates my layout, which climbs to my viewport (it re-fits the plane whose size it tracks), so
+  # its next arrange commits my measure anew. A core: my browser writes it inside a choice's settle
+  # (InspectorBrowserWdgt._holdMyScrollNoSettle); my viewport lets go of it inside its reveal's settle
+  # (InspectorRowViewportWdgt.revealColumn) or, for a stream's scroll, inside a declared deferral
+  # (InspectorRowViewportWdgt._letGoOfMySetsHold). Nothing to do when it holds that already.
+  _holdScrollAtNoSettle: (offset, viewWidth) ->
+    return if offset is @_heldScrollOffset and viewWidth is @_heldAtViewWidth
+    @_heldScrollOffset = offset
+    @_heldAtViewWidth = viewWidth
+    @_invalidateLayout()
 
   # My measure is my WHOLE frame, committed verbatim (the scrolled-content contract, read by
   # ViewportWdgt._positionAndResizeChildren): it stands at my origin, at least my viewport's width and
@@ -144,15 +192,15 @@ class InspectorRowWdgt extends Widget
     (child for child in @children when @_isMyColumn(child) or @_isMySplitter(child))
 
   # Is `child` a SPLITTER of mine, a column divider? Asked of the capability its users need, never of a
-  # type: a cell of my division row that answers a column divider's solve (columnWidthDraggedTo), the
-  # seam a split button asks of the divider before its inspector (SplitGripWdgt). Another cell that
+  # type: a cell of my division row that answers a divider's solve (sizeDraggedTo), the seam a split
+  # button asks of the divider before its inspector (SplitGripWdgt). Another cell that
   # takes a drag in place (a palette or a slider's button dropped on an "Edit layout" slot of mine)
   # answers no such solve, and neither does a trading adjuster the halo's "Resize/move…" adds beside an
   # inspector of mine (StackElementsSizeAdjustingWdgt), so neither is ever destroyed as a stray divider
   # nor dragged as one; an "Edit layout" slot is a cell that answers none either; a halo's handle and a
   # widget attached to me stand free.
   _isMySplitter: (child) ->
-    (child.layoutSpec?.isDivisionElement?() is true) and child.columnWidthDraggedTo?
+    (child.layoutSpec?.isDivisionElement?() is true) and child.sizeDraggedTo?
 
   # THE CELL JUST BEFORE `cell` among my cells, or undefined (first, or no cell of mine): an "Edit
   # layout" slot between the two is no cell of mine, so it does not stand between them
@@ -166,17 +214,18 @@ class InspectorRowWdgt extends Widget
     before = @_cellBefore inspector
     before  if before? and @_isMySplitter before
 
-  # THE COLUMN `divider` SIZES, splitterBefore's twin: the cell just before it among my cells, when
+  # THE CELL `divider` SIZES, splitterBefore's twin: the column just before it among my cells, when
   # that cell is a column of mine, or undefined. Asked by the divider as a drag on it, or on its split
-  # button, begins and goes on (InspectorColumnDividerWdgt.columnDragAnchorAt, columnWidthDraggedTo).
-  columnBefore: (divider) ->
+  # button, begins and goes on (InspectorDividerWdgt.dragAnchorAt, sizeDraggedTo). I cap no column's
+  # width (I answer no mostSizeOf): a column wider than my viewport overflows it, and it scrolls me.
+  cellSizedBy: (divider) ->
     before = @_cellBefore divider
     before  if before?.showsSubject?
 
   # THE PLANE MY SCROLL LEAVES STILL: my viewport's while I am its plane (isMyContentsPanel, its role
   # query) -- its own plane excludes the scroll that translates me, so a point mapped into it stays put
   # as my scroll moves me -- or my own while I stand in no viewport (turned in a transform island, which
-  # maps into me). A drag on a divider of mine is measured in it (InspectorColumnDividerWdgt.dragPlane):
+  # maps into me). A drag on a divider of mine is measured in it (InspectorDividerWdgt.dragPlane):
   # at my scroll's far end a drag that narrows a column lets my viewport's clamp slide me under the
   # pointer, which a drag measured in my own plane would read as more travel.
   planeItsScrollLeavesStill: ->
@@ -184,8 +233,8 @@ class InspectorRowWdgt extends Widget
 
   # THE ONE RULE of my splitters: exactly one between two of my columns that stand side by side,
   # none anywhere else -- then each column re-derives its split button from it, and my browser is
-  # told that its first inspector may be another one (what changed my children may have changed which
-  # column is first: a person's "Pick up" of it), which is the browser's to judge, settling nothing.
+  # told that its sequence may have changed (what changed my children may have changed which columns
+  # are its steps: a person's "Pick up" of one), which is the browser's to judge, settling nothing.
   # Run under a flag, in a try/finally: the splitters it destroys tell me they left, and that must not
   # reconcile again inside this run. Builds nothing when nothing is out of place, so a child leaving me
   # in the middle of a layout pass (an "Edit layout" slot the pass takes away) finds nothing to do; a
@@ -197,7 +246,7 @@ class InspectorRowWdgt extends Widget
       @_dropStraySplittersNoSettle()
       @_addMissingSplittersNoSettle()
       inspector._reconcileSplitGripNoSettle() for inspector in @columns()
-      InspectorBrowserWdgt.holding(@)?._noteFirstInspectorMayHaveChangedNoSettle()
+      InspectorBrowserWdgt.holding(@)?._noteMySequenceMayHaveChangedNoSettle()
     finally
       @_reconcilingSplitters = false
     return
@@ -220,7 +269,7 @@ class InspectorRowWdgt extends Widget
     previous = undefined
     for cell in @_myCells()
       if cell.showsSubject? and previous?.showsSubject?
-        splitter = new InspectorColumnDividerWdgt()
+        splitter = new InspectorDividerWdgt()
         @_addNoSettle splitter, atIndex: @children.indexOf(cell), layoutSpec: splitter.divisionBox()
       previous = cell
     return

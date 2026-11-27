@@ -369,7 +369,17 @@ The viewport's arrange reads DECLARATIONS off its plane instead of testing class
   read from fields (every column at the width it answers, the last column the rest, as tall
   as the viewport, widened while it overflows so the end of its scroll is a column's left
   edge — unless its last column is wider than the viewport, which leaves the end where that
-  column's right edge meets the view's), is its whole frame. A division row arranges its cells in its OWN layout pass, so
+  column's right edge meets the view's — and, while a choice that removed columns HOLDS the
+  viewport's scroll where it found it, at least that offset plus the view's width, its last
+  column taking that room too, and only while the viewport stands at the width it had when
+  the hold was written (`InspectorRowWdgt._heldScrollOffset` and `_heldAtViewWidth`, fields
+  the measure reads and no save or copy carries), let go of by the viewport's next scroll — a
+  wheel notch, the bar's write or a reveal as it moves, a press-held stroke where it comes to
+  rest, so the set moves with a finger through the held room (`InspectorRowViewportWdgt.
+  _scrollX`, `_restAfterAStroke`)), is its whole frame. As the browser's STRIP OF LISTS
+  (its body below), the viewport's own height is STATED by its division box, and its least
+  is never below its plane's, the tallest least of the set's columns
+  (`InspectorRowViewportWdgt.getMinDim`; `layout.md`, the tool's composition). A division row arranges its cells in its OWN layout pass, so
   it also declares `implementsDeferredLayout` true: the viewport commits a plane's frame
   silently and schedules the plane's re-lay only for a plane that says so, and the set's
   columns would otherwise stay placed for an old width whenever the viewport is itself
@@ -396,10 +406,11 @@ which is what let the pop-up's rows panel become its viewport's DIRECT contents 
 menu-sandwich dissolution; `PopUpRowsPaneWdgt` is deleted). A free-width stack is fine as
 direct contents with no such declaration: it owns its width PASSIVELY (the declaration
 turns the normalization off), and its `tight: false` height AGREES with grow-to-fill by
-construction. ⚠ `ListWdgt` keeps the interposed-pane shape deliberately: its design sizes
-the rows panel PAST the hug (anti-vacant-space, `ListWdgt._applyExtent`), so the panel's
-unconditional hug self-write and the list's committed frame structurally disagree — there
-the pane IS the second surface that keeps the writers apart. (A MEMBER list's panel — an inspector's member list's, or its object list's —
+construction. `ListWdgt` keeps the interposed-pane shape. Its rows stay where they were
+built: a list's growth moves no row (a move of the rows inside a pinned plane is not a
+scroll, and one made at each applied extent of a drag would leave the rows where a frame
+boundary happened to cut it), so a list's render is a function of its scroll events and
+its final extent. (A MEMBER list's panel — an inspector's member list's, or its object list's —
 does not hug: it takes the list's width, `ListWdgt._positionAndResizeChildren` / `CommandPanelWdgt._myArrangedWidth`.)
 
 ## Naming

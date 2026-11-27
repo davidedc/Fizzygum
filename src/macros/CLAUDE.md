@@ -325,9 +325,10 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `topMemberList()` locator: the inspector entry below has both locators),
   `clickViewToggle inspector, face` (the inspector's chooser toggle that shows `face`, found by what it shows and
   answers, never through `viewToggles`/`shownViewTitle`, clicked and verified; NO VIEW TOGGLE, naming the faces
-  shown, where none shows it), `dragSplitControlBy control, deltaX` (a drag on a split's divider or split button in
-  legs: a verified press, a held move, a release — a plain touch stroke under a finger, both controls owning the
-  drags that start on them),
+  shown, where none shows it), `dragSplitControlBy control, delta` (a drag on an inspector browser's divider or the
+  split button joined to it, by `delta`, a Point read along the divider's axis — a column divider's x, the body's
+  divider's y — in legs: a verified press, a held move, a release — a plain touch stroke under a finger, both
+  controls owning the drags that start on them),
   `bringMenuRowIntoView row` (a menu row the locators answered, brought into view through the input queue: ONE wheel
   over the pop-up's rows by the delta that CENTRES the row — the list wheel's rule, `_centringDelta`; a finger run
   swipes the rows — then `assertMenuRowInView`, never a retry; a row already showing takes no wheel and no cycle. Hold
@@ -399,7 +400,7 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   wording itself (`assertTopMenuItemStrings ["Desktop"]`) only where the wording is the point. A label carries no mark
   of where its row leads either: a row that opens a submenu states it (`opensSubmenu: true`) and DRAWS a chevron, so a
   test reads the row's `opensSubmenu`, never a typed arrow. `findTopWidgetByClassNameOrClass` and `instanceof`, by
-  contrast, use the REAL class name (`"TextWdgt"`); and an inspector's class chip shows the real name too.
+  contrast, use the REAL class name (`"TextWdgt"`); and an inspector's class button shows the real name too.
 - **Menu items and magnets are label buttons** — their base is **`LabelButtonWdgt`** (a flat label-bearing button):
   `Widget → ButtonWdgt → LabelButtonWdgt → {MenuItemWdgt, MagnetWdgt}`. `LabelButtonWdgt` inherits the
   `target`/`action`/`trigger` machinery and the pointer look `_shownState` reads off the hand from `ButtonWdgt` but paints its own
@@ -417,54 +418,82 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
 - **One inspector tool — a BROWSER of inspectors, in a window by default, and a widget like any other with none:** "Dev →
   Inspect" (`inspect` → `Widget.spawnInspector`, the one door; `spawnInspector subject, member: name` opens it with that
   member chosen as a click on its row chooses it, its row scrolled whole into view and Inherited turned on where only that
-  hid it — `InspectorBrowserWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open) opens a 760 × 528 window (`InspectorBrowserWdgt.defaultExtent`;
-  its set's viewport 758 × 439) whose content is an `InspectorBrowserWdgt` (a `ClippingWdgt`), titled by its first inspector
-  ("Inspector — analog clock"): its cell `browser.viewport` (`InspectorRowViewportWdgt`) scrolls sideways its plane, the SET
-  `browser.row` (`InspectorRowWdgt`, `row.columns()`). `browser.inspectors()` is its SEQUENCE, the `InspectorWdgt`s left to
-  right, a column divider (`InspectorColumnDividerWdgt`) between two: each has its `inspectedObject`,
-  a `header` (`headerTitle`, and a `classChip` naming the class its subject is made by), a `chooser` band when its
+  hid it — `InspectorBrowserWdgt.chooseMember` — which is what an edit mark and an "Edit code" row open) opens a window at
+  `InspectorBrowserWdgt.defaultExtent()`, `(new Point 1000, 808).min world.extent()` — in the test world 1000 × 808, its
+  browser 998 × 719 — whose content is an `InspectorBrowserWdgt` (a `ClippingWdgt`), titled by its first inspector
+  ("Inspector — analog clock"). Its cells, top to bottom: the TRAIL `browser.trail` (a `BandWdgt`, 52 tall); the
+  STRIP OF LISTS `browser.viewport` (`InspectorRowViewportWdgt`, 998 × 312 as built), which scrolls sideways its plane,
+  the SET `browser.row` (`InspectorRowWdgt`, `row.columns()`); a divider (`InspectorDividerWdgt`, 12); and the BODY,
+  every pixel left (343), at the browser's full width — the setting `bodyPlace: "below"`, the default (`new
+  InspectorBrowserWdgt target, bodyPlace: "beside"` keeps the body as the set's last column, with no divider below the
+  set). `browser.inspectors()` is its SEQUENCE: the set's columns left to right (a divider, `InspectorDividerWdgt`,
+  between two), then the body while it shows a member; while none is chosen the body is an EMPTY one ("(nothing
+  chosen)", an inspector on no subject), no step of the sequence. Each step has its `inspectedObject`,
+  a `header` (`headerTitle`, and a `classButton`, a plain `SimpleButtonWdgt` whose face is the name of the class its
+  subject is made by), a `chooser` band when its
   subject offers more than one VIEW (`viewToggles`, one `LabelledToggleWdgt` per view, the shown one ON: a widget
   offers Members and Children, a class's prototype Members, Instances where instances register, and Subclasses), and
   ONE `view`. The first view is always the **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s, the
   footer's `addPropertyButton` / `duplicatePropertyButton` / `renamePropertyButton` / `removePropertyButton`,
   `cutNoticeBand`, `footerBand`), so `inspectors()[0].view` read right after the build is a member list; on a
-  subject with a chooser it stands 48 px lower (header 44, chooser 48, then its toggles 48, its list 247, its footer
-  52 in the default window). A press on another toggle (`clickViewToggle_InputEvents_Macro inspector, face`) shows that view in the same inspector (an `ObjectListWdgt`
-  for Children, Instances, Subclasses: rows of objects, a press on one opens THAT object on the right), a press on
-  the lit toggle has the view read its list again, and either closes what stood right of it. A
-  CHOICE in an inspector replaces whatever stands right of it: a click on a member row (`selectionFromList`) puts an
-  inspector on THAT member there, its view a **member editor** (`MemberEditorWdgt`: `.memberRef`, the code area
-  `.tempPromptEntryField`, its `.textWidget`, `.saveButton`; an editor's inspector offers one view and stands no
-  chooser); a double-click on a row whose value has members to show -- an object, or a Fizzygum class (a function
-  carrying the class marker, a `constructor` row's) -- (`inspectMemberValue`) puts one on the value, while a plain
-  method's row keeps its editor; the class chip puts one on the class it names (its prototype), each a member list.
-  Nothing widens the window: every column stands at its NATURAL width (what its cells desire: a member list 372, an
-  editor 280 at least) until a drag on the divider at its right, or on the split button joined to it, STATES its width;
+  subject with a chooser it stands 48 px lower (header 44, chooser 48, then its toggles 48, its list 120, its footer
+  52 in the strip's 312: two whole member rows). A press on another toggle (`clickViewToggle_InputEvents_Macro inspector, face`) shows that view in the same inspector (an `ObjectListWdgt`
+  for Children, Instances, Subclasses: rows of objects, a press on one opens THAT object in the column after it, on
+  the view of the same title when the object offers one that lists something: a walk keeps its view), a press on
+  the lit toggle has the view read its list again, and either closes what followed it. A
+  CHOICE in an inspector replaces whatever follows it in the sequence: a click on a member row (`selectionFromList`)
+  puts an inspector on THAT member in the BODY, below the lists, its view a **member editor** (`MemberEditorWdgt`:
+  `.memberRef`, the code area `.tempPromptEntryField`, its `.textWidget`, `.saveButton`; an editor's inspector offers
+  one view and stands no chooser, and its header no class button); a double-click on a row whose value has members to
+  show -- an object, or a Fizzygum class (a function
+  carrying the class marker, a `constructor` row's) -- (`inspectMemberValue`) puts one on the value, a column, while a
+  plain method's row keeps its editor; the class button puts one on the class it names (its prototype), a column, each
+  a member list.
+  Nothing widens the window: every column stands at its NATURAL width (what its cells desire: a member list 372)
+  until a drag on the divider at its right, or on the split button joined to it, STATES its width;
   the set's last column takes the spare room, and a set wider than its viewport SCROLLS — never squeezes a column —,
-  its scroll resting on a column's left edge (a sideways wheel notch moves one column; a stroke rests at its end); a
-  choice brings the column it shows whole into view, the least way (`InspectorRowViewportWdgt.revealColumn`). A press
+  its scroll resting on a column's left edge (a sideways wheel notch moves one column; a stroke rests at its end). A
+  choice brings the inspector it SHOWS whole into view, the least way, when that is a column
+  (`InspectorRowViewportWdgt.revealColumn`): a member shown in the body moves nothing, so the list chosen in stands
+  still under the pointer for a second click. A choice that REMOVES columns HOLDS the set's scroll where it found it
+  (`row._heldScrollOffset`: the set stays at least that offset plus its viewport's width, its last column taking the
+  room, while its viewport keeps the width it had then), and the set's next scroll lets go of it — a stroke where it
+  comes to rest. The strip's height is STATED: a drag on the divider above the body,
+  or on its tab, the split button turned a quarter (44 × 32) at the left end of the body's header, states it (the
+  strip's least 190, or the tallest least of its columns where that is more, 236 under a chooser; its most what leaves
+  every other cell its desired height), and a window resized after keeps it. The trail names the sequence, one plain button per
+  step (`action` `"revealTrailLevel"`, `argumentToAction1` the step's index, `faceWidget.text` its words), a drawn
+  chevron (`MenuRowIndicatorWdgt`) between two: each step named as the step before it names the choice made in it
+  ("Class RectangleWdgt", "Child Rectangle 2", "Instance Rectangle"), else by its own subject's name ("Rectangle",
+  "color", "RectangleWdgt"); a press on a step brings the column it was chosen in whole into view and the row chosen
+  there into its list's view. A press
   at a column the set scrolled out misses (AIM MISSED): bring it in first, as a person does,
   `bringColumnIntoView_InputEvents_Macro column` (a notch, or a swipe under a finger). "Add…", "Duplicate…" and "Rename…" refuse a new name the
   subject already answers, its own or inherited, with an inform (a rename to the member's own name does nothing and
   says nothing); an own version of an inherited member is made by choosing it and pressing Save. ⚠ An editor exists only once a member is
   chosen; ANOTHER member REPLACES its inspector with a new one holding a new editor (the same member chosen again
   reloads the editor in place: its text put back, as one step of its undo history), and a filter toggle, a footer
-  edit or the class chip takes it away — re-locate the editor after EVERY choice, never keep one from before it. The
+  edit or the class button takes it away (the body is an empty one again) — re-locate the editor after EVERY choice,
+  never keep one from before it. The
   list's placeholder row "(empty)" names no member and chooses nothing. **Find the parts with the toolkit's two
   locators**, not a search of the world (one for "an editor" also meets a script's, a console's or another window's):
   `@topMemberList()` — the frontmost widget answering `selectionFromList` with a `list`: the rightmost member list of
   the frontmost window holding one — and `@memberEditorFedBy memberList` — STRUCTURAL: the view of the inspector
-  standing next after that list's own in its browser's sequence (`browser.inspectors()`), while it holds a `memberRef`
-  on a member of the list's subject (else undefined) — with
+  standing next after that list's own in its browser's sequence (`browser.inspectors()`: the body, once a member
+  is chosen in that list), while it holds a `memberRef` on a member of the list's subject (else
+  undefined) — with
   `@topMemberEditor()` that of `topMemberList()`. The `*FromTopInspector*` verbs ride them: `topInspectorList()` is
   `topMemberList()`'s `list`, and the three code-pane verbs act on `topMemberEditor()`, throwing NO MEMBER EDITOR when
   no member is chosen (NO SAVE BUTTON for a member no Save edits). A test holding a list of its own (a copied window's,
-  the second of two) hands THAT list to `memberEditorFedBy`. An inspector's `parent` is its set, the set's its
-  viewport, the viewport's its browser and the browser's the window: find the window by `enclosingFrame()`, never a
-  `.parent` chain, and move the WINDOW, never an inspector (a cell of its set's division). A part picked out of its
-  set stands alone, on a body it paints itself: an inspector whose view is picked out of it shows no subject (it keeps
+  the second of two) hands THAT list to `memberEditorFedBy`. A column's `parent` is its set, the set's its
+  viewport, the viewport's its browser, and the body's `parent` is the browser itself, the browser's the window: find
+  the window by `enclosingFrame()`, never a `.parent` chain, and move the WINDOW, never an inspector (a cell of a
+  division). A part picked out of its
+  browser stands alone, on a body it paints itself: an inspector whose view is picked out of it shows no subject (it keeps
   its header and its chooser, and its column falls to their width), a choice in a list in no browser opens a window of
-  its own, and a split button anywhere but at the lead of its inspector's header moves no column.
+  its own, and a split button anywhere but at the lead of its inspector's header moves nothing. When the body leaves
+  the browser (a choice that removes it, a person's "Pick up" or "Destroy" of it), the browser rebuilds what is
+  missing: an empty body, exactly one divider right before it, and its tab.
   **With no window** (`world.add new InspectorBrowserWdgt target`) the browser paints its own body (`inspectorBodyFill`)
   and chooses, scrolls and edits the same way, found by the same locators; it has NO resizer of its own. Resize it as
   any widget, by the halo its "Resize/move…" gives it (`@resizeWidgetBy_InputEvents browser, delta`). Two gotchas (learned in

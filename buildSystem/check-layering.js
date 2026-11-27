@@ -402,7 +402,8 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 
 // [O] the *DeferredSettle caller ALLOWLIST (Tier C, 2026-07-02, docs/archive/layout-optimizations-and-oo-cleanup-plan.md §4).
 // A *DeferredSettle entrypoint (_setMaxDimDeferredSettle / _setExtentDeferredSettle / _moveToDeferredSettle / _setWidthDeferredSettle /
-// _setHeightDeferredSettle on Widget, and InspectorWdgt._setColumnWidthDeferredSettle, a column's stated width -- all _-private,
+// _setHeightDeferredSettle on Widget, and the stated size an inspector browser's divider writes, _setStatedSizeDeferredSettle on
+// InspectorWdgt, a column's width, and on InspectorRowViewportWdgt, the strip of lists' height -- all _-private,
 // restricted to stream handlers) DEFERS its layout SETTLE to the ONE
 // end-of-cycle flush -- the field write is synchronous,
 // only the flush is deferred. That is byte-identical (render is once-per-frame after all events), hence sound,
@@ -412,7 +413,7 @@ const SEAM_VERB_BANNED = /^_announce\w*ToContainer$/;   // the deleted notify-by
 // the _deferredSettleDeclarationDepth / auditUndeclaredEndOfCycle machinery (WorldWdgt :90-98, Widget :3713) enforces
 // the CONVERSE -- that end-of-cycle mutations are DECLARED -- and treats any *DeferredSettle call as auto-declared
 // regardless of caller. So restrict the CALL to the allowlisted stream handlers by ENCLOSING-METHOD NAME (HandleWdgt,
-// StackElementsSizeAdjustingWdgt, an inspector browser's column divider, InspectorColumnDividerWdgt, and the split button
+// StackElementsSizeAdjustingWdgt, an inspector browser's divider, InspectorDividerWdgt, and the split button
 // joined to it, SplitGripWdgt, each name their drag handler nonFloatDragging, so the one name covers the four callers).
 // @-self / .-receiver scoped -- the callers are always direct; a comment or a string mentioning one
 // is blanked (lib/coffee-mask.js). Extend the allowlist ONLY when a genuine new per-event stream (a wheel/scroll or key-repeat

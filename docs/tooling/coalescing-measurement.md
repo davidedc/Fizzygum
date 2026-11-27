@@ -63,11 +63,12 @@ exactly that shape today: `StackElementsSizeAdjustingWdgt.nonFloatDragging` call
 (`_`-private, restricted to `nonFloatDragging` by check-layering [O]'s `DEFERRED_SETTLE_CALLER_ALLOWLIST`), which
 *declares* the deferred settle so the end-of-cycle flush can tell an intentional deferred-settle mutation from a
 careless leak. The watch above still fires under it: the entrypoint bottoms out in the same `_setMaxDimNoSettle`.
-An inspector browser's column divider and its split button take the same deferred path under the same allowlisted
-name (`InspectorColumnDividerWdgt.nonFloatDragging`, `SplitGripWdgt.nonFloatDragging`: the divider's solve,
-`columnWidthDraggedTo`, then one `_setColumnWidthDeferredSettle` write), but their write bottoms out in
-`InspectorWdgt._setColumnWidthNoSettle`, a column's stated width, which the watch above does not wrap: measure their
-mutations by wrapping that core too. The splitter's own solve, `_maxDimsPuttingMyLeadingEdgeAt`, has its own handler
+An inspector browser's divider and its split button take the same deferred path under the same allowlisted
+name (`InspectorDividerWdgt.nonFloatDragging`, `SplitGripWdgt.nonFloatDragging`: the divider's solve,
+`sizeDraggedTo`, then one `_setStatedSizeDeferredSettle` write), but their write bottoms out in the cell's own
+`_setStatedSizeNoSettle` — a column's stated width (`InspectorWdgt`) or the strip of lists' stated height
+(`InspectorRowViewportWdgt`, its division box) — which the watch above does not wrap: measure their mutations by
+wrapping those cores too. The splitter's own solve, `_maxDimsPuttingMyLeadingEdgeAt`, has its own handler
 as its one caller.
 
 Side note the harness surfaced: ~half of those 718 mutations are **set-then-reverted within the same frame**

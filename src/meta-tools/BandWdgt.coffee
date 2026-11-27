@@ -1,13 +1,15 @@
 # A BAND: one row of controls across the widget that holds me -- an inspector's header, a member
 # list's row of toggles, its row of buttons. I am `height` tall, my rule included, and as wide as I
-# am given; my controls keep their own sizes, centred down me, in the order written, with the gaps
-# written between them, and my spring -- or a text that gives, in its place -- takes the slack.
+# am given; my controls keep their own sizes, centred down me -- unless a control says where it stands
+# down a band (crossAlignInABand: a split button turned a quarter hangs from my top, under the divider
+# above its inspector) --, in the order written, with the gaps written between them, and my spring --
+# or a text that gives, in its place -- takes the slack.
 #   I have no layout of my own: every piece of mine is an element of a horizontal DIVISION row
 # (StackLayoutEngine). So my least width is my pieces' together, which the stack derives
 # (Widget.getRecursiveMinDim), and the least width of whatever holds me follows from it.
-#   An item is a widget (a CONTROL, fixed at its own preferredExtent and centred down me), a number
-# (a GAP that many px wide), BandWdgt.SPRING (BandSpaceWdgt makes a gap and a spring), or
-# `{gives: aText}`, a line of text that GIVES WAY. A gap is as tall as I am, and that is what makes
+#   An item is a widget (a CONTROL, fixed at its own preferredExtent, centred down me or where it
+# says), a number (a GAP that many px wide), BandWdgt.SPRING (BandSpaceWdgt makes a gap and a spring),
+# or `{gives: aText}`, a line of text that GIVES WAY. A gap is as tall as I am, and that is what makes
 # me that tall: a division row is as tall as its tallest element, whatever its own box says.
 #   Every fixed piece is FIXED: a control's least, desired and most size are all its preferredExtent,
 # with no spreadability at all (SPREADABILITY_NONE still leaves a tenth of the desired size to take
@@ -96,8 +98,9 @@ class BandWdgt extends Widget
 
   # the piece an item makes: a gap or a spring for a number or SPRING; for a widget, a control fixed
   # at its own size; for a text that gives, that text as my spring, at its box's least width and its
-  # line's height (the header says why); either widget centred down me (the spec's NoSettle core: its
-  # public setter settles)
+  # line's height (the header says why); either widget centred down me, or where it says it stands down
+  # a band (crossAlignInABand: "start", "center" or "end"), through the spec's NoSettle core (its public
+  # setter settles)
   _pieceFor: (item) ->
     return new BandSpaceWdgt 1, @bandHeight, springs: true  if item is BandWdgt.SPRING
     return new BandSpaceWdgt item, @bandHeight  if typeof item is "number"
@@ -109,7 +112,7 @@ class BandWdgt extends Widget
       piece = item
       extent = piece.preferredExtent()
       piece.setMinAndMaxBoundsAndSpreadability extent, extent, 0
-    piece.divisionBox()._setCrossAlignNoSettle "center"
+    piece.divisionBox()._setCrossAlignNoSettle (piece.crossAlignInABand?() ? "center")
     piece
 
   # My one seam: my rule, inside my height, along my ruleEdge (none without one).

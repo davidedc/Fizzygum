@@ -340,22 +340,6 @@ class Theme
     @toggleOnFill = @accentTint
     @toggleOnStroke = @accent
     @toggleOnText = @accent
-    # a CHIP (ChipWdgt; visual-design-system §4.3, §4.8), one of a row of alternatives -- the class
-    # chip of an inspector's header. Any chip but the CURRENT one: no fill at all (whatever lies
-    # behind the chip shows), its 1 px border and the ink of its label ...
-    @chipFill = Color.TRANSPARENT
-    @chipStroke = @chip
-    @chipText = @text2
-    # ... hovered, its fill (its border stays chipStroke), and pressed, its fill and its darker
-    # border ...
-    @chipHoverFill = @desk
-    @chipPressFill = @chrome
-    @chipPressStroke = @frame
-    # ... and the CURRENT chip, in every state: the accent's translucent tint, which composites over
-    # whatever the chip stands on, inside an accent border, and the accent as its label's ink.
-    @chipCurrentFill = @accentTint
-    @chipCurrentStroke = @accent
-    @chipCurrentText = @accent
     # a PLAIN button -- one with no look of its own, which wears ButtonWdgt's state fills: a bare
     # ButtonWdgt given an appearance, a SimpleRectangularButtonWdgt (the demo's simple button and the
     # demo switch's buttons) -- the button's look (visual-design-system §4.3): its fill at rest,
@@ -522,9 +506,14 @@ class Theme
     # out keeps them): none, so the browser's body and the bands' rules show through them.
     @inspectorPaneFill = Color.TRANSPARENT
     @inspectorPaneStroke = undefined
-    # the ink of an inspector's TITLE, its subject's name in its header (InspectorWdgt; its class chip
-    # wears the chip roles, above).
+    # the ink of an inspector's TITLE, its subject's name in its header (InspectorWdgt; its class button
+    # wears the button roles, above).
     @inspectorHeaderTitle = @ink
+    # the ink of the CHEVRON between two levels of an inspector browser's TRAIL (InspectorBrowserWdgt: a
+    # MenuRowIndicatorWdgt drawing the mark a menu row's submenu chevron draws), the same in every state:
+    # the menu row's muted ink, in a role of its own, since it is another surface (menuRowSubmenuChevron
+    # is the row's).
+    @inspectorTrailChevron = @muted3
 
     # the analog CLOCK (AnalogClockAppearance paints its face and marks, AnalogClockWdgt's hand
     # methods its hands and centre dot): its FACE, an opaque disc with no border ...
@@ -698,7 +687,7 @@ class Theme
       # every window's title, focused or not, is FIT in this weight (the look's titleFitBold), so a
       # focus flip never changes which characters a title shows
       focusedWindowTitle: {family: "Arial, sans-serif", size: 13, bold: true}
-      # the small chrome labels: a text button's face (a toggle's and a chip's included), the save /
+      # the small chrome labels: a text button's face (a toggle's included), the save /
       # save + close labels, an inspector's title and a member list's cut notice, a patch
       # node's field labels
       buttonLabel: {family: "Arial, sans-serif", size: 12, bold: false}
@@ -766,10 +755,11 @@ class Theme
     # its side's ends, a toolbar grid's cell
     # side / inter-cell gap / outer margin / row count, a tool cell's rounding and the overflow
     # chevron's glyph square, a text field's rounding, a button's height, paddings and rounding,
-    # a toggle's height, padding and rounding, a chip's height, padding and rounding, a Fizzytiles
+    # a toggle's height, padding and rounding, a Fizzytiles
     # magnet's rounding, the least side of a chrome target, a footer band's height, rule, inset and
     # button gap, and an inspector's bands: their rule's width, its header band's
-    # height, inset and gap, a member list's toggles band's height, inset and gap, and a member
+    # height, inset and gap, a member list's toggles band's height, inset and gap, its browser's trail
+    # chevron's glyph square, and a member
     # editor's least width, a code pane's padding, the text caret's width and the gap it stands after
     # its slot, the drop outline's and the selection outline's widths, a document's item spacing and
     # its text items' rounding and padding, and a desktop icon's tile, glyph, plate and cell (all
@@ -812,9 +802,11 @@ class Theme
     # and the most grip dots it shows along its long side (as many as fit across: two at this
     # thickness). An adjuster's grip dots keep layoutChromeGripDotsInset in from its edges, so no dot
     # touches an edge however thin the divider is squeezed. An inspector's split button, the TAB
-    # joining the adjuster before its inspector (SplitGripWdgt), is splitButtonWidth wide and
-    # minimumTargetSize tall -- the piece the two make is the target's side across at the header --
-    # and its face is a field of the adjuster's own dots, at most splitButtonGripDots each way.
+    # joining the adjuster before its inspector (SplitGripWdgt), is splitButtonWidth along the
+    # adjuster's axis and minimumTargetSize across it (beside a column divider 32 wide and 44 tall,
+    # turned under the divider above a browser's body 44 wide and 32 tall) -- the piece the two make is
+    # the target's side along the axis at the header -- and its face is a field of the adjuster's own
+    # dots, at most splitButtonGripDots each way.
     @layoutChromePlateRadius = 6
     @layoutChromeGripDotsInset = 2
     @layoutAdderGlyphSize = 9
@@ -1073,24 +1065,19 @@ class Theme
     @toggleHeight = 36
     @togglePaddingX = 12
     @toggleCornerRadius = 6
-    # a CHIP (ChipWdgt): the height it takes, its horizontal padding at each side of its label, and
-    # the rounding of its box -- half its height, a full pill. Its width is the label, that padding at
-    # each side and its 1 px border at each side (ChipWdgt.preferredExtent).
-    @chipHeight = 32
-    @chipPaddingX = 10
-    @chipCornerRadius = 16
     # a Fizzytiles MAGNET (MagnetAppearance): the rounding of its box, the draft's control radius.
     # Its box is content's size, not a chrome target's (a word tile, Widget's default 50 x 40).
     @magnetCornerRadius = 6
-    # the least side of a chrome TARGET (the 44 rule, visual-design-system §4.2): a button, a toggle
-    # or a chip is never narrower than this, and a row holding smaller controls is never shorter (a
-    # prompt's row of buttons, PromptButtonsRowWdgt).
+    # the least side of a chrome TARGET (the 44 rule, visual-design-system §4.2): a button or a toggle
+    # is never narrower than this, and a row holding smaller controls is never shorter (a prompt's row
+    # of buttons, PromptButtonsRowWdgt).
     @minimumTargetSize = 44
 
     # a FOOTER BAND, the row of buttons a window's content ends in (FooterBandLayout: a code
     # prompt's, a script's, a console's, an error log's, a member editor's, a bin's; and a member
-    # list's, a band of its own, BandWdgt): its
-    # height, its top rule included, and that rule's thickness (a seam its host owns,
+    # list's, a band of its own, BandWdgt -- as is the one other band of plain buttons, an inspector
+    # browser's TRAIL, at the top of the browser, its rule along its bottom): its
+    # height, its rule included, and that rule's thickness (a seam its host owns,
     # visual-design-system §4.1) ...
     @footerBandHeight = 52
     @footerRuleWidth = 1
@@ -1103,13 +1090,18 @@ class Theme
 
     # an INSPECTOR's bands (BandWdgt: a row of controls at their own sizes, centred down the band):
     # the width of the RULE a band draws inside its height, along its bottom (an inspector's header and
-    # its chooser band, a member list's toggles band) or its top (the cut-notice band a member list or
-    # an object list shows, and a member list's footer band, which is footerBandHeight tall and keeps
-    # footerInset and footerGap, above) ...
+    # its chooser band, a member list's toggles band, an inspector browser's trail) or its top (the
+    # cut-notice band a member list or an object list shows, and a member list's footer band, which is
+    # footerBandHeight tall and keeps footerInset and footerGap, above, as the trail does) ...
     @inspectorRuleWidth = 1
+    # ... the side of the glyph square of the CHEVRON between two levels of an inspector browser's trail
+    # (MenuRowIndicatorWdgt): 12, so its ink, about 10 px tall, is about as tall as the buttons'
+    # capitals beside it; the trail stands that INK footerGap clear of each button
+    # (ChevronRightIconAppearance.inkSpanX: [4, 9) of 12, so the gaps beside its square are 4 and 5) ...
+    @inspectorTrailChevronSize = 12
     # ... an inspector's HEADER band (InspectorWdgt): its height, its rule included, a chrome target's
     # (the split button stands in it whole); how far in from its left edge its title starts, which is
-    # also how far short of its right edge its class chip ends, and how tall the cut-notice band a
+    # also how far short of its right edge its class button ends, and how tall the cut-notice band a
     # member list or an object list shows stands and how far in its notice starts (both build it by
     # one routine, MemberListWdgt.cutNoticeBandFor); and the gap between the split button
     # and the title, where an inspector a splitter stands before opens with one ...

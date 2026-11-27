@@ -1013,8 +1013,10 @@ door reaches (every re-home and destroy of the holder's own child, inside the se
 `FrameWdgt` (a window's content, keeping the window's size and, for a Maker, its mode) and
 `StretchableWidgetContainerWdgt` (a page). A holder whose parts are DERIVED from its other children re-derives them
 in the same seat, under the same flag: an inspector browser's set its column dividers, one between two inspectors and
-none elsewhere (`InspectorRowWdgt._reconcileSplittersNoSettle`), touching no child it does not derive them from and
-building nothing when nothing is out of place. `_reactToChildRemoved` hears only a DIRECT child's departure.
+none elsewhere (`InspectorRowWdgt._reconcileSplittersNoSettle`), and the browser itself its body's place — an empty body
+when no body stands, exactly one divider right before the body, the body's tab — and its trail
+(`InspectorBrowserWdgt._reconcileMyStructureNoSettle`), each touching no child it does not derive them from and building
+nothing when nothing is out of place. `_reactToChildRemoved` hears only a DIRECT child's departure.
 
 ---
 

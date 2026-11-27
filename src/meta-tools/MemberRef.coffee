@@ -87,18 +87,21 @@ class MemberRef
 
   constructor: (@holder, @name) ->
 
-  # A member is what I am: an inspector whose subject I am shows my editor, and no member list and no
-  # class chip (InspectorWdgt), whoever holds me.
-  editsAsAMember: -> true
+  # I am shown as ONE TEXT, a BODY: an inspector whose subject I am shows my editor, and no member list
+  # and no class button (InspectorWdgt.showsOneText), whoever holds me, and an inspector browser stands
+  # that inspector where its body goes (InspectorBrowserWdgt._placeNoSettle).
+  editsAsText: -> true
 
   # what an inspector titles me (Utils.colloquialNameOf asks): my member's name
   colloquialName: -> @name
 
   # Do I name the same member as `other` -- the same holder's, under the same name? Two references
   # made for one member at two clicks are two objects, and an inspector showing one shows the other
-  # (InspectorWdgt.showsSubject), so a member chosen again reloads the editor already showing it.
+  # (InspectorWdgt.showsSubject), so a member chosen again reloads the editor already showing it. Only a
+  # member reference answers the question this compares by, so nothing else that holds a `holder` and a
+  # `name` (another subject shown as one text) is ever the same member as I am.
   sameMemberAs: (other) ->
-    (other?.editsAsAMember?() is true) and other.holder is @holder and other.name is @name
+    other?.sameMemberAs? and other.holder is @holder and other.name is @name
 
   # What an inspector shows of my member, which its member editor shows (MemberEditorWdgt: its build,
   # its reload when the member is chosen again, and after a Save of a value): a function's source,

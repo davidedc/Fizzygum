@@ -2373,12 +2373,17 @@ class MacroToolkit
     @_dragSliderButtonFromTo_InputEvents slider, seenFrom, seenFrom.translateBy new Point 0, displacement
 
   # Scroll a `list` (a ListWdgt: a member list's, or any other) by its bar's thumb so `itemString`'s
-  # row lands a couple of rows BELOW the pane's top edge, to within one thumb pixel of the bar's
+  # row lands a LEAD of whole rows below the pane's top edge, to within one thumb pixel of the bar's
   # travel. It uses the REAL row pitch + visible pane height (not the plain index/(total-1) fraction,
   # which lands the target at the pane's BOTTOM edge for large indices; adding a single inherited
   # member then tips it out of view and a click on the clipped row chooses the wrong member). Number
-  # of scroll positions = total - visibleRows (rows you can put at the top), so aiming (index - 2) at
-  # the top puts the target 2 rows down. That one thumb pixel is the drag's whole error, and on a long
+  # of scroll positions = total - visibleRows (rows you can put at the top), so aiming (index - lead)
+  # at the top puts the target `lead` rows down. The lead is 2 rows, never more than the rows above
+  # the pane's middle row: min(2, floor((visibleRows - 1) / 2)), so a pane of five rows or more shows
+  # the target two rows down, a pane of three or four one row down, and a pane of one or two at its
+  # top, whole, never past its last row (a member list under a chooser shows two whole rows in the
+  # browser's strip of lists, and a lead of 2 would put the target in a third slot the pane does not
+  # show). That one thumb pixel is the drag's whole error, and on a long
   # list it can be worth more than the pane is tall, so the row may still land clipped or out of the
   # window: bringListItemInView corrects what is left with one wheel (wheelListTowardItem_InputEvents).
   # A list whose rows all fit shows no vertical bar and has nothing to bring into view, so nothing is
@@ -2405,7 +2410,8 @@ class MacroToolkit
     padding = list.listContents.padding ? 0
     visibleRows = Math.max 1, Math.floor((list.height() - 2 * padding) / pitch)
     scrollPositions = Math.max 1, list.elements.length - visibleRows
-    topIndex = Math.max 0, Math.min(scrollPositions, index - 2)
+    lead = Math.min 2, Math.floor((visibleRows - 1) / 2)
+    topIndex = Math.max 0, Math.min(scrollPositions, index - lead)
     @_dragVerticalSliderButtonToTravelFraction_InputEvents list.vBar, topIndex / scrollPositions
 
   # THE ROWS OF `list`, top to bottom: the children of its rows panel that stand for an element — the
@@ -2729,7 +2735,7 @@ class MacroToolkit
     return editor  if editor?
     unless (memberList = @topMemberList())?
       throw new Error "NO MEMBER EDITOR: #{verb} acts on the editor the top member list feeds, and no member list shows — open an inspector first (bringUpInspector_InputEvents_Macro)"
-    throw new Error "NO MEMBER EDITOR: #{verb} acts on the editor #{memberList} feeds, and none stands beside it — choose a member in it first (bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro)"
+    throw new Error "NO MEMBER EDITOR: #{verb} acts on the editor #{memberList} feeds, and none stands after it in its browser — choose a member in it first (bringInViewAndClickOnListItemFromTopInspector_InputEvents_Macro)"
 
   # Click into the top member editor's code text just before or after the Nth occurrence of
   # `codeString`; verifies that the press lands on that text.
@@ -2812,12 +2818,13 @@ class MacroToolkit
     # THE INSPECTOR VERBS. bringUpInspector opens a widget's inspector as a person does, its menu's
     # "Dev" then "Inspect": a window whose content is an inspector browser, its one inspector on the
     # widget, its view a member list. bringInViewAndClickOnListItemFromTopInspector chooses a member in
-    # the top member list (topInspectorList), which puts an inspector on that member beside the list, its
-    # view the member editor the code-pane verbs act on (topMemberEditor); bringUpInspectorAndSelectListItem is
-    # the two, one after the other. Below the list verbs, bringColumnIntoView scrolls a browser's set
-    # to a column of it its viewport does not show whole, clickViewToggle shows another view of an
-    # inspector's subject (its chooser's toggle, by the face it shows), and dragSplitControlBy sizes the
-    # column left of a column divider (by the divider or by the split button).
+    # the top member list (topInspectorList), which puts an inspector on that member next in the
+    # browser's sequence (its body, below the lists), its view the member editor the code-pane verbs act
+    # on (topMemberEditor); bringUpInspectorAndSelectListItem is the two, one after the other. Below the
+    # list verbs, bringColumnIntoView scrolls a browser's set to a column of it its viewport does not
+    # show whole, clickViewToggle shows another view of an inspector's subject (its chooser's toggle, by
+    # the face it shows), and dragSplitControlBy sizes what a divider sizes -- the column on its left, or
+    # the strip of lists above the body -- by the divider or by the split button joined to it.
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
         clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
@@ -2909,24 +2916,26 @@ class MacroToolkit
         yield "waitNoInputsOngoing"
     """
 
-    # A DRAG ON ONE OF A SPLIT'S CONTROLS by deltaX across -- a column divider of an inspector browser's
-    # set (InspectorColumnDividerWdgt, the mouse's way) or the split button leading the header of the
-    # inspector right of it (SplitGripWdgt, the finger's way) -- in LEGS, as a person drags: the press on
-    # the control (its centre, the press verified to land on it), drained, so the drag starts where it
-    # pressed; then a move with the button held to deltaX right of the press, and the release. Under a
-    # finger the press is a touch-down, the move the finger's move stream and the release its lift: a
-    # plain touch stroke with NO hold, right for both controls, which own the drags that start on them
-    # (ownsDragsStartingOnMe: a finger's press arms at once), where syntheticEventsMouseMovePressDragRelease
-    # would hold first. The first move sample lands on the press point, where the drag takes its anchor,
-    # so both pointers size the column left of the divider by exactly deltaX, never below that column's
-    # least width. The control is chrome: it stays where it stands, keeps the press (no pane around it
-    # scrolls), and its nonFloatDragging sizes the column.
+    # A DRAG ON ONE OF A SPLIT'S CONTROLS by `delta`, a Point (a column divider's drag reads its x, the
+    # body's divider's its y; the other is the pointer's own wander) -- a divider of an inspector browser
+    # (InspectorDividerWdgt, the mouse's way: between two columns of its set, or between its set and its
+    # body below) or the split button leading the header of the inspector after it (SplitGripWdgt, the
+    # finger's way) -- in LEGS, as a person drags: the press on the control (its centre, the press
+    # verified to land on it), drained, so the drag starts where it pressed; then a move with the button
+    # held to delta from the press, and the release. Under a finger the press is a touch-down, the move
+    # the finger's move stream and the release its lift: a plain touch stroke with NO hold, right for
+    # both controls, which own the drags that start on them (ownsDragsStartingOnMe: a finger's press arms
+    # at once), where syntheticEventsMouseMovePressDragRelease would hold first. The first move sample
+    # lands on the press point, where the drag takes its anchor, so both pointers size what the divider
+    # sizes by exactly delta along its axis, never below that cell's least size nor above the most its
+    # holder allows. The control is chrome: it stays where it stands, keeps the press (no pane around it
+    # scrolls), and its nonFloatDragging sizes the cell.
     macroSubroutines.add Macro.fromString """
-      dragSplitControlBy_InputEvents_Macro = (control, deltaX) ->
+      dragSplitControlBy_InputEvents_Macro = (control, delta) ->
         @moveToAndMouseDown_InputEvents control
         yield "waitNoInputsOngoing"
         pressedAt = world.hand.position()
-        @syntheticEventsMouseMove_InputEvents (new Point (pressedAt.x + deltaX), pressedAt.y), "left button"
+        @syntheticEventsMouseMove_InputEvents (pressedAt.add delta), "left button"
         yield "waitNoInputsOngoing"
         @syntheticEventsMouseUp_InputEvents()
         yield "waitNoInputsOngoing"

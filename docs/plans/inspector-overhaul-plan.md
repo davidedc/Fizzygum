@@ -2044,7 +2044,7 @@ split a split moves right only (§5.10). Picture nothing below a row's least wid
 
 | Test | Proves | Already pinned by U2's ports | Plant that must fail it |
 |---|---|---|---|
-| `macroInspectorMemberClickOpensItsEditorBesideTheList` | a click adds the second inspector; another row REPLACES it (still two); the same row again RELOADS it (typed text gone, undo brings it back) | the reload and its undo, and another member's NEW editor beside the list: `macroFormulaBarUndoStaysInItsEdit`; the same subject chosen again reloads the same inspector, and a choice further left removes what stands right of it: `macroInspectorClassChipShowsTheClassBesideIt`. Unpinned: the count "still two" after another member | `_showNextToNoSettle` always appends |
+| `macroInspectorMemberClickOpensItsEditorBelowTheLists` | a click adds the second inspector; another row REPLACES it (still two); the same row again RELOADS it (typed text gone, undo brings it back) | the reload and its undo, and another member's NEW editor beside the list: `macroFormulaBarUndoStaysInItsEdit`; the same subject chosen again reloads the same inspector, and a choice further left removes what stands right of it: `macroInspectorClassChipShowsTheClassBesideIt`. Unpinned: the count "still two" after another member | `_showNextToNoSettle` always appends |
 | `macroInspectorDrillWidensItsWindow` | a double-click on an object-valued field shows the value beside the list; a third inspector widens the window by the missing width; the first inspector is still there | the drill to a second and a third inspector: `macroInspectorEditsAClassPrototypeAsAClass`; a three-inspector window 1048 wide, by its PIXELS only: `macroInspectorCodePaneRunsAgainstItsSubject` image_3. Unpinned: the widening by the missing least width as a value, and its stop at the desktop's right edge | `_widenMyWindowToFitNoSettle` a no-op |
 | `macroInspectorSplitMovesByDividerAndByButton` | the divider shows its dots and the second inspector's header opens with the split button, the first inspector's does not; a drag on the DIVIDER moves the split by the drag's travel and nothing else; a drag on the BUTTON does the same. The test runs on both pointer axes: the finger run is the proof D11 asks for (its button drag is a touch drag) | the second inspector's split button (its header's pieces read by class): `macroPickingUpPartsFromInspector`, `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: every drag; that the first inspector carries none; a dragged split kept across a member choice, and its return to the default after a kind change (a drill to a value) or a filter toggle (measured in a browser, §5.4; pinned by no test) | `SplitGripWdgt.nonFloatDragging` a no-op |
 | `macroInspectorTakenOutLeavesNoStraySplitter` | "Pick up" of the second inspector leaves one inspector and NO splitter; a choice made in the picked-out one opens a window of its own | a picked-out VIEW's choice opening exactly one new window, the row left as it was: `macroInspectorResizingOKEvenWhenTakenApart`. Unpinned: a whole inspector picked out, the splitter it leaves, the grip it sheds, and the window's title following the row's new first inspector | `InspectorRowWdgt._reactToChildRemoved` a no-op |
@@ -2070,7 +2070,7 @@ the copy, the serialization rig the snapshot) and `macroInspectorReadOnlyMemberH
 `macroInspectorOnNonWidgetIsReadOnly` and `macroInspectorEditsAClassPrototypeAsAClass` assert a read-only member's
 editor has no Save and no band). A test that proves what another already proves is not written.
 - **The six,** 42 assertions, each proving only what U2's ports left unpinned and saying so in its `intent`:
-  `macroInspectorMemberClickOpensItsEditorBesideTheList` (5: the protocol's counts: a click adds the second
+  `macroInspectorMemberClickOpensItsEditorBelowTheLists` (5: the protocol's counts: a click adds the second
   inspector, another member replaces it, the same member reloads it); `macroInspectorDrillWidensItsWindow` (5, one
   shot: the widening as a value, and its stop at the desktop's edge); `macroInspectorCutListSaysSo` (4, one shot:
   the cut notice on a plain array); `macroInspectorSplitMovesByDividerAndByButton` (11, two shots: every drag on
@@ -2231,7 +2231,7 @@ built, for the reasons each step gives.
    Children, choose a child, choose its child: three inspectors, each titled with its widget);
    `macroInspectorClassViewsListInstancesAndSubclasses` (on classes of the test's own, never a product class's);
    `macroInspectorViewSwitchDropsWhatWasChosen`; and each ruling pinned in the test that owns its subject: A2 in
-   `macroInspectorDrillWidensItsWindow`, A6 in `macroInspectorMemberClickOpensItsEditorBesideTheList`, the naming
+   `macroInspectorDrillWidensItsWindow`, A6 in `macroInspectorMemberClickOpensItsEditorBelowTheLists`, the naming
    rule in `macroInspectorDuplicateCopiesAMember`, R15 in `macroInspectorTakenOutLeavesNoStraySplitter`. The toolkit
    gains the two verbs three tests each need: `clickViewToggle_InputEvents_Macro (inspector, face)` and
    `dragSplitControlBy_InputEvents_Macro (control, deltaX)`, in place of the copies the tests carried (U3's
@@ -2783,7 +2783,7 @@ the seventeen change in U2 (46 shots, each recaptured at dpr 1 and 2, mouse and 
 | DuplicatedInspectorsCloseIndependently | closes each copy | none | 3 |
 | EveryCodeChangeGivesBannedWidgetsAnotherChance | class add/remove in code | `addProperty`, `removeProperty`, `list.listContents`, `list.select` | 0 |
 | FormulaBarUndoStaysInItsEdit | the code pane's undo history | `detail.textWdgt` | 0 |
-| InspectorClassChipShowsTheClassBesideIt (was InspectorBreadcrumbChipOpensClassInspector) | chips open class inspectors | `classChips`, `inspectedObject`, `colloquialName()`, `parent` | 0 |
+| InspectorClassButtonShowsTheClassBesideIt (was InspectorClassChipShowsTheClassBesideIt, first InspectorBreadcrumbChipOpensClassInspector) | chips open class inspectors | `classChips`, `inspectedObject`, `colloquialName()`, `parent` | 0 |
 | InspectorCodePaneRunsAgainstItsSubject | run rows of the pane menu | `list`, `detail`, `detail.textWdgt`, `classChips`, `inspectedObject` | 3 |
 | InspectorEditTellsOnce | counts how often each edit tells | `addProperty`, `save()`, `renameProperty`, `removeProperty`, `list.select`, `detail.textWdgt.setText` | 0 |
 | InspectorOffersOnlyWhatItsSubjectOwns | Rename/Remove enabling | the buttons' `isEnabled`, `detail.textWdgt.isEditable`, `list.select`, `renameProperty`, `addProperty`, `toggleShowingInherited` | 0 |

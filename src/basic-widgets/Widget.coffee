@@ -2430,9 +2430,6 @@ class Widget extends TreeNode
   _moveRightSideTo: (x) ->
     @_applyMoveTo new Point x - @width(), @top()
 
-  _moveBottomSideTo: (y) ->
-    @_applyMoveTo new Point @left(), y - @height()
-  
   _moveToSideOf: (aWidget) ->
     @_applyMoveTo aWidget.topRight().add new Point 10, -Math.round((@height() - aWidget.height())/2)
     @_moveWithin @parent
@@ -2506,7 +2503,7 @@ class Widget extends TreeNode
   _setMinimumExtent: (@minimumExtent) ->
 
   # Widget accessing - dimensional changes requiring a complete redraw
-  # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt / ListWdgt /
+  # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt /
   # TrackingTransformFrameWdgt / ViewportWdgt specialize it for their own,
   # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
   # body per behaviour, two names for dispatch; the bare twin is the override-BYPASSING base apply the

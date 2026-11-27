@@ -81,7 +81,9 @@ const METHOD_CEILINGS = {
   // body every holder's member edit shares (injectPropertyInto). Raised 395 -> 396 on 2026-11-26 under the
   // owner's standing ruling of 2026-11-16 (the right shape over the count): keepSourceWith, the kept-source store's
   // one writer, so a paint tool keeping the text of a member it could not make writes no private field of Widget's
-  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 396 },
+  // Lowered 396 -> 395 on 2026-11-27: _moveBottomSideTo went with its one caller, ListWdgt._applyExtent (a list's
+  // growth moved its rows inside its pinned plane, by whichever extent a frame applied: a render the cadence chose).
+  Widget: { file: 'basic-widgets/Widget.coffee', ceiling: 395 },
   // raised 126 -> 128 on 2026-11-16, owner-approved (the right shape over the count): content in view mode refuses
   // restyling through one public door, editableEditorFocus, and the edit-mode flip is announced by its own
   // intent-named notification, noteEditModeChanged. Raised 128 -> 129 on 2026-11-18 for the toolbar residue's U3, on
@@ -224,8 +226,8 @@ const RECORDED = {
   // the split's closed-form solve, recorded at 19 as StackElementsSizeAdjustingWdgt#nonFloatDragging. Re-keyed on
   // 2026-11-24 and read at 18: the solve is a QUERY of its own (the split a wanted leading edge asks for), which
   // the splitter's drag handler asks, mapping its own pointer and making the two deferred max-dim writes itself; the
-  // handler keeps the guard and the mapping, well under the ceiling. (An inspector browser's column divider, a kind
-  // of splitter, and its split button ask a solve of the divider's own, InspectorColumnDividerWdgt#columnWidthDraggedTo.)
+  // handler keeps the guard and the mapping, well under the ceiling. (An inspector browser's divider, a kind of
+  // splitter, and its split button ask a solve of the divider's own, InspectorDividerWdgt#sizeDraggedTo.)
   // Re-keyed 2026-11-26 (inspector-browser U1), score unchanged: with the split button asking the column divider's
   // solve, the splitter's own handler is this query's only caller, so it is _-private (check-call-separation [U]).
   'StackElementsSizeAdjustingWdgt#_maxDimsPuttingMyLeadingEdgeAt': 18,

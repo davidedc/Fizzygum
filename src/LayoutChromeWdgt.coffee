@@ -1,10 +1,10 @@
 # Shared base for the small "layout-editing chrome" widgets -- the layout spacer
 # (LayoutSpacerWdgt), the element adder/droplet (LayoutElementAdderOrDropletWdgt),
-# and the stack-size adjuster (StackElementsSizeAdjustingWdgt; the column divider
-# between two columns of an inspector browser's set is one, InspectorColumnDividerWdgt)
-# -- and of the split button at the left end of an inspector's header, right of the
-# column divider standing before that inspector (SplitGripWdgt; both in the lazy
-# 'meta-tools' part). My look is my class's (createAppearance). The spacer and the
+# and the stack-size adjuster (StackElementsSizeAdjustingWdgt; an inspector browser's
+# divider is one, InspectorDividerWdgt, between two columns of its set or between its
+# set and its body below) -- and of the split button at the left end of an inspector's
+# header, joined to the divider standing before that inspector (SplitGripWdgt; both in
+# the lazy 'meta-tools' part). My look is my class's (createAppearance). The spacer and the
 # adder wear the handles' look (LayoutChromeAppearance): the layoutChromePlate* plate
 # over the whole box, in the look of my pointer state (below), and each one's glyph on
 # it (_glyphOnMyPlate). The adjuster and the split button wear a split's piece
@@ -36,8 +36,9 @@ class LayoutChromeWdgt extends Widget
   #     both parts, each letting go of any part it held before;
   #   CLEARED on both parts by either part's going, each by its own event: the BUTTON's teardown
   #     (SplitGripWdgt._destroyNoSettle tells the divider: notePartedFrom), and the DIVIDER's leaving
-  #     the stack it divides -- picked out, attached elsewhere or destroyed -- which the row it
-  #     divides hears and tells it (InspectorRowWdgt._reactToChildRemoved: noteLeftMyStack).
+  #     the stack it divides -- picked out, attached elsewhere or destroyed -- which the set or the
+  #     browser it divides hears and tells it (InspectorRowWdgt._reactToChildRemoved,
+  #     InspectorBrowserWdgt._reactToChildRemoved: noteLeftMyStack).
   # So no reference of either part outlives the other. (A button a person takes out of its header
   # stays held, though painted alone, until either event, or until the reconcile introduces the
   # divider to the fresh button that replaces it.) Never in a file nor in a copy: a save or a copy of
@@ -153,8 +154,7 @@ class LayoutChromeWdgt extends Widget
 
   # THE RESIZE CURSOR my hover shows, a CSS cursor name, or undefined for none: what a drag on me
   # does, said by the page's pointer while the pointer is over me or drags me. Default: none -- a
-  # spacer and an adder resize nothing; the split adjuster answers by its axis, the split button
-  # across.
+  # spacer and an adder resize nothing; the split adjuster and the split button answer by their axis.
   _resizeCursor: -> undefined
 
   # my plate's hover and press are read off the hand as I am painted (above); here, the resize cursor

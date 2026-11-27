@@ -107,9 +107,10 @@ exactly one ENDING. The contract lives once, beside the hand's `_pressAudience`:
   that it passes the press on — `pressBegan` RETURNS `true` to hand it up and anything else to keep
   it (`Widget.pressBegan` raises and answers `true`; a halo handle, a 3D plot, a selectable text — on
   a mouse or pen stroke, or a finger stroke the grammar armed —, a slider's jump, a palette, a piece of
-  layout chrome that owns its drags — a division stack's divider and the split button joined to it,
-  `LayoutChromeWdgt.pressBegan`, so a pane around it that scrolls by a plain drag never scrolls under its
-  drag — and the world keep it). Who heard the press is RECORDED, leaf first,
+  layout chrome that owns its drags — a division stack's divider and the split button joined to it, an
+  inspector browser's divider among them, between two columns of its set or between its set and its body below,
+  with its tab across or turned a quarter, `LayoutChromeWdgt.pressBegan`, so a pane around it that scrolls by a
+  plain drag never scrolls under its drag — and the world keep it). Who heard the press is RECORDED, leaf first,
   and never re-walked: a lift re-parents what it picks up, so the chain at the release is not the
   chain the press climbed.
 - **The endings.** `pressCancelled()` the moment the stroke becomes something that is not a press

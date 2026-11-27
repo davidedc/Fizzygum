@@ -4,12 +4,16 @@
 # icon), so the label stays the row's plain wording and a size-aware icon appearance paints the
 # mark at integer device-pixel geometry on both backends.
 #   I am a PICTURE, never a target: `catchesPointerAt` answers false, so a tap on me is a tap on the
-# row that carries me -- the role InertIconHolderWdgt states for the row's left icon slot, and for
-# the same reason. I have no children, so nothing below me can take the tap either.
+# row (or the band) that carries me -- the role InertIconHolderWdgt states for the row's left icon
+# slot, and for the same reason. I have no children, so nothing below me can take the tap either.
 #   My box IS my glyph square (glyphSize on each side), and my ink is my @color, the theme role my
-# row hands me (SizeAwareIconAppearance reads both). My row builds me, places me and decides when I
-# exist (MenuItemWdgt._placeMyParts); I am a plain child of it, so a duplicated, lifted-out or
-# saved row brings me along.
+# holder hands me (SizeAwareIconAppearance reads both). I have TWO holders, each of which builds me,
+# places me and decides when I exist, and holds me as a plain child, so a duplicated, lifted-out or
+# saved holder brings me along:
+#   a menu row (MenuItemWdgt._placeMyParts), its chevron and its tick;
+#   an inspector browser's TRAIL band (InspectorBrowserWdgt._trailItems), the chevron between two of
+# its levels, a fixed piece of the band at my square (my preferredExtent is my box, as every widget's
+# is), centred down it. A band answers no isDisabled, so there I always wear my own ink.
 
 class MenuRowIndicatorWdgt extends Widget
 
@@ -33,7 +37,7 @@ class MenuRowIndicatorWdgt extends Widget
 
   # MY INK FOR MY ROW'S STATE, read by my appearance as it paints (IconAppearance._iconColor, ahead
   # of my @color): the row's disabled ink while my row is disabled (MenuItemWdgt.isDisabled), nothing
-  # otherwise, so I wear my own ink. A disabled row's tick stays, greyed: the state it reports still
-  # holds.
+  # otherwise -- and nothing in a holder that is no row -- so I wear my own ink. A disabled row's tick
+  # stays, greyed: the state it reports still holds.
   _fillForMyState: ->
     WorldWdgt.theme.menuRowDisabledText  if @parent?.isDisabled?()

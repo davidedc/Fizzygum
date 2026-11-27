@@ -615,10 +615,15 @@ is already suppressed while a test plays). By touch a plain sideways drag anywhe
 
 **A choice reveals its column** (`InspectorRowViewportWdgt.revealColumn inspector`, read from fields): after the
 choice's settle the set scrolls the least way, to a rest point, that shows the column whole (its start, when it is
-wider than the view). As built, `InspectorBrowserWdgt.showChoice` asks it (`revealLastColumn`) once `showNextTo` has
-returned: the thin-wraps convention keeps `showNextTo` the plain settle wrapper. A choice that removes columns scrolls
-back by the arrange's clamp alone in U1; **OVERTURNED for U2 by the owner (L11)**: the clamp slides the chooser under a
-double-click's pointer, so the set keeps its scroll where the choice found it.
+wider than the view). As built (U2), `InspectorBrowserWdgt.showChoice` reveals the inspector the choice SHOWS, which
+`showNextTo` answers (the fresh or reloaded one; the chooser after a choice of no subject), once `showNextTo` has
+returned: the thin-wraps convention keeps `showNextTo` the plain settle wrapper; a body below is no column, and its
+reveal moves nothing. **A choice that removes columns HOLDS the scroll where it found it** (the owner's ruling L11,
+which overturned U1's "scrolls back by the arrange's clamp alone": the clamp slid the chooser under a double-click's
+pointer): the set keeps a held offset (`InspectorRowWdgt._heldScrollOffset`, transient) and is at least that offset
+plus its viewport's width, its last column taking the rest; the next SCROLL by any path drops it (they all meet in
+`ViewportWdgt._scrollX`), and the gap closes by the clamp at a rest point. A choice that changes no column (a reload,
+another member shown in the body below) keeps it, so nothing slides under a person's pointer.
 
 **The two hazards, each fixed where it lives and each with a control run** (`compare/probes/hazards.js` reproduces
 both):
@@ -632,7 +637,9 @@ both):
   lift the column out of the set (`Widget._amIDirectlyInsideViewport`). The set's viewport answers
   `contentsPanelHoldsLooseContent` false, as `ListWdgt` does, so that drag moves the window as it does today.
 
-**The column divider** (`InspectorColumnDividerWdgt`, a kind of `StackElementsSizeAdjustingWdgt`: the halo's
+**The column divider** (built in U1 as `InspectorColumnDividerWdgt`; generalised by axis in U2 as `InspectorDividerWdgt`,
+whose seam reads `dragPlane` / `dragAnchorAt` / `sizeDraggedTo` and writes `_setStatedSizeDeferredSettle`, the same
+divider sizing the strip of lists below the set; a kind of `StackElementsSizeAdjustingWdgt`: the halo's
 "Resize/move…" tests a neighbour for that class, and a sibling class would get a trading adjuster inserted beside
 it; its box exactly its thickness, spreadability 0). A drag sizes the column on its LEFT: that column's stated
 width follows the pointer's travel since the drag began, from the width it had then, floored at its least width;
@@ -657,7 +664,7 @@ one caller). The row stops being a `ClippingWdgt`: its viewport clips, and the b
 
 **What must still hold, and where it moves**: the body under the inspectors (as built the BROWSER paints it, once,
 and the row, the inspectors' parent, answers `laysTheInspectorBodyUnderItsParts` and paints nothing); the derived dividers and split buttons (the row's
-reconcile, unchanged in rule, building `InspectorColumnDividerWdgt`); the window's title (the browser's
+reconcile, unchanged in rule, building the divider); the window's title (the browser's
 `colloquialName` is its first inspector's; the reconcile's re-title asks the browser's window).
 
 ### 5.4 The browser, and the body's place (U1 builds the browser with the body beside; U2 puts it below)
@@ -674,8 +681,8 @@ reconcile, unchanged in rule, building `InspectorColumnDividerWdgt`); the window
 # says: bodyPlace "below" puts it under my set, at my full width, a divider between them that a person drags;
 # "beside" leaves it my set's last column. The setting is fixed as I am built.
 #   Top to bottom, the cells of one vertical DIVISION stack (StackLayoutEngine), so I have no layout of my own:
-# my TRAIL band; my set's viewport; and, with my body below, my divider (the stack's own splitter,
-# StackElementsSizeAdjustingWdgt, whose drag trades most height between its two neighbours) and my body's place.
+# my TRAIL band; my set's viewport; and, with my body below, my divider (InspectorDividerWdgt, a kind of the
+# stack's splitter whose drag STATES the strip's height, never a trade) and my body.
 # The place is never empty: while my sequence ends on a list it holds a body that shows nothing.
 class InspectorBrowserWdgt extends ClippingWdgt
   bodyPlace: "below"
@@ -706,12 +713,20 @@ class InspectorBrowserWdgt extends ClippingWdgt
   row's end); then the row's reconcile; then the trail rebuilt; then, after the settle, the reveal.
 - **What "a body" is** is asked of the subject, never of a view's class: the question `editsAsText`, answered by
   `MemberRef` (which answers `editsAsAMember` today: `InspectorWdgt._views` builds an editor by it) and by
-  `ClassCommentRef` (§5.11). The unit decides whether the two questions are one renamed or two.
+  `ClassCommentRef` (§5.11). As built (U2): ONE question, `editsAsText` (`editsAsAMember` deleted), asked through the
+  inspector (`InspectorWdgt.showsOneText`); `MemberRef.sameMemberAs` guards on its own capability.
 - **The split between lists and body** is the division stack's own arithmetic, read from fields. The viewport's
-  cell desires the height at which a member list shows FOUR rows under its bands (header 44 + toggles 48 + footer
-  52 + 4 × 42 = 312 px, the strip the owner saw at every size) and has no margin of its own; the body's cell takes
-  the stack's spare. The divider's drag is the splitter's own trade. Dragged in round 4: the strip 312 to 440
-  (9 / 9 / 8 / 7 rows, 3 lines of body) and to 202 (3 / 3 / 2 / 1 rows, 16 lines).
+  cell states its height (desired = most, no margin): 312 px as built (header 44 + toggles 48 + footer 52 + 4 × 42,
+  the strip the owner saw at every size; with the list pane's 4-px padding that is THREE whole member rows and most of
+  a fourth, and in a column with a chooser — every widget's and every class's — about two: the owner's ruling L13); the
+  body's cell takes the stack's spare. The divider's drag STATES that height (the strip's division box), the size it
+  had plus the pointer's travel, floored at the strip's least and capped so the stack stays at every cell's desired
+  size; a window resized after a drag keeps the person's split. **As built, NOT the splitter's own trade**: a trade
+  clamps each neighbour at its desired size, so the strip could only grow, and a traded split is a share of the spare
+  that moves with every resize (U2's research; the prototype the owner saw stated it too). The strip's LEAST is
+  derived, the tallest least among the set's columns (190 for a member list, 236 for a column with a chooser), so the
+  divider never squeezes a column's bands. Dragged in round 4: the strip 312 to 440 (9 / 9 / 8 / 7 rows, 3 lines of
+  body) and to 202 (3 / 3 / 2 / 1 rows, 16 lines).
 - **That split has both controls, as every split of this tool has** (the owner's rule of 2026-11-24: a split must
   work by touch, and both controls stay on screen): the 12 px divider for a mouse, and, joined to it as one flat
   piece, a TAB at the left end of the body's header band for a finger: the split button turned a quarter (a chrome
@@ -720,8 +735,9 @@ class InspectorBrowserWdgt extends ClippingWdgt
   prototypes drew the divider alone, so the owner has NOT seen this tab: decision D16, shown on the review page
   before U2's gauntlet, measured by a finger's drag.
 - **The empty body** is an inspector on no subject showing a header that reads "(nothing chosen)" over an empty
-  pane, so the lists never change height when a member is chosen. The unit decides its subject (a value of
-  meta-tools that answers no view but an empty one) under reframe 7.
+  pane, so the lists never change height when a member is chosen. As built (U2): its subject is `undefined`, the
+  house's one absence value (no new value class: nothing a person inspects is ever undefined), its one view "Nothing"
+  a `BandSpaceWdgt` spring of an editor's least size; it is no step of the sequence and names no trail level.
 - **With no window** the browser stands on the desktop as any widget and is resized by the halo; a column picked
   out of the set keeps today's rule (its choice opens a window of its own); the plane picked out of its viewport, or
   the body picked out of its place, must leave nothing that throws (U1 and U2 each probe their own).
@@ -744,6 +760,15 @@ chevron's INK (`ChevronRightIconAppearance.inkSpanX` gives the ink's span; `comp
   in a list of objects, the relation first, in words: "class RectangleWdgt", "instance Rectangle", "subclass
   BlinkerWdgt", "child Rectangle 2" (the singular of the view's title; "class" for the class button). Round 4's
   trails read "rectangle › RectangleWdgt" and "rectangle › rectangle › rectangle".
+- **As built in U2** (the owner's ruling L12 and the unit's rulings): the buttons are the house's 36-px button in the
+  52-px band (the 44 rule met by the band), at the footer band's metrics (inset 12, gap 8); the chevron in a role of
+  its own, `inspectorTrailChevron` (the menu row's role names the menu row's surface), at `inspectorTrailChevronSize`
+  12, its ink ([4, 9] of its square) `footerGap` clear of each button; the wording in SENTENCE case where the words are
+  ours — "Class RectangleWdgt", "Instance Rectangle", "Subclass BlinkerWdgt", "Child Rectangle 2", a widget's level its
+  row name ("Rectangle") — and data never re-cased (a member's name, a class's name); the words DERIVED when the band
+  is built, from how the chooser's column made the choice (`InspectorWdgt.nameOfMyChoice`), nothing stored; the band
+  rebuilt only when its faces would change; a press reveals level k's column (the one it was chosen in, k − 1; level
+  0 its own) and that column's chosen row. A trail longer than its browser squeezes its buttons (filed).
 - A level's button offers "Open in a new inspector" as every such thing does (§5.8).
 - The window's title stays the first inspector's ("Inspector — Packages", "Inspector — rectangle").
 
@@ -980,10 +1005,11 @@ there" ask one question of every value).
 
 ### 5.13 The default window (U2, decision D5)
 
-`InspectorBrowserWdgt.defaultExtent()` states it once: **1000 × 808**, the least height at which every list shows
-five rows and the body ten lines (§4.1), **clamped to the desktop's extent** when the desktop is smaller. The window
+`InspectorBrowserWdgt.defaultExtent()` states it once: **1000 × 808** — under the 312-px strip the body shows twelve
+lines of code (the round-4 prototype's 808 was the least height for five rows a list at a taller strip; with the strip
+the owner ruled, ten lines need only 765) — **clamped to the desktop's extent** when the desktop is smaller. The window
 opens where it does today (at the hand, less 50 and 100 px) and `WorldWdgt.openFrameWith` keeps it within the
-world. On a 1366 × 768 screen the window is 768 tall: four rows a list and ten lines.
+world. On a 1366 × 768 screen the window is 768 tall: ten lines.
 
 ### 5.14 The verbs of categories and of classes (U8, U9)
 
@@ -1155,7 +1181,8 @@ the object flows look as round 4 pictured them.
 - `macroInspectorTrailNamesAndRevealsEachLevel`: the levels' names and wording on the object flows of round 4
   (a widget, its class, an instance, a subclass, a child), a press revealing the column scrolled out.
 - `macroInspectorOpensInsideTheDesktop`: on a tablet's and a phone's extent (a test's own `testScreenExtent`) the
-  window opens within the desktop at the clamped extent.
+  window opens within the desktop at the clamped extent. As built: TWO tests, `macroInspectorOpensInsideATabletDesktop`
+  and `macroInspectorOpensInsideAPhoneDesktop` (a test declares one `testScreenExtent`).
 
 **Predicted failing set**: EVERY test whose pictures show an inspector (§7.1's list, re-derived by
 `node scripts/derive-inspector-churn-set.js --check` and by §4.5's run), every shot of each; the assertion-only
@@ -1166,6 +1193,34 @@ desk, a tablet and a phone extent, on the review page beside round 4's own pictu
 
 **Docs.** `visual-design-system.md` §4.3 (the chip is gone; the trail band; the chevron's metrics),
 `src/macros/CLAUDE.md` (the tool's shape, the default extent), the three CLAUDE.md files.
+
+**Landed 2026-11-27** (inspector-browser loop; one commit per repo, this unit's). **Built**: the browser's division
+stack [trail · the set's viewport · divider · body] with `bodyPlace` "below" (the default) or "beside"; the body derived
+from the children, the EMPTY body an inspector on `undefined` ("(nothing chosen)", no step); `_reconcileMyStructureNoSettle`
+and `_reactToChildRemoved` rebuilding the body, its divider, its tab and the trail; `InspectorDividerWdgt` (U1's column
+divider by axis: a drag STATES the cell before it, a column's width or the strip's height; the seam `dragPlane` /
+`dragAnchorAt` / `sizeDraggedTo`; in regime 1 a drag states nothing); the strip's stated height and DERIVED least (the
+tallest least of the set's columns); the turned tab (`SplitGripWdgt` by axis, `BandWdgt.crossAlignInABand`); the reveal
+of what a choice shows (`revealLastColumn` deleted; the reveal settles itself); the held scroll (L11, kept by a choice
+that changes no column, honoured at the width it was written at, released by the next scroll, a stroke where it rests);
+the trail (§5.5 as built); the walk keeping its view through the toggle path; `classButton` (`ChipWdgt` deleted with
+its twelve roles); `defaultExtent` clamped to the desktop (D5); the toolkit's Point delta and list-scroll lead.
+**Ruled in the loop** (PREP §2 and the LEDGER): the divider states, never trades (§5.4 corrected); the strip's least
+derived; the anchor `min(desired, most)`; the empty body's subject `undefined`; one question `editsAsText`; the
+derived wording; a walk switching after the choice (no constructor option); a level's name never throws; the trail
+rebuilt only when out of place; two Opens tests. **Evidence**: probes on real mouse and finger input (the divider and
+tab to both ends, 400 heights against the engine re-derived for every cell, picks, copies and a snapshot, U1's probes
+on a beside browser, the double-click cases with controls, the default window at three desktops, the trail on every
+object flow, a stroke keeping the hold); five new tests, ~35 ported; 36 plants each seen failing its own line under
+both pointers; followers clean; every rig green; the dpr-1 mouse and finger suites failing exactly the predicted 26
+pictures; two independent reviews, every (A) finding fixed. **Found on the way**: the gauntlet's tier-naming leg missed
+one picture of the new body test; a virtual clock reproduced it exactly: `ListWdgt._applyExtent` moved a growing list's
+rows inside its pinned plane by whichever extent a frame applied (a render the cadence chose) — deleted, with a
+cadence-free regression line; a ported test's 2200 characters typed unwrapped crashed a back buffer at dpr 2 (soft
+wrap now on first; the product's limit filed). **Ratchets moved**: `PROMPTS_DRIVEN_FLOOR` 87 → 99 (the
+menu sweep's new roots); `METHOD_CEILINGS.Widget` 396 → 395 (lowered: a mover gone with its one caller); `Fizzygum-tests/CLAUDE.md`'s byte ceiling 66368 → 66319 (lowered). **Filed**: a trail longer
+than its browser squeezes; a class reached by its `constructor` row is named "Function"; beside keeps U1's
+double-click miss.
 
 ### U3. Every list its own footer of drawn icon buttons (1–1.5 days)
 
@@ -1390,9 +1445,9 @@ window without a member list's rows deciding them: `macroClassEditShowsOnTheNext
 `macroAStepThatThrowsStopsStepping`, `macroClassEditShowsOnTheNextFrame`,
 `macroDrawingToolReachesEveryDrawingOfItsHolder`, `macroEditMarkAndMenuRowOpenTheSameMember`,
 `macroEveryCodeChangeGivesBannedWidgetsAnotherChance`, `macroFormulaBarUndoStaysInItsEdit`,
-`macroInspectorClassChipShowsTheClassBesideIt`, `macroInspectorClassViewsListInstancesAndSubclasses`,
+`macroInspectorClassButtonShowsTheClassBesideIt`, `macroInspectorClassViewsListInstancesAndSubclasses`,
 `macroInspectorCutListSaysSo`, `macroInspectorDuplicateCopiesAMember`, `macroInspectorEditTellsOnce`,
-`macroInspectorEditsAClassPrototypeAsAClass`, `macroInspectorMemberClickOpensItsEditorBesideTheList`,
+`macroInspectorEditsAClassPrototypeAsAClass`, `macroInspectorMemberClickOpensItsEditorBelowTheLists`,
 `macroInspectorOffersOnlyWhatItsSubjectOwns`, `macroInspectorOnAClassShowsItsStaticsSource`,
 `macroInspectorOnNonWidgetIsReadOnly`, `macroInspectorSaveOfAClassMemberRefusesCodeThatDoesNotCompile`,
 `macroInspectorSaveRefusesCodeThatDoesNotCompile`, `macroInspectorShowsAnUndefinedFieldAsUndefined`,
@@ -1414,7 +1469,8 @@ window without a member list's rows deciding them: `macroClassEditShowsOnTheNext
 | Buttons pressed by their text ("Add…", "Rename…") | the unit's research counts them | U3 |
 
 `macroInspectorDrillWidensItsWindow` is retired (U1). `macroInspectorMemberClickOpensItsEditorBesideTheList` and
-`macroInspectorClassChipShowsTheClassBesideIt` are renamed when what their names say stops being true (U2).
+`macroInspectorClassChipShowsTheClassBesideIt` are renamed when what their names say stops being true (U2):
+`macroInspectorMemberClickOpensItsEditorBelowTheLists` and `macroInspectorClassButtonShowsTheClassBesideIt`.
 
 ### 7.2 Product code outside `src/meta-tools/`
 
@@ -1677,4 +1733,5 @@ moves a column per event and races across the set. No notch accumulator exists i
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] U1: the set of columns scrolls sideways and stops on a column, and the tool is a browser that owns the rule of choice; the window widening itself and the trading of width between columns deleted (§5.3, §5.4). — CLOSED 2026-11-26 (inspector-browser loop, U1): `InspectorBrowserWdgt`, `InspectorRowViewportWdgt`, `InspectorColumnDividerWdgt`, the set as a viewport's plane; the widening and the trade deleted (§6 U1, its Landed paragraph).
+- [x] U2: the body below the lists as a setting of the browser, the where-you-are band, the default window, the class named by a plain button (§5.4 to §5.6, §5.13). — CLOSED 2026-11-27 (inspector-browser loop, U2): the body below, the trail, the class button, the clamped window, the held scroll (§6 U2, its Landed paragraph).
 - [x] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24) — CLOSED 2026-11-26: this plan is that plan (moved from the `plans/inspector-overhaul-plan.md` section; the work itself is this plan's units, each with its own line).

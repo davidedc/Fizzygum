@@ -1,7 +1,7 @@
 # A MEMBER LIST: an inspector's view of one object's members -- which ones it has, as a list of
 # rows, each a kind tag and the member's name -- and, for a subject whose members are edited
 # (MemberRef.canEdit), the gestures that change WHICH members it has: Add… Duplicate… Rename…
-# Remove. A row chosen is a CHOICE (InspectorBrowserWdgt.showChoice): the inspector to my right shows
+# Remove. A row chosen is a CHOICE (InspectorBrowserWdgt.showChoice): the inspector after mine shows
 # that member (a click: its editor, MemberEditorWdgt) or that member's value (a double-click, when
 # the value has members to show: an object, or a class), so I show no member's code myself. I stand
 # in an inspector (InspectorWdgt) whose subject is my inspectedObject, its first view; picked out of
@@ -18,7 +18,7 @@
 # RE-FILTERS me (_refilterMembers): my member list is rebuilt from the filter as it stands,
 # every other child of mine stays the same widget, and every toggle is shown its field. Adding,
 # duplicating, renaming or removing a member re-filters me the same way. A re-filter's fresh list
-# selects nothing, so what stood on my right for its selection goes (InspectorBrowserWdgt.showChoice,
+# selects nothing, so what followed my inspector for its selection goes (InspectorBrowserWdgt.showChoice,
 # with no subject): every gesture of mine asks the browser AFTER its own settle, never inside it.
 #   Each edit is ONE step of the member's reference (MemberRef.of: an object's member through the
 # instance edit protocol, a class's through its meta-object, recorded), which makes the edit, tells
@@ -180,7 +180,7 @@ class MemberListWdgt extends Widget
   # My toggles' ACTIONS, one per toggle (a toggle hands itself in slot 1; none of them needs it).
   # Each flips the filter field its toggle stands for and re-filters me, in ONE settle: the field is
   # the filter's truth, and the re-filter shows every toggle its field (_reflectFiltersOnToggles).
-  # Then, after that settle, what stood on my right for my old list's selection goes: my fresh list
+  # Then, after that settle, what followed my inspector for my old list's selection goes: my fresh list
   # selects nothing.
   toggleShowingMethods: ->
     @_settleLayoutsAfter =>
@@ -389,12 +389,12 @@ class MemberListWdgt extends Widget
 
   # A CLICK on a member row (ListWdgt.select hands me its member's name, my list's selection already
   # moved to that row): my member buttons follow the selection, and the member is my CHOICE -- the
-  # inspector on my right shows it (InspectorBrowserWdgt.showChoice; the member's reference, MemberRef.of,
+  # inspector after mine shows it (InspectorBrowserWdgt.showChoice; the member's reference, MemberRef.of,
   # says how it is edited). The same member chosen again is reloaded there: its saved text put back
   # over unsaved typing, as one step of its undo history. A label that names no member (my list's
   # placeholder, a row whose member has gone since my list was built: _memberNamedBy) is NO choice,
-  # and said as one: my buttons show no member to act on, and what stood on my right for the row
-  # chosen before goes. With nothing on my right, that changes nothing a person sees.
+  # and said as one: my buttons show no member to act on, and what followed my inspector for the row
+  # chosen before goes. With nothing after my inspector, that changes nothing a person sees.
   selectionFromList: (selected) ->
     @_reflectMemberSelection()
     name = @_memberNamedBy selected
@@ -405,7 +405,8 @@ class MemberListWdgt extends Widget
   # version of one included, while my Inherited toggle is off -- my Inherited toggle is turned on
   # first, as its click turns it on (toggleShowingInherited). Then its row is clicked (my list's
   # select, which hands me the row: selectionFromList), so my buttons follow it and its editor stands
-  # right of me, and last the row is scrolled WHOLE into my list's view (ListWdgt.scrollRowIntoView),
+  # as my browser's body (below the lists, or right of me), and last the row is scrolled WHOLE into my
+  # list's view (ListWdgt.scrollRowIntoView),
   # read off the geometry that choice's settle left. A name my subject does not answer
   # (_memberNamedBy) chooses nothing, and says nothing: the window stands with nothing chosen. So does
   # a member my filter hides some other way (Fields, Methods or Own props only, a person's re-filter):
@@ -422,7 +423,7 @@ class MemberListWdgt extends Widget
   # A DOUBLE-CLICK on a member row (ListWdgt.openRow hands me its member's name, after the click that
   # chose the member): when the member's VALUE has members of its own to show -- an object, or a
   # Fizzygum CLASS (a function carrying the class marker, as classNamed tells it: a widget's
-  # `constructor` row) -- that value is my choice, in place of the member, so the inspector on my right
+  # `constructor` row) -- that value is my choice, in place of the member, so the inspector after mine
   # shows it (a class function's `__super__` its superclass's prototype, edited as that class,
   # MemberRef.of). Any other value -- a method, a number, a string -- opens nothing more: the click
   # already chose the row, and its editor stands. So does a label that names no member (_memberNamedBy).
@@ -433,9 +434,9 @@ class MemberListWdgt extends Widget
     return unless hasMembersToShow
     InspectorBrowserWdgt.showChoice @, value
 
-  # NO ROW OF MINE IS CHOSEN any more: what stands on my right shows something other than my choice,
+  # NO ROW OF MINE IS CHOSEN any more: what follows my inspector shows something other than my choice,
   # or nothing, so my list drops its selection (ListWdgt.clearSelection) and my member buttons follow.
-  # One act, two doors: my inspector's class chip pressed (InspectorWdgt.chooseMyClass, at the press,
+  # One act, two doors: my inspector's class button pressed (InspectorWdgt.chooseMyClass, at the press,
   # before my browser settles the choice), and my subject chosen again (my inspector's reload, inside
   # my browser's settle, which removes what stood right of it): a list holds no text to put back, so
   # this is its reload. Paint only -- my selected row's look and my buttons' -- so a core both doors
@@ -451,7 +452,7 @@ class MemberListWdgt extends Widget
   # MY EDITS. Each of my four edit gestures -- Add…, Duplicate…, Rename…, Remove -- is one STEP of my
   # member's reference (MemberRef.of: its add, duplicate, rename and remove), which makes the edit,
   # records it where a world snapshot needs it, tells ONCE, and answers whether it made it. My member
-  # set changed, so I re-filter (_refilterMembers), and what stood on my right for my selection goes
+  # set changed, so I re-filter (_refilterMembers), and what followed my inspector for my selection goes
   # (InspectorBrowserWdgt.showChoice, with no subject), after my settle. A step that refused changed
   # nothing, so I keep my list and my choice as they are.
 

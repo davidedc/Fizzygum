@@ -1030,7 +1030,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # (absolute world coords): those only land right for a frame at the world origin -- the root
   # of a real mis-scrolled-slide bug. The public door to a scroll to a place: a holder pins my
   # content where it wants it (SampleSlideApp), and a subclass brings a part of its plane into view
-  # through it (ListWdgt.scrollRowIntoView, InspectorRowViewportWdgt.revealColumn).
+  # through it (ListWdgt.scrollRowIntoView).
   #
   # CLAMPED like every other scroll path: the request is expressed as deltas and routed through
   # _scrollX/_scrollY, so a target past the content's edge stops AT the edge -- a raw move here let a

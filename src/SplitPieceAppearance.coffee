@@ -1,7 +1,8 @@
 # The look of a SPLIT'S PIECE of layout chrome: a division stack's divider
 # (StackElementsSizeAdjustingWdgt) and, where one joins it, the tab that is an inspector's split button
-# (SplitGripWdgt, standing right of the divider at the top of the next inspector's header), painted as
-# ONE flat grey piece:
+# (SplitGripWdgt, at the left end of the next inspector's header: right of a column divider, or turned a
+# quarter and hanging under the divider above an inspector browser's body), painted as ONE flat grey
+# piece:
 #   the PLATE  one flat tone over my widget's whole box, with no outline: splitPieceFill at rest,
 #              splitPieceHoverFill while the pointer rests on either part of the piece,
 #              splitPiecePressFill while either part is pressed or dragged (LayoutChromeWdgt's

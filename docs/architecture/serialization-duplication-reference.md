@@ -103,7 +103,7 @@ Keeping this in one doc is what stops the two walkers from drifting silently.
   Widget-branch prototype is `instanceof Widget`, so the external-widget rule below would read it
   as a widget, and a non-widget one would be copied into an object posing as its class's prototype.
   (A class FUNCTION rides a copy uncopied, as every function does but a widget's injected method,
-  which the copy compiles afresh — §5's Functions — and a save names it by its class too.) An inspector on a class has one as its subject, whichever door opened it (a class chip, a
+  which the copy compiles afresh — §5's Functions — and a save names it by its class too.) An inspector on a class has one as its subject, whichever door opened it (a class button, a
   `__super__` row, a row of a class's Subclasses list, Inspect selection), and a class member's reference holds one (`ClassMemberRef.holder`).
 - A `Widget` NOT in the **in-structure set** is **external**: duplication keeps the live
   reference (so a duplicate can stay wired to an outside widget); serialization cannot
@@ -328,7 +328,7 @@ window lives in the world's app-window registry (`world.appWindows`, keyed by cl
 
 **The class keys.** A class, and its own prototype, belong to the PAGE rather than to the
 world: every page holding the class has them. A widget pointing at one (an inspector on a class
-has its prototype as its subject, which a class chip, a `__super__` row and Inspect selection open; a class
+has its prototype as its subject, which a class button, a `__super__` row and Inspect selection open; a class
 member's reference holds it, `ClassMemberRef.holder`; and an inspector can be opened on a class function too) writes `"class:<Name>"` / `"prototype:<Name>"`, and the load
 binds the key through `classNamed` to the LOADING page's class, with the file's class-scope edits
 replayed onto it first (§12). A record of the prototype's members
@@ -346,7 +346,7 @@ would restore as a fake instance, and its methods have no source a file can carr
   record classes and both kinds of key, which the lazy-part pre-load reads too (§9), so a class a
   lazy part provides is loaded before the restore rather than refused.
 - A BUILT-IN class's prototype (a number's `Number`) is not a Fizzygum class, has no key, and is
-  refused like any other unrecognized value. So an inspector's class chip holds no
+  refused like any other unrecognized value. So an inspector's class button holds no
   class at all: its face is the class's name, and its press asks for the class (`InspectorWdgt._classAbove`).
 
 The link is symbolic and reconstructable — it preserves identity, which a bare opaque

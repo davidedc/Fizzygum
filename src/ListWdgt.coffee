@@ -139,6 +139,8 @@ class ListWdgt extends ViewportWdgt
           doubleClickAction: (if @doubleClickAction? then "openRow")
           arg1: place
 
+    # my rows panel stands at my plane's origin, and nothing of mine moves it from there: a resize of
+    # mine moves no row, and only a scroll (my offset, read as I paint) moves what I show
     @listContents.__commitMoveTo @contents.position()
     @listContents._reLayoutChildren()   # §5.2e: the rows-panel is now a stack; its re-fit chokepoint lays the rows out + self-sizes
 
@@ -168,7 +170,7 @@ class ListWdgt extends ViewportWdgt
     return
 
   # NO ROW OF MINE IS SELECTED any more: my target says so when what it chose through me stopped being
-  # shown (a member list whose inspector's class chip was pressed, MemberListWdgt.clearChoice). My
+  # shown (a member list whose inspector's class button was pressed, MemberListWdgt.clearChoice). My
   # rows read the selection as they paint, so my rows panel is told it moved; nothing is dispatched,
   # since nothing was chosen.
   clearSelection: ->
@@ -217,19 +219,3 @@ class ListWdgt extends ViewportWdgt
       @listContents._applyExtentBase new Point @width(), @listContents.height()
       @listContents._reLayoutChildren()
     super
-
-  
-  _applyExtent: (aPoint) ->
-    unless aPoint.equals @extent()
-      lb = @listContents.boundingBox()
-      # anti-vacant-space on growth: if my grown window would reach past the rows' far edge
-      # (and the rows are still bigger than the window), drag the rows' edge to the window's.
-      # The rows live on my PLANE, so the comparison runs in plane coordinates — the window's
-      # plane rect is frame origin + offset + my new extent (paint-time scroll model).
-      windowRight = @contents.left() + @scrollOffsetX + aPoint.x
-      windowBottom = @contents.top() + @scrollOffsetY + aPoint.y
-      if windowRight > lb.right() and aPoint.x <= lb.width()
-        @listContents._moveRightSideTo windowRight
-      if windowBottom > lb.bottom() and aPoint.y <= lb.height()
-        @listContents._moveBottomSideTo windowBottom
-      super aPoint
