@@ -8,10 +8,11 @@
 # it, I still list and edit it.
 #   Top to bottom, the elements of a vertical DIVISION stack (StackLayoutEngine), each a band of mine
 # or my list: my TOGGLES band (BandWdgt), my member LIST, which takes the slack, my CUT-NOTICE band
-# when my list cuts an indexed subject's items, and my FOOTER band of buttons when my subject's
-# members are edited. I have no layout of my own. In an inspector I paint nothing -- my bands paint
-# their rules, and the browser paints the body under all of us -- and standing anywhere else I paint
-# that body myself (InspectorBodyAppearance): one body under my bands, one shadow.
+# when my list cuts an indexed subject's items, and my VERBS band (ListVerbsBandWdgt: a drawn icon
+# button per verb I offer, verbsOffered) when my subject's members are edited. I have no layout of my
+# own. In an inspector I paint nothing -- my bands paint their rules, and the browser paints the body
+# under all of us -- and standing anywhere else I paint that body myself (InspectorBodyAppearance):
+# one body under my bands, one shadow.
 #   My TOGGLES (LabelledToggleWdgt) show my member FILTER -- Methods, Fields, Inherited, Own props
 # only (none for a class's prototype, whose every member is its class's) -- whose one truth is my
 # showing* fields. A click on a toggle runs its action (toggleShowing*), which flips that field and
@@ -46,8 +47,10 @@ class MemberListWdgt extends Widget
   list: undefined
   # my band saying my list cuts an indexed subject's items, built only when it does
   cutNoticeBand: undefined
-  # my footer band, built only while my subject's members are edited
-  footerBand: undefined
+  # my VERBS band (ListVerbsBandWdgt), my last cell, built once, only while I offer a verb
+  # (verbsOffered): its buttons follow what my verbs act on (verbApplies) whenever I ask it to
+  # reflect them
+  verbsBand: undefined
 
   # my filter's TOGGLES (LabelledToggleWdgt), each ON exactly while the showing* field it stands for
   # is true (_reflectFiltersOnToggles). A class's prototype gets no own-props toggle, so that field
@@ -63,14 +66,6 @@ class MemberListWdgt extends Widget
   showingMethods: true
   showingInherited: false
   showingOwnPropsOnly: false
-
-  # my footer band's buttons. Duplicate, rename and remove act on the selected member and are enabled
-  # exactly while one is selected that they can act on. A disabled button still catches a press and
-  # does nothing.
-  addPropertyButton: undefined
-  duplicatePropertyButton: undefined
-  renamePropertyButton: undefined
-  removePropertyButton: undefined
 
   # At most this many ITEMS of an indexed subject are listed, and at most this many objects in an
   # object list (ObjectListWdgt): a person scrolls a list, and no list of a million rows is one -- a
@@ -150,32 +145,63 @@ class MemberListWdgt extends Widget
     @cutNoticeBand = MemberListWdgt.cutNoticeBandFor items.length, itemCount
     @_addCellNoSettle @cutNoticeBand  if @cutNoticeBand?
 
-    @_buildAndConnectEditRow() if MemberRef.canEdit @inspectedObject
-
-    # my member buttons' enabled states: a fresh list selects nothing, so disabled
-    @_reflectMemberSelection()
+    # my verbs band, when I offer a verb (verbsOffered: none while my subject's members are edited by
+    # no step), its buttons' enabled states then reflected: a fresh list selects nothing, so all but
+    # Add… are disabled
+    if (Object.keys @verbsOffered()).length > 0
+      @verbsBand = new ListVerbsBandWdgt @
+      @_addCellNoSettle @verbsBand
+    @verbsBand?.reflectVerbs()
     @_invalidateLayout()
 
   # a child of mine added as the next element of my vertical division stack
   _addCellNoSettle: (cell) ->
     @_addNoSettle cell, layoutSpec: cell.divisionBox('y')
 
-  # The EDIT ROW -- my footer band and its buttons -- as ONE unit: built together, so it exists or it
-  # does not. A subject whose members no step edits gets a READ-ONLY list, which is the honest
-  # presentation rather than a degraded one; offering controls that could only refuse is worse than
-  # offering none (the same reasoning `createDesktop` uses to skip an app icon a profile cannot
-  # provide). Add… Duplicate… Rename… Remove at the band's left, footerInset in and footerGap apart,
-  # and footerInset again after the band's spring: every band of mine ends with its inset, so its
-  # least width keeps that inset clear on the right of its last control too.
-  _buildAndConnectEditRow: ->
-    theme = WorldWdgt.theme
-    @addPropertyButton = new SimpleButtonWdgt target: @, action: "addPropertyPopout", face: "Add…"
-    @duplicatePropertyButton = new SimpleButtonWdgt target: @, action: "duplicatePropertyPopout", face: "Duplicate…"
-    @renamePropertyButton = new SimpleButtonWdgt target: @, action: "renamePropertyPopout", face: "Rename…"
-    @removePropertyButton = new SimpleButtonWdgt target: @, action: "removeProperty", face: "Remove"
-    buttons = [theme.footerInset, @addPropertyButton, theme.footerGap, @duplicatePropertyButton, theme.footerGap, @renamePropertyButton, theme.footerGap, @removePropertyButton, BandWdgt.SPRING, theme.footerInset]
-    @footerBand = new BandWdgt theme.footerBandHeight, buttons, rule: "top"
-    @_addCellNoSettle @footerBand
+  # MY VERBS (my verbs band's protocol, ListVerbsBandWdgt): the TABLE of the verbs I offer, each the
+  # name of my method that performs it and the words that say it -- all four while my subject's members
+  # are edited (MemberRef.canEdit), none otherwise, and then I have no band. A subject whose members no
+  # step edits gets a READ-ONLY list, which is the honest presentation rather than a degraded one;
+  # offering controls that could only refuse is worse than offering none (the same reasoning
+  # `createDesktop` uses to skip an app icon a profile cannot provide). Add…, Duplicate… and Rename…
+  # open a prompt, so their words end in "…"; Remove removes at once. The prompts and their refusals
+  # are below (MY EDITS).
+  verbsOffered: ->
+    return {} unless MemberRef.canEdit @inspectedObject
+    {
+      add: {action: "addPropertyPopout", words: "Add…"}
+      duplicate: {action: "duplicatePropertyPopout", words: "Duplicate…"}
+      rename: {action: "renamePropertyPopout", words: "Rename…"}
+      remove: {action: "removeProperty", words: "Remove"}
+    }
+
+  # DOES `verb` APPLY NOW? Add always. Duplicate, rename and remove act on the SELECTED member, so they
+  # apply exactly while my list has a selection they can act on (_selectedMemberCanBeRenamedOrRemoved).
+  # My verbs band asks it at each seat I know of where that changes: my build, whose fresh list
+  # selects nothing; each selection (selectionFromList, a row that names no member included); each
+  # re-filter, whose fresh list selects nothing; my choice dropped (clearChoice, and my reload:
+  # _reloadNoSettle); and every STEP taken on a member of my subject -- an add, a duplicate, a rename or
+  # a remove in any member list on it, mine or another's, and a member editor's Save -- each of which
+  # ends in one notification (MemberRef._notifyOfEdit, which asks noteMembersMayHaveChanged).
+  #   What no step makes is NOT seen: a run of typed code (a member editor's run rows) and a write of
+  # the product's own (a menu's colour written onto my subject) can make an inherited member its own
+  # or take one away, and my buttons then show what they showed until my next seat -- the next choice
+  # asks again. The actions ask the same question when pressed, since other callers reach them
+  # directly, so a button that shows a stale state never acts on a member it cannot.
+  verbApplies: (verb) ->
+    verb is "add" or @_selectedMemberCanBeRenamedOrRemoved()
+
+  # A STEP WAS TAKEN ON A MEMBER OF `holder` (MemberRef._notifyOfEdit, the one notification every step
+  # ends in: an add, a duplicate, a rename, a remove, a Save): which members it has, or which of them
+  # it owns, may have changed, so every member list on it asks its verbs again -- the member chosen in
+  # one may be the member another list's step removed, added back or duplicated, or the member a Save
+  # made its own. Every one there is, wherever it stands (my class's instances, the registry every
+  # widget class keeps): a step knows no list it was taken in. The list a step was taken in re-filters
+  # too (_refilterMembers), which asks again once its fresh list stands. Paint only.
+  @noteMembersMayHaveChanged: (holder) ->
+    MemberListWdgt.instances.forEach (each) ->
+      each.verbsBand?.reflectVerbs()  if each.inspectedObject is holder
+    return
 
   # My toggles' ACTIONS, one per toggle (a toggle hands itself in slot 1; none of them needs it).
   # Each flips the filter field its toggle stands for and re-filters me, in ONE settle: the field is
@@ -236,18 +262,6 @@ class MemberListWdgt extends Widget
   @_isAnIndex: (name) ->
     /^(0|[1-9]\d*)$/.test(name) and Number(name) < 4294967295
 
-  # Duplicate, rename and remove act on the SELECTED member, so they are enabled exactly while my
-  # list has a selection they can act on (_selectedMemberCanBeRenamedOrRemoved): disabled as built,
-  # then following each selection (selectionFromList, a row that names no member included) until my
-  # next re-filter, whose fresh list selects nothing, or until my choice is dropped (clearChoice, and
-  # my reload: _reloadNoSettle). The actions ask the same question, since other callers reach them
-  # directly. A read-only list has none of the three.
-  _reflectMemberSelection: ->
-    offered = @_selectedMemberCanBeRenamedOrRemoved()
-    @duplicatePropertyButton?.setEnabled offered
-    @renamePropertyButton?.setEnabled offered
-    @removePropertyButton?.setEnabled offered
-
   # Duplicate, rename and remove act only on a member my member reference can act on: one my subject
   # OWNS, and never `constructor` (MemberRef.canBeRenamedOrRemoved says why). Nor on anything, while
   # my subject's members are edited by no step (MemberRef.canEdit).
@@ -263,7 +277,7 @@ class MemberListWdgt extends Widget
   # properties (_subjectsItemsAndNames), and the placeholder is none -- unless my subject has a member
   # of that very name, one my filter hides, which the placeholder then names. Asked as an object, so a
   # string's items are found. Every reader of a label of mine asks here: a choice (selectionFromList,
-  # inspectMemberValue) and my member buttons, through my selection (_selectedMemberName).
+  # inspectMemberValue) and my verbs, through my selection (_selectedMemberName).
   _memberNamedBy: (label) ->
     label  if label? and label of Object @inspectedObject
 
@@ -284,14 +298,14 @@ class MemberListWdgt extends Widget
   # duplicated, renamed or removed -- so my member LIST is built again from my filter as it stands
   # (_buildAndConnectMemberList), and nothing else is: my toggles and my bands stay the same widgets.
   # What showed the old list's selection shows none, as at my construction: no member is
-  # selected, and my member buttons are disabled (_reflectMemberSelection). My toggles are then shown
-  # my filter.
+  # selected, and my verbs band shows only Add… enabled (ListVerbsBandWdgt.reflectVerbs). My toggles
+  # are then shown my filter.
   _refilterMembers: ->
     @_settleLayoutsAfter => @_refilterMembersNoSettle()
 
   _refilterMembersNoSettle: ->
     @_buildAndConnectMemberList()
-    @_reflectMemberSelection()
+    @verbsBand?.reflectVerbs()
     @_reflectFiltersOnToggles()
     @_invalidateLayout()
 
@@ -345,7 +359,7 @@ class MemberListWdgt extends Widget
   # me as the element after my toggles band. The build makes the first one; a re-filter makes it again:
   # the list it replaces, while still mine, is destroyed, and the new one takes its place among my
   # children; a list taken out of me is not mine to replace, so it stays where it is and the new one
-  # stands before my cut-notice and footer bands. A fresh list selects nothing and shows its first rows.
+  # stands before my cut-notice and verbs bands. A fresh list selects nothing and shows its first rows.
   #   A MEMBER list: each row a kind tag and the member's name, as wide as the list (MemberRowWdgt),
   # told what each member is by my memberFactsOf. Everything the list reaches me through is a method
   # NAME -- a click selects a member (selectionFromList), a double-click opens its value
@@ -359,7 +373,7 @@ class MemberListWdgt extends Widget
       atIndex = @children.indexOf @list
       @list._fullDestroyNoSettle()
     else
-      atIndex = (@children.indexOf band for band in [@cutNoticeBand, @footerBand] when band?.parent is @)[0]
+      atIndex = (@children.indexOf band for band in [@cutNoticeBand, @verbsBand] when band?.parent is @)[0]
 
     @list = new ListWdgt @_filteredMemberNames(),
       target: @
@@ -388,15 +402,15 @@ class MemberListWdgt extends Widget
     classPrototype if classPrototype? and typeof classPrototype is "object"
 
   # A CLICK on a member row (ListWdgt.select hands me its member's name, my list's selection already
-  # moved to that row): my member buttons follow the selection, and the member is my CHOICE -- the
+  # moved to that row): my verbs follow the selection, and the member is my CHOICE -- the
   # inspector after mine shows it (InspectorBrowserWdgt.showChoice; the member's reference, MemberRef.of,
   # says how it is edited). The same member chosen again is reloaded there: its saved text put back
   # over unsaved typing, as one step of its undo history. A label that names no member (my list's
   # placeholder, a row whose member has gone since my list was built: _memberNamedBy) is NO choice,
-  # and said as one: my buttons show no member to act on, and what followed my inspector for the row
+  # and said as one: my verbs show no member to act on, and what followed my inspector for the row
   # chosen before goes. With nothing after my inspector, that changes nothing a person sees.
   selectionFromList: (selected) ->
-    @_reflectMemberSelection()
+    @verbsBand?.reflectVerbs()
     name = @_memberNamedBy selected
     InspectorBrowserWdgt.showChoice @, (if name? then MemberRef.of(@inspectedObject, name))
 
@@ -404,7 +418,7 @@ class MemberListWdgt extends Widget
   # the member `name` of my subject. Hidden by my filter -- a member a superclass declares, an own
   # version of one included, while my Inherited toggle is off -- my Inherited toggle is turned on
   # first, as its click turns it on (toggleShowingInherited). Then its row is clicked (my list's
-  # select, which hands me the row: selectionFromList), so my buttons follow it and its editor stands
+  # select, which hands me the row: selectionFromList), so my verbs follow it and its editor stands
   # as my browser's body (below the lists, or right of me), and last the row is scrolled WHOLE into my
   # list's view (ListWdgt.scrollRowIntoView),
   # read off the geometry that choice's settle left. A name my subject does not answer
@@ -435,18 +449,18 @@ class MemberListWdgt extends Widget
     InspectorBrowserWdgt.showChoice @, value
 
   # NO ROW OF MINE IS CHOSEN any more: what follows my inspector shows something other than my choice,
-  # or nothing, so my list drops its selection (ListWdgt.clearSelection) and my member buttons follow.
+  # or nothing, so my list drops its selection (ListWdgt.clearSelection) and my verbs follow.
   # One act, two doors: my inspector's class button pressed (InspectorWdgt.chooseMyClass, at the press,
   # before my browser settles the choice), and my subject chosen again (my inspector's reload, inside
   # my browser's settle, which removes what stood right of it): a list holds no text to put back, so
-  # this is its reload. Paint only -- my selected row's look and my buttons' -- so a core both doors
+  # this is its reload. Paint only -- my selected row's look and my verbs' -- so a core both doors
   # reach.
   clearChoice: ->
     @_reloadNoSettle()
 
   _reloadNoSettle: ->
     @list?.clearSelection()
-    @_reflectMemberSelection()
+    @verbsBand?.reflectVerbs()
     return
 
   # MY EDITS. Each of my four edit gestures -- Add…, Duplicate…, Rename…, Remove -- is one STEP of my

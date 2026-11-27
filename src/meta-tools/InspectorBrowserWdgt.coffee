@@ -164,11 +164,12 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # takes all of it. Its width is no input: my division stack stretches every cell across me. A core on
   # my fresh viewport, before my build adds it (an orphan's box setter schedules nothing).
   #   LEAST, the box's: one whole member row under a member list's bands: header 44 + toggles 48 +
-  # footer 52 (the bands, inspectorHeaderHeight, toggleBandHeight, footerBandHeight), the rows' panel's
-  # padding 4 (memberRowsPanelPadding) and one row 42 (memberRowHeight): 190. The strip's own least
-  # is never below the tallest least of my set's columns (InspectorRowViewportWdgt.getMinDim): 236
-  # while a member list stands under a chooser (every widget's column, every class's: header 44,
-  # chooser 48, the list's toggles 48, its rows' least 44, its footer 52). So my own least, my cells'
+  # verbs 52 (the bands: inspectorHeaderHeight, toggleBandHeight, and footerBandHeight, the height of
+  # the list's verbs band, ListVerbsBandWdgt), the rows' panel's padding 4 (memberRowsPanelPadding)
+  # and one row 42 (memberRowHeight): 190. The strip's own least is never below the tallest least of
+  # my set's columns (InspectorRowViewportWdgt.getMinDim): 236 while a member list stands under a
+  # chooser (every widget's column, every class's: header 44, chooser 48, the list's toggles 48, its
+  # rows' least 44, its verbs band 52). So my own least, my cells'
   # summed -- my trail's 52, the strip's, my divider's 12 and my body's 96 (header 44, an editor's least
   # 52) -- is 396 while such a column stands, 350 while none does; given less, my division stack
   # squeezes every cell (its first regime).

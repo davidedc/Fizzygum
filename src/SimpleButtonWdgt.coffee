@@ -19,6 +19,16 @@
 #   its place  a box one line tall, centred in my box (draft-exact: _faceBoundsIn)
 #   my size    preferredExtent: buttonHeight tall, the label plus my horizontal padding at each
 #              side plus my border wide, never narrower than minimumTargetSize
+# A drawn MARK as my face -- a picture that names the side of its glyph square, glyphSize, and wears
+# the ink its holder hands it (MenuRowIndicatorWdgt: a list's verb, ListVerbsBandWdgt) -- gets the
+# same three, for a mark:
+#   its ink    the text face's, pushed the same way (_inkMyFace): buttonText while I am enabled,
+#              buttonDisabledText while I am not, in every pointer state
+#   its place  its glyph square, centred in my box (_faceBoundsIn), so its box is its square
+#   my size    preferredExtent: buttonHeight tall, and as wide but never narrower than
+#              minimumTargetSize (44 x 36): across, I meet the 44 rule myself, as every button of
+#              mine does (visual-design-system §4.2); down, I am the house's one button height, and
+#              the band I stand in meets 44 (a list's verbs band, 52 tall)
 # Any other face (an icon, a raster image) fills my box inset by my padding, as ButtonWdgt places
 # it, and I answer ButtonWdgt's preferredExtent. Without a face I have no child at all.
 #
@@ -62,7 +72,7 @@ class SimpleButtonWdgt extends ButtonWdgt
 
   # Enable or disable me. My look follows at once, whatever state the pointer leaves me in: a
   # disabled button shows no hover or pressed look, and an enabled one shows the look of the state
-  # it is in now. Only I repaint; my text face recolours itself.
+  # it is in now. Only I repaint; my text or mark face recolours itself.
   setEnabled: (flag) ->
     enabled = !!flag
     return if enabled is @isEnabled
@@ -94,10 +104,12 @@ class SimpleButtonWdgt extends ButtonWdgt
     return theme.buttonDisabledStroke unless @isEnabled
     if @_shownState() is "pressed" then theme.buttonPressStroke else theme.buttonStroke
 
-  # My text face's ink, which follows my enabled flag and nothing else: the constructor and
-  # setEnabled write it, a hover or a press never does.
+  # My text or mark face's ink, which follows my enabled flag and nothing else: the constructor and
+  # setEnabled write it, a hover or a press never does. A mark is inked as a text is, by its colour
+  # (setColor): it wears the ink its holder hands it, so it wears my roles. Any other face keeps the
+  # colours it paints in.
   _inkMyFace: ->
-    return unless @_faceIsALineOfText()
+    return unless @_faceIsALineOfText() or @_faceIsAMark()
     theme = WorldWdgt.theme
     @faceWidget.setColor (if @isEnabled then theme.buttonText else theme.buttonDisabledText)
 
@@ -108,6 +120,12 @@ class SimpleButtonWdgt extends ButtonWdgt
   _faceIsALineOfText: ->
     @faceWidget?.parent is @ and @faceWidget.measureText? and !@faceWidget.breakTextIntoLines?
 
+  # Is my face a drawn MARK, a picture that names the side of its glyph square (glyphSize)? A
+  # capability query, as the text's: my header says what a mark gets. A face something has taken out
+  # of me is not my face.
+  _faceIsAMark: ->
+    @faceWidget?.parent is @ and @faceWidget.glyphSize?
+
   # The box ButtonWdgt._reLayout grants my face inside `room` (my box inset by my padding). A line
   # of text gets a box one line tall -- its own line box (linePitch), ceil(1.2 x its font size)
   # while its font role states no line height: 15 at 12 px --
@@ -116,7 +134,16 @@ class SimpleButtonWdgt extends ButtonWdgt
   # floor keeps the box at integer bounds, and in a room only one line tall it IS the room, so a
   # button sized to one line places its face exactly where it fills the room. A room shorter than
   # one line, and any other face, keep the whole room.
+  #   A MARK gets its glyph square, centred in the room the same floor way: for a 16 px square, 14 px
+  # in from the sides of a 44 x 36 button and 10 from its top and bottom. In a room smaller than its
+  # square (a band squeezed below its least) the square shrinks to the room's short side, and the
+  # mark's art with it: a mark is size-aware, drawn at the square it is handed (from its MIN_SIZE).
   _faceBoundsIn: (room) ->
+    if @_faceIsAMark()
+      side = Math.min @faceWidget.glyphSize, room.width(), room.height()
+      left = room.left() + Math.floor (room.width() - side) / 2
+      top = room.top() + Math.floor (room.height() - side) / 2
+      return new Rectangle left, top, left + side, top + side
     return room unless @_faceIsALineOfText()
     lineHeight = @faceWidget.linePitch @faceWidget.originallySetFontSize
     return room if room.height() <= lineHeight
@@ -126,12 +153,14 @@ class SimpleButtonWdgt extends ButtonWdgt
   # The extent I would take given my druthers: for a line of text, buttonHeight tall and as wide as
   # the label (its own measure, so the SWCanvas page's integer advances are what count) plus my
   # horizontal padding at each side plus my 1 px border at each side -- never narrower than a
-  # chrome target (visual-design-system §4.2). For any other face, or none, what every widget
-  # answers. A pure measure: my CONSTRUCTION extent stays the generic one, and a set extent is
-  # never clamped to this.
+  # chrome target (visual-design-system §4.2). For a mark, the same rule with no label to measure:
+  # buttonHeight tall and buttonHeight wide but never narrower than a chrome target, 44 x 36. For
+  # any other face, or none, what every widget answers. A pure measure: my CONSTRUCTION extent stays
+  # the generic one, and a set extent is never clamped to this.
   preferredExtent: ->
-    return super() unless @_faceIsALineOfText()
     theme = WorldWdgt.theme
+    return new Point (Math.max theme.minimumTargetSize, theme.buttonHeight), theme.buttonHeight  if @_faceIsAMark()
+    return super() unless @_faceIsALineOfText()
     paddingX = if @isPrimaryAction then theme.primaryButtonPaddingX else theme.buttonPaddingX
     face = @faceWidget
     labelWidth = Math.ceil face.measureText (face.transformTextOneToOne face.text), face.originallySetFontSize

@@ -325,7 +325,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   `topMemberList()` locator: the inspector entry below has both locators),
   `clickViewToggle inspector, face` (the inspector's chooser toggle that shows `face`, found by what it shows and
   answers, never through `viewToggles`/`shownViewTitle`, clicked and verified; NO VIEW TOGGLE, naming the faces
-  shown, where none shows it), `dragSplitControlBy control, delta` (a drag on an inspector browser's divider or the
+  shown, where none shows it), `clickListVerb listView, verb` and `answerListVerbPrompt listView, verb, typed,
+  options` (a list's verb button pressed by the verb it answers, and that press with its prompt answered: the
+  inspector entry below), `dragSplitControlBy control, delta` (a drag on an inspector browser's divider or the
   split button joined to it, by `delta`, a Point read along the divider's axis — a column divider's x, the body's
   divider's y — in legs: a verified press, a held move, a release — a plain touch stroke under a finger, both
   controls owning the drags that start on them),
@@ -433,11 +435,26 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   subject is made by), a `chooser` band when its
   subject offers more than one VIEW (`viewToggles`, one `LabelledToggleWdgt` per view, the shown one ON: a widget
   offers Members and Children, a class's prototype Members, Instances where instances register, and Subclasses), and
-  ONE `view`. The first view is always the **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s, the
-  footer's `addPropertyButton` / `duplicatePropertyButton` / `renamePropertyButton` / `removePropertyButton`,
-  `cutNoticeBand`, `footerBand`), so `inspectors()[0].view` read right after the build is a member list; on a
-  subject with a chooser it stands 48 px lower (header 44, chooser 48, then its toggles 48, its list 120, its footer
-  52 in the strip's 312: two whole member rows). A press on another toggle (`clickViewToggle_InputEvents_Macro inspector, face`) shows that view in the same inspector (an `ObjectListWdgt`
+  ONE `view`. The first view is always the **member list** (`MemberListWdgt`: `.list`, the four `show…Toggle`s,
+  `cutNoticeBand`, and `verbsBand`, its BAND OF VERBS, a `ListVerbsBandWdgt` of drawn icon buttons — add, duplicate,
+  rename, remove, always in that order, each button's words its tooltip, `toolTipMessage` ("Add…", "Duplicate…",
+  "Rename…", "Remove") — built only while its subject's members are edited, `MemberRef.canEdit`: a value's list and an
+  object list have none), so `inspectors()[0].view` read right after the build is a member list; on a
+  subject with a chooser it stands 48 px lower (header 44, chooser 48, then its toggles 48, its list 120, its band of
+  verbs 52 in the strip's 312: two whole member rows). **Reach a verb by the toolkit, never by a field or a place**:
+  `@listVerbButtonOf memberList, verb` is the LOCATOR (the band's button that performs `verb`, found by what it answers,
+  `ListVerbsBandWdgt.buttonFor`; undefined where the list offers no such verb — absence is a fact a test asserts), its
+  `isEnabled` the verb's state (`MemberListWdgt.verbApplies`: add always; duplicate, rename and remove while a member
+  the subject OWNS, not `constructor`, is chosen — asked again at once in EVERY member list on the subject after any
+  member step changes what it owns, an add, duplicate, rename or remove in any list or a Save, since the steps' one
+  tail, `_notifyOfEdit`, tells them all, `MemberListWdgt.noteMembersMayHaveChanged`; a run in an editor and a
+  product write show at the list's next choice); `@listVerbsOf memberList` reads the verbs the band offers, as the
+  band answers them in its one order (`ListVerbsBandWdgt.verbs()`; `[]` with no band);
+  `clickListVerb_InputEvents_Macro memberList, verb` presses one (the press verified on its button; a disabled one is
+  pressed all the same and does nothing; NO LIST VERB, naming the verbs offered, where the band offers none); and
+  `answerListVerbPrompt_InputEvents_Macro memberList, verb, typed, options = {}` presses one and answers the prompt it
+  opens (Add…, Duplicate…, Rename…): `typed` after the name the prompt holds, or, with `replacing: true`, in place of
+  it (all of it selected first), then its OK; NO PROMPT where the press opens none. A press on another toggle (`clickViewToggle_InputEvents_Macro inspector, face`) shows that view in the same inspector (an `ObjectListWdgt`
   for Children, Instances, Subclasses: rows of objects, a press on one opens THAT object in the column after it, on
   the view of the same title when the object offers one that lists something: a walk keeps its view), a press on
   the lit toggle has the view read its list again, and either closes what followed it. A
@@ -449,7 +466,9 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   carrying the class marker, a `constructor` row's) -- (`inspectMemberValue`) puts one on the value, a column, while a
   plain method's row keeps its editor; the class button puts one on the class it names (its prototype), a column, each
   a member list.
-  Nothing widens the window: every column stands at its NATURAL width (what its cells desire: a member list 372)
+  Nothing widens the window: every column stands at its NATURAL width (what its cells desire: a widget's member list
+  365, its band of filter toggles, least 364; a class prototype's column 286, its chooser band, least 285, its own list
+  246; the band of verbs, four 44 × 36 buttons 8 apart, 225, least 224, is never the widest)
   until a drag on the divider at its right, or on the split button joined to it, STATES its width;
   the set's last column takes the spare room, and a set wider than its viewport SCROLLS — never squeezes a column —,
   its scroll resting on a column's left edge (a sideways wheel notch moves one column; a stroke rests at its end). A
@@ -472,8 +491,8 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   subject already answers, its own or inherited, with an inform (a rename to the member's own name does nothing and
   says nothing); an own version of an inherited member is made by choosing it and pressing Save. ⚠ An editor exists only once a member is
   chosen; ANOTHER member REPLACES its inspector with a new one holding a new editor (the same member chosen again
-  reloads the editor in place: its text put back, as one step of its undo history), and a filter toggle, a footer
-  edit or the class button takes it away (the body is an empty one again) — re-locate the editor after EVERY choice,
+  reloads the editor in place: its text put back, as one step of its undo history), and a filter toggle, an edit
+  by a list's verb or the class button takes it away (the body is an empty one again) — re-locate the editor after EVERY choice,
   never keep one from before it. The
   list's placeholder row "(empty)" names no member and chooses nothing. **Find the parts with the toolkit's two
   locators**, not a search of the world (one for "an editor" also meets a script's, a console's or another window's):
@@ -517,9 +536,10 @@ Full signatures + behaviour are the **doc-comments in `MacroToolkit.coffee`**; u
   widget by its printed name, still editable, and a Save of a value reads back what it stored (MACRO-PATTERNS.md, "A
   member editor shows a value as CODE"); the list HIDES inherited members by
   default (toggle `showInheritedToggle`, and scroll the list to a row by name since e.g. `alpha` sorts below the first
-  rows); members are edited by the list's "Add…"/"Duplicate…"/"Rename…"/"Remove" footer buttons and the editor's
-  "Save" (`save` → `MemberRef.save`: an object's member through `injectProperty`, a class's through its meta-object; a
-  subject no step edits, `MemberRef.canEdit`, gets no footer band, and neither do its members' editors); and to nest
+  rows); members are edited by the list's band of verbs (add, duplicate, rename, remove: "Add…"/"Duplicate…"/"Rename…"
+  /"Remove", its buttons' tooltips) and the editor's "Save" (`save` → `MemberRef.save`: an object's member through
+  `injectProperty`, a class's through its meta-object; a subject no step edits, `MemberRef.canEdit`, gets no band of
+  verbs, and its members' editors no Save and no footer band); and to nest
   the window into a document/panel, drag it by its title and linger past `dwellToArmMs` (the dwell-to-arm embed — there
   is no internal/external gate; a window's skin is derived from its parentage, `FrameWdgt.isInternal`).
 

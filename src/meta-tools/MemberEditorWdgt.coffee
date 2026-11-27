@@ -104,8 +104,11 @@ class MemberEditorWdgt extends CodeAreaWdgt
   # where a world snapshot needs it, and tells once. Every save step compiles before it changes
   # anything, so an edit that does not compile changes nothing: it is reported beside the hand, and
   # stays MODIFIED, my Save still enabled (Widget._savingTypedCode). The gesture asks MemberRef.canEdit
-  # too, not only my build: a restored editor keeps the button its file holds. Then I show what my
-  # member SHOWS (MemberRef.shownText), one rule whatever was stored: where that is the text typed,
+  # too, not only my build: a restored editor keeps the button its file holds. A save changes what my
+  # member's holder OWNS when the member was inherited (the Save makes it the holder's own), so every
+  # member list on that holder asks its verbs again, whichever one I was chosen in: my member
+  # reference's step tells them, as every step of it does (MemberRef._notifyOfEdit). Then I show what
+  # my member SHOWS (MemberRef.shownText), one rule whatever was stored: where that is the text typed,
   # read once before the save, nothing moves -- the text stays, its caret, selection and undo history
   # with it; where it differs, it is put back (_reloadNoSettle, one step of my undo history), so I show
   # what was stored: `Color.GRAY` saved reads as its code form, a text NAMING a function (`Math.max`,

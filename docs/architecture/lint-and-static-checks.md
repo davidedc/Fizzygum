@@ -426,17 +426,19 @@ blind spot is structural:
   and it needs its own query. OK is pressed with the prompt's own
   default contents, so this asks "does the callback resolve and run", never "is this a good value".
   ⭐ It also proves the WORDING rules at runtime, since a label cannot be read for what its action does any more than a
-  name can: a dispatched row (and a member list's "Add…"/"Duplicate…"/"Rename…" and the bin's "Empty bin…", the buttons no menu walk
-  reaches) ends in "…" exactly when its act opened a prompt, the file chooser, a download, a confirmation
-  or the resize handles (`ELLIPSIS_MISMATCH`; ASCII "..." is `ASCII_ELLIPSIS`). The file I/O and `window.confirm` are
+  name can: a dispatched row (and the buttons no menu walk reaches: the bin's "Empty bin…", and a member list's add,
+  duplicate and rename buttons, whose faces are drawn marks and whose words, "Add…"/"Duplicate…"/"Rename…", are their
+  tooltips) ends in "…" exactly when its act opened a prompt, the file chooser, a download, a confirmation
+  or the resize handles (`ELLIPSIS_MISMATCH`; ASCII "..." is `ASCII_ELLIPSIS`; a judged button that is missing or
+  carries no words is `BUTTON_WORDS_MISSING`). The file I/O and `window.confirm` are
   counters in the page, so the file rows are dispatched, not skipped, and nothing reaches the browser. Every label seen
   starts with a capital or a non-letter (`SENTENCE_CASE`). Each rule has a stated-decision allowlist
   (`ELLIPSIS_EXCEPTIONS`, `SENTENCE_CASE_EXCEPTIONS`) and a vacuity guard (`ELLIPSIS_CHECK_VACUOUS`,
   `SENTENCE_CASE_CHECK_VACUOUS`).
   ⚠ Its coverage model is REPRESENTATIVES, not exhaustion: its roots (its summary's `roots` line counts them) are two
   world roots, representative widget classes, the two inspector browsers (`InspectorBrowserWdgt[widget]`,
-  `InspectorBrowserWdgt[class]`; their member lists' prompts open from a BUTTON row no menu walk can reach, which a section
-  of their own presses), a `MenuWdgt`/`PromptWdgt` pair, each popped up and right-clicked on ITSELF, since no other
+  `InspectorBrowserWdgt[class]`; their member lists' prompts open from the buttons of a band of verbs no menu walk can
+  reach, which a section of their own finds by verb and presses), a `MenuWdgt`/`PromptWdgt` pair, each popped up and right-clicked on ITSELF, since no other
   root stands in a pop-up and so nothing else walks a transient frame's own entries, the P5 docking pair
   (`FrameWdgt[docked band]` / `FrameWdgt[host with an empty slot]` — a Docs Maker's own docked toolbar, built and
   floated the product way, since a bare `FrameWdgt` representative is free-floating with an empty slot and offers

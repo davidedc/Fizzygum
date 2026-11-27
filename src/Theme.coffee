@@ -759,7 +759,7 @@ class Theme
     # magnet's rounding, the least side of a chrome target, a footer band's height, rule, inset and
     # button gap, and an inspector's bands: their rule's width, its header band's
     # height, inset and gap, a member list's toggles band's height, inset and gap, its browser's trail
-    # chevron's glyph square, and a member
+    # chevron's glyph square, a list's verb buttons' mark square, and a member
     # editor's least width, a code pane's padding, the text caret's width and the gap it stands after
     # its slot, the drop outline's and the selection outline's widths, a document's item spacing and
     # its text items' rounding and padding, and a desktop icon's tile, glyph, plate and cell (all
@@ -1054,7 +1054,9 @@ class Theme
     # a BUTTON (SimpleButtonWdgt) whose face is a line of text: the height it takes, its horizontal
     # padding at each side of the label (a primary action's is wider), and the rounding of its box.
     # Its width is the label, that padding at each side and its 1 px border at each side
-    # (SimpleButtonWdgt.preferredExtent).
+    # (SimpleButtonWdgt.preferredExtent). A button whose face is a drawn MARK has no label to
+    # measure: it is that height tall, as wide as it is tall but never narrower than a chrome target
+    # (minimumTargetSize, below), 44 x 36.
     @buttonHeight = 36
     @buttonPaddingX = 14
     @primaryButtonPaddingX = 18
@@ -1074,9 +1076,10 @@ class Theme
     @minimumTargetSize = 44
 
     # a FOOTER BAND, the row of buttons a window's content ends in (FooterBandLayout: a code
-    # prompt's, a script's, a console's, an error log's, a member editor's, a bin's; and a member
-    # list's, a band of its own, BandWdgt -- as is the one other band of plain buttons, an inspector
-    # browser's TRAIL, at the top of the browser, its rule along its bottom): its
+    # prompt's, a script's, a console's, an error log's, a member editor's, a bin's), and the two
+    # bands of buttons that are BandWdgts at its metrics, no footer layout's: a member list's VERBS
+    # (ListVerbsBandWdgt, its buttons faced with drawn marks) and an inspector browser's TRAIL (its
+    # buttons faced with text, at the top of the browser, its rule along its bottom): its
     # height, its rule included, and that rule's thickness (a seam its host owns,
     # visual-design-system §4.1) ...
     @footerBandHeight = 52
@@ -1091,7 +1094,7 @@ class Theme
     # an INSPECTOR's bands (BandWdgt: a row of controls at their own sizes, centred down the band):
     # the width of the RULE a band draws inside its height, along its bottom (an inspector's header and
     # its chooser band, a member list's toggles band, an inspector browser's trail) or its top (the
-    # cut-notice band a member list or an object list shows, and a member list's footer band, which is
+    # cut-notice band a member list or an object list shows, and a member list's verbs band, which is
     # footerBandHeight tall and keeps footerInset and footerGap, above, as the trail does) ...
     @inspectorRuleWidth = 1
     # ... the side of the glyph square of the CHEVRON between two levels of an inspector browser's trail
@@ -1099,6 +1102,12 @@ class Theme
     # capitals beside it; the trail stands that INK footerGap clear of each button
     # (ChevronRightIconAppearance.inkSpanX: [4, 9) of 12, so the gaps beside its square are 4 and 5) ...
     @inspectorTrailChevronSize = 12
+    # ... the side of the glyph square of the MARK a list's verb button wears (ListVerbsBandWdgt: the
+    # plus, the two sheets, the text cursor, the bin outline), centred in its 44 x 36 button: 16, 14 px
+    # clear of the button's sides and 10 of its top and bottom; and at 16 the plus's bars are the control
+    # glyph's line (2 logical px: 2 at dpr 1, 4 at dpr 2) that the three marks beside it are drawn on,
+    # at both densities ...
+    @inspectorVerbMarkSize = 16
     # ... an inspector's HEADER band (InspectorWdgt): its height, its rule included, a chrome target's
     # (the split button stands in it whole); how far in from its left edge its title starts, which is
     # also how far short of its right edge its class button ends, and how tall the cut-notice band a

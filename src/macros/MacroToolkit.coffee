@@ -2429,7 +2429,7 @@ class MacroToolkit
   # ── THE INSPECTOR'S TWO LOCATORS ───────────────────────────────────────────────────────────────
   # "Inspect" opens a window whose content is an inspector BROWSER (InspectorBrowserWdgt), which
   # holds a SEQUENCE of inspectors: the first on the widget inspected, its view a MEMBER LIST
-  # (MemberListWdgt: its `list`, toggles and footer buttons); a member chosen in a member list puts an
+  # (MemberListWdgt: its `list`, its toggles and its band of verbs); a member chosen in a member list puts an
   # inspector on that member next after the list's own inspector in the sequence, its view a MEMBER
   # EDITOR (MemberEditorWdgt: its code area `tempPromptEntryField`, the `textWidget` in it, and its
   # `saveButton`). The `…FromTopInspector…` verbs find both parts through the two locators below,
@@ -2490,6 +2490,35 @@ class MacroToolkit
   # no member list shows.
   topInspectorList: ->
     @topMemberList()?.list
+
+  # ── A LIST'S VERBS ───────────────────────────────────────────────────────────────────────────────
+  # A list view of an inspector (a member list) that offers VERBS ends in a band of drawn icon buttons,
+  # one per verb it offers -- "add", "duplicate", "rename", "remove" -- each pressed for its verb
+  # (ListVerbsBandWdgt: its buttons' argument is the verb, its tooltip the words a person reads). A
+  # view that offers none has no band at all. The band and its buttons are found by what they ANSWER,
+  # never by class: the band is the lazy 'meta-tools' part's and this toolkit the eager 'harness'
+  # part's (the reason the inspector's locators above give).
+
+  # THE BAND OF VERBS `listView` ENDS IN: the one cell of the view that answers buttonFor (a band of
+  # verbs is the one cell that does), or undefined when the view has none -- a view that offers no
+  # verb, or a band taken out of it, which is not its band.
+  _listVerbsBandOf: (listView) ->
+    (listView?.children ? []).find (cell) -> cell.buttonFor?
+
+  # THE BUTTON OF `listView`'s band THAT PERFORMS `verb` ("add", "duplicate", "rename", "remove"), as
+  # its band answers it (buttonFor), or undefined when the view's band offers no such verb or the view
+  # has no band. Absence is a fact a test asserts, so it is answered, never thrown; a press asked of
+  # an absent verb throws instead (clickListVerb_InputEvents_Macro). Its enabled state is its
+  # isEnabled: a disabled button still catches a press and does nothing with it.
+  listVerbButtonOf: (listView, verb) ->
+    @_listVerbsBandOf(listView)?.buttonFor verb
+
+  # THE VERBS `listView`'s band offers, in its order, as the band answers them (ListVerbsBandWdgt.verbs),
+  # [] when the view has no band. Asked of the band, never read off its pieces: what it offers and in
+  # what order is the band's to say, as which button performs a verb is (listVerbButtonOf). Where its
+  # buttons STAND is a test's own reading, off their geometry.
+  listVerbsOf: (listView) ->
+    @_listVerbsBandOf(listView)?.verbs() ? []
 
   # WHERE THE NAMED ROW SITS RELATIVE TO THE PANE'S VISIBLE WINDOW — the one place that geometry is
   # computed, shared by the wheel's correction, the in-view check, the nudge and the click itself. The row is
@@ -2823,8 +2852,10 @@ class MacroToolkit
     # on (topMemberEditor); bringUpInspectorAndSelectListItem is the two, one after the other. Below the
     # list verbs, bringColumnIntoView scrolls a browser's set to a column of it its viewport does not
     # show whole, clickViewToggle shows another view of an inspector's subject (its chooser's toggle, by
-    # the face it shows), and dragSplitControlBy sizes what a divider sizes -- the column on its left, or
-    # the strip of lists above the body -- by the divider or by the split button joined to it.
+    # the face it shows), clickListVerb presses one of a list's verbs (its band's button, by the verb) and
+    # answerListVerbPrompt answers the prompt such a press opens, and dragSplitControlBy sizes what a
+    # divider sizes -- the column on its left, or the strip of lists above the body -- by the divider or
+    # by the split button joined to it.
     macroSubroutines.add Macro.fromString """
       bringUpInspector_InputEvents_Macro = (whichWidget) ->
         clickMenuItemOfWidget_InputEvents_Macro whichWidget, "Dev"
@@ -2913,6 +2944,46 @@ class MacroToolkit
         unless toggle?
           throw new Error "NO VIEW TOGGLE: clickViewToggle clicks the toggle '" + face + "' of the chooser of " + inspector + ", which shows " + (if faces.length > 0 then faces.join(", ") else "no chooser")
         @moveToAndClick_InputEvents toggle
+        yield "waitNoInputsOngoing"
+    """
+
+    # A LIST'S VERB PRESSED, as a person presses it (a tap under a finger): the button of `listView`'s band
+    # of verbs that performs `verb` ("add", "duplicate", "rename", "remove"), found by the verb it answers
+    # (listVerbButtonOf), never by its mark, its place or its class; the press is verified to land on it,
+    # and the queue drained. A disabled button is pressed all the same -- it catches the press and does
+    # nothing with it, as a person's press on it does. A view whose band offers no such verb, or that has no
+    # band, is a fault, raised naming the verbs it offers (listVerbsOf): a press is never placed elsewhere.
+    macroSubroutines.add Macro.fromString """
+      clickListVerb_InputEvents_Macro = (listView, verb) ->
+        button = @listVerbButtonOf listView, verb
+        unless button?
+          offered = @listVerbsOf listView
+          throw new Error "NO LIST VERB: clickListVerb presses the '" + verb + "' button of the band of verbs of " + listView + ", which offers " + (if offered.length > 0 then offered.join(", ") else "no verb")
+        @moveToAndClick_InputEvents button
+        yield "waitNoInputsOngoing"
+    """
+
+    # A LIST VERB'S PROMPT ANSWERED, as a person answers it: the verb pressed (clickListVerb; Add…,
+    # Duplicate… and Rename… each open a prompt asking for a name), the prompt held from right after it
+    # opens, `typed` typed into its field -- which opens editing, the caret after the name it holds, so the
+    # typing is added after that name, or REPLACES it with `replacing: true` (all of it selected first) --
+    # and its OK pressed (a real button: clickPromptButton). How the typing meets the name is
+    # configuration, so it rides `options`, never a bare positional flag. A press that opens no prompt (a
+    # verb that asks for no name, a disabled button, a refusal said instead) is a fault, raised naming the
+    # verb and the list: the typing is never sent elsewhere. A prompt is the pop-up that ends in a row of
+    # buttons (buttonsRow), asked by what it answers, as clickPromptButton finds its OK.
+    macroSubroutines.add Macro.fromString """
+      answerListVerbPrompt_InputEvents_Macro = (listView, verb, typed, options = {}) ->
+        clickListVerb_InputEvents_Macro listView, verb
+        prompt = @getMostRecentlyOpenedMenu()
+        unless prompt?.buttonsRow?
+          throw new Error "NO PROMPT: answerListVerbPrompt answers the prompt the '" + verb + "' button of " + listView + " opens, and its press opened none"
+        if options.replacing
+          @syntheticEventsShortcutsAndSpecialKeys_InputEvents "Meta+a"
+          yield "waitNoInputsOngoing"
+        @syntheticEventsStringKeys_InputEvents typed
+        yield "waitNoInputsOngoing"
+        @clickPromptButton_InputEvents prompt, "OK"
         yield "waitNoInputsOngoing"
     """
 

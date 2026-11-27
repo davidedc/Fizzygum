@@ -217,11 +217,22 @@ class MemberRef
     @_notifyOfEdit()
     true
 
-  # The one notification each of my edit steps ends in, once its edit is made: my holder's
-  # sourceChanged (a widget's, Widget.sourceChanged; a paint tool's, which writes it to the person),
-  # since the edit was made under it. ClassMemberRef's is the world's.
+  # The one notification each of my edit steps ends in, once its edit is made -- mine and
+  # ClassMemberRef's alike, so it is the ONE seat a step tells from -- in two parts. First, what the
+  # edit reaches is told (_tellWhatTheEditReaches), the one part a class's member tells differently.
+  # Then every member list on my holder asks its verbs again (MemberListWdgt.noteMembersMayHaveChanged):
+  # a step can change which members my holder OWNS -- an add, a duplicate, a rename or a remove which
+  # it has, a Save of an inherited member whether that member is its own -- and the list a step was
+  # taken in (or the editor a Save was pressed in) is not the only list that may stand on my holder.
   _notifyOfEdit: ->
-    # settling-call-sanctioned: the tail of my edit steps, which only an inspector's edit gestures reach (a member
-    # list's Add…, Duplicate…, Rename… and Remove, a member editor's Save), at event time and never inside a
-    # settle -- the notification is the edit's own settle
+    @_tellWhatTheEditReaches()
+    MemberListWdgt.noteMembersMayHaveChanged @holder
+
+  # what my edit reaches, told: my holder's sourceChanged (a widget's, Widget.sourceChanged; a paint
+  # tool's, which writes it to the person), since the edit was made under it. ClassMemberRef's is the
+  # world's.
+  _tellWhatTheEditReaches: ->
+    # settling-call-sanctioned: the tail of my edit steps (_notifyOfEdit), which only an inspector's edit
+    # gestures reach (a member list's Add…, Duplicate…, Rename… and Remove, a member editor's Save), at event
+    # time and never inside a settle -- the notification is the edit's own settle
     @holder.sourceChanged()

@@ -26,13 +26,15 @@ class ClassMemberRef extends MemberRef
     @holder.constructor.class.removeMember memberName
     world?.sourceEditsRegistry?.recordClassMemberRemoval? @holder, memberName
 
-  # My steps' one notification: code changed under every widget (WorldWdgt.noteCodeChanged), which
-  # re-lays and repaints whatever derives from it -- the base's is my holder's alone, and my holder is
-  # a class's prototype.
-  _notifyOfEdit: ->
-    # settling-call-sanctioned: the tail of my edit steps, which only an inspector's edit gestures reach (a member
-    # list's Add…, Duplicate…, Rename… and Remove, a member editor's Save), at event time and never inside a
-    # settle -- the notification is the edit's own settle
+  # What my steps' edit reaches, told (the first part of the one notification every step ends in,
+  # MemberRef._notifyOfEdit, whose second part -- the member lists on my holder asking their verbs
+  # again -- is the base's for me too): code changed under every widget (WorldWdgt.noteCodeChanged),
+  # which re-lays and repaints whatever derives from it -- the base's is my holder's alone, and my
+  # holder is a class's prototype.
+  _tellWhatTheEditReaches: ->
+    # settling-call-sanctioned: the tail of my edit steps (_notifyOfEdit), which only an inspector's edit
+    # gestures reach (a member list's Add…, Duplicate…, Rename… and Remove, a member editor's Save), at event
+    # time and never inside a settle -- the notification is the edit's own settle
     world.noteCodeChanged()
 
   # Prototype-level truth for a FIELD: its recorded SOURCE, the first class up the chain that

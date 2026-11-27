@@ -293,8 +293,8 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 - [ ] **An inspector saved open on a paint tool restores a detached copy of it** — the copy's Save writes its whole member record over the person's, so an edit made since through the palette's edit mark is lost — reachable, low; by reading, not pressed.
 
 ### `plans/inspector-browser-plan.md`
-AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; IN PROGRESS (U1, U2 landed). The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
-- [ ] U3: every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule; the four marks are placeholders (§5.7).
+AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; IN PROGRESS (U1, U2, U3 landed; U3.2 parked). The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
+- [ ] U3.2: the Children and Instances lists' verbs (duplicate, remove) — PARKED, asked 2026-11-27: the menu's Duplicate puts the copy on the desktop and its Delete closes into the bin, so the plan's premise does not hold (§5.7, As built in U3).
 - [ ] U4: "Open in a new inspector" by a menu row and by Cmd-click (§5.8).
 - [ ] U5: the meta-object keeps a class's comments and its methods' categories, edits and snapshots keep them, and a build gate holds the `#:` marker (§5.9, §5.10).
 - [ ] U6: the 64 classes a person opens first get their categories, as marker comments only (decision D1).
@@ -311,6 +311,8 @@ AUTHORED 2026-11-26 after five prototype rounds on the real build and four spike
 - [ ] **A trail longer than its browser squeezes its buttons** — on a phone or a narrow window five or six levels cut every label ("Rect…"), as every band of the tool squeezes (A3); a trail that scrolls, or one that shows its last levels, is a product decision (`docs/plans/inspector-browser-plan.md` §5.5) — reachable, low.
 - [ ] **A double-click on a member in the set's rightmost column can miss when the body stands beside** — the editor a first click adds can make the set scroll to show it, so the second click meets what slid under the pointer; the body below, the default, has no such reveal — reachable through `bodyPlace: "beside"`, low.
 - [ ] **A trackpad's sideways swipe moves the set a column per wheel event** — a swipe is many small wheel events and a notch moves one rest point whatever its size, as a sheet's does, so a gentle swipe races across the columns — reachable on a trackpad, low.
+- [ ] **Under a finger a tooltip comes up after a tap** — a tap whose press opens nothing (a list's Remove, a disabled verb) leaves the tip's countdown running, so the tip shows ~500 ms later with no finger there and stays until the next press; every tooltipped control (the verbs' words are tooltips only) — reachable, low.
+- [ ] **A member list keeps a band a dev-mode Destroy destroyed** — `verbsBand` still names it, as `cutNoticeBand` names its own, so a live list retains a destroyed widget and every later choice asks it to reflect its verbs (it holds no buttons) — reachable in developer mode, low.
 
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.

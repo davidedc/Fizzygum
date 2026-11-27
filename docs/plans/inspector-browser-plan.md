@@ -140,7 +140,7 @@ arc's size; the rest are a pass of yes or no.
 | D7 | Finding by name (a class in another package costs about a hundred wheel notches; a widget's `color` about 250 rows) | NOT built unseen. U10 builds two candidates on the real build patched at load (a filter line over a long list; a "Find…" prompt that jumps to a class or a member by name), puts them on the review page with counted gestures, and PARKS for the owner's choice |
 | D8 | The Fields toggle inside a category | ABSENT there (a category lists methods); under "all" the list is today's. Round 5 pictured both (`compare/img5/b5-alt-laptop-category.png` is this one). The Methods toggle stays, as pictured, though a category holds only methods: say if it should go too |
 | D9 | The object flows' rough edges (§4.1's last bullet): which are fixed here | FIXED: the trail's wording (a level made through the class button or a list of objects says its relation: "class RectangleWdgt", "instance Rectangle", "child Rectangle 2", §5.5); a walk keeps its view (a subject chosen in a list of objects opens on the view of the same title when it offers one that is not empty: a subclass chosen in Subclasses opens on its Subclasses, a child on its Children, a leaf on its first view). FILED, each a BACKLOG line: an instance named "Rectangle" in a list and "rectangle" in its header; a drilled value leaving the body empty (it is the model: the body is the set's last column); a class's view toggle closing what stands right of the class; a separately opened window that looks like its original |
-| D10 | The table of which buttons, and when (§5.7) | As §5.7: the product's rule for members unchanged; children and instances duplicate and remove (never a window's content); categories add, rename, remove-when-empty, never duplicate, nothing on "all"; packages no button; classes by D2 |
+| D10 | The table of which buttons, and when (§5.7) | As §5.7: the product's rule for members unchanged; children and instances duplicate and remove (never a window's content) — PARKED as U3.2 and asked of the owner 2026-11-27: the premise does not hold (§5.7 "As built in U3"); categories add, rename, remove-when-empty, never duplicate, nothing on "all"; packages no button; classes by D2 |
 | D11 | The icons | The arc ships four simple drawn marks. Final icons are the owner's (the umbrella's `/convert-icon-size-aware` way), filed |
 | D12 | Where a separately opened inspector lands, and its title | Beside the original where the desktop has room (right, then left, then below), else cascaded 48 px; inside the desktop always. Its title names the thing alone ("Inspector — color") |
 | D13 | A class with no category | Its list shows "all" alone, and that row is chosen as the list opens (L4's "not chosen" is about a list with more than one row) |
@@ -818,6 +818,62 @@ filed (D11).
 The member list's four text buttons, their `…Button` fields and `_buildAndConnectEditRow` go; the prompts they
 open and their refusals (`addPropertyPopout` and its twins) stay as they are.
 
+- **As built in U3** (the loop's rulings, `u3/PREP.md` §2, on the research's findings, `u3/research/R3-A-…`, `R3-B-…`):
+  - **Only the MEMBER lists have a band.** The table's children and instances rows are PARKED as U3.2 and asked of the
+    owner (decision D10): their premise does not hold. The widget menu's Duplicate (`duplicateMenuAction`) stands the
+    copy on the DESKTOP (`world.add`, 10 px right and down), so a Children list shows nothing new; its remove is
+    `close`, into the bin, so an Instances list keeps listing what it removed; the menu offers both in developer mode
+    only, the inspector in every mode; and an Instances list reaches the world, the hand, the bin and shelf, menus and
+    the inspector's own parts, which neither verb refuses. What the two verbs mean there is a product decision; until it
+    is ruled, a Children, Instances or Subclasses list offers no verb and builds no band (the table's own rule for a list
+    that offers none).
+  - **The buttons are 44 × 36, not 44 × 44**: the house's rule for every button. `SimpleButtonWdgt.preferredExtent` holds
+    every text button to `max(minimumTargetSize, …)` wide and the house's one button height (`buttonHeight`, 36) tall, and a
+    mark-faced one is (`max(minimumTargetSize, buttonHeight)`, `buttonHeight`): the button meets the 44 rule across by
+    itself, and the 52 band it stands in meets it down — L12's reasoning, the trail's. PREP (§2) had said 36 × 36, a
+    `buttonHeight` square that skipped the width every text button keeps; the orchestrator found it while checking a
+    review-page claim, and the house's rule, applied as it stands, settled it with no product question. The table above
+    predates both. A `SimpleButtonWdgt` whose face is a drawn MARK (`MenuRowIndicatorWdgt`, `glyphSize` the new metric
+    `inspectorVerbMarkSize`, 16) sizes itself so, centres the mark's square in it (14 px in from its sides, 10 from its
+    top and bottom) and inks it as a text face is (`SimpleButtonWdgt._faceIsAMark`): no icon-faced button existed.
+  - **The words are each button's TOOLTIP**: the words its text button bore ("Add…", "Duplicate…", "Rename…",
+    "Remove"), which the menu sweep's "…" and sentence-case rules judge. They belong to the VIEW: `verbsOffered()` is a
+    TABLE keyed by verb, each entry its action's method name and its words (a verb's words depend on what its press
+    does), never a list literal of names; the ONE order and each verb's mark are the band's (`ListVerbsBandWdgt._verbsInOrder`),
+    and the band answers both of a reader's questions itself, its verbs in that order (`verbs()`) and a verb's button
+    (`buttonFor(verb)`), so no reader outside it (the toolkit, the menu sweep) reads its pieces.
+  - **The seats, and ONE seat for what a member step changes.** `_reflectMemberSelection` is gone: its four callers (the
+    build, a re-filter, a row's choice, a reload) ask the band (`ListVerbsBandWdgt.reflectVerbs`), which asks the view's
+    `verbApplies(verb)` for each button. "Every edit" needs what the subject OWNS seen as it moves, and that has ONE
+    seat: the tail every member step ends in (`MemberRef._notifyOfEdit`, which `ClassMemberRef` inherits, overriding only
+    `_tellWhatTheEditReaches`: the holder's `sourceChanged` for an object, `world.noteCodeChanged` for a class) tells
+    `MemberListWdgt.noteMembersMayHaveChanged` the step's holder, and every member list on it reflects its verbs again.
+    So an add, duplicate, rename or remove through ANY list on that holder (a second browser on the same widget) and a
+    SAVE in the body (a Save is a step, and ends in the same tail) show in every list at once: an inherited member saved into
+    an own one has duplicate, rename and remove at once. What no step makes is not seen there — a run in an editor
+    (`Widget._runningAPersonsCode`, which tells the holder's `sourceChanged` itself) and a product write (a menu's
+    `setColor`) — and the next choice asks again. CP1 had the Save call it directly (`MemberEditorWdgt.save`), which
+    saw a Save and missed another list's step (Review A, A1); the call moved to the tail, and the Save's own went.
+  - **The marks are placeholders** (D11): the plus reused (`PlusIconAppearance`), and three new size-aware marks drawn as
+    fills on the control glyph's line, named by their picture — two overlapping sheets (`TwoSheetsIconAppearance`), a text
+    cursor in a field (`TextCursorIconAppearance`: never a pencil, which means "edit" in this house, the mark that opens
+    the inspector on a member), a bin in outline (`BinOutlineIconAppearance`: the desktop's `BinIconAppearance` misfits a
+    button face, its paper interiors showing on the hover and pressed fills, its lines a hairline beside a control glyph).
+  - **The member list's natural width falls** to its widest remaining cell: 365 on a widget (its band of filter toggles;
+    least 364), a class prototype's own list 246 in a column of 286 (its chooser band; least 285); the band of verbs
+    desires 12 + 4 × 44 + 3 × 8 + 1 + 12 = 225 (its spring's 1; least 224), never the widest. The width was the four text buttons' (372) before,
+    so every number derived from it moved, and five tests lost the overflow their premise needed, each now stating a
+    narrower window: ColumnsScroll, BehavesTheSame, BodyStands' second part and BodyBeside at 900, ChildrenView at 700.
+    Four GESTURES changed length too, each for a reason the narrower columns gave (Review B, A3 and A7): ColumnsScroll's
+    sideways wheel 300 → 200 (a finger's swipe stays inside the list it starts on, and a class column's list shows
+    262 px, so 300 arrived as two 150 px swipes, each resting back on 377, and a later wheel aimed at a column still
+    scrolled out: AIM MISSED under the finger; 200 is one swipe, reach 258, with the same rest points), and BodyStands'
+    wheel over a class column the same 300 → 200 for the same reason (at 300 its expected value held, but for another
+    reason than its comment gave); SidewaysDrag's mouse drag 300 → 200 (at the offset 377 the second column stands
+    0..286 in the view and the press about 243 in, so 300 ends past the view's edge, off the set; 200 ends inside and
+    still carries the set past the midpoint, 577, nearer 675); DividerSizes' drag 200 → 300 (200 would leave the set
+    644 + 12 + 286 = 942 inside the 998 viewport, so the no-squeeze line would see no overflow; 300 makes it 1042).
+
 ### 5.8 "Open in a new inspector" (U4)
 
 **What.** On every thing whose press would add a column: a row of an object list (the object), a row of a member
@@ -1046,8 +1102,8 @@ rig and doc it touches before any edit (§7 is the starting list).
 |---|---|---|---|---|
 | U0 | Orient: read, verify, ask the open decisions | — | 0.5 | |
 | U1 | The set scrolls, and the tool is a browser (the body still beside); the widening and the trading deleted | — | 2–3 | ✓ 2026-11-26 |
-| U2 | The body below, the where-you-are band, the default window, the class button | U1 | 2–3 | |
-| U3 | Every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule | U2 | 1–1.5 | |
+| U2 | The body below, the where-you-are band, the default window, the class button | U1 | 2–3 | ✓ 2026-11-27 |
+| U3 | Every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule | U2 | 1–1.5 | ✓ 2026-11-27 (U3.2 parked) |
 | U4 | "Open in a new inspector": the menu row and Cmd-click | U2 | 1–1.5 | |
 | U5 | The meta-object keeps comments and method categories; edits and snapshots keep them; the marker gate | — | 2 | |
 | U6 | The first classes get their categories (comment-only edits, D1) | U5 | 1–2 | |
@@ -1245,6 +1301,90 @@ shows a list), plus the ports.
 
 **Docs.** `visual-design-system.md` §4.3 (the footer of icon buttons; absent versus disabled), the icon inventory
 if one lists drawn marks.
+
+**Landed 2026-11-27** (inspector-browser loop; one commit per repo, this unit's: U3.1 and U3.3; U3.2 PARKED). **Built**:
+`ListVerbsBandWdgt` (a kind of `BandWdgt`, `src/meta-tools`: built from its view's `verbsOffered()`, one button per verb
+offered in the ONE order add, duplicate, rename, remove, at the footer band's metrics, its rule along its top, no field
+of its own; `reflectVerbs` sets each button enabled from the view's `verbApplies(verb)`; `verbs()` and `buttonFor(verb)`
+answer the toolkit and the sweep, so neither reads the band's pieces); the mark-faced `SimpleButtonWdgt` (`_faceIsAMark`:
+44 × 36, `max(minimumTargetSize, buttonHeight)` by `buttonHeight` as every button is held to 44 across, the mark's square
+centred, inked as a text face); `MenuRowIndicatorWdgt`'s third holder, the button; three placeholder marks
+(`TwoSheetsIconAppearance`, `TextCursorIconAppearance`, `BinOutlineIconAppearance`) beside the reused plus, at the new
+metric `inspectorVerbMarkSize` (16); `MemberListWdgt.verbsOffered` (a table: none unless `MemberRef.canEdit`, its rule
+unchanged), `verbApplies`, `verbsBand`, and `MemberListWdgt.noteMembersMayHaveChanged`, which the tail every member step
+ends in (`_notifyOfEdit`) calls, so every member list on the holder follows a step made through any of them, a Save
+included; the toolkit's locator `listVerbButtonOf`, its reader `listVerbsOf` (the band's `verbs()`), and the verbs
+`clickListVerb_InputEvents_Macro` and `answerListVerbPrompt_InputEvents_Macro (listView, verb, typed, options = {})`
+(`options.replacing`; one of each: the three test-local prompt answerers replaced), with their two aim-census rows.
+**Deleted**: the four text buttons, their fields (`addPropertyButton` and its three twins), `footerBand`,
+`_buildAndConnectEditRow`, `_reflectMemberSelection`. **Ruled in the loop** (PREP §2 and the LEDGER): §5.7 as built (the
+member lists only, the object lists' band PARKED as U3.2 and asked; 44 × 36 buttons, the house's rule for every button,
+where PREP had said 36 × 36; the words as tooltips, the view's; ONE seat for what a member step changes, the steps' tail,
+where CP1 had the Save tell the lists itself; the marks named by picture, the rename mark no pencil; the verbs a table,
+never a list literal of names); the menu sweep finds the band's buttons by verb (`buttonFor`) and judges their tooltip
+words, its rule `BUTTON_FACE_MISSING` renamed `BUTTON_WORDS_MISSING` (a verb button's words are its tooltip, the bin's its
+face), and drives the same six prompts (`PROMPTS_DRIVEN_FLOOR` 99 unchanged); its self-test's UNBUILT plant builds a
+fifth band button through the product's own table, its EMPTIED plant strips "…" from the tooltips; the serialization rig
+reads `verbsBand` and `verbApplies("rename")`. **Tests**: new `macroInspectorListFootersOfferOnlyTheirVerbs` (both
+pointers, its own two classes deleted in its `finally`; 18 assertions and 15 plants across it and the three tests that
+would have passed vacuously as CP2 built it; the fix pass made its add line tell add from duplicate and rename, added a
+line of two member lists on one holder, and planted the press lines no plant had bitten and the one seat); 35 tests
+ported (presses by verb, enabled states through the locator, the three vacuous reads now reading the band both ways it
+can stand, every width re-derived from 365 / 364 / 286 / 285 / 246, five windows restated where the set no longer
+overflowed, four gestures re-lengthened, §5.7). **Evidence**: a footer probe on real mouse and finger input
+(`u3/cp1/probe-footer.js`, VERDICT OK: the band's order, sizes, actions, tooltips and measured ink, the states at every
+seat with a control for the Save seat, real presses opening the same prompts, no band on a Point's list or on a
+Children, Instances or Subclasses list, the widths 365, 246 and 286 as predicted); the marks' geometry at 16, 32, 24 and
+13 px (`u3/cp1/marks-ascii.js`: every rect integral, inside its square, no pixel painted twice); the footer looked at, at
+dpr 1 and 2; the new test passing under both pointers. Then, on CP1–CP3's build (before the reviews' fix pass): the dpr-1
+presuite (paint audit and fracplane rider PASS) and the finger suite each failing exactly PREP §4's predicted set, 25
+picture tests (U2's 26 less CutListSaysSo, matched by name), the finger run with one ASSERTION more, ColumnsScroll's AIM
+MISSED (traced, `u3/cs-finger/trace-swipes.js`: its wheel 300 → 200, §5.7), both pointers' assertions passing after;
+followers clean under both pointers (no `WORLD_INVENTORY_` line); the menu sweep OK (8192 items, 126 prompt OKs, U2's
+count, 20 of 20 contributors) and its self-test 24 of 24 rules planted; the serialization rig OK (198 expectations) and
+its self-test 7 of 7; 104 + 18 plant runs (`u3/plants/`, `u3/plants-ported/RESULTS.txt`), no rule unbitten once the
+stale ones were ported: the 15 new plants first on their headers' lines under both pointers; the 74 U1 and U2 plants of
+the re-numbered tests (mouse), 59 on the same line as in their units, 7 on the same line reworded or re-numbered,
+ColumnsScroll's notch plant tripping the toolkit's aim check first, its latch plant failing no line under the mouse as
+in U1 (its rule is the finger's), and SIX found STALE since U2 (`PLANT_NOT_APPLIED`: they hooked
+`InspectorColumnDividerWdgt.columnWidthDraggedTo` and `revealLastColumn`, which U2 reworked and deleted without
+re-running them, a hole in U2's evidence) — five ported (`u3/plants-ported/`, DividerSizes', each failing first on its
+own line under both pointers), the sixth (ColumnsScroll's removal leaving the offset past the end) not ported, its rule
+REVERSED by U2's ruling (a removal holds the scroll) and U2's own plants covering the hold and its release; and
+ColumnsScroll's 8 U1 plants re-run under the finger once its wheel changed, each as in U1, its stroke plant now on its
+own line. The difference page (`fg diffpage`, the 25 tests at dpr 1 and 2: 50 changed groups, 114 changed shots,
+0 unchanged, 0 INVALID), every shot looked at on contact sheets (`u3/look1`, `u3/look2`): the four text buttons become
+the four icon buttons, the list 7 px narrower, the windows the ported tests state; ONE state change, correct
+(NakedInspector's two shots after its Save: duplicate, rename and remove enabled where the reference kept them disabled,
+the Save seat); every dpr-2 change region exactly twice its dpr-1 one (57 of 57); no paint error. **Reviews**: two,
+independent and read-only. Review A (the source) found nothing bent for a number, and: the verbs missing a step made
+through ANOTHER list on the same holder, with comments claiming every seat (→ the ONE seat at the steps' tail, the
+comments saying what is seen and what is not); `listVerbsOf` reading the band's pieces' order (→ `verbs()`); the text
+cursor's geometry overlapping below about 14 device px, in the button's shrink branch only (→ made to hold, CP4a); the
+button's header claiming its row meets the 44 rule (→ the 44 × 36 button); `answerListVerbPrompt`'s bare boolean
+(→ `options.replacing`, every caller ported); a tooltip appearing after a finger's tap, and a band a dev-mode Destroy
+destroyed kept by its list (→ BACKLOG); `popUpIdWhenHoldScheduled` never cleared (unreached) and
+`_selectedMemberCanBeRenamedOrRemoved` naming two of the three verbs it gates (→ LEDGER lines). Review B (the tests,
+plants, rigs and docs) found: the new test's add line unable to tell add from duplicate or rename, and three press lines
+no plant had bitten (→ the line made to tell them, a plant each); ColumnsScroll's finger plants not run after its wheel
+changed (→ run, above); BodyStands still wheeling 300 over a class column (→ 200); MACRO-PATTERNS' 300 and its notch
+plant, ColumnsScroll's provenance, EditTellsOnce's scenario, this plan's silence on the changed gestures (→ made true);
+the claims that the 44 rule is met (→ the 44 × 36 button); the serialization rig's comment and two stories naming the
+old footer's add button as the band's (→ made true); the sweep's renamed rule's verb branch never planted, and the
+verbs' ORDER in EditsAClassPrototypeAsAClass's and OnNonWidgetIsReadOnly's positive lines unplanted (→ a plant each).
+**After the fix pass**: the footer probe VERDICT OK again (44 × 36, the band's least 224 and desired 225, and a new
+flow: two browsers on one rectangle, a stubbed-seat control, then one list's real Remove and Add… followed at once by
+the other's buttons and ink, both pointers); `marks-ascii.js` over 8..48 px, every claim of every mark's header holding
+at all 41 sizes (the text cursor 25 of 41 before its fix, pixel-identical after at 16, 32 and 48); the new test (19
+assertions) passing under both pointers; the presuite and the finger suite each failing exactly the same 25 picture
+tests, with no assertion failure; followers clean; the menu sweep OK (126 prompt OKs) and its self-test 44 cases, 24
+of 24 rules, the verb branch planted; the serialization rig and its self-test OK; 63 plant runs, every one applied and
+none passing — each of the 22 plants of this unit failing first on the line its header names under both pointers,
+BodyStands' U2 plants under the finger failing as in U2. The difference page again (the same 50 groups, 114 shots),
+looked at: between the two rounds every render changed only inside the band's 36 px row (the buttons 44 wide), every
+dpr-2 region twice its dpr-1 one. Recaptured by name, mouse then finger, dpr 1 and 2: exactly the 25 tests, each run COMPLETE (the full
+suite green); `fg gauntlet` OK, 20 legs, clean; `fg homepage` OK. **Ratchets moved**: the tests' CLAUDE.md byte ceiling
+66319 → 66313 (lowered).
 
 ### U4. "Open in a new inspector" (1–1.5 days)
 
@@ -1730,8 +1870,34 @@ Filed by U1 (2026-11-26). A sideways notch moves the set one rest point whatever
 the sheet's precedent: `SimpleSpreadsheetWdgt.scrolledBy`). A trackpad's swipe is many small wheel events, so a gentle swipe
 moves a column per event and races across the set. No notch accumulator exists in the house; it would serve the sheet too.
 
+### Under a finger a tooltip comes up after a tap
+
+Filed by U3 (2026-11-27; Review A's B2, verified in the code). A pointer entering a widget that carries a `toolTipMessage`
+starts the tip's countdown (`ActivePointerWdgt._dispatchEventsFollowingMouseMove` → `Widget.startCountdownForBubbleHelp` →
+`ToolTipWdgt.createInAWhileIfHandStillContainedInWidget`, a 500 ms timer), and a finger enters at its touch-down
+(`processPointerDown` runs the move pipeline for the down's own position). The pending timer is cancelled only by a
+widget added to the world (`Widget._addNoSettle` → `ToolTipWdgt.cancelAllScheduledToolTips`, which is why a press that
+opens a prompt or a menu shows no tip) and by a world's reset; the touch-up's `_dissolveHoverStateOfTouchStroke` takes
+down the tips SHOWN (`world.destroyToolTips`) and leaves the pending one. When it fires,
+`ToolTipWdgt.createBubbleHelpIfHandStillOnWidget` asks only whether the widget is in the world and the hand's LAST
+position inside it, which a lifted finger leaves there, so the tip opens over the control about 500 ms after the tap,
+with no pointer on the glass, and stays until the next press. It is reached by a tap whose press adds nothing to the
+world: a member list's Remove, any disabled verb (a disabled button does nothing with its press), and every other
+tooltipped control of that kind. The band of verbs says its words only by tooltips (§5.7), so it shows there most.
+
+### A member list keeps a band a dev-mode Destroy destroyed
+
+Filed by U3 (2026-11-27; Review A's B3, verified in the code). In developer mode a click for a menu on a verb button
+opens the hierarchy menu, which lists the band (`Widget.getHierarchyMenuWidgets`: nothing hides a `BandWdgt`), and every
+widget's menu there ends in "Destroy" (`fullDestroy`). Destroyed, the band leaves the list and holds no buttons
+(`Widget._destroyNoSettle` empties its children), but `MemberListWdgt.verbsBand` still names it: the list has no
+`_reactToChildRemoved`. So a live list retains a destroyed widget, and every later choice, re-filter, reload or member
+step asks it to reflect its verbs (`reflectVerbs` over no buttons, so nothing shows). `cutNoticeBand` is kept the same
+way; the list's rebuild already reads both only while the list is their parent (`band?.parent is @`).
+
 ## BACKLOG ledger (closed items, moved from docs/BACKLOG.md)
 
 - [x] U1: the set of columns scrolls sideways and stops on a column, and the tool is a browser that owns the rule of choice; the window widening itself and the trading of width between columns deleted (§5.3, §5.4). — CLOSED 2026-11-26 (inspector-browser loop, U1): `InspectorBrowserWdgt`, `InspectorRowViewportWdgt`, `InspectorColumnDividerWdgt`, the set as a viewport's plane; the widening and the trade deleted (§6 U1, its Landed paragraph).
 - [x] U2: the body below the lists as a setting of the browser, the where-you-are band, the default window, the class named by a plain button (§5.4 to §5.6, §5.13). — CLOSED 2026-11-27 (inspector-browser loop, U2): the body below, the trail, the class button, the clamped window, the held scroll (§6 U2, its Landed paragraph).
+- [x] U3: every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule; the four marks are placeholders (§5.7). — CLOSED 2026-11-27 (inspector-browser loop, U3): the member lists' band of drawn icon buttons, one seat for what a member step changes; U3.2 (the object lists') PARKED (§6 U3, its Landed paragraph).
 - [x] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24) — CLOSED 2026-11-26: this plan is that plan (moved from the `plans/inspector-overhaul-plan.md` section; the work itself is this plan's units, each with its own line).

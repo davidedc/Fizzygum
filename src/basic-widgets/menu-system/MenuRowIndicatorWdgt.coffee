@@ -6,14 +6,21 @@
 #   I am a PICTURE, never a target: `catchesPointerAt` answers false, so a tap on me is a tap on the
 # row (or the band) that carries me -- the role InertIconHolderWdgt states for the row's left icon
 # slot, and for the same reason. I have no children, so nothing below me can take the tap either.
-#   My box IS my glyph square (glyphSize on each side), and my ink is my @color, the theme role my
-# holder hands me (SizeAwareIconAppearance reads both). I have TWO holders, each of which builds me,
-# places me and decides when I exist, and holds me as a plain child, so a duplicated, lifted-out or
-# saved holder brings me along:
+#   My box IS my glyph square (glyphSize on each side, or less in a button whose room is smaller:
+# below), and my ink is my @color, the theme role my holder hands me (SizeAwareIconAppearance reads
+# both). I have THREE holders, each of which builds me, places me and decides when I exist, and holds
+# me as a plain child, so a duplicated, lifted-out or saved holder brings me along:
 #   a menu row (MenuItemWdgt._placeMyParts), its chevron and its tick;
 #   an inspector browser's TRAIL band (InspectorBrowserWdgt._trailItems), the chevron between two of
 # its levels, a fixed piece of the band at my square (my preferredExtent is my box, as every widget's
-# is), centred down it. A band answers no isDisabled, so there I always wear my own ink.
+# is), centred down it. A band answers no isDisabled, so there I always wear my own ink;
+#   a BUTTON (SimpleButtonWdgt), as its face: the mark of a list's verb (ListVerbsBandWdgt). The
+# button places me at my square, centred in its box -- a smaller square only where its room is
+# smaller than mine (SimpleButtonWdgt._faceBoundsIn), my mark then drawn at that size --, sizes itself
+# around me, 44 x 36 (a chrome target across, the house's one button height down, as any button),
+# and inks me as it inks a text face, by my colour (SimpleButtonWdgt._inkMyFace: buttonText while it
+# is enabled, buttonDisabledText while it is not). A button answers no isDisabled either: it hands me
+# the ink, so there too I wear my own.
 
 class MenuRowIndicatorWdgt extends Widget
 
@@ -22,8 +29,9 @@ class MenuRowIndicatorWdgt extends Widget
   glyphSize: undefined
 
   # POSITIONAL for the identity -- the appearance CLASS that draws my mark, a
-  # SizeAwareIconAppearance (ChevronRightIconAppearance, TickIconAppearance) -- and the look rides
-  # opts: `glyphSize`, the side of my square, and `color`, my ink.
+  # SizeAwareIconAppearance (ChevronRightIconAppearance, TickIconAppearance, a list verb's mark) --
+  # and the look rides opts: `glyphSize`, the side of my square, and `color`, my ink (none for a
+  # button's face: the button hands me mine as it takes me).
   constructor: (markAppearance, opts = {}) ->
     super()
     @glyphSize = opts.glyphSize
