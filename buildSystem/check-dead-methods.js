@@ -116,8 +116,9 @@ function main() {
     for (const u of unseen) console.error(rules.fired('UNSEEN_HEADER', '   ' + u));
     console.error('\nA method whose signature wraps must break immediately after the `(`, so that the header line');
     console.error('ends there — every build gate groups a .coffee file by that shape, and a header none of them');
-    console.error('matches makes the WHOLE METHOD invisible to all of them, silently. Re-wrap the signature, or');
-    console.error('widen METHOD_HEADER in buildSystem/lib/coffee-method-header.js and re-run every gate.');
+    console.error('matches makes the WHOLE METHOD invisible to all of them, silently. Re-wrap the signature (a header');
+    console.error('continued by a backslash: join it onto one line), or widen METHOD_HEADER in');
+    console.error('buildSystem/lib/coffee-method-header.js and re-run every gate.');
     process.exit(1);
   }
 

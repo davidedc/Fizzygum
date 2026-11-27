@@ -77,8 +77,7 @@ class LCLCodeCompiler
 
   # this function is used externally after the code has been
   # run, so we need to attach it to the LCLCodeCompiler object.
-  addCheckMarksAndUpdateCodeAndNotifyChange: \
-      (LCLCodeCompiler, doOnceOccurrencesLineNumbers) ->
+  addCheckMarksAndUpdateCodeAndNotifyChange: (LCLCodeCompiler, doOnceOccurrencesLineNumbers) ->
     elaboratedSource = undefined
     elaboratedSourceByLine = undefined
     drawFunction = undefined

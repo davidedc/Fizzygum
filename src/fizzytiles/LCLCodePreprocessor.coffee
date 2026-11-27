@@ -476,7 +476,7 @@ class LCLCodePreprocessor
     # that was passed
     return [code, error]
 
-  normaliseCode:(code, error) ->
+  _normaliseCode:(code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -495,12 +495,12 @@ class LCLCodePreprocessor
   #   a -> b 2, -> c()
   # is just the same as
   #   a -> b 2, c
-  simplifyFunctionDoingSimpleInvocation:(code, error) ->
+  _simplifyFunctionDoingSimpleInvocation:(code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
     code = code.replace(/([\w\d]|,)[\t ]*->[\t ]*([\w\d]*)[\t ]*\([\t ]*\)/gm, "$1 $2")
-    if @detailedDebug then console.log "simplifyFunctionDoingSimpleInvocation-1:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_simplifyFunctionDoingSimpleInvocation-1:\n" + code + " error: " + error
     return [code, error]
 
   # sometimes you are left with something like
@@ -508,7 +508,7 @@ class LCLCodePreprocessor
   # where F is a function.
   # simplify that to
   #   a = F
-  simplifyFunctionsAloneInParens:(code, error, userDefinedFunctions, bracketsVariables) ->
+  _simplifyFunctionsAloneInParens:(code, error, userDefinedFunctions, bracketsVariables) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -518,7 +518,7 @@ class LCLCodePreprocessor
     code = code.replace(rx, "$1")
 
 
-    if @detailedDebug then console.log "simplifyFunctionsAloneInParens-1:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_simplifyFunctionsAloneInParens-1:\n" + code + " error: " + error
     return [code, error]
 
 
@@ -531,70 +531,70 @@ class LCLCodePreprocessor
   # there are actually critical for the transformed code to work.
   # so they should be moved out of this function.
 
-  beautifyCode:(code, error) ->
+  _beautifyCode:(code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
     code = code.replace(/\.times[\\t ]+/gm, ".times ")
-    if @detailedDebug then console.log "beautifyCode--1:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode--1:\n" + code + " error: " + error
     code = code.replace(/\.times[\\t ]+with[\\t ]+/gm, ".times with ")
-    if @detailedDebug then console.log "beautifyCode-0:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-0:\n" + code + " error: " + error
     code = code.replace(/->(?![ \t])/gm, "-> ")
-    if @detailedDebug then console.log "beautifyCode-1:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-1:\n" + code + " error: " + error
     code = code.replace(/->[\t ;]+/gm, "-> ")
-    if @detailedDebug then console.log "beautifyCode-2:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-2:\n" + code + " error: " + error
     code = code.replace(/->[\t ]+$/gm, "->")
-    if @detailedDebug then console.log "beautifyCode-3:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-3:\n" + code + " error: " + error
     code = code.replace(/if[\t ;]+/gm, "if ")
-    if @detailedDebug then console.log "beautifyCode-4:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-4:\n" + code + " error: " + error
     code = code.replace(/then[\t ;]+/gm, "then ")
-    if @detailedDebug then console.log "beautifyCode-5:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-5:\n" + code + " error: " + error
     code = code.replace(/else[\t ;]+/gm, "else ")
-    if @detailedDebug then console.log "beautifyCode-6:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-6:\n" + code + " error: " + error
     code = code.replace(/;[\t ]+/gm, "; ")
-    if @detailedDebug then console.log "beautifyCode-7:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-7:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*then/g, "$1 then")
-    if @detailedDebug then console.log "beautifyCode-8:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-8:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*else/g, "$1 else")
-    if @detailedDebug then console.log "beautifyCode-9:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-9:\n" + code + " error: " + error
     code = code.replace(/;$/gm, "")
-    if @detailedDebug then console.log "beautifyCode-10:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-10:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*->/g, "$1 ->")
-    if @detailedDebug then console.log "beautifyCode-11:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-11:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*!=/g, "$1 !=")
-    if @detailedDebug then console.log "beautifyCode-12:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-12:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*>=/g, "$1 >=")
-    if @detailedDebug then console.log "beautifyCode-13:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-13:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*<=/g, "$1 <=")
-    if @detailedDebug then console.log "beautifyCode-14:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-14:\n" + code + " error: " + error
     code = code.replace(/([\w\d;\)])[\t ]*=/g, "$1 =")
-    if @detailedDebug then console.log "beautifyCode-15:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-15:\n" + code + " error: " + error
     code = code.replace(/\=([\w\d\(])/g, "= $1")
-    if @detailedDebug then console.log "beautifyCode-16:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-16:\n" + code + " error: " + error
     code = code.replace(/\)[\t ]*if/g, "); if")
-    if @detailedDebug then console.log "beautifyCode-18:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-18:\n" + code + " error: " + error
     code = code.replace(/,[\t ]*->/gm, ", ->")
-    if @detailedDebug then console.log "beautifyCode-18.5:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-18.5:\n" + code + " error: " + error
     code = code.replace(/;[\t ]+$/gm, "")
-    if @detailedDebug then console.log "beautifyCode-19:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-19:\n" + code + " error: " + error
     code = code.replace(/♠/g, "")
-    if @detailedDebug then console.log "beautifyCode-20:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-20:\n" + code + " error: " + error
 
     # transform stuff like (3).times and (n).times
     # into 3.times and n.times
     code = code.replace(/\(\s*(\d+|[$A-Z_][0-9A-Z_$]*)\s*\)\.times/gi, "$1.times")
-    if @detailedDebug then console.log "beautifyCode-21:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-21:\n" + code + " error: " + error
 
     code = code.replace(/\=[\t ]+-/g, "= -")
-    if @detailedDebug then console.log "beautifyCode-22:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-22:\n" + code + " error: " + error
 
     allFunctionsRegex = @allCommandsRegex + "|" + @expressionsRegex
     rx = RegExp("\\( *("+allFunctionsRegex+") *\\)",'g')
     code = code.replace(rx, "$1")
-    if @detailedDebug then console.log "beautifyCode-23:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-23:\n" + code + " error: " + error
 
     code = code.replace(/[ ]*then/g, " then")
-    if @detailedDebug then console.log "beautifyCode-24:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_beautifyCode-24:\n" + code + " error: " + error
 
 
     return [code, error]
@@ -609,7 +609,7 @@ class LCLCodePreprocessor
   # or
   #   x times with var:
 
-  normaliseTimesNotationFromInput:(code, error) ->
+  _normaliseTimesNotationFromInput:(code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -624,12 +624,12 @@ class LCLCodePreprocessor
     # remove the arrow in the case of binding
     code = code.replace(/(^[\t ]*|[\t ]+)times[\t .]*with[\t .]*([\w]*)[\t .]*:?[\t .]*->/gm, "$1times with $2:")
 
-    if @detailedDebug then console.log "normaliseTimesNotationFromInput-1:\n" + code + " error: " + error
+    if @detailedDebug then console.log "_normaliseTimesNotationFromInput-1:\n" + code + " error: " + error
 
     return [code, error]
 
 
-  checkBasicErrorsWithTimes:(code, error) ->
+  _checkBasicErrorsWithTimes:(code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
 
@@ -667,7 +667,7 @@ class LCLCodePreprocessor
     return [undefined, error] if error?
     # put back in place "sin⨁a,b" into "sin a,b"
     code = code.replace(/⨁/g, "")
-    return @normaliseCode(code, error)
+    return @_normaliseCode(code, error)
 
   # in order to proper recognise where expressions
   # start and end, we need to tie the functions with their
@@ -701,7 +701,7 @@ class LCLCodePreprocessor
     # to become "sin⨁ times"
     code = code.replace(/⧻/g, "")
 
-    return @normaliseCode(code, error)
+    return @_normaliseCode(code, error)
 
   _transformTimesSyntax: (code, error) ->
     # if there is an error, just propagate it
@@ -820,7 +820,7 @@ class LCLCodePreprocessor
     code = code.replace(/^(\t*) else/gm, "$1else")
     if @detailedDebug then console.log "_transformTimesSyntax-9\n" + code + " error: " + error
 
-    return @normaliseCode(code, error)
+    return @_normaliseCode(code, error)
 
   # transforms the case where we are binding a variable
   # e.g.
@@ -857,7 +857,7 @@ class LCLCodePreprocessor
 
     if @detailedDebug then console.log "_transformTimesWithVariableSyntax-3\n" + code + " error: " + error
 
-    return @normaliseCode(code, error)
+    return @_normaliseCode(code, error)
 
   # the need for "parametersForBracketedFunctions" is so that
   # code such as
@@ -1338,7 +1338,7 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log "_evaluateAllExpressions-4\n" + code + " error: " + error
 
 
-    return @normaliseCode(code, error)
+    return @_normaliseCode(code, error)
 
 
   adjustDoubleSlashSyntaxForComments: (code, error) ->
@@ -1685,10 +1685,10 @@ class LCLCodePreprocessor
 
 
 
-    [code, error] = @normaliseTimesNotationFromInput(code, error)
+    [code, error] = @_normaliseTimesNotationFromInput(code, error)
     if @detailedDebug then console.log "_preprocess-10\n" + code + " error: " + error
 
-    [code, error] = @checkBasicErrorsWithTimes(code, error)
+    [code, error] = @_checkBasicErrorsWithTimes(code, error)
     if @detailedDebug then console.log "_preprocess-11\n" + code + " error: " + error
     
 
@@ -1752,7 +1752,7 @@ class LCLCodePreprocessor
     if @detailedDebug then console.log "_preprocess-26\n" + code + " error: " + error
     [code, error] = @_addScopeToTimes(code, error)
     if @detailedDebug then console.log "_preprocess-27\n" + code + " error: " + error
-    [code, error] = @beautifyCode(code, error)
+    [code, error] = @_beautifyCode(code, error)
     if @detailedDebug then console.log "_preprocess-28\n" + code + " error: " + error
     
     # unfortunately some beautification depends on the () being there
@@ -1761,13 +1761,13 @@ class LCLCodePreprocessor
     # beautifications and can be moved outside... BEFORE beautification
     # so we can have
     #  - parens-dep stuff beaut
-    #  - simplifyFunctionDoingSimpleInvocation
+    #  - _simplifyFunctionDoingSimpleInvocation
     #  - other beautification
     # it would be better to have beautification as the very last step
-    [code, error] = @simplifyFunctionDoingSimpleInvocation(code, error)
+    [code, error] = @_simplifyFunctionDoingSimpleInvocation(code, error)
     if @detailedDebug then console.log "_preprocess-29\n" + code + " error: " + error
 
-    [code, error] = @simplifyFunctionsAloneInParens(code, error, userDefinedFunctions, bracketsVariables)
+    [code, error] = @_simplifyFunctionsAloneInParens(code, error, userDefinedFunctions, bracketsVariables)
     if @detailedDebug then console.log "_preprocess-29.5\n" + code + " error: " + error
 
     [code, error] = @injectStrings(code, stringsTable, error)

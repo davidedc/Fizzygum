@@ -129,7 +129,7 @@ words win):
 | L16 | A browser whose set holds no column hides its strip of lists (no empty 312 px strip above a member opened straight in the browser) (2026-11-27; §5.4) |
 | L17 | A trail longer than its browser shows its LAST levels, the earlier ones folded behind a leading "…" button that opens them as a menu — low priority, a later pass (2026-11-27; §5.5) |
 | L18 | No second shortcut for "Open in a new inspector" on PC keyboards (Ctrl+click opens the context menu, which carries the row); revisit if PC users ask (2026-11-27; §5.8) |
-| L19 | The build's shared method-header matcher is fixed in its OWN change (it misses 7 real methods: a header with no space after the colon, one continued by a backslash; ten gates never read those bodies) — before U5, its own gauntlet and commit (2026-11-27) |
+| L19 | The build's shared method-header matcher is fixed in its OWN change (it misses 7 real methods: a header with no space after the colon, one continued by a backslash; ten gates never read those bodies) — before U5, its own gauntlet and commit (2026-11-27). **Built** the same day: both matchers read `: *`, the guard four shapes on either side, a self-test judged by the product's parse, the continued header joined, the six steps it revealed `_`-tiered (lint §6b) |
 
 **OPEN: ask the owner at the start. On "use the defaults", run on the default of each row.** D1 and D2 decide the
 arc's size; the rest are a pass of yes or no.

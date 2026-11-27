@@ -1116,10 +1116,13 @@ geometry-apply **2×2** + the notification **(perspective × phase)** grid) and 
 
 ## 6b. What "this line defines a method" means — ONE shared matcher, and its guard
 
-Ten gates and censuses group a `.coffee` file into methods: `census-public-private-calls`,
-`census-nosettle-naming`, `check-dead-methods`, `check-raw-pointer-reads`, `check-plane-discipline`,
-`check-layering`, `check-relayout-bounds-first`, `check-thin-wraps`, `check-menu-actions` and
-`census-widget-conformance` (facet 5, the pin setters). They all take both the header spelling and the grouping from
+Every gate and census that groups a `.coffee` file into methods does it one way, directly
+(`census-public-private-calls`, `census-nosettle-naming`, `census-widget-conformance` (facet 5, the pin setters),
+`check-dead-methods`, `check-raw-pointer-reads`, `check-plane-discipline`, `check-layering`,
+`check-relayout-bounds-first`, `check-thin-wraps`, `check-menu-actions`, `check-hand-lists`,
+`check-complexity-ratchets`, `check-back-buffer-memos`, `check-page-loaded-elements`) or through a library that
+does (`lib/settle-tiers.js`, `lib/settling-setters.js`, `lib/repaint-verbs.js`, `lib/immediate-mutators.js`). They
+all take both the header spelling and the grouping from
 **`buildSystem/lib/coffee-method-header.js`**: `METHOD_HEADER` / `STATIC_METHOD_HEADER` say what a
 header line is; `methodBoundary` / `methodSpans` say which method a line belongs to — a class's 2-space
 methods and its class-side `@name:` methods alike. A key written deeper (inside an object literal, or a
@@ -1138,9 +1141,12 @@ settle), and `check-dead-methods` inventories it under its bare name, which is h
 (`Class.name`, or `@name` between the statics of one class).
 
 A header is either **closed on the line** (`foo: ->`, `foo: (a, b) ->`, `foo: (a)->`, `foo: (a) =>`,
-`foo:  ->` with the body aligned past a run of spaces) or **opens a wrapped parameter list** (`foo: (`
-with nothing after the paren; the continuation lines are ordinary body lines to every gate, which is
-correct — they are the signature).
+`foo:  ->` with the body aligned past a run of spaces, `foo:(a) ->` and `foo:->` with none) or **opens a
+wrapped parameter list** (`foo: (` with nothing after the paren; the continuation lines are ordinary body
+lines to every gate, which is correct — they are the signature). A header CONTINUED by a backslash (`foo: \`,
+its parameters and arrow on the next line) is no header to the matcher: a line cannot tell it from a field
+continued the same way, so the guard below fails on it instead, and its fix is to join it onto one line.
+Its proof is `lib/coffee-method-header-selftest.js`, every case judged against the product's own parse.
 
 ⚠ **The failure mode this protects against is silence, not noise.** A gate that cannot see a method does
 not warn about it — it reports nothing, so its output looks healthy and its counts look stable. Both
@@ -1176,10 +1182,26 @@ side surfaced:
 | `InfoDocs.@_buildInfoDocNextTo` | rule `[G]` ×4: a one-off builder wearing the low-level tier, calling four self-settling wrappers — folded into its single caller, the public `@createNextTo` |
 | `StackElementsSizeAdjustingWdgt.@includeInNewWidgetMenu` | dead — the menu that asked it is long gone; deleted |
 
+⚠ **And a FIFTH time, 2026-11-27: no space at all.** The matcher demanded at least one space after the
+colon, where the product's own member reader (`src/meta/Class.coffee` `propertyRegex`) takes none, so the
+six `LCLCodePreprocessor` steps spelled `name:(…) ->` were nobody's, and so was a header continued by a backslash
+(`LCLCodeCompiler.addCheckMarksAndUpdateCodeAndNotifyChange`, now joined onto one line). Both matchers now
+read `: *`, and seeing them moved the method total 3223 → 3230. What they revealed: the six steps, each
+called only from inside its class, wore public names — rule `[U]` of `check-call-separation`, 107 over its
+baseline of 101 — and took the `_` tier; the continued header failed the widened guard (`UNSEEN_HEADER`), and
+was joined.
+
 `unseenMethodHeaders()` in the same module is the **regression guard**: `check-dead-methods` (which owns
-the method inventory) FAILS on any class-level line that ends in an arrow, or opens an unbalanced paren
-list, that `METHOD_HEADER` does not match. A future spelling therefore becomes a build error that names
-its own fix, instead of another silent hole. It reads the class-method indent only.
+the method inventory), `check-back-buffer-memos` and `check-page-loaded-elements` FAIL on any class-level member
+line, on either side (`name:` and `@name:`, a `$` in the name included, which the matchers never read), that
+neither matcher reads and whose value ends in an arrow, opens an unbalanced paren list, ends in a backslash
+before a code line that opens a function, or is absent before a code line that opens a function (the next CODE
+line: blank and comment lines skipped, the member's body ending where the product's own reader ends it). A
+future spelling therefore becomes a build error that names its own fix, instead of another silent hole. Its
+stated cost is the mirror one, loud and never silent: a FIELD whose value is a call wrapped across lines fails it
+too. It reads the class-method indent only, and never a prototype shorthand written there (`String::name = … ->`).
+Its one stated blind spot is a field written `x: (` with its value closed on a later line, which form 2 reads as a
+method: a wrong span, never a missing one.
 
 ## 6c. What a line of CoffeeScript IS — ONE masker
 

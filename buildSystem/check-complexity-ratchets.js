@@ -213,11 +213,11 @@ const RECORDED = {
   // arrange takes it, the steady way (several-bands plan, U1b)
   'FrameWdgt#preferredExtentForWidth': 18,
   'LCLCodePreprocessor#_avoidLastArgumentInvocationOverflowing': 29,
+  'LCLCodePreprocessor#_beautifyCode': 27,
   'LCLCodePreprocessor#_completeImplicitFunctionPasses': 17,
   'LCLCodePreprocessor#_preprocess': 33,
   'LCLCodePreprocessor#_rearrangeColorCommands': 23,
   'LCLCodePreprocessor#_transformTimesSyntax': 22,
-  'LCLCodePreprocessor#beautifyCode': 27,
   'LCLCodePreprocessor#checkBasicSyntax': 30,
   'LCLCodePreprocessor#constructor': 17,
   'LCLTransforms#scale': 18,
