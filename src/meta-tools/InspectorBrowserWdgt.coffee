@@ -150,6 +150,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
       return place  if desktop.containsRectangle place.extent extent
     original.topLeft().add InspectorBrowserWdgt.CASCADE_STEP
 
+  #: initialization
+
   # The subject is my identity, my one positional parameter: the subject of my first inspector.
   # opts.bodyPlace is my setting ("below" or "beside"), assigned only when given, so my class's default
   # stands otherwise (a parameter assigned unconditionally would write undefined over it).
@@ -161,9 +163,13 @@ class InspectorBrowserWdgt extends ClippingWdgt
     @appearance = new RectangularAppearance @
     @_buildAndConnectChildren subject
 
+  #: drawing
+
   # I lay the inspector's body under my parts (my appearance paints it, under all of them), so a part
   # of the tool standing in me paints none of its own (InspectorBodyAppearance asks, as it paints).
   laysTheInspectorBodyUnderItsParts: -> true
+
+  #: initialization
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled): my set, empty, then its viewport around it, a cell of mine (its division box stated
@@ -192,6 +198,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     finally
       @_changingMyCells = false
     @_reconcileMyStructureNoSettle()
+
+  #: layout
 
   # MY STRIP OF LISTS, with my body below: my set's viewport's division box pins its HEIGHT -- its least,
   # and a desired its most equals (spreadability 0), so no spare room of mine goes to it and my body
@@ -230,6 +238,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     plain = new Point 1, 1
     @viewport.setMinAndMaxBoundsAndSpreadability plain, plain, DivisionStackLayoutSpec.SPREADABILITY_SPACERS
 
+  #: structure
+
   # MY SEQUENCE, in order: the columns of my set, left to right (InspectorRowWdgt.columns), never an
   # inspector a person attached into a column or onto my set free-floating; then, with my body below,
   # my body while it shows a subject (an empty body is no step of it: nobody chose it). Derived from my
@@ -252,6 +262,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # element's)
   _divisionCells: ->
     (child for child in @children when child.layoutSpec?.isDivisionElement?())
+
+  #: splitting
 
   # Is `child` a DIVIDER of mine? Asked of the capability its users need, never of a type, as my set
   # asks it (InspectorRowWdgt._isMySplitter): a cell of my division stack that answers a divider's solve
@@ -305,9 +317,13 @@ class InspectorBrowserWdgt extends ClippingWdgt
   # is (InspectorRowWdgt.planeItsScrollLeavesStill).
   planeItsScrollLeavesStill: -> @
 
+  #: printing
+
   # my window's title: my first inspector's
   colloquialName: ->
     @inspectors()[0]?.colloquialName() ? "Inspector"
+
+  #: choosing
 
   # THE BROWSER `widget` STANDS IN: its nearest ancestor that answers showNextTo, or undefined (a
   # column, a view or a set a person picked out of me stands in none). From a column of mine the climb
@@ -447,6 +463,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     return unless (each for each in leaving when each in columns).length > 0
     @row._holdScrollAtNoSettle @viewport.getScrollX(), @viewport.width()
 
+  #: structure
+
   # my inspectors following `inspector`, in order; none when it is no inspector of mine
   _inspectorsAfter: (inspector) ->
     mine = @inspectors()
@@ -538,6 +556,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     @_addNoSettle divider, atIndex: @children.indexOf(body), layoutSpec: divider.divisionBox('y')
     return
 
+  #: notifications
+
   # A CHILD OF MINE LEFT ME (destroyed, or re-homed: a "Pick up", an "Attach", a drop into another
   # widget -- or re-added to me elsewhere, which also tells me). A divider that left me, however it left
   # (my reconcile's own removals and my teardown included), is told so first, and parts from the split
@@ -556,11 +576,15 @@ class InspectorBrowserWdgt extends ClippingWdgt
     child._reconcileSplitGripNoSettle?()  unless child.destroyed or child.parent is @
     @_reconcileMyStructureNoSettle()
 
+  #: lifecycle
+
   # Destroyed as a whole: flagged at entry, so every child my teardown destroys finds me being torn
   # down (_reactToChildRemoved) and nothing is built into a dying browser.
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true
     super
+
+  #: notifications
 
   # MY SEQUENCE MAY HAVE CHANGED: the ONE seat of what follows from it, told by my set at the end of
   # every reconcile of it (a choice's, and a person's "Pick up" or "Destroy" of a column's, which reaches
@@ -588,6 +612,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     @_reconcileMyStripNoSettle()
     @_reconcileMyTrailNoSettle()
     return
+
+  #: trail
 
   # MY TRAIL, its one rule: the band standing first in me names my levels as they stand (_trailLevels).
   # Builds nothing when it does (_trailNames), as every reconcile of the tool builds nothing when
@@ -697,6 +723,8 @@ class InspectorBrowserWdgt extends ClippingWdgt
     @viewport.revealColumn level.column
     level.column.revealMyChosenRow()
     return
+
+  #: choosing
 
   # WHAT A STEP OF MY TRAIL OPENS IN A NEW INSPECTOR (ButtonWdgt.toOpenInANewInspector asks me, the
   # button's target): the subject of the step its index names, as my sequence stands now -- the

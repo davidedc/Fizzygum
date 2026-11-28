@@ -28,6 +28,8 @@ class BinOutlineIconAppearance extends SizeAwareIconAppearance
   RIB_CLEAR: 2      # the rib's clear from the can's top and from its bottom bar (units)
   MIN_SIZE: 8       # px: below it nothing is drawn
 
+  #: geometry
+
   # THE GEOMETRY in the parity fit F of a glyph square of S px, relative to its top-left corner: the
   # line t, the margin m, and every bar's box [left, top, width, height], each span about F's vertical
   # axis mirrored exactly
@@ -55,6 +57,8 @@ class BinOutlineIconAppearance extends SizeAwareIconAppearance
     if innerWidth - t >= 2 and bottomTop - ribClear > ribTop
       bars.push [(F - t) / 2, ribTop, t, bottomTop - ribClear - ribTop]   # the rib
     {t, F, bars}
+
+  #: drawing
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev

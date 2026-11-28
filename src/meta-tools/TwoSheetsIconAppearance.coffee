@@ -20,6 +20,8 @@ class TwoSheetsIconAppearance extends SizeAwareIconAppearance
   SHEET: 10     # a sheet's side (units)
   MIN_SIZE: 8   # px: below it nothing is drawn
 
+  #: geometry
+
   # THE GEOMETRY in a glyph square of S px, relative to its top-left corner: the line t, the margin
   # m, a sheet's side a, and f, where the front sheet's left and top edges stand
   _glyphMetrics: (S) ->
@@ -28,6 +30,8 @@ class TwoSheetsIconAppearance extends SizeAwareIconAppearance
     m = Math.max 1, px @MARGIN
     a = px @SHEET
     {t, m, a, f: S - m - a}
+
+  #: drawing
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev

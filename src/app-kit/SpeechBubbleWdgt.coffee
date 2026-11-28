@@ -31,6 +31,8 @@ class SpeechBubbleWdgt extends Widget
   # _surfaceStroke), so a bubble saved, loaded or duplicated wears the world's look
   color: undefined
 
+  #: initialization
+
   constructor: (@contents="hello") ->
     super()
     @padding = 0
@@ -39,12 +41,16 @@ class SpeechBubbleWdgt extends Widget
     @_buildAndConnectChildren()
     @minimumExtent = new Point 10,10
 
+  #: colour roles
+
   # the fill and the 1 px border my BubblyAppearance paints me in while I hold no colour of my own
   _surfaceFill: ->
     WorldWdgt.theme.speechBubbleFill
 
   _surfaceStroke: ->
     WorldWdgt.theme.speechBubbleStroke
+
+  #: drawing
 
   # MY PICTURE IN A MENU ROW (a toolbar overflow row's, OverflowChevronButtonWdgt._miniatureOf) shows the bubble
   # without its words: in a menu row's glyph box no size of them is legible on either backend, and a bubble with no
@@ -54,6 +60,8 @@ class SpeechBubbleWdgt extends Widget
   prepareForMenuRowPicture: ->
     @contentsWidget.hide()
 
+
+  #: initialization
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -79,6 +87,8 @@ class SpeechBubbleWdgt extends Widget
     @_addNoSettle @contentsWidget
     @_invalidateLayout()
 
+
+  #: layout
 
   _reLayout: (newBoundsForThisLayout) ->
 

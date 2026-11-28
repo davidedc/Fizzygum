@@ -15,6 +15,8 @@ class SampleSheetApp extends WindowedApp
 
   opensOneWindow: true
 
+  #: accessing
+
   # [address, source] of every entry, one per line (a member body is compiled on its own, so the
   # array hangs off an arrow), and the one cell shown in bold
   _entries: -> [
@@ -34,6 +36,8 @@ class SampleSheetApp extends WindowedApp
     ["C8", "if C5 <= C6 then Color.SEAGREEN else Color.TOMATO"]
   ]
   BOLD: "A1"
+
+  #: launching
 
   buildWindow: ->
     sheetWindow = new SpreadsheetWdgt

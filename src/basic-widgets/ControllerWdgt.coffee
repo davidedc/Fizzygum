@@ -6,6 +6,8 @@
 
 class ControllerWdgt extends Widget
 
+  #: menus
+
   openTargetSelector: ->
     choices = world.plausibleTargetAndDestinationWidgets @
     if choices.length > 0
@@ -20,6 +22,8 @@ class ControllerWdgt extends Widget
     else
       menu = new MenuWdgt @, target: @, title: "no targets available", titleKind: "message"
     menu.popUpAtHand()
+
+  #: pins and dataflow
 
   # ---- THE WIRES ----------------------------------------------------------------------
   # An ordered list of WireSpec, one per relationship I drive (connector plan §P4). It REPLACED the
@@ -146,6 +150,8 @@ class ControllerWdgt extends Widget
       @unwireFrom wire.target, wire.action
     return
 
+  #: storage
+
   # My declared wires, as FLOW edges (Widget.graphEdgesOut -- the three-edge model,
   # docs/archive/graph-edges-and-lifecycle-plan.md §4.2). The SERIALIZED truth, not the engine's
   # derived records: the index also carries consumer-declared firesOnAnyChange subscriptions
@@ -156,6 +162,8 @@ class ControllerWdgt extends Widget
     if @wires?
       edges.push {kind: 'flow', to: wire.target} for wire in @wires
     edges
+
+  #: pins and dataflow
 
   # ---- THE BIND GESTURE (connector plan §P2) --------------------------------------------
   # A BIND IS TWO ORDINARY WIRES — mine onto you, yours onto me — and nothing else. There is no
@@ -182,6 +190,8 @@ class ControllerWdgt extends Widget
     @wireTo theTarget, theTarget.principalPin().setterName
     theTarget.declareWireTo @, @principalPin().setterName
     return
+
+  #: testing
 
   # Can I be bound at all? Only if my own value is both readable and writable: the forward wire
   # READS it and the return wire WRITES it. A widget whose value is COMPUTED — a patch node's
@@ -227,6 +237,8 @@ class ControllerWdgt extends Widget
   isWiredToActionOf: (theTarget, action) ->
     return (@_wireFor theTarget, action)?
 
+  #: accessing
+
   # The record for THIS relationship, if I hold it. The identity of a wire is the pair, so
   # re-wiring the same target and action finds the existing record instead of adding a twin.
   _wireFor: (theTarget, action) ->
@@ -234,6 +246,8 @@ class ControllerWdgt extends Widget
     for wire in @wires
       return wire if wire.describes theTarget, action
     return undefined
+
+  #: testing
 
   # Does THIS wire (its identity, the (target, action) pair) fire per event / also track its target?
   # False for a wire I do not hold (one cut since the row was built). What the wire menu's rows tick
@@ -255,6 +269,8 @@ class ControllerWdgt extends Widget
       return true if wire.target is theTarget
     return false
 
+  #: accessing
+
   # The wire I FOLLOW, for a control that reflects what it drives (SliderWdgt.reflectTarget).
   # The FIRST one: a slider has one thumb and can only show one value, so tracking a second
   # target would be a display with no way to render it. Nothing builds such a control today.
@@ -263,6 +279,8 @@ class ControllerWdgt extends Widget
     for wire in @wires
       return wire if wire.tracks
     return undefined
+
+  #: pins and dataflow
 
   # THE MENU ADAPTER. Its first two parameters are not mine to choose: a menu/button
   # action is dispatched as
@@ -349,6 +367,8 @@ class ControllerWdgt extends Widget
       world.dataflow.addEdge wire.target, @, action: "reflectTarget", firesOnAnyChange: true
     return
 
+  #: testing
+
   # ---- THE FOLLOW GESTURE (connector plan §P2 residue) --------------------------------
   # PIN granularity's answer to "Bind ⇄", and it is not a second chooser: the wire the gesture
   # needs ALREADY EXISTS. "Connect to" offers every drivable pin, so a slider can already be
@@ -380,6 +400,8 @@ class ControllerWdgt extends Widget
     return false unless pin?.getterName? and pin.announces
     return false unless @_canReflectPin?
     return @_canReflectPin wire.target, pin
+
+  #: menus
 
   # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu):
   # promote this wire to a tracking one, or demote it back to one-way.
@@ -488,9 +510,13 @@ class ControllerWdgt extends Widget
       menu = new MenuWdgt @, target: @, title: "nothing to bind with", titleKind: "message"
     menu.popUpAtHand()
 
+  #: pins and dataflow
+
   # Menu-dispatched (slots 1-2 are the dispatcher's — see setTargetAndActionWithOnesPickedFromMenu).
   bindToOnePickedFromMenu: (ignored, ignored2, theTarget) ->
     @bindTo theTarget
+
+  #: menus
 
   # One row per live wire, each naming what it drives ("Panel · color", WireSpec.descriptionsOf)
   # and opening that wire's own menu. Nothing at all when I am unwired, so an unconnected

@@ -59,17 +59,21 @@ records (`serialization-duplication-reference.md` §12) and the gate.
   class lists it once.
 - **A marked class is marked whole**: once a class names a category, every instance method of it stands in one, so
   the first marker stands above the first method.
-- **Layout** (the house's, no rule): a blank line above a marker and one below it, and the marker ABOVE a member's
+- **Layout** (the house's, no rule): a blank line above a marker and one below it (or neither, where the two members
+  stand with no blank line between them: next bullet), and the marker ABOVE a member's
   comment block, never between that block and the member's line: the blank line below a marker would cut the
   contiguous comment block directly above a header that `# thin-wrap-exempt:`, `# relayout-bounds-first-exempt:` and
   `# raw-screen-pointer-sanctioned:` are read from (`lint-and-static-checks.md` §5), and a sanction cut off from its
   header excuses nothing. No reader depends on the blank lines themselves: the parse takes a marker out of a stash
   whatever surrounds it.
 - **⚠ A marker ends the SOURCE of the member above it**: that member's source runs to the marker's line, the blank
-  lines before it included. So write a marker into a blank line the class already has between two members, with its
-  own blank line below it: a blank line ADDED above a marker is a line added to the source of the member above it —
-  its compiled output the same, its source string not. A change that places markers is proved by comparing every
-  member's SOURCE string as well as the compiled output.
+  lines before it included. So a marker goes AFTER the blank lines that already stand between two members, above the
+  next member's whole comment block, with one new blank line below it; where no blank line stands, it goes alone,
+  with no blank line on either side. Placed so, it changes no member's source, no member's comment and no compiled
+  byte, at every place above a member in the tree (measured by placing one at each). Placed ABOVE the blank lines
+  that stand there, it takes them out of the source of the member above; with a NEW blank line above it, it adds one
+  to that source — the compiled output the same either way, the source string not. A change that places markers is
+  proved by comparing every member's SOURCE string as well as the compiled output.
 
 ## 3. What a class's record keeps (`src/meta/Class.coffee`)
 
@@ -136,25 +140,34 @@ and tells, serialization §12).
 
 ## 4. The vocabulary
 
-RECOMMENDED, not closed: these are the names that recur across the tree, each with what belongs there. A class names
-a category of its own where none of them fits (the inspector's "choosing", "filtering", "member editing" are such
-names); a name is never bent to fit the list, and the list never bent to fit one class.
+RECOMMENDED, not closed: the names the marked classes use, each with ONE meaning across every class that uses it,
+and what belongs there. A name is never bent to fit the list, and the list never bent to fit one class.
 
 | Category | What belongs there |
 |---|---|
 | initialization | the constructor and what builds a new instance's state and children (`_buildAndConnectChildren`, `createAppearance`) |
-| accessing | reading and writing the object's own state, a field's getter and setter, where no topic below claims it |
+| accessing | reading and writing the object's own state, a field's getter and setter, where no topic below claims it — a field setter a pin also names included (`Widget.setColor`, `StringWdgt.setText`) |
 | testing | the questions that answer true or false of the object (`isZero`, an `is…`, `has…` or `can…`) |
 | geometry | position, extent and bounds, their setters, and the mapping between planes |
 | layout | how the object arranges its children and is arranged: `_reLayout` and its kin, a layout spec's knobs |
 | drawing | how it paints: its appearance, its back buffer, what it marks changed |
+| colour roles | the fills and strokes a surface wears BY ROLE, from the theme, rather than a colour of its own (`_surfaceFill`, `_surfaceStroke`, `ViewportWdgt.paneFillRole`, an icon appearance's ink and paper) |
+| hit testing | where a press lands and what catches it (`Widget.catchesPointerAt`, `boundsContainPoint`, a scroll bar's part met on a pointer's arrival) |
 | event handling | what pointer, keyboard and wheel input does to it: presses, clicks, hovers, keys |
 | drag and drop | being grabbed, carried and dropped, and taking drops (`grabsToParentWhenDragged`, `_reactToBeingDropped`) |
-| notifications | what it is told of another object's change and what it tells others (its `_reactTo…` callbacks, a `note…` door) |
+| scrolling | a scroll offset and how it moves: the scroll policy, a stroke's or a wheel's scroll, scrolling near an edge while dragging, bringing a part into view (`ViewportWdgt.scrollTo`, `ListWdgt.scrollRowIntoView`, `InspectorRowViewportWdgt.revealColumn`) |
+| docking | a window's edges holding bands and toolbars: the slots, the band thicknesses and boxes, docking and floating out (`FrameWdgt.dockFrame`, `floatOutOfDock`, `ToolbarWdgt.dockThickness`), a document's docked toolbar |
+| handles | the resize and move handles, a window's resize grip and what keeps them usable (`Widget.showResizeAndMoveHandlesAndLayoutAdjusters`, `FrameWdgt.offersAResizeHandle`) |
+| visibility | a widget's own showing, hiding and collapsing, and the queries that ask whether it shows (`show`, `hide`, `collapse`, `isInCollapsedSubtree`): these stand here, never in lifecycle |
+| edit mode | the edit/view switch and what it turns on and off (`isInEditMode`, `enableDragsDropsAndEditing` / `disableDragsDropsAndEditing`, a window's edit toggle) |
+| notifications | what it is told of a CHILD's change and what it tells others: the `_reactToChild…` callbacks, the `note…` doors of a class with no topic for them (`WorldWdgt.noteCodeChanged`) |
 | structure | its place in the widget tree: adding and removing children, its parent, the queries that walk the tree |
-| lifecycle | stepping, showing and hiding, and its end: destroy and teardown (`step`, `fullDestroy`) |
-| menus | the menus it builds and the actions their rows dispatch (`addWidgetSpecificMenuEntries`) |
-| pins and dataflow | the pins it advertises, their setters, and its part in the dataflow engine (`pins`) |
+| storage | the bin and the shelf: what keeps a widget reachable there, and the edges the storage classifier reads (`graphEdgesOut`, `TreeNode.isInStorageButReachable`) |
+| shortcuts | the shortcut widgets that stand for another (`createReference`, `_buildShortcutWidget`) and the icon that represents a thing (`representativeIcon`) |
+| lifecycle | stepping, and the end: closing, trashing, destroy and teardown (`step`, `close`, `moveToTrash`, `fullDestroy`) |
+| menus | the menus it builds and the rows it adds (`addWidgetSpecificMenuEntries`, `buildContextMenu`) |
+| pins and dataflow | the pins it advertises, a getter or setter that exists FOR a pin (`ViewportWdgt.getScrollX`, `SliderWdgt.getValue`), wires and their firing, its part in the dataflow engine (`pins`) |
+| evaluating code | running code a person typed against its receiver, and reporting what that code did (`Widget.evaluateString`, `TextWdgt.runSelection`, a code receiver) |
 | copying and serialization | duplication, saving and restoring (`fullCopy`, `_reactToBeingCopied`, `_afterDeserialization`) |
 | printing | the text that names or describes it (`toString`, `colloquialName`) |
 | private | a helper with no topical home — NOT every underscored name: the underscore already says private, and a `_setXNoSettle` core stands with the `setX` it serves |
@@ -162,7 +175,40 @@ names); a name is never bent to fit the list, and the list never bent to fit one
 | converting | on a value class: making another kind of value from it (`asArray`) |
 | arithmetic | on a value class: `add`, `subtract`, `multiplyBy` and their kin |
 
-Each name passes `Class.isACategoryName`; so must one a class makes up.
+**Four rules the tree follows** where a method could stand in two:
+
+- **A callback about a CHILD stands in notifications; one about my OWN event in that event's topic.** Every
+  `_reactToChild…` of a marked class (dropped, removed, grabbed, collapsed, a child's colour changed) is a
+  notification;
+  `_reactToBeingDropped` / `_reactToBeingGrabbed` are drag and drop, `_reactToBeingAdded` structure,
+  `_reactToBeingCopied` copying and serialization. A hook that runs BEFORE an act on a child, to prepare for it,
+  stands with that act (`FrameWdgt._beforeChildCollapsed` in visibility, `_beforeChildDropped` in drag and drop).
+- **A getter or setter that exists FOR a pin stands in pins and dataflow; a field setter a pin also names stays in
+  accessing or its own topic.** `ViewportWdgt.getScrollX` and `SliderWdgt.getValue` exist to be read by a wire;
+  `Widget.setColor` is a field's setter that `Widget.pins` also offers.
+- **A `note…` door goes with its class's topic where it has one**, else notifications: `ToolbarWdgt.noteDockedOn`
+  is docking, `FrameWdgt.noteMyGripCameOrWent` handles, `WorldWdgt.noteCodeChanged` a notification.
+- **A menu BUILDER stands in menus even when its rows' actions stand in a topic of their own**: the chooser
+  `Widget.openTargetPropertySelector` is menus, while the setters its rows call are pins and dataflow.
+
+**A class names a category of its own** where none of these fits, and the tree's marked classes do so often, in the
+words a class already used for its parts: the inspector's choosing, filtering, member editing, views, trail and
+splitting; a text's measuring, fitting, style and selecting; a window's title bar; the world's damage and world
+cycle; a value class's rounding. Such a name keeps ONE meaning wherever it is reused (`choosing` across the
+inspector's classes, `docking` from `FrameWdgt` to the toolbars and the maker documents, `scrolling` from
+`ViewportWdgt` to the lists). A reader finds a class's names in its text, its markers in order (`grep -n '^  #: '
+<file>`), or in a page as `<Class>.class.categories()`; and every name the tree uses with
+`grep -rh '^  #: ' src --include='*.coffee' | sort | uniq -c`, which is where a new class looks for the name an
+existing one already gives a meaning before making one up.
+
+Each name passes `Class.isACategoryName`; so must one a class makes up. "colour roles" spells colour as the house's
+prose does, where code names say `color`.
+
+**A stated limit: a FIELD takes the category of the marker above it.** A marker names METHODS (§1), but the record
+gives every member after it its category, a field included, by its place in the file. So `Widget`'s
+`step: noOperation`, a field standing among the layout methods, reads "layout", while every `step` that is a method
+is lifecycle. Only moving the field, into the run of a lifecycle marker, changes that; a marker cannot, since a
+marker needs an instance method under it (`EMPTY_CATEGORY`).
 
 ## 5. The gate — `buildSystem/check-method-categories.js`
 

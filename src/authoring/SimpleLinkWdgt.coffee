@@ -18,16 +18,22 @@ class SimpleLinkWdgt extends Widget
   descriptionString: undefined
   linkString: undefined
 
+  #: initialization
+
   constructor: (@descriptionString = "insert link caption here", @linkString = "http://www.google.com") ->
     super()
     @_buildAndConnectChildren()
 
+
+  #: event handling
 
   # open my link's URL in a new browser tab. The external-link button calls this instead of
   # testing `@parent instanceof SimpleLinkWdgt` and reaching into my outputTextArea.
   # (type-test-elimination campaign)
   openExternalURL: ->
     window.open @outputTextArea.text
+
+  #: initialization
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -57,6 +63,8 @@ class SimpleLinkWdgt extends Widget
 
   _createLinkIcon: ->
     @externalLinkIcon = new ExternalLinkButtonWdgt
+
+  #: layout
 
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout

@@ -21,11 +21,15 @@ class WindowedApp
 
   keptByReferenceOnDeepCopy: true
 
+  #: copying and serialization
+
   # Serialization: each app singleton is encoded symbolically as {"$wk":"app:<ClassName>"}
   # and re-resolved (in Phase 5, launched if absent) against the destination world. A
   # method because the key is per-subclass. See docs/architecture/serialization-duplication-reference.md
   # §4a.
   wellKnownKey: -> "app:" + @constructor.name
+
+  #: launching
 
   # --- per-app configuration (subclasses override) ---
   # true: the app opens ONE window, kept in world.appWindows under my class name and brought forward
@@ -59,11 +63,15 @@ class WindowedApp
   buildWindow: -> undefined                    # build + world.add the app's window; return it
   windowOpened: (newlyOpenedWindow) ->   # after a FRESH (non-singleton) launch; no-op by default
 
+  #: printing
+
   # --- shared apparatus (written once) ---
   # My NAME: the caption AppCatalog gives my launcher. An app that opens ONE window (opensOneWindow)
   # titles that window with it, read here rather than retyped in buildWindow, so the icon and the
   # window it opens say the same thing.
   _title: -> AppCatalog.get(@constructor.name).title
+
+  #: launching
 
   # Put this app's EAGER launcher on the desktop. Takes NOTHING, and that is load-bearing: it is
   # wired to demo menu items, and ButtonWdgt dispatches actions with a fixed four-slot convention

@@ -54,6 +54,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
   @serializationTransients: ["_offsetWhenPressed"]
   @copyTransients: ["_offsetWhenPressed"]
 
+  #: initialization
+
   # `row` is my identity, my one positional parameter: the set I hold as my plane, built empty by my
   # browser. My look is pinned AFTER super, which builds my plane in and mimics its colour and alpha:
   # transparent, so the body my browser paints shows through me (alpha is paint, never hit-testing),
@@ -63,6 +65,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
     super row
     @alpha = 0
     @wearPaneRoles stroke: "inspectorPaneStroke"
+
+  #: layout
 
   # my plane's measure is the frame I commit for it (ViewportWdgt._positionAndResizeChildren)
   _isContentSizing: -> true
@@ -89,6 +93,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
     desired = super()
     return desired  if @isInCollapsedSubtree()
     new Point desired.x, Math.max desired.y, @getMinDim().y
+
+  #: scrolling
 
   # MY MOVEMENT CORE, my base's (ViewportWdgt._scrollX), where every scroll of mine meets, and my clamp
   # never does (it writes my offset through my base's write funnel alone). A scroll that MOVES me lets go
@@ -124,6 +130,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
   _letGoOfMySetsHold: ->
     @_deferredSettleDeclare => @contents._holdScrollAtNoSettle()
 
+  #: layout
+
   # MY HEIGHT STATED, as the strip of lists, by a drag-move STREAM: the divider below me being dragged,
   # or the split button joined to it (InspectorDividerWdgt.nonFloatDragging,
   # SplitGripWdgt.nonFloatDragging: the stream handlers check-layering [O] lets call a *DeferredSettle
@@ -148,6 +156,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
     box._setMaxMainDimNoSettle height
     box._setDesiredMainDimNoSettle height
 
+  #: testing
+
   # my plane holds the tool's own columns, not loose content: a mouse drag on a column moves the window
   contentsPanelHoldsLooseContent: -> false
 
@@ -163,11 +173,17 @@ class InspectorRowViewportWdgt extends ViewportWdgt
   # no glide: a stroke that scrolls the set stops where it ends, never carried past a column
   hasVelocity: false
 
+  #: menus
+
   # my browser's internal structure: the hierarchy menu lists my browser in my place
   hiddenFromHierarchyMenu: -> true
 
+  #: printing
+
   # my name where a list names me (an inspector on a browser's children): my role, not "viewport"
   colloquialName: -> "inspector row viewport"
+
+  #: scrolling
 
   # ── SCROLLING BY REST POINTS ──────────────────────────────────────────────────────────────
 
@@ -190,6 +206,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
     nearest = points[0]
     nearest = point  for point in points when Math.abs(point - offset) < Math.abs(nearest - offset)
     nearest
+
+  #: event handling
 
   # A SIDEWAYS NOTCH moves me ONE rest point its way, whatever its size: the travel to the next rest
   # point past my offset that way, in my movement core's steps (a positive step scrolls me back toward
@@ -222,6 +240,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
     super
     @_restAfterAStroke()
 
+  #: scrolling
+
   # THE REST AT A PRESS'S ENDING, the one statement my two endings share: the press's record let go
   # of, and then, unless my offset is where the press found it, my set's hold let go of -- the stroke
   # moved me, and its scroll lets go of it here, where it comes to rest, never on its way (_scrollX) --
@@ -247,6 +267,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
       @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
+  #: pins and dataflow
+
   # MY SCROLL PIN'S SETTER RESTS TOO, as a sheet's comes to rest on a whole cell
   # (SimpleSpreadsheetWdgt._setViewOriginAlongNoSettle): an offset delivered goes to the rest point
   # nearest it, through my base's setter. It is where my own bar writes -- a thumb drag and a track
@@ -259,6 +281,8 @@ class InspectorRowViewportWdgt extends ViewportWdgt
     num = parseFloat num  unless typeof num is "number"
     return  if isNaN num
     super @_nearestOf @_restOffsets(), num
+
+  #: scrolling
 
   # `column`, one of my set's, brought WHOLE into my view the least way, to a rest point: of the rest
   # points that show it whole (at or before its left edge, my width from there reaching its right

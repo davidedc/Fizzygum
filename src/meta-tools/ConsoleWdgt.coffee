@@ -6,14 +6,20 @@ class ConsoleWdgt extends CodeAreaWdgt
   runSelectionButton: undefined
   runAllButton: undefined
 
+  #: initialization
+
   constructor: (@target) ->
     super()
     @_buildAndConnectChildren()
+
+  #: printing
 
   # my target's name follows the dash as it is: a proper name keeps its capitals ("Console — Docs
   # Maker"), a description stays in its lowercase words ("Console — rectangle")
   colloquialName: ->
     "Console — " + @target.colloquialName()
+
+  #: initialization
 
   _buildAndConnectChildrenNoSettle: ->
 
@@ -35,9 +41,13 @@ class ConsoleWdgt extends CodeAreaWdgt
 
     @_invalidateLayout()
 
+  #: evaluating code
+
   # What code typed in my text runs against (TextWdgt._codeReceiver): my target.
   codeReceiver: ->
     @target
+
+  #: layout
 
   # My footer band holds both run buttons at its LEFT.
   _footerLeftButtons: ->

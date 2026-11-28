@@ -46,6 +46,8 @@ class MemberEditorWdgt extends CodeAreaWdgt
   # a disabled button still catches a press and does nothing.
   saveButton: undefined
 
+  #: initialization
+
   # The member reference is my identity, my one positional parameter.
   constructor: (@memberRef) ->
     super()
@@ -55,6 +57,8 @@ class MemberEditorWdgt extends CodeAreaWdgt
     @setMinAndMaxBoundsAndSpreadability least, least, DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @_buildAndConnectChildren()
 
+  #: drawing
+
   # MY SHADOW IS THE BODY'S BOX, my parts' silhouettes left out, while I paint the body
   # (InspectorBodyAppearance.castsOnlyTheBody says when, and its header why); otherwise my base's pass.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
@@ -62,6 +66,8 @@ class MemberEditorWdgt extends CodeAreaWdgt
       @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     else
       super
+
+  #: initialization
 
   # My code area, as the editable variant builds it (CodeAreaWdgt), its text my member's, then dressed
   # in the inspector's pane roles in place of the code pane's (ViewportWdgt.wearPaneRoles, read as it
@@ -81,9 +87,13 @@ class MemberEditorWdgt extends CodeAreaWdgt
     @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
     @_invalidateLayout()
 
+  #: layout
+
   # My footer band holds my Save at its RIGHT, when I have one (none: no band, _hasAFooterBand).
   _footerRightButtons: ->
     [@saveButton]
+
+  #: notifications
 
   # My code area tells me when its text comes to differ from the text last loaded or saved, and when
   # it agrees with it again: my Save is enabled exactly while there is an edit to save.
@@ -93,12 +103,16 @@ class MemberEditorWdgt extends CodeAreaWdgt
   textContentUnmodified: ->
     @saveButton?.setEnabled false
 
+  #: evaluating code
+
   # What code typed in me runs against (TextWdgt._codeReceiver): my member's holder, exactly while it
   # is an object my Save edits as an object's and a receiver typed code runs against
   # (MemberRef.codeReceiverOf); a class's member, a paint tool's, or a value no Save edits, gets no run
   # rows.
   codeReceiver: ->
     MemberRef.codeReceiverOf @memberRef.holder
+
+  #: member editing
 
   # My Save: my text written back as my member (my memberRef's save), which makes the edit, records it
   # where a world snapshot needs it, and tells once. Every save step compiles before it changes
@@ -125,6 +139,8 @@ class MemberEditorWdgt extends CodeAreaWdgt
     else
       @_settleLayoutsAfter => @_reloadNoSettle()
     true
+
+  #: choosing
 
   # MY MEMBER CHOSEN AGAIN (InspectorBrowserWdgt.showChoice, the subject my inspector already shows),
   # or just saved, when what it shows is not the text typed (save): its text put back over whatever is

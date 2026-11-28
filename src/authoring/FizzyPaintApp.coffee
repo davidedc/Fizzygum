@@ -7,5 +7,7 @@ class FizzyPaintApp extends WindowedApp
 
   requiredParts: ["authoring"]
 
+  #: launching
+
   buildWindow:  -> world.openFrameWith (new ImageWdgt), (new Point 460, 400), (new Point 174, 114)
   windowOpened: (wm) -> InfoDocs.createNextTo @constructor.name, wm

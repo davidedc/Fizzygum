@@ -24,6 +24,8 @@
 # (a gate that can only flag by-design states is noise).
 class RatioLockedWdgt extends Widget
 
+  #: layout
+
   _setWidthSizeHeightAccordingly: (newWidth) ->
     @_resizeToWithoutSpacing?()
     ratio = @height()/@width()
@@ -35,6 +37,8 @@ class RatioLockedWdgt extends Widget
   # (mirrors _setWidthSizeHeightAccordingly above). No mutation, no seam.
   preferredExtentForWidth: (availW) ->
     new Point availW, Math.round availW * (@height()/@width())
+
+  #: drag and drop
 
   _reactToHolderFrameGrabbed: (whereFrom) ->
     # capability query replaces `whereFrom instanceof VerticalStackPanelWdgt`

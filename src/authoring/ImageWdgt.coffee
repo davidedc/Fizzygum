@@ -13,15 +13,23 @@
 
 class ImageWdgt extends GenericPanelWdgt
 
+  #: printing
+
   colloquialName: ->
     "Drawings Maker"
+
+  #: shortcuts
 
   representativeIcon: ->
     new SprayCanIconWdgt
 
+  #: docking
+
   # the frame docks this variant in its toolbar-slot (§5.C)
   _buildToolbar: ->
     new PaintToolbarWdgt
+
+  #: initialization
 
   _makeStartingPayload: ->
     # mainCanvas
@@ -38,6 +46,8 @@ class ImageWdgt extends GenericPanelWdgt
     mainCanvas.add overlayCanvas
 
     container
+
+  #: docking
 
   # BORN PAINTING. The palette my frame docks makes me adopt WHAT THE HAND HOLDS as it arrives
   # (ToolbarWdgt.noteDockedOn): open a drawing while holding the brush and it hands you the brush. An

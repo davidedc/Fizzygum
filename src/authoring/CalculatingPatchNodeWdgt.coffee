@@ -25,10 +25,14 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
   input3: undefined
   input4: undefined
 
+  #: initialization
+
   constructor: (@defaultFormulaBoxContents = "# function with formula here e.g.\n# (in1) -> in1 * 2\n") ->
     super()
     @_buildAndConnectChildren()
 
+
+  #: pins and dataflow
 
   setInput1: (newvalue, ignored) ->
     @input1 = Number(newvalue)
@@ -51,6 +55,8 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
       @evaluateString "@functionFromCompiledCode = " + @textWidget.text
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
       @outputTextAreaText._setTextConnector @output + ""
+
+  #: initialization
 
   _buildAndConnectChildrenNoSettle: ->
 
@@ -79,6 +85,8 @@ class CalculatingPatchNodeWdgt extends PatchNodeWdgt
 
 
     @_invalidateLayout()
+
+  #: layout
 
   # subclass hook for PatchNodeWdgt::_reLayout — position my own children within the (already-applied) frame.
   # The formula box gets two thirds of the height the two labels leave and the output box the third

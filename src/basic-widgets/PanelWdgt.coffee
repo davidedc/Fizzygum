@@ -16,10 +16,14 @@ class PanelWdgt extends ClippingWdgt
   color: undefined
   strokeColor: undefined
 
+  #: initialization
+
   constructor: ->
     super()
     @dragsDropsAndEditingEnabled = true
     @appearance = new RectangularAppearance @
+
+  #: colour roles
 
   # MY LOOK while I hold no colour of my own: the generic panel's fill ...
   _surfaceFill: ->
@@ -31,6 +35,8 @@ class PanelWdgt extends ClippingWdgt
   _surfaceStroke: ->
     theme = WorldWdgt.theme
     if @parent?.isMyContents?(@) then theme.windowContentPanelStroke else theme.panelStroke
+
+  #: menus
 
   # only the desktop and folder panels have menu entries
   # to invoke this
@@ -53,6 +59,8 @@ class PanelWdgt extends ClippingWdgt
     world.untitledNamingService.noteShortcutCreated()
     return newFolderWindow
 
+  #: accessing
+
   # Keep an enclosing viewport's MIMIC paint values true when a plane is recolored/faded
   # DIRECTLY — a parent-soaked notification, a no-op under any non-viewport parent
   # (ViewportWdgt._reactToChildColorChanged guards on `child is @contents`). Living here, every
@@ -63,10 +71,14 @@ class PanelWdgt extends ClippingWdgt
     @parent?._reactToChildColorChanged? @, aColor
     return aColor
 
+  #: pins and dataflow
+
   setAlphaScaled: (alpha) ->
     alpha = super alpha
     @parent?._reactToChildAlphaChanged? @, alpha
     return alpha
+
+  #: layout
 
   # The panel half of the scrolled-content contract (scroll-frame role plan P5): the PURE
   # measure of my children for a content-sizing viewport, at the width the viewport gives
@@ -75,6 +87,8 @@ class PanelWdgt extends ClippingWdgt
   # the viewport reads its applied bounds back instead of asking this.
   scrolledContentMeasure: (widthHint) ->
     @subWidgetsMergedPreferredBounds widthHint
+
+  #: structure
 
   # The panel-side scroll-topology chokepoint (mirror of Widget._amIDirectlyInsideViewport,
   # which asks the same question from a CONTENT widget's viewpoint): am I the panel a viewport
@@ -85,6 +99,8 @@ class PanelWdgt extends ClippingWdgt
   _amITheContentsPanelOfAViewport: ->
     (@parent?.isMyContentsPanel? @) ? false
 
+  #: drag and drop
+
   # Do my direct children get the "lock to panel/desktop" menu toggle? Panels are lockable
   # surfaces (the world included); a viewport doesn't define this capability at all — its
   # direct children are chrome — while children INSIDE the scrolled contents get the toggle
@@ -93,11 +109,15 @@ class PanelWdgt extends ClippingWdgt
   childrenCanLockToMe: ->
     true
 
+  #: event handling
+
   # (the click-to-caret forward for a scrolled pane holding one text lives on
   # ScrolledPaneWdgt.activated, which supers into this)
   activated: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForeground()
 
+
+  #: notifications
 
   # Gesture-driven re-fit of my enclosing container (@parent): DEFER to the cycle. Dispatched from
   # ActivePointerWdgt.drop AFTER a self-settling add (outside any pass) -> the else arm invalidates the
@@ -114,6 +134,8 @@ class PanelWdgt extends ClippingWdgt
     # orphan-skip in _invalidateLayout broke 63 tests). Attached removals re-fit as before -- see docs/archive/end-of-cycle-flush-endgame-plan.md.
     return if @isOrphan()
     @_reFitContainer @parent
+
+  #: structure
 
   # puts the widget in the Viewport
   # in some sparse manner and keeping it
@@ -136,6 +158,8 @@ class PanelWdgt extends ClippingWdgt
     # already settles AT the frame the move above applied -- the re-fit below must be scheduled explicitly. See docs/archive/ordered-downwalk-stage-b-plan.md (§9-N2).
     @_reFitContainer @parent
 
+
+  #: drag and drop
 
   detachesWhenDragged: ->
     if @parent?
@@ -163,10 +187,12 @@ class PanelWdgt extends ClippingWdgt
     # doesn't have a parent
     return false
   
+  #: notifications
+
   _reactToChildGrabbed: (child) ->
     @_reFitContainer @parent
 
-  # PanelWdgt menus:
+  #: menus
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     if @children.length

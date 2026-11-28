@@ -13,11 +13,15 @@
 
 class GenericPanelWdgt extends MakerDocumentWdgt
 
+  #: initialization
+
   # the family's payload hook (the DocumentWdgt shape): the ctor AND the reset
   # build through it (MakerDocumentWdgt), so a subclass with a richer apparatus
   # (ImageWdgt's canvas + glass) overrides ONE method.
   _makeStartingPayload: ->
     new StretchableWidgetContainerWdgt
+
+  #: printing
 
   # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
   # produce, but I extend FrameWdgt -- so without it the chain answers FrameWdgt's "window", not the
@@ -26,8 +30,12 @@ class GenericPanelWdgt extends MakerDocumentWdgt
   colloquialName: ->
     "generic panel"
 
+  #: shortcuts
+
   representativeIcon: ->
     new GenericPanelIconWdgt
+
+  #: testing
 
   # content dropped in crystallizes the container's ratio -- that IS the
   # "user changed something" signal (byte-what the retired editor checked)

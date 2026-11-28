@@ -15,6 +15,8 @@ class SampleSlideApp extends WindowedApp
 
   opensOneWindow: true
 
+  #: launching
+
   buildWindow: ->
     slideWdgt = new SlideWdgt
 

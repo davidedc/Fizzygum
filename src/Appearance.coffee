@@ -31,7 +31,11 @@ class Appearance
   # toolbar property tool takes none: its ink follows its state, read at paint.)
   ownColorInsteadOfWidgetColor: undefined
 
+  #: initialization
+
   constructor: (@widget, @ownColorInsteadOfWidgetColor) ->
+
+  #: geometry
 
   # ===== the two SHAPE questions an appearance answers about a point / a rect =====
   # Both are about the OUTLINE I draw, not about how see-through the drawing is: neither
@@ -63,6 +67,8 @@ class Appearance
   # undefined, or the culler will drop real pixels.
   opaqueCoveredRect: ->
     undefined
+
+  #: drawing
 
   # The key-values half of the paint preamble: bail (undefined) if there is nothing to draw, else return
   # the [damageBox,sl,st,al,at,w,h] key-values (undefined when the widget is sub-pixel / off-clip). ZERO draw
@@ -160,6 +166,8 @@ class Appearance
     h = Math.round localRect.height() * ceilPixelRatio
     ctx.fillRect l / ceilPixelRatio - widgetPosition.x, t / ceilPixelRatio - widgetPosition.y, w / ceilPixelRatio, h / ceilPixelRatio
 
+  #: shared figures
+
   # The rules between my widget's panes (Widget._seamRects), each filled in the seamRule colour over
   # the part of it being repainted. A container appearance calls this inside its open scope, after
   # its own fill and before my widget's children paint, in the normal pass only (a seam is part of
@@ -237,6 +245,8 @@ class Appearance
     first = start + Math.floor (length - ((count - 1) * pitch + size)) / 2
     (first + i * pitch for i in [0...count])
 
+
+  #: drawing
 
   # Shadow-pass wrapper for appearances whose art sets its own colours internally (icons,
   # the analog clock) — where the boxy pattern of swapping ONE fill to the shadow colour cannot

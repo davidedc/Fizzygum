@@ -4,5 +4,7 @@ class GenericPanelApp extends WindowedApp
 
   requiredParts: ["authoring"]
 
+  #: launching
+
   buildWindow:  -> world.openFrameWith (new GenericPanelWdgt), (new Point 460, 400), world.hand.position()
   windowOpened: (wm) -> InfoDocs.createNextTo @constructor.name, wm

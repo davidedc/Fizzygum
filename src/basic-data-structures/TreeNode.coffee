@@ -45,9 +45,13 @@ class TreeNode
   checkFirstParentClippingAtBoundsCache: undefined
   cachedFirstParentClippingAtBounds: undefined
 
+  #: initialization
+
   constructor: (@parent, @children = []) ->
 
   
+  #: printing
+
   # TreeNode string representation: e.g. 'a TreeNode[3]'
   toString: ->
     if @children?
@@ -56,7 +60,7 @@ class TreeNode
       childrenLength = "-"
     "a TreeNode" + "[" + childrenLength + "]"
 
-  # TreeNode accessing:
+  #: structure
   # atIndex -- WHERE AMONG THE SIBLINGS, an index into @children; absent means append. It is NOT a
   # screen position, and the name says so on purpose: while this slot was called `position` two
   # callers up the chain read it as one and passed a Point, which Array::splice coerces to NaN and
@@ -114,6 +118,8 @@ class TreeNode
     @children.remove node
     node.parent = undefined
 
+  #: storage
+
   markItAndItsParentsAsReachable: (newGcSessionId) ->
     @gcSessionId = newGcSessionId
     if @parent?
@@ -125,6 +131,8 @@ class TreeNode
         return
       @parent.markItAndItsParentsAsReachable newGcSessionId
   
+  #: structure
+
   # is this Widget attached to neither the world nor to
   # the hand?
   isOrphan: ->
@@ -132,6 +140,8 @@ class TreeNode
     if root == world or root == world.hand
       return false
     return true
+
+  #: storage
 
   # check if the widget is on its own in the bin
   # (rather than being part of a widget that is in the
@@ -158,6 +168,8 @@ class TreeNode
     return @parent.isInStorageButReachable newGcSessionId
 
 
+  #: private
+
   # THE cached-derivation oracle. Each derived query that memoises its answer against a WorldWdgt
   # version counter (root and firstParentClippingAtBounds here, Widget's bounds and visibility
   # queries, and their overrides) keeps a SLOW twin that derives the answer without its own memo.
@@ -173,14 +185,14 @@ class TreeNode
     which = if path? then " (" + path + ")" else ""
     console.error "CACHED_DERIVATION_DIVERGED -- " + queryName + " is broken" + which
 
-  # TreeNode functions:
+  #: structure
   SLOWroot: ->
     if @parent?
       return @parent.SLOWroot()
     else
       return @
 
-  # TreeNode functions:
+  #: structure
   root: ->
     if @checkRootCache == WorldWdgt.structureVersion
       result = @cachedRoot
@@ -237,6 +249,8 @@ class TreeNode
       result = result.concat child.allChildrenBottomToTop()
     result
 
+  #: copying and serialization
+
   # My children as a copy or a save carries them: every child but one the world keeps under me and that is
   # no part of me (Widget.isLeftOutOfCopiesAndSaves: the text caret, an ephemeral overlay). A FRESH list in my
   # own order, never my children array itself, whether or not a child is left out -- a walker holds the answer
@@ -253,6 +267,8 @@ class TreeNode
     for child in @childrenCarriedByCopiesAndSaves()
       carried = carried.concat child.subtreeCarriedByCopiesAndSaves()
     carried
+
+  #: structure
 
   # the easiest way here would be to just return
   #   @allChildrenBottomToTop().slice().reverse()

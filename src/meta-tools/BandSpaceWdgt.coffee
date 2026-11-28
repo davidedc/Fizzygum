@@ -24,6 +24,8 @@
 # me), and I am my holder's internal structure, so the hierarchy menu passes over me.
 class BandSpaceWdgt extends Widget
 
+  #: initialization
+
   # `width` and `height` are my identity: the size I take (a spring's desired size: a band gives its
   # spring as 1 wide, an inspector its view's place as 1 by 1, an empty body its pane as a member
   # editor's least); opts.springs makes me a SPRING
@@ -35,6 +37,8 @@ class BandSpaceWdgt extends Widget
     else
       extent = new Point width, height
       @setMinAndMaxBoundsAndSpreadability extent, extent, 0
+
+  #: menus
 
   # I am my holder's internal structure -- a band's, the place an inspector keeps, or an empty body's
   # pane -- like the row a prompt's buttons stand in: the ancestor hierarchy menu passes over me

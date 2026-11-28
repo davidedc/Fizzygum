@@ -52,6 +52,8 @@ class ToolbarWdgt extends ViewportWdgt
   # ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
 
+  #: initialization
+
   constructor: ->
     super new ToolPanelWdgt
     @appearance = @createAppearance()
@@ -63,6 +65,8 @@ class ToolbarWdgt extends ViewportWdgt
   # border of mine would paint those lines a second time. A press anywhere in my box still lands
   # on me: the base appearance's shape is my whole box.
   createAppearance: -> new SeamRulesAppearance @
+
+  #: docking
 
   # MY CROSS-AXIS SIZE when docked `depthInCells` cells deep -- the count my band's edge spec
   # recorded as I arrived (EdgeDockLayoutSpec.thicknessGrantedTo hands it to me), or my own depth
@@ -117,6 +121,8 @@ class ToolbarWdgt extends ViewportWdgt
   shortestDockedRun: ->
     @contents.shortestUsableRun()
 
+  #: testing
+
   # WHAT I SHOW SAYS WHAT I AM: my tools are my identity, so a frame around me needs no title while I
   # show (FrameWdgt._payloadIdentifiesItself, which adds the "while"), and with nothing to read its
   # bar is free to run down its side (FrameWdgt._runAxis). Not true of every payload: two text panes
@@ -124,6 +130,8 @@ class ToolbarWdgt extends ViewportWdgt
   # its title names the widget they act on, which its rows do not.
   identifiesItself: ->
     true
+
+  #: edit mode
 
   # I AM THERE FOR EDITING: my tools change the content of the window I work for, so a window that
   # holds an edit mode puts my band away while it views and gives it back when it edits (my band's
@@ -135,10 +143,14 @@ class ToolbarWdgt extends ViewportWdgt
   isAnAmenityForEditing: ->
     true
 
+  #: event handling
+
   # Clicking BETWEEN the buttons (the strip/grid background) must not steal the
   # editor focus pointer (world.editorFocusWdgt) from the widget being edited.
   excludedFromEditorFocusTracking: ->
     true
+
+  #: initialization
 
   # Subclass hook: the toolbar's item list. Keep every entry a literal `new X`
   # form so the boot dependency finder sees the class edges.
@@ -154,6 +166,8 @@ class ToolbarWdgt extends ViewportWdgt
     for tool in @_toolbarItems()
       tool._applyExtent tool.toolExtent if tool.toolExtent?
       tool
+
+  #: docking
 
   # ===== who I work for =====
 
@@ -181,6 +195,8 @@ class ToolbarWdgt extends ViewportWdgt
   @hostWindowOf: (aWidget) ->
     @toolbarOf(aWidget)?.hostWindow()
 
+  #: testing
+
   # Do I carry a DRAWING tool -- a tool that names a paint tool by its key (drawingToolKey), whatever
   # else I carry beside it? A window wearing me then holds a tool of its own (FrameWdgt
   # .armedDrawingTool), which the drawings in its content paint with.
@@ -192,6 +208,8 @@ class ToolbarWdgt extends ViewportWdgt
   # slots wears nothing.
   @wearsDrawingTools: (aFrame) ->
     (aFrame.dockedPayloads?() ? []).some (each) -> each.holdsDrawingTools?()
+
+  #: notifications
 
   # MY TOOLS' STATES MAY HAVE MOVED: the selection, its style or where it stands moved, or an edit
   # mode flipped (the world's announcement), the person's hand or tool code did (the user's), the window I work for
@@ -231,6 +249,8 @@ class ToolbarWdgt extends ViewportWdgt
     @noteToolStatesChanged()
     return
 
+  #: copying and serialization
+
   _afterDeserialization: ->
     super
     @_subscribeToWhatMyToolsShow()
@@ -238,6 +258,8 @@ class ToolbarWdgt extends ViewportWdgt
   _reactToBeingCopied: ->
     super
     @_subscribeToWhatMyToolsShow()
+
+  #: docking
 
   # I ARRIVED in `host`'s edge slot (told by FrameWdgt._dockFrameNoSettle, my slot already mine), so
   # I work for `host` from now on and every tool of mine re-derives its look. Moving a palette changes
@@ -265,6 +287,8 @@ class ToolbarWdgt extends ViewportWdgt
     @noteToolStatesChanged()
     return
 
+  #: layout
+
   # THE BOX A FRAME AROUND ME TAKES WHEN I FLOAT -- my grid's own natural box, my own depth in
   # cells across (_ownDepthInCells), within the `room` the frame has left after its chrome (owner
   # ruling: a free manifestation HUGS its payload, so there are no per-toolbar size constants
@@ -274,6 +298,8 @@ class ToolbarWdgt extends ViewportWdgt
   # granted through the edge-dock spec) because its long axis is the host's to force.
   naturalPayloadExtentWithin: (room) ->
     @contents.naturalGridExtentWithin room, @_ownDepthInCells()
+
+  #: initialization
 
   # Children are built in the core reached via the settling wrapper (the
   # check-constructors-build contract: a constructor must not @add its own
@@ -292,6 +318,8 @@ class ToolbarWdgt extends ViewportWdgt
     # lock, so the build applies it once instead of each call site.
     @_disableDragsDropsAndEditingNoSettle()
     @_subscribeToWhatMyToolsShow()
+
+  #: layout
 
   # A width change re-WRAPS the grid, and the base viewport re-fit is
   # measure-then-commit: it reads the items' APPLIED bounds, commits the

@@ -15,6 +15,8 @@ class HowToSaveMessageApp extends WindowedApp
 
   opensOneWindow: true
 
+  #: launching
+
   buildWindow: ->
     doc = new DocumentWdgt
     sdspw = doc.contents

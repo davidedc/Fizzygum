@@ -33,6 +33,8 @@ class TextCursorIconAppearance extends SizeAwareIconAppearance
   GAP: 1            # the clear between the stem and the field on each side of it (units)
   MIN_SIZE: 8       # px: below it nothing is drawn
 
+  #: geometry
+
   # THE GEOMETRY in a glyph square of S px, relative to its top-left corner: the line t and the
   # margin m; across, the field's right side, the stem's left edge GAP clear of it, and where the
   # bars' left pieces end, GAP clear of the stem; down, whether the cursor has its serifs and the
@@ -52,6 +54,8 @@ class TextCursorIconAppearance extends SizeAwareIconAppearance
     fieldTop = Math.max px(@FIELD_TOP), m + 1  unless serifs
     overhang = Math.max 1, Math.round (px(@SERIF) - t) / 2
     {t, m, rightSide, stemX, leftEnd: stemX - gap, serifs, fieldTop, serifX: stemX - overhang, serifW: t + 2 * overhang}
+
+  #: drawing
 
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
     S = Math.min wDev, hDev

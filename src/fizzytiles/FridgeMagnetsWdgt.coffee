@@ -21,12 +21,18 @@ class FridgeMagnetsWdgt extends Widget
   internalPadding: 5
 
 
+  #: initialization
+
   constructor: ->
     super()
     @_buildAndConnectChildren()
 
+  #: printing
+
   colloquialName: ->
     "Fizzytiles"
+
+  #: layout
 
   # I am a PAGE, not a pane (three boards you work on): a window holding me keeps the theme's page
   # gutter (windowPageGutter) around me on every side and between me and each band it docks, and my
@@ -34,6 +40,8 @@ class FridgeMagnetsWdgt extends Widget
   # that window at every measure and arrange (FrameWdgt._hostsAPage), through ?(): a payload that
   # does not answer is a pane.
   wantsWindowPageGutter: -> true
+
+  #: initialization
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -124,6 +132,8 @@ class FridgeMagnetsWdgt extends Widget
     # -----------------------------------------------
 
     @_invalidateLayout()
+
+  #: layout
 
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout

@@ -1,5 +1,7 @@
 class IconWdgt extends RatioLockedWdgt
 
+  #: initialization
+
   constructor: (@color = WorldWdgt.theme.iconInk) ->
     super()
     @appearance = @createAppearance()
@@ -9,8 +11,12 @@ class IconWdgt extends RatioLockedWdgt
   # the `new <X>IconAppearance` edge and orders the appearance before the icon.)
   createAppearance: -> new IconAppearance @
 
+  #: geometry
+
   widthWithoutSpacing: ->
     @appearance.widthWithoutSpacing()
+
+  #: layout
 
   _resizeToWithoutSpacing: ->
     @_applyExtent @appearance.calculateRectangleOfIcon().extent()

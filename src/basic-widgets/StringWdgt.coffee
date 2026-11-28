@@ -23,9 +23,13 @@ class StringWdgt extends ControllerWdgt
   # _createRefreshOrGetBackBuffer, and a serialization transient (Widget's list)
   backBuffer: undefined
 
+  #: drawing
+
   # A text has no appearance: its paint is its buffer.
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     BackBuffer.blitOf @, aContext, clippingRectangle, appliedShadow
+
+  #: hit testing
 
   # CLICKING TEXT MEANS CLICKING THE LINE, not the strokes — so my whole box takes the pointer,
   # never the per-pixel test a canvas or a palette answers with (BackBuffer.isPaintedAt).
@@ -40,6 +44,8 @@ class StringWdgt extends ControllerWdgt
     cornerRadius = @_itemShape()?.cornerRadius
     return @boundsContainPoint aPoint unless cornerRadius?
     (@boundsContainPoint aPoint) and BoxyAppearance.roundedBoxContainsPixelCentreOf (aPoint.subtract @position()), @width(), @height(), [cornerRadius, cornerRadius, cornerRadius, cornerRadius]
+
+  #: printing
 
   # a line of text is "text" to a person ("string" is a programmer's word); my subclasses inherit
   # it, so one that is something more than a text names itself
@@ -252,6 +258,8 @@ class StringWdgt extends ControllerWdgt
   undoHistory: undefined
   redoHistory: undefined
 
+  #: initialization
+
   # The text is the identity — what this widget SHOWS, and the one argument every caller
   # passes. Everything else, font SIZE included, is an independently-optional knob and rides
   # `opts` (docs/architecture/constructor-and-parameter-conventions.md).
@@ -314,6 +322,8 @@ class StringWdgt extends ControllerWdgt
     super()
 
     @_changed()
+
+  #: line box
 
   # This font height comes out thin: tall characters such as ⎲█ƒ⎳À⎷ ⎸⎹ get cut.
   fontHeight: (fontSize) ->
@@ -424,6 +434,8 @@ class StringWdgt extends ControllerWdgt
   _lineBoxCacheKeySuffix: ->
     if @lineHeight? then "-lineHeight" + @lineHeight + "@" + (@lineHeightStatedAtFontSize ? @originallySetFontSize) else ""
 
+  #: item shape
+
   # ── THE ITEM SHAPE ─────────────────────────────────────────────────────────────────────────
   # Where I live can dress me as an ITEM: a block filled rounded at its corners, my text standing in
   # from its edges -- as a document dresses the texts on its page (DocumentViewportWdgt
@@ -477,6 +489,8 @@ class StringWdgt extends ControllerWdgt
     shape = @_itemShape()
     if shape? then "-item" + shape.cornerRadius + "-" + shape.inset.x + "x" + shape.inset.y else ""
 
+  #: drawing
+
   # The corners of the rounded body I paint myself (Widget._outlineCornerRadii): dressed as an item,
   # my fill's rounding at each corner; else whatever my appearance answers. A ring or a wash laid over
   # me reads them (Widget.cornerRadiiFollowingMyOutline: the selection outline around a selected
@@ -487,6 +501,8 @@ class StringWdgt extends ControllerWdgt
     return super() unless cornerRadius?
     [cornerRadius, cornerRadius, cornerRadius, cornerRadius]
 
+  #: fitting
+
   # the actual font size used might be
   # different than the one specified originally
   # because this widget has to be able to fit
@@ -494,6 +510,8 @@ class StringWdgt extends ControllerWdgt
   actualFontSizeUsedInRendering: ->
     @reflowText()
     @fittingFontSize
+
+  #: undo
 
   pushUndoState: (slot, justFirstClickToPositionCursor) ->
 
@@ -572,6 +590,8 @@ class StringWdgt extends ControllerWdgt
     @undoHistory = []
     @redoHistory = []
 
+  #: style
+
   # My weight, slant, font and alignment are MY STYLE, which a text toolbar's tools mirror while I am
   # the text being edited (TextToolbarWdgt): each of my setters for them tells the world it moved
   # (WorldWdgt.noteStyleChanged), and the world announces it if I am its editor focus.
@@ -608,6 +628,8 @@ class StringWdgt extends ControllerWdgt
     @setVerticalAlignment AlignmentSpecVertical.BOTTOM
     @
   
+  #: printing
+
   # What tells me from another text on a row that names me (Widget.distinguishedRowName): the text
   # I SHOW — in my display case, a password as its asterisks — whose start the row quotes.
   _rowNameDistinction: ->
@@ -634,11 +656,15 @@ class StringWdgt extends ControllerWdgt
     textWithoutLocationOrInstanceNo = @text.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
+  #: accessing
+
   # My text MASKED: one "*" per character (TextSlots). A character longer than one code unit (an emoji) pads its "*"
   # with the invisible character every measure and paint strips (eliminateInvisibleCharacter), so the mask is
   # exactly as long as my text (transformTextOneToOne's contract) and a slot of one is the same slot of the other.
   obfuscateAsPassword: (theText) ->
     ("*" + StringWdgt.INVISIBLE_CARRIAGE_RETURN.repeat(character.length - 1) for character in TextSlots.characters theText).join ""
+
+  #: measuring
 
   # in the weight I draw in, or in `bold` when given (my fit measures in fitBold)
   buildCanvasFontProperty: (overrideFontSize = @fittingFontSize, bold = @isBold) ->
@@ -647,6 +673,8 @@ class StringWdgt extends ControllerWdgt
     font = font + "bold "  if bold
     font = font + "italic "  if @isItalic
     font + overrideFontSize + "px " + @fontName
+
+  #: fitting
 
   # does a binary search to see which font size
   # we need to apply to the text to fit to the
@@ -855,6 +883,8 @@ class StringWdgt extends ControllerWdgt
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN
         @textPossiblyCroppedToFit = textToFit
 
+  #: measuring
+
   # every invisible character goes, not only the first: a wrapped line ends with one, and a password's mask holds
   # one per extra code unit of each character it hides (obfuscateAsPassword)
   eliminateInvisibleCharacter: (string) ->
@@ -878,6 +908,8 @@ class StringWdgt extends ControllerWdgt
     cacheEntry = world.canvasContextForTextMeasurements.measureText(@eliminateInvisibleCharacter text).width
     world.cacheForTextMeasurements.set cacheKey, cacheEntry
     return cacheEntry
+
+  #: accessing
 
   # My text as it SHOWS. This must be a 1-1 transformation: the shown text is exactly as long as
   # the stored one, so a slot in one is the same slot in the other. A password shows one "*" per
@@ -915,6 +947,8 @@ class StringWdgt extends ControllerWdgt
     @_sizeToTextAndDisableFittingNoSettle() if @autoSizeBoxToText
     @_changed()
     @_reflowContainedTextThenInvalidateLayout()
+
+  #: fitting
 
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
@@ -958,13 +992,19 @@ class StringWdgt extends ControllerWdgt
         largestFittingFontSize = @searchLargestFittingFont textToFit
         return largestFittingFontSize
 
+  #: measuring
+
   calculateTextWidth: (text, overrideFontSize) ->
     return @measureText text, overrideFontSize
+
+  #: fitting
 
   _setFittingFontSize: (theValue) ->
     if @fittingFontSize != theValue
       @fittingFontSize = theValue
       @_changed()
+
+  #: drawing
 
   # The key of my back buffer: everything its pixels are a function of. My selection is its two
   # marks and the theme's two selection roles, my header line's ink is the headerLineRule role, and
@@ -1009,6 +1049,8 @@ class StringWdgt extends ControllerWdgt
     @_itemShapeCacheKeySuffix() +
     @_ownCodeKeySuffix
 
+  #: measuring
+
   # Where my text starts inside my box, along each axis: flush with the side of my text area it is
   # aligned to (my box less my item inset, THE ITEM SHAPE), or centred. The paint and the caret /
   # selection math (slotCoordinates, slotAt) both read these, so the caret always sits on the text
@@ -1033,6 +1075,8 @@ class StringWdgt extends ControllerWdgt
       when AlignmentSpecHorizontal.RIGHT
         @width() - inset - widthOfText
 
+
+  #: drawing
 
   # Draw ONE complete line of text at (x, y) in my ink (_textInk, a key of my buffer too). StringWdgt's
   # single-line paint and TextWdgt's wrapped-lines loop both draw every line through here, so this is
@@ -1232,7 +1276,7 @@ class StringWdgt extends ControllerWdgt
       backBufferContext.fillText c, p.x, p.y + @_lineInkOffset @fittingFontSize
     
   
-  # StringWdgt measuring:
+  #: measuring
   slotCoordinates: (slot) ->
     # PURE geometry: the position point of the given index ("slot") -- no side effects.
     # (used to fire one here; moved to handOffToPopoutEditorIfOverflowing -- see docs/archive/layout-system-architecture-assessment.md.)
@@ -1330,6 +1374,8 @@ class StringWdgt extends ControllerWdgt
   endOfLine: ->
     TextSlots.slotAtOrBefore @text, @textPossiblyCroppedToFit.length
 
+  #: menus
+
   fontSizePopout: (menuItem)->
     @prompt menuItem.parent.promptTitleAsking("font\nsize:"), @, "setFontSize",
       defaultContents: @originallySetFontSize.toString()
@@ -1347,6 +1393,8 @@ class StringWdgt extends ControllerWdgt
       defaultContents: @text
       floorNum: 6
       isRounded: true
+
+  #: style
 
   # SELF-SETTLES via the single @_settleLayoutsAfter, like the other text setters.
   setFontName: (theNewFontName) ->
@@ -1374,6 +1422,8 @@ class StringWdgt extends ControllerWdgt
   # slots is the hole R3 names (docs/architecture/constructor-and-parameter-conventions.md).
   setFontNameFromMenu: (ignored, ignored2, theNewFontName) ->
     @setFontName theNewFontName
+
+  #: menus
 
   # what a reflecting menu row reads to decide whether it is the ticked one
   # (MenuRowReflectionSpec.readerName)
@@ -1517,6 +1567,8 @@ class StringWdgt extends ControllerWdgt
     MenuRowReflectionSpec.enabledWhile @, "sitsInViewModeContent", false, announcedBy: world
 
 
+  #: fitting
+
   # EVERY STATE MY MENU'S ROWS TICK ON is ANNOUNCED where it changes (world.dataflow.markNonValueChange, as
   # _setFontNameNoSettle does: the state is not my VALUE, so it re-delivers nothing along a wire), so every row
   # showing it re-ticks, whichever route changed it -- a menu's row, a toolbar's tool, a script. DARK when nobody
@@ -1533,6 +1585,8 @@ class StringWdgt extends ControllerWdgt
     @_changed()
     world.dataflow?.markNonValueChange @
 
+
+  #: style
 
   # weight and slant are my style: see setHorizontalAlignment for who mirrors it. The toggle flips
   # the weight I draw in; the weight my fit is measured in (fitBold) stays what it is.
@@ -1584,9 +1638,13 @@ class StringWdgt extends ControllerWdgt
       world.dataflow?.markNonValueChange @
       @_reflowContainedTextThenInvalidateLayout()
 
+  #: drawing
+
   _changed: ->
     super
     world.caret?.noteTextChanged()
+
+  #: fitting
 
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
@@ -1695,6 +1753,8 @@ class StringWdgt extends ControllerWdgt
     @_reLayoutSelf()
     @parent?._invalidateLayout() unless @extent().equals extentBefore   # (property sub-seam deletion) invalidate the container BARE (no freefloating trigger)
 
+  #: accessing
+
   # The NON-settling core of setText: apply a text change IN PLACE -- re-hug the box if this
   # is a box-hugs-text chrome label, notify any connection target, and re-fit if contained-text
   # -- WITHOUT settling layouts. The public setText wraps this in its single self-settler; callers
@@ -1747,6 +1807,8 @@ class StringWdgt extends ControllerWdgt
   setText: (theTextContent) ->
     @_settleLayoutsAfter => @_setTextNoSettle theTextContent
 
+  #: pins and dataflow
+
   # The reactive-CONNECTOR entrypoint for setText (the connection lane -- see Widget.
   # _settleLayoutsAfterOrJoinEnclosingPass and check-layering [P]). IDENTICAL to the public setText
   # EXCEPT it JOINS an already-open layout pass instead of opening a nested settle
@@ -1756,6 +1818,8 @@ class StringWdgt extends ControllerWdgt
   _setTextConnector: (theTextContent) ->
     @_settleLayoutsAfterOrJoinEnclosingPass =>
       @_setTextNoSettle theTextContent
+
+  #: notifications
 
   considerCurrentTextAsReferenceText: ->
     @hashOfTextConsideredAsReference = hashOfString @text
@@ -1767,6 +1831,8 @@ class StringWdgt extends ControllerWdgt
       else
         @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
+  #: style
+
   _setFontSizeNoSettle: (size) ->
     if typeof size is "number"
       newSize = Math.round Math.min Math.max(size, 4), 500
@@ -1787,6 +1853,8 @@ class StringWdgt extends ControllerWdgt
 
   setFontSize: (size) ->
     @_settleLayoutsAfter => @_setFontSizeNoSettle size
+
+  #: pins and dataflow
 
   # The reactive-CONNECTOR entrypoint for setFontSize (see _setTextConnector above / check-layering [P]).
   # setFontSize is a SINK -- it never calls updateTarget, so a circuit cannot cycle through it.
@@ -1821,6 +1889,8 @@ class StringWdgt extends ControllerWdgt
     @updateTarget()
 
   
+  #: testing
+
   # On Enter, a single-line StringWdgt commits (accept); subclasses override this to
   # false so multi-line/derived text inserts a newline instead. The caret keys off
   # this rather than an exact class-name check. (type-test-elimination campaign)
@@ -1841,7 +1911,7 @@ class StringWdgt extends ControllerWdgt
   isTextEntryField: ->
     @isEditable and (@takesTypingInViewMode or not @sitsInViewModeContent())
 
-  # StringWdgt editing:
+  #: editing
   # thin-wrap-exempt: edit BRANCHES (inline world.edit when the text fits, else editPopout) and returns a fit
   # flag -- not the bare @_settleLayoutsAfter => @_editNoSettle wrap. Its NoSettle sibling _editNoSettle below
   # mirrors the branch, routing the inline case to world._editNoSettle (the drain-safe caret core).
@@ -1880,6 +1950,8 @@ class StringWdgt extends ControllerWdgt
     world.stopEditing()
     @edit()
     return true
+
+  #: selecting
 
   selection: ->
     start = Math.min @startMark, @endMark
@@ -1959,6 +2031,8 @@ class StringWdgt extends ControllerWdgt
     if @startMark == @endMark
       @clearSelection()
 
+  #: event handling
+
   # A string that takes typing (isTextEntryField) selects the WORD around the caret
   # (TextSlots.wordAround: letters, digits and underscores); one that takes none escalates (the same
   # else-escalate activated has), so a double-click on a passive label reaches the first ancestor that
@@ -2011,8 +2085,12 @@ class StringWdgt extends ControllerWdgt
     else
       @escalateEvent "activated", pos, arg2, arg3, arg4, shiftKey, arg6, arg7, arg8, arg9
   
+  #: selecting
+
   enableSelecting: ->
     @isSelectable = true
+
+  #: event handling
 
   # A press on selectable text starts a selection (an edit, when I take typing), and STOPS here; on
   # any other text it goes on as any widget's does.
@@ -2049,6 +2127,8 @@ class StringWdgt extends ControllerWdgt
 
   pressMoved: (pos) ->
     @_stepSelectionAt pos
+
+  #: selecting
 
   # When not selectable this must stay equivalent to HAVING NO move handler at all:
   # each dispatch site (ActivePointerWdgt) is a bare optional call with no

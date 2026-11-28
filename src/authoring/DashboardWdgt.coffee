@@ -3,11 +3,17 @@
 
 class DashboardWdgt extends GenericPanelWdgt
 
+  #: printing
+
   colloquialName: ->
     "Dashboards Maker"
 
+  #: shortcuts
+
   representativeIcon: ->
     new DashboardsIconWdgt
+
+  #: docking
 
   # the frame docks this variant in its toolbar-slot (§5.C)
   _buildToolbar: ->

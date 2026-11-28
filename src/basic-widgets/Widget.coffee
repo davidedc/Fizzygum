@@ -365,6 +365,8 @@ class Widget extends TreeNode
 
   shadowInfo: undefined
 
+  #: layout
+
   initialiseDefaultFrameContentLayoutSpec: ->
     @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 1
     # bind the element NOW (the capture re-binds it later): a PRE-capture measure's
@@ -383,6 +385,8 @@ class Widget extends TreeNode
       # element bound now for the pre-capture measure fallback (see the window-content twin above)
       @_contentStackSpec.element = @
 
+  #: event handling
+
   # THE CERTIFIED CONTEXT GESTURE HAPPENED — from EITHER trigger. A secondary press's release and a
   # press-and-hold certify the same thing ("your context menu was asked for"), so the hand dispatches
   # this one verb for both, and an override here is reached by both alike. `pos` is where the gesture
@@ -394,6 +398,8 @@ class Widget extends TreeNode
     #@bringToForeground()
 
     world.hand.openContextMenuAtPointer @
+
+  #: printing
 
   getTextDescription: ->
     if @textDescription?
@@ -407,13 +413,19 @@ class Widget extends TreeNode
   widgetClassString: ->
     @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
 
+  #: initialization
+
   assignUniqueID: ->
     @constructor.instancesCounter++
     @constructor.lastBuiltInstanceNumericID++
     @instanceNumericID = @constructor.lastBuiltInstanceNumericID
 
+  #: event handling
+
   startCountdownForBubbleHelp: (contents) ->
     ToolTipWdgt.createInAWhileIfHandStillContainedInWidget @, contents
+
+  #: initialization
 
   constructor: ->
     super()
@@ -464,6 +476,8 @@ class Widget extends TreeNode
       goingUpClassHierarchy.instances.add @
       goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
+  #: lifecycle
+
   # When a widget is destroyed (_destroyNoSettle), and a world as it dissolves
   # (WorldWdgt._dissolveWorldNoSettle): it leaves each `instances` set registerThisInstance
   # put it in, its class's and every superclass's.
@@ -477,6 +491,8 @@ class Widget extends TreeNode
       goingUpClassHierarchy.instances.delete @
       goingUpClassHierarchy = goingUpClassHierarchy.__super__.constructor
 
+
+  #: hit testing
 
   # ===== the pointer hit test: TWO questions, and this is the outer one =====
 
@@ -554,6 +570,8 @@ class Widget extends TreeNode
       @appearance.shapeContainsPoint aPoint
     else
       @boundsContainPoint aPoint
+
+  #: drawing
 
   # Selection overlay (selection-overlay-unification arc, supersedes the §5.D D-3/D21 world-attached
   # HighlighterWdgt). The editor-focus selection is a per-widget decoration drawn ON TOP of the selected
@@ -635,12 +653,16 @@ class Widget extends TreeNode
   _seamRects: ->
     []
 
+  #: menus
+
   addShapeSpecificMenuItems: (menu) ->
     if @appearance?.addShapeSpecificMenuItems?
       return @appearance.addShapeSpecificMenuItems menu
     return menu
 
 
+
+  #: printing
 
   # Widget string representation: e.g. 'a Widget' or 'a Widget#2' — my DEBUG name, the one I show
   # as a VALUE (the inspector's fields, error messages) and the seed of my scatter spot in a panel
@@ -655,6 +677,8 @@ class Widget extends TreeNode
     # "an" before a vowel-initial name, else "a" (e.g. "an Image", "a Rectangle")
     firstPart = if name[0]?.toLowerCase() in ["a", "e", "i", "o", "u"] then "an " else "a "
     firstPart + name
+
+  #: lifecycle
 
   close: ->
     # SELF-SETTLE (single-mutation tier). _closeNoSettle re-homes me to the bin through the NON-settling
@@ -758,6 +782,8 @@ class Widget extends TreeNode
     frame = @_parentThroughIslands()
     frame  if !@isFrame?() and frame?.isFrame?()
 
+  #: edit mode
+
   # The window title-bar edit toggle announces its press to the window's
   # contents (FrameWdgt.editButtonInBarPressed -> @contents.editButtonPressedFromFrameBar?()).
   # The button is only shown when providesAmenitiesForEditing is set -- by PanelWdgt
@@ -819,6 +845,8 @@ class Widget extends TreeNode
       holder = holder.parent
     false
 
+  #: menus
+
   # The shared "Enable editing" / "Disable editing" lock menu entry appended by the content-locking
   # containers (StretchableWidgetContainerWdgt, StretchablePanelWdgt,
   # VerticalStackViewportWdgt). The children list varies by
@@ -832,7 +860,7 @@ class Widget extends TreeNode
         menu.addMenuItem "Disable editing", @, "disableDragsDropsAndEditing", toolTip: "prevents dragging content in and out"
     menu.removeConsecutiveLines()
 
-  # Widgets destroying ======
+  #: lifecycle
   # this is different from a widget being closed/deleted
   # when a widget is destroyed, it's removed from the stepping
   # list and marked as destroyed.
@@ -1008,6 +1036,8 @@ class Widget extends TreeNode
       @children[0]._fullDestroyNoSettle()
     return undefined
 
+  #: layout
+
   # Free-floating = NO SPEC OWNS MY PLACEMENT: no layoutSpec at all, or a follower spec
   # (StretchLayoutSpec — proportional placement MEMORY whose ownsPlacement() is false).
   # Both mean the layouting system leaves me alone between my holder's own re-lays: I am
@@ -1058,7 +1088,7 @@ class Widget extends TreeNode
   step: noOperation
   
   
-  # Widget accessing - geometry getting:
+  #: geometry
   left: ->
     @bounds.left()
   
@@ -1086,7 +1116,7 @@ class Widget extends TreeNode
   boundingBox: ->
     @bounds
   
-  # Widget accessing - geometry getting:
+  #: geometry
   leftTight: ->
     @bounds.left() + @paddingLeft
   
@@ -1101,6 +1131,8 @@ class Widget extends TreeNode
   
   boundingBoxTight: ->
     new Rectangle @leftTight(), @topTight(), @rightTight(), @bottomTight()
+
+  #: layout
 
   _resizeToWithoutSpacing: ->
 
@@ -1167,6 +1199,8 @@ class Widget extends TreeNode
   preferredExtent: ->
     @extent()
 
+  #: geometry
+
   # The apply-tier twin of setBounds — same two call shapes (aRectangle | aPosition, anExtent):
   # place AND size in ONE immediate call. The move is subtree-FOLLOWING (_applyMoveTo — children
   # ride along, like every unmarked move verb): the one-shot for the ubiquitous construction
@@ -1194,6 +1228,8 @@ class Widget extends TreeNode
       @_changed()
 
     @_applyExtent newBounds.extent()
+
+  #: layout
 
   # high-level geometry-change API,
   # you don't actually change the geometry right away,
@@ -1277,6 +1313,8 @@ class Widget extends TreeNode
     finally
       world._inLayoutMutation = false
 
+  #: geometry
+
   # The ONE-SHOT frame setter: position AND extent in a single public mutation (ONE flush --
   # prefer this over a setExtent-then-moveTo pair, which flushes twice). Two call shapes:
   #   setBounds aRectangle            -- the Morphic/Cocoa-setFrame form
@@ -1355,6 +1393,8 @@ class Widget extends TreeNode
   height: ->
     @bounds.height()
 
+  #: structure
+
   # used for example:
   # - to determine which widgets you can attach a widget to
   # - for a SliderWdgt's "set target" so you can change properties of another Widget
@@ -1399,6 +1439,8 @@ class Widget extends TreeNode
 
     return result
 
+
+  #: visibility
 
   # both methods invoked in here
   # are cached
@@ -1456,6 +1498,8 @@ class Widget extends TreeNode
     return result
 
 
+  #: geometry
+
   # doesn't take into account orphanage
   # or visibility
   SLOWfullBounds: ->
@@ -1498,6 +1542,8 @@ class Widget extends TreeNode
     if @isOrphan() or !@SLOWvisibleBasedOnIsVisibleProperty() or @SLOWisInCollapsedSubtree()
       return Rectangle.EMPTY
     @boundingBox().intersect @SLOWclipThrough()
+
+  #: layout
 
   # for PanelWdgt scrolling support
   # (D4, sizing-model unification U3-A) THE ONE NAMED STATE-READ of the layout system --
@@ -1567,6 +1613,8 @@ class Widget extends TreeNode
           h = if minE? then Math.max(ext.y, minE.y) else ext.y
           result = result.merge new Rectangle child.left(), child.top(), child.left() + w, child.top() + h
     result
+
+  #: geometry
 
   # does not take into account orphanage or visibility
   fullBounds: ->
@@ -1818,6 +1866,8 @@ class Widget extends TreeNode
       result = root.mapRectExactFromChildPlane result
       root = root._enclosingMappedPlaneRoot()
     result
+
+  #: transforms
 
   # My OWN sugar transform — getter symmetry with the 4C setters setRotationDegrees / setScaleFactor
   # (reads what they wrote). 0 / 1 for a bare widget AND for a widget that is CONTENT of an EXPLICIT
@@ -2267,6 +2317,8 @@ class Widget extends TreeNode
       figure = figure._unwrapIfIdentitySugar()
     figure
 
+  #: geometry
+
   # Widget accessing - simple changes: translate me + my children + repaint.
   # (Stage 5, 2026-07-01) The re-fit seam this used to fire is DELETED -- the settle loop now re-fits my tracking
   # container AFTER I settle (see _reFitMyTrackingContainerAfterSettle) -- so this immediate mutator is PURE geometry
@@ -2321,6 +2373,8 @@ class Widget extends TreeNode
         return
     WorldWdgt.geometryVersion++
 
+  #: layout
+
   # The desktop's position-only imposition from the child's StretchLayoutSpec (the panel
   # consumer instead GRANTS whole boxes through the child's _reLayout — see
   # StretchablePanelWdgt._reLayout; the desktop moves without sizing, so it keeps this
@@ -2354,6 +2408,8 @@ class Widget extends TreeNode
       @_applyMoveTo new Point @left(), boundsOfParent.top() + Math.round(spec.topFraction * boundsOfParent.height())
 
   
+  #: geometry
+
   # this one actually immediately changes the position and
   # bounds of widgets
   _applyMoveTo: (aPoint) ->
@@ -2395,6 +2451,8 @@ class Widget extends TreeNode
       @_settleLayoutsAfter => @_moveToNoSettle aPoint
 
 
+  #: layout
+
   # Record my proportional situation in my holding panel — a StretchLayoutSpec derived from
   # CURRENT geometry, created/updated on the FIGURE (my enclosing sole-content island) w.r.t.
   # the figure's REAL holding panel, not on ME w.r.t. @parent (§5c: when I am wrapped in a
@@ -2428,6 +2486,8 @@ class Widget extends TreeNode
       fig._setLayoutSpec spec
     spec.recordFor fig, provisional
   
+  #: geometry
+
   __commitMoveTo: (aPoint) ->
     # no cache-break here: __commitMoveBy breaks the caches itself, so a zero-delta move
     # no longer bumps the cache version key (the Tier-D D4 discipline).
@@ -2512,7 +2572,7 @@ class Widget extends TreeNode
 
   _setMinimumExtent: (@minimumExtent) ->
 
-  # Widget accessing - dimensional changes requiring a complete redraw
+  #: geometry
   # The polymorphic extent-apply -- the override DISPATCH POINT (TextWdgt /
   # TrackingTransformFrameWdgt / ViewportWdgt specialize it for their own,
   # non-composite reasons). The base is _applyExtentBase (exactly like _applyMoveBy -> _applyMoveByBase: ONE
@@ -2658,6 +2718,8 @@ class Widget extends TreeNode
       world?.__noteCompositeResizedByAnArrange @ if @children.length != 0 and not @_reLayoutChildren?
 
 
+  #: layout
+
   # (proper-layouts, 2026-07-01) The notify-by-mutation seams that re-fit a freefloating content's
   # size-tracking container (_announceLayoutPropertyChangeToContainer / _announceGeometryChangeToContainer)
   # are DELETED -- that dependency now rides the uniform dirty-tree (the D1 climb-through in _invalidateLayout)
@@ -2737,6 +2799,8 @@ class Widget extends TreeNode
       @_invalidateLayout()
 
 
+  #: geometry
+
   _applyWidth: (width) ->
     @_applyExtent new Point(width or 0, @height())
 
@@ -2815,6 +2879,8 @@ class Widget extends TreeNode
     # cache-break under the did-anything-change guard, like __commitExtent (the D4/E1 discipline)
     @__breakMoveResizeCaches()
   
+  #: pins and dataflow
+
   # The write half of the `corner radius` pin an appearance contributes (BoxyAppearance /
   # BubblyAppearance / MenuAppearance all declare it), and the target of that shape's
   # "Corner radius…" prompt. Both dispatch on the WIDGET — a pin's setter is called as
@@ -2830,6 +2896,8 @@ class Widget extends TreeNode
       if !isNaN newRadius
         @cornerRadius = Math.max newRadius, 0
     @_changed()
+
+  #: accessing
 
   setColor: (aColor) ->
     if aColor
@@ -2852,6 +2920,8 @@ class Widget extends TreeNode
 
     return aColor
 
+  #: pins and dataflow
+
   # The principal value this widget offers to a spreadsheet reference (dataflow spec §9.3): the value
   # of my PRINCIPAL PIN. Widgets that declare no principal pin answer undefined here; the reference
   # read then falls back to the widget itself (that fallback lives at the read site — see the
@@ -2873,7 +2943,7 @@ class Widget extends TreeNode
   # Plain widgets (slider, text) inherit this; computing patch nodes override it to return their @output.
   dataflowValue: -> @exportedValue()
 
-  # Widget displaying ---------------------------------------------------------
+  #: hit testing
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateBackBuffer: this one creates/updates the local canvas of this widget only
@@ -2903,6 +2973,8 @@ class Widget extends TreeNode
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
 
+  #: drawing
+
   calculateKeyValues: (aContext, clippingRectangle) ->
     damageBox = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
@@ -2920,6 +2992,8 @@ class Widget extends TreeNode
 
     return [damageBox,sl,st,al,at,w,h]
 
+  #: testing
+
   # EPHEMERAL capability (owner's term). An ephemeral is a transient overlay owned wholly by the
   # per-cycle reconciler (WorldWdgt._addHighlightingWidgets / PinoutsOverlay.reconcile): it is
   # hit-test-excluded (never steals hoverEntered / clicks / drops — ActivePointerWdgt.topWdgtUnderPointer),
@@ -2927,6 +3001,8 @@ class Widget extends TreeNode
   # (isLeftOutOfCopiesAndSaves below). Capability, not a type test (type-test-elimination convention): reads
   # the _ephemeralOverlay flag, so dedicated overlay classes AND ad-hoc reconciler-marked instances qualify.
   isEphemeral: -> @_ephemeralOverlay is true
+
+  #: copying and serialization
 
   # LEFT OUT OF EVERY COPY AND SAVE: a widget the WORLD keeps in a tree — an ephemeral overlay (its reconciler's)
   # and the text caret (the world's one edit) — stands under a parent for its place, its plane and its clip, and
@@ -2936,6 +3012,8 @@ class Widget extends TreeNode
   # world snapshot's roots (Serializer.serializeWorld) take each subtree as it carries it, and the Duplicator and
   # the Serializer walk a widget's children as it carries them. CaretWdgt answers true for itself.
   isLeftOutOfCopiesAndSaves: -> @isEphemeral()
+
+  #: drawing
 
   # A widget added to the world normally gains a drop-shadow (Widget._addNoSettle). Ephemerals opt
   # out — "not anything material the user clicks/drags". The caret ALSO opts out (it is not an
@@ -3317,6 +3395,8 @@ class Widget extends TreeNode
       shape = shape.parent
     radii
 
+  #: visibility
+
   # ... when you want to hide something
   # but you don't want to generate any
   # damage rectangles
@@ -3432,6 +3512,8 @@ class Widget extends TreeNode
 
     return result
   
+  #: structure
+
   # Take me off my parent, settled: the removal marks my parent's layout while I am still attached, so
   # the one settle round it re-lays my parent out now rather than at the end of the cycle.
   removeFromTree: ->
@@ -3447,6 +3529,8 @@ class Widget extends TreeNode
     # needs the parent chain, which removeChild severs.
     @_fullChangedIncludingShadowOwner()
     @parent.removeChild @
+
+  #: printing
 
   # My name in the product's own words: window titles, inspector and console titles, the drag-embed
   # hint, the shortcut auto-namer, the name a saved file gets, the rows that name me (rowName).
@@ -3505,6 +3589,8 @@ class Widget extends TreeNode
     oneLine = text.replace(/\s+/g, " ").trim()
     return oneLine if oneLine.length <= maxLength
     oneLine.slice(0, maxLength).trimEnd() + "…"
+
+  #: shortcuts
 
   representativeIcon: ->
     new WidgetIconWdgt
@@ -3602,7 +3688,7 @@ class Widget extends TreeNode
     # keeps me reachable, so file straight to the SHELF
     @_closeNoSettle world.shelfWdgt
 
-  # Widget full image:
+  #: drawing
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160
   #
@@ -3701,7 +3787,7 @@ class Widget extends TreeNode
 
 
 
-  # Widget updating ///////////////////////////////////////////////////////////////
+  #: drawing
   _changed: ->
     # dropped while a _repaintAsOneUnit block is open: the unit's owner issues
     # the one covering mark at close, so per-child marks inside it would only
@@ -3798,7 +3884,7 @@ class Widget extends TreeNode
       if !completed or world._suppressedMarkAttempts isnt attemptsAtOpen
         @_fullChanged()
 
-  # Widget accessing - structure //////////////////////////////////////////////
+  #: structure
 
   # Hierarchy/bounds change methods come in tiers (see
   # docs/architecture/layering-naming-convention.md): public self-settling setters at the top,
@@ -3828,6 +3914,8 @@ class Widget extends TreeNode
     myPosition = @positionAmongSiblings()
     @parent._addNoSettle aWdgt, atIndex: myPosition, layoutSpec: opts.layoutSpec
 
+  #: layout
+
   # The layoutSpec a widget takes when added with NO explicit one -- the default for add() / _addNoSettle()'s
   # layoutSpec option. Plain widgets are free-floating; a widget with an intrinsic placement overrides this
   # so a caller can write the uniform `parent.add child` (no spec at the call site) and still get the right
@@ -3835,6 +3923,8 @@ class Widget extends TreeNode
   # only to the very widget it resizes -- its @target -- and is free-floating on the world / hand otherwise).
   defaultLayoutSpecWhenAddedTo: (destination) ->
     undefined
+
+  #: structure
 
   # ===== structural add =====
   # add() is the PUBLIC self-settling entry: it links the widget in through the private,
@@ -3942,6 +4032,8 @@ class Widget extends TreeNode
     # and the __add seed's drain alone IS the last-write-wins record.)
     return aWdgt
 
+  #: notifications
+
   # What the code I hold of my OWN -- functions I hold beside my class's: a person's (an
   # inspector's Save of a text's _drawTextLine, of a palette's fillPaletteBuffer), or plumbing's (a
   # patch node's compiled formula, which no key of its reads) -- adds to the keys of the shared caches
@@ -4002,6 +4094,8 @@ class Widget extends TreeNode
     @_invalidateLayout()
     world.noteStyleChanged @
 
+  #: layout
+
   # this is done before the updating of the
   # backing store in some widgets that
   # need to figure out their whole
@@ -4023,6 +4117,8 @@ class Widget extends TreeNode
   # (type-test-elimination idiom -- no instanceof at the ask site).
   consumesFractionalGeometryOf: (child) ->
     false
+
+  #: structure
 
   # The structural link-in, one level below _addNoSettle: it shares that family's option
   # vocabulary so the same key means the same thing at every layer of the add chain.
@@ -4064,7 +4160,7 @@ class Widget extends TreeNode
       world.pendingFractionalBookkeepingSeeds.add aWdgt
     
 
-  # Duplication and Serialization /////////////////////////////////////////
+  #: copying and serialization
 
 
   # The widget menu's Duplicate: a copy of my whole FIGURE — the widget PLUS any enclosing transform-island
@@ -4257,7 +4353,7 @@ class Widget extends TreeNode
     Serializer.serializeWidget @, opts
 
 
-  # Deserialization -----------------------------------
+  #: copying and serialization
 
 
   # Returns the restored, DETACHED widget (the caller attaches it). Callers that need the
@@ -4291,7 +4387,7 @@ class Widget extends TreeNode
         throw error
     FileSaving.saveStringAsFile envelope, @colloquialName() + ".fzw.json"
 
-  # Injecting code /////////////////////////////////////////
+  #: injecting code
 
   # The program that injects ONE property: the typed value behind its assignment, which the
   # injection's one body runs (injectPropertyInto). The typed text begins at its length minus the
@@ -4461,7 +4557,7 @@ class Widget extends TreeNode
       @[newName] = @[oldName]
     true
 
-  # Widget dragging (and dropping) /////////////////////////////////////////
+  #: drag and drop
   
   # (In this comment section "non-float" dragging and "dragging" are
   # interchangeable unless made explicit)
@@ -4587,6 +4683,8 @@ class Widget extends TreeNode
   findRootForGrab: ->
     return @findFirstLooseWidget()
 
+  #: shortcuts
+
   # Asked by ShortcutWdgt._bringUpReferencedWidget before I am shown: do I owe myself any
   # CONTENT first? Almost nothing does — a widget resting in storage is already whole — so the
   # default runs the callback INLINE. That is correctness rather than economy: going through a
@@ -4601,6 +4699,8 @@ class Widget extends TreeNode
   # a hook with a sensible default is what that is.
   whenReadyToBeBroughtUp: (callback) ->
     callback()
+
+  #: structure
 
   # Am I loose content living directly on a viewport's plane? Two role queries on the
   # grandparent (scroll-frame role plan P3): isMyContentsPanel — is my parent the panel that
@@ -4618,6 +4718,8 @@ class Widget extends TreeNode
         return true
     return false
 
+  #: drawing
+
   # the only trick here is that we stop at the first
   # clipping widget, because if a widget is inside a clipping
   # widget, it doesn't contribute to any shadow.
@@ -4634,6 +4736,8 @@ class Widget extends TreeNode
         return scanningWidgets
 
     return undefined
+
+  #: drag and drop
 
   # if true, then the drag will be a float drag
   # otherwise it will be a nonfloating drag
@@ -4659,7 +4763,7 @@ class Widget extends TreeNode
     # nonfloatdragged
     return false
 
-  # Widget dragging (and dropping) /////////////////////////////////////////
+  #: structure
 
   # The innermost enclosing frame, self included — a frame marked for closure (on its way out)
   # is transparent to the climb, so it passes through to whatever holds it (FrameWdgt's
@@ -4727,6 +4831,8 @@ class Widget extends TreeNode
     root._fullChanged()
 
 
+  #: menus
+
   # note that "propagateKillPopUps" doesn't necessarily
   # go up the "parent" trail, for pop ups this method goes up
   # another trail of pop up ownership named via the
@@ -4735,6 +4841,8 @@ class Widget extends TreeNode
   propagateKillPopUps: ->
     if @parent?
       @parent.propagateKillPopUps()
+
+  #: event handling
 
   # A PRIMARY PRESS REACHED ME, `pos` the pointer in my plane. The hand climbs a press from the widget
   # it hit up the chain, and every receiver STATES whether the press goes on: answer true to pass it
@@ -4759,6 +4867,8 @@ class Widget extends TreeNode
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.add @
     else
       world.wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.delete @
+
+  #: drag and drop
 
   _reactToBeingDropped: (whereIn) ->
     # RE-RECORD (the F6 family, auto-bookkeeping arc): a dropped widget usually carries
@@ -4835,7 +4945,7 @@ class Widget extends TreeNode
       )
     undefined
   
-  # Widget utilities ////////////////////////////////////////////////////////
+  #: handles
   
   # Create a resize/move HandleWdgt of `type` and corner-attach it to myself (I become its @target), tracking
   # it in the temporary-adjusters set so it is torn down when handles are hidden. _addNoSettle (not add): a
@@ -4911,6 +5021,8 @@ class Widget extends TreeNode
         @parent._showResizeAndMoveHandlesAndLayoutAdjustersNoSettle()
 
   
+  #: dialogs
+
   # Pop a one-line bubble telling a MESSAGE: what a gesture has to say ("There is nothing here for
   # this code to run against", a refusal, a compile error's words). A VALUE somebody asked to see has
   # its own door, _informOfValue. ⚠ The empty case is ABSENCE, not falsiness: code a person runs can
@@ -4964,6 +5076,8 @@ class Widget extends TreeNode
   pickColor: (msg, callback, defaultContents) ->
     colorPrompt = new ColorPromptWdgt @, @, msg: msg, callback: callback, defaultContents: defaultContents
     colorPrompt.popUpAtHand()
+
+  #: inspecting
 
   inspect: ->
     @spawnInspector @
@@ -5046,6 +5160,8 @@ class Widget extends TreeNode
       consoleWdgt = new ConsoleWdgt @
       world.openFrameWith consoleWdgt, (new Point 285, 290), world.hand.position().subtract(new Point 50, 100)
 
+  #: structure
+
   spawnNextTo: (widgetToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?
       whereToAddIt = widgetToBeNextTo.parent
@@ -5054,7 +5170,7 @@ class Widget extends TreeNode
     @_moveWithin whereToAddIt
     
   
-  # Widget menus ////////////////////////////////////////////////////////////////
+  #: menus
   
   # context Menus are whatever appears when one right-clicks
   # on something. It could be a custom menu, or the standard
@@ -5333,7 +5449,7 @@ class Widget extends TreeNode
       menu = @addShapeSpecificMenuItems menu
     menu
 
-  # Widget menu actions
+  #: pins and dataflow
   calculateAlphaScaled: (alpha) ->
     if typeof alpha is "number"
       unscaled = alpha / 100
@@ -5394,6 +5510,8 @@ class Widget extends TreeNode
         @_changed()
 
     return alpha
+
+  #: menus
 
   newParentChoice: (ignored, theWidgetToBeAttached) ->
     # this is what happens when "each" is
@@ -5464,6 +5582,8 @@ class Widget extends TreeNode
   attachWithHorizLayout: ->
     @_attachToChosenParent "newParentChoiceWithHorizLayout"
   
+  #: drag and drop
+
   toggleIsLockingToPanels: ->
     @isLockingToPanels = not @isLockingToPanels
 
@@ -5472,6 +5592,8 @@ class Widget extends TreeNode
 
   _unlockFromPanels: ->
     @isLockingToPanels = false
+
+  #: edit mode
 
   # ---------------------------------------------------------------------
   # locking of contents
@@ -5582,11 +5704,15 @@ class Widget extends TreeNode
       world._stopEditingNoSettle()
 
 
+  #: drag and drop
+
   # ---------------------------------------------------------------------
 
   _beforeBeingGrabbed: ->
     @_unlockFromPanels()
     @_setLayoutSpec undefined
+
+  #: pins and dataflow
 
   # ── the PIN protocol ─────────────────────────────────────────────────────────────────────────
   # A PIN is a named property the dataflow can write, read, or both (PinSpec). `pins` is the whole
@@ -5675,6 +5801,8 @@ class Widget extends TreeNode
     return undefined unless @principalPinLabel?
     return @pinLabelled @principalPinLabel
 
+  #: storage
+
   # The GRAPH EDGES I hold OUT of myself, as [{kind, to}] with kind one of 'flow' | 'command' |
   # 'reference' and `to` another WIDGET (docs/archive/graph-edges-and-lifecycle-plan.md §4.2, the
   # three-edge model). DERIVED on demand from the fields that already persist -- a controller's
@@ -5690,6 +5818,8 @@ class Widget extends TreeNode
   # the close paths' park-vs-destroy query (WorldWdgt.anyReferenceOrWireIntoWdgt) both follow
   # flow + reference and let command confer nothing.
   graphEdgesOut: -> []
+
+  #: menus
 
   # The shared body of every controller widget's openTargetPropertySelector: pop up the "target
   # property" chooser, one item per drivable pin of the kind I produce. Each item wires
@@ -5712,7 +5842,7 @@ class Widget extends TreeNode
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     @_popUpTargetPropertyMenu theTarget, theTarget.pinsOfKind @producesPinKind
 
-  # Widget entry field tabbing //////////////////////////////////////////////
+  #: event handling
   
   allEntryFields: ->
     # an entry field is a text that takes a person's typing here, now (StringWdgt.isTextEntryField:
@@ -5762,7 +5892,7 @@ class Widget extends TreeNode
   
   
   
-  # Widget events --------------------------------------------
+  #: event handling
 
   escalateEvent: (functionName, args...) ->
     handler = @parent
@@ -5771,6 +5901,8 @@ class Widget extends TreeNode
       handler[functionName] args...  if handler[functionName]
   
   
+  #: evaluating code
+
   # Widget eval: codeSource compiled (compileFGCode) and run with me as `this`, its value answered.
   # The evaluation alone: like injectProperty, it tells no one -- the person's run gesture tells me
   # once it has run (_runningAPersonsCode, through _runningTypedCodeAgainst: a text's run rows,
@@ -5878,6 +6010,8 @@ class Widget extends TreeNode
 
 
 
+
+  #: layout
 
   # ------------------------------------------------------------------------------------
   # Layouts
@@ -6389,6 +6523,8 @@ class Widget extends TreeNode
       w._reLayout()
     return
 
+
+  #: layout editing
 
   # The layout-editing chrome (the spacers and the adder/droplet placeholders the three methods
   # below insert) lives in the LAZY 'authoring' part: a profile may omit it entirely (lean),

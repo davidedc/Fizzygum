@@ -198,6 +198,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # world-snapshot serialization; matched to islandBufferCacheEnabled). See docs/archive/island-buffer-cache-plan.md §6.
   @immutableBackBufferGeneration: 0
 
+  #: drawing
+
   # The single reset entry for the immutable text-back-buffer cache: resets it AND bumps the epoch so
   # downstream island buffers rebuild from the now-warm text, AND repaints everything — dropping the
   # cache means every text-bearing pixel on screen may be stale, so the full repaint is intrinsic to
@@ -211,6 +213,8 @@ class WorldWdgt extends IconGridPanelWdgt
     @cacheForImmutableBackBuffers?.reset?()
     WorldWdgt.immutableBackBufferGeneration++
     @_fullChanged()
+
+  #: notifications
 
   # PUBLIC notification: CODE changed under every widget -- an inspector's gesture edited,
   # added, renamed or removed a member of a class (its member reference's step, ClassMemberRef), or
@@ -365,6 +369,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # deferred because the handle's writes are deferred-settle). Drained AFTER the geometry
   # flush, so the re-record reads the settled fixed point. Cleared in the world teardown.
   pendingFractionalReRecords: undefined
+
+  #: lifecycle
 
   # Does the world step this member of its stepping set now? A widget steps while it is on the world or on
   # the hand (TreeNode.isOrphan): off them -- taken off its holder, closed into the bin or onto the shelf, a
@@ -555,6 +561,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
   macroToolkit: undefined
 
+  #: initialization
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -720,6 +728,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
     @_changed()
 
+  #: geometry
+
   # Memoised absolute position of the world canvas within the document.
   # Reading offsetLeft/offsetTop/offsetParent forces a synchronous style+layout
   # reflow whenever the DOM is dirty; the SystemTests control panel writes to the
@@ -757,14 +767,20 @@ class WorldWdgt extends IconGridPanelWdgt
     # mutate the returned position, which must never corrupt the cache
     {x: @_cachedCanvasPosition.x, y: @_cachedCanvasPosition.y}
 
+  #: printing
+
   colloquialName: ->
     "Desktop"
+
+  #: evaluating code
 
   # What code typed in a text on me runs against when no tool around it names something else
   # (TextWdgt._codeReceiver, whose climb ends at me): I am the workspace's receiver, as a script
   # window's "Try it" is.
   codeReceiver: ->
     @
+
+  #: error handling
 
   createErrorConsole: ->
     errorsLogViewerWdgt = new ErrorsLogViewerWdgt()
@@ -776,6 +792,8 @@ class WorldWdgt extends IconGridPanelWdgt
     @errorConsole = wm
     @errorConsole.setBounds (new Point 190,10), new Point 550,415
     @errorConsole.hide()
+
+  #: initialization
 
   # Remove the loading spinner and the fake desktop the page paints while the world is still being
   # built. Both elements belong to the LOADING PAGE, not to any world — which is why this is boot's
@@ -789,11 +807,15 @@ class WorldWdgt extends IconGridPanelWdgt
     splashScreenFakeDesktop = document.getElementById 'splashScreenFakeDesktop'
     splashScreenFakeDesktop?.parentNode?.removeChild splashScreenFakeDesktop
 
+  #: colour roles
+
   # The desktop draws no border of its own (not the generic panel's): my DesktopAppearance asks this
   # while I hold no stroke colour, as every panel's does. My fill is my own colour, the desktop's,
   # which the user can set.
   _surfaceStroke: ->
     undefined
+
+  #: initialization
 
   createDesktop: ->
     # the desktop's own furnishing -- its backdrop colour (the theme's desktopFill). Its wallpaper
@@ -847,6 +869,8 @@ class WorldWdgt extends IconGridPanelWdgt
     @makeFolder "Examples", new ExamplesFolderWindowWdgt
 
 
+  #: pop ups
+
   mostRecentlyCreatedPopUp: ->
     mostRecentPopUp = undefined
     mostRecentPopUpID = -1
@@ -875,6 +899,8 @@ class WorldWdgt extends IconGridPanelWdgt
       eachWidget.close()
     @popUpsMarkedForClosure.clear()
   
+  #: drawing
+
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of
   # widgets done
   # by the paintIntoAreaOrBlitFromBackBuffer function.
@@ -943,6 +969,8 @@ class WorldWdgt extends IconGridPanelWdgt
     @paintStroke aContext, aRect
     return true
 
+  #: geometry
+
   clippedThroughBounds: ->
     # always recompute -- the world is the clip terminal, so its clipped bounds ARE its boundingBox; trivial, no version cache.
     return @boundingBox()
@@ -960,6 +988,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
   SLOWclipThrough: ->
     return @boundingBox()
+
+  #: damage
 
   _pushDamageRect: (damagedWidget, theRect, isSrc) ->
     if @duplicatedDamageRectsTracker[theRect.toString()]?
@@ -1170,6 +1200,8 @@ class WorldWdgt extends IconGridPanelWdgt
             Math.round(eachDamageRect.height())
     aContext.restore()
 
+
+  #: layout
 
   # layouts are recalculated like so:
   # there will be several subtrees
@@ -1491,6 +1523,8 @@ class WorldWdgt extends IconGridPanelWdgt
     return
 
 
+  #: damage
+
   clearPaintBoundsMaybeChangedFlags: ->
     for m in @widgetsWithMaybeChangedPaintBounds
       m.paintBoundsMaybeChanged = false
@@ -1498,6 +1532,8 @@ class WorldWdgt extends IconGridPanelWdgt
   clearFullPaintBoundsMaybeChangedFlags: ->
     for m in @widgetsWithMaybeChangedFullPaintBounds
       m.fullPaintBoundsMaybeChanged = false
+
+  #: drawing
 
   _repaintDamagedRects: ->
     @damageRects = []
@@ -1626,6 +1662,8 @@ class WorldWdgt extends IconGridPanelWdgt
     else
       false
 
+  #: error handling
+
   _findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
     # we keep repainting the whole screen while a pass finds a NEW offender.
     # Why do we need multiple repaints and not just one?
@@ -1722,12 +1760,16 @@ class WorldWdgt extends IconGridPanelWdgt
     @widgetsGivingErrorWhileStepping = []
     return
 
+  #: damage
+
   _resetDataStructuresForDamageRects: ->
     @damageRects = []
     @duplicatedDamageRectsTracker = {}
     @numberOfDuplicatedDamageRects = 0
 
   
+  #: drawing
+
   _addHighlightingWidgets: ->
     @currentHighlightingWidgets.forEach (eachHighlightingWidget) =>
       target = eachHighlightingWidget.wdgtThisWdgtIsHighlighting
@@ -1843,6 +1885,8 @@ class WorldWdgt extends IconGridPanelWdgt
       @dragEmbedDockBandWdgt.fullDestroy()
       @dragEmbedDockBandWdgt = undefined
 
+  #: focus and selection
+
   # THE ONE WRITE OF THE EDITOR FOCUS (editorFocusWdgt). The pointer's click and drop sites
   # (ActivePointerWdgt), a dying widget taking itself out of the focus (Widget._destroyNoSettle) and
   # the error-recovery reset (_softResetWorld) all come through here, so a change is ANNOUNCED
@@ -1896,6 +1940,8 @@ class WorldWdgt extends IconGridPanelWdgt
       w = w.parent
     aWdgt
 
+  #: notifications
+
   # A WIDGET'S STYLE MOVED -- a text's weight, slant, font or alignment (StringWdgt's setters), or
   # whatever a code change may have touched (Widget._codeChangedNoSettle: a person's edit under the
   # widget, or code changed under every widget). When that widget is the one being edited I announce it exactly as I announce a
@@ -1919,6 +1965,8 @@ class WorldWdgt extends IconGridPanelWdgt
   noteEditModeChanged: ->
     @dataflow?.markNonValueChange @
     return
+
+  #: focus and selection
 
   # THE EDITOR FOCUS THE EDITING TOOLS MAY ACT ON: the focus, or undefined while it sits in content in
   # VIEW mode (the focus's own sitsInViewModeContent, the question a text's menu asks too before it
@@ -2253,6 +2301,8 @@ class WorldWdgt extends IconGridPanelWdgt
     return
 
 
+  #: event handling
+
   _playQueuedEvents: ->
     try
 
@@ -2292,6 +2342,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
     @inputEventsQueue.clear()
 
+  #: world cycle
+
   # Batch-FETCH pacing: each waitNextTurn parks its resolving function in the
   # framePacedPromises array and each frame we release one, so a sources-batch
   # <script> load gets a whole frame of network time without causing gitter.
@@ -2304,6 +2356,8 @@ class WorldWdgt extends IconGridPanelWdgt
     if window.framePacedPromises.length > 0
       resolvingFunction = window.framePacedPromises.shift()
       resolvingFunction.call()
+
+  #: error handling
 
   _showErrorsHappenedInRepaintingStepInPreviousCycle: ->
     # public-call-sanctioned: createErrorConsole is public API (macros and rigs build the console
@@ -2332,6 +2386,8 @@ class WorldWdgt extends IconGridPanelWdgt
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError eachErr
 
+
+  #: world cycle
 
   _updateTimeReferences: ->
     WorldWdgt.dateOfCurrentCycleStart = new Date
@@ -2481,7 +2537,7 @@ class WorldWdgt extends IconGridPanelWdgt
     WorldWdgt.dateOfPreviousCycleStart = WorldWdgt.dateOfCurrentCycleStart
     WorldWdgt.dateOfCurrentCycleStart = undefined
 
-  # Widget stepping:
+  #: lifecycle
   _runChildrensStepFunction: ->
 
 
@@ -2570,6 +2626,8 @@ class WorldWdgt extends IconGridPanelWdgt
       if !@errorConsole? then @createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
+  #: geometry
+
   stretchWorldToFillEntirePage: ->
     # once you call this, the world will forever take the whole page
     @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -2602,6 +2660,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # drop the memoised position so the next read reflects the new geometry
     @_invalidateCanvasPositionCache()
 
+
+  #: layout
 
   # The desktop consumes its children's proportional records (position-only, in
   # _reLayoutDesktop below) -- my COMPLETE child rule, asked by the __add seed, both drain
@@ -2669,7 +2729,7 @@ class WorldWdgt extends IconGridPanelWdgt
     # handler calls it directly), so run the pass here too
     @_reLayoutCornerInternalChildren()
   
-  # WorldWdgt events:
+  #: event handling
 
   # the top of every press's climb: nothing raises me, and there is nothing above me to pass it to
   pressBegan: ->
@@ -2679,7 +2739,7 @@ class WorldWdgt extends IconGridPanelWdgt
     noOperation
 
 
-  # WorldWdgt text field tabbing:
+  #: event handling
   nextTab: (editField) ->
     next = @nextEntryField editField
     if next
@@ -2696,6 +2756,8 @@ class WorldWdgt extends IconGridPanelWdgt
     next.selectAll()
     next.edit()
 
+  #: error handling
+
   # if an error is thrown, the state of the world might
   # be messy, for example the pointer might be
   # dragging an invisible widget, etc.
@@ -2710,6 +2772,8 @@ class WorldWdgt extends IconGridPanelWdgt
     @hand.forgetHoverAndNonFloatDrag()
     @wdgtsDetectingClickOutsideMeOrAnyOfMeChildren.clear()
     @_setEditorFocusNoSettle undefined
+
+  #: lifecycle
 
   # There is something special about the
   # "world" version of fullDestroyChildren:
@@ -2738,6 +2802,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
     super()
 
+  #: pop ups
+
   destroyToolTips: ->
     # "toolTipsList" keeps the widgets to be deleted upon
     # the next mouse click, or whenever another temporary Widget decides
@@ -2756,6 +2822,8 @@ class WorldWdgt extends IconGridPanelWdgt
       tooltip.fullDestroy()
       @toolTipsList.delete tooltip
   
+
+  #: copying and serialization
 
   # "Open from file…" world-menu action: pop the file picker; FileLoading routes the chosen
   # *.fzw.json by its envelope `kind` (a widget is attached to the desktop, a world snapshot
@@ -3059,6 +3127,8 @@ class WorldWdgt extends IconGridPanelWdgt
         @_addNoSettle child, layoutSpec: child.layoutSpec
     return
 
+  #: lifecycle
+
   # A RESET IS A RECONSTRUCTION, not a cleaning. This world is torn down and DISSOLVED, a
   # replacement WorldWdgt is constructed over the same canvas, and the page runs on that one from
   # here on. The point of building rather than scrubbing is that "did the teardown forget field X?"
@@ -3203,6 +3273,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # to mark — see the _changed / _fullChanged overrides.
     @_dissolved = true
 
+  #: drawing
+
   # A DISSOLVED WORLD MARKS NO DAMAGE. Every damage funnel routes its mark through the `world`
   # GLOBAL (Widget._changed pushes onto world.widgetsWithMaybeChangedPaintBounds, Widget._fullChanged
   # onto world.widgetsWithMaybeChangedFullPaintBounds) — so a mark made by a corpse AFTER the swap
@@ -3219,6 +3291,8 @@ class WorldWdgt extends IconGridPanelWdgt
   _fullChanged: ->
     return if @_dissolved
     super
+
+  #: lifecycle
 
   # --- THE SHARED STRUCTURAL TEARDOWN ----------------------------------------------------------
   # ONE core, two callers: resetWorld (which dissolves this world after it returns and constructs
@@ -3480,6 +3554,8 @@ class WorldWdgt extends IconGridPanelWdgt
     # dead ref the seam contract forbids.
     @paintingWidget = undefined
 
+  #: menus
+
   # ONE desktop menu, with no fork on which HTML file booted the world. What a desktop can offer
   # does not depend on the page: it depends on which PARTS shipped and whether dev mode is on, and
   # both of those are asked directly below, per item, where they are true facts about capability.
@@ -3534,6 +3610,8 @@ class WorldWdgt extends IconGridPanelWdgt
 
 
 
+  #: structure
+
   create: (aWdgt) ->
     aWdgt.pickUp()
 
@@ -3569,6 +3647,8 @@ class WorldWdgt extends IconGridPanelWdgt
   _frameAround: (contentWidget) ->
     return contentWidget if contentWidget.isFrame?()
     new FrameWdgt contentWidget
+
+  #: menus
 
   # The demo/parts-bin menu and the layout-tests menu. They stay on the WORLD (not in DemoMenus)
   # because they are bound as world ACTIONS: the world menu names them on `@`, and a SystemTest
@@ -3678,6 +3758,8 @@ class WorldWdgt extends IconGridPanelWdgt
     return
 
 
+  #: editing
+
   # edit self-settles via the public add / fullDestroy (EACH opens its own settle) exactly as it always has --
   # every event-time editing caller (inspectors, text fields) depends on that unchanged timing. _editNoSettle
   # shares the IDENTICAL caret-teardown-and-creation body via a strategy thunk (the _stopEditingTearingCaretDownWith
@@ -3774,6 +3856,8 @@ class WorldWdgt extends IconGridPanelWdgt
       @browserInput.inputDOMElementForVirtualKeyboard = undefined
     @worldCanvas.focus()
 
+  #: notifications
+
   # Chokepoint mark for the eager storage sort (StorageSorter): called after
   # any event that may change which storage container a widget belongs in --
   # the reference tracker's mutations, wire add / un-wire / wire-holder death
@@ -3783,6 +3867,8 @@ class WorldWdgt extends IconGridPanelWdgt
   # storms; the sort itself drains once per cycle in doOneCycle.
   noteStorageMembershipMayHaveChanged: ->
     @storageSorter.noteMembershipMayHaveChanged()
+
+  #: storage
 
   # Is any liveness edge -- a REFERENCE or a declared WIRE (flow), the same two
   # kinds that confer reachability in the storage classifier (graph-edges plan

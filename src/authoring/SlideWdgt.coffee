@@ -3,11 +3,17 @@
 
 class SlideWdgt extends GenericPanelWdgt
 
+  #: printing
+
   colloquialName: ->
     "Slides Maker"
 
+  #: shortcuts
+
   representativeIcon: ->
     new SimpleSlideIconWdgt
+
+  #: docking
 
   # the frame docks this variant in its toolbar-slot (§5.C)
   _buildToolbar: ->

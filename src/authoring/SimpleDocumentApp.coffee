@@ -5,5 +5,7 @@ class SimpleDocumentApp extends WindowedApp
 
   requiredParts: ["authoring"]
 
+  #: launching
+
   buildWindow:  -> world.openFrameWith (new DocumentWdgt), (new Point 370, 395), (new Point 170, 88)
   windowOpened: (wm) -> InfoDocs.createNextTo @constructor.name, wm

@@ -7,6 +7,8 @@
 
 class SliderWdgt extends ControllerWdgt
 
+  #: testing
+
   # Am I a scroll bar my parent presents? I ASK my parent whether it owns me as one (isMyScrollBar,
   # which every host of scroll indicators answers: ScrollIndicatorHostWdgt's), dispatched via ?() so a
   # parent that presents no indicators answers undefined. A content slider -- even one dropped INTO a
@@ -14,6 +16,8 @@ class SliderWdgt extends ControllerWdgt
   # chrome-ness (excludedFromEditorFocusTracking) and my click (activated) ask.
   _isMyParentsScrollBar: ->
     @parent?.isMyScrollBar?(@) is true
+
+  #: event handling
 
   # A slider is editor content when dropped alone (a value control you can select/align), but a
   # host's scroll bar is CHROME: a press on it must neither take the editor focus nor get the
@@ -31,6 +35,8 @@ class SliderWdgt extends ControllerWdgt
   activated: ->
     return if @_isMyParentsScrollBar()
     super
+
+  #: initialization
 
   start: undefined
   stop: undefined
@@ -112,12 +118,16 @@ class SliderWdgt extends ControllerWdgt
     @button = new SliderButtonWdgt
     @_addNoSettle @button
 
+  #: geometry
+
   # My orientation follows my shape: taller than wide is vertical.
   autoOrientation: ->
     if @height() > @width()
       return "vertical"
     else
       return "horizontal"
+
+  #: drawing
 
   # Wear an indicator presentation (my host derives it; see
   # ScrollIndicatorHostWdgt._refreshScrollIndicators).
@@ -146,6 +156,8 @@ class SliderWdgt extends ControllerWdgt
     @_reLayoutSelfAndButton() if @thumbInsetInTrack() isnt insetBefore
     @_fullChanged()
 
+  #: colour roles
+
   # The fill my track wears while I hold no colour of my own (CircleBoxyAppearance._fillColor), read
   # as I am painted: the scroll indicator's track role while I wear an indicator presentation (shown
   # faintly fat, not at all thin: my alpha), else a plain slider's opaque groove. A bar picked up off
@@ -153,6 +165,8 @@ class SliderWdgt extends ControllerWdgt
   _surfaceFill: ->
     theme = WorldWdgt.theme
     if @indicatorMode? then theme.scrollIndicatorTrack else theme.sliderTrack
+
+  #: hit testing
 
   # Am I an indicator the pointer must pass THROUGH? True in every state but 'fat': an indicator
   # is not a target (ruling G3), so a click over a thin bar reaches the content under it.
@@ -164,6 +178,8 @@ class SliderWdgt extends ControllerWdgt
     return false if @indicatorIsIntangible()
     super
 
+  #: event handling
+
   # I am CHROME: a drag that starts on me moves my value — that is the whole of what I am — and
   # nothing competes for it. The hand asks this of a press's ancestry
   # (ActivePointerWdgt._touchPressArmsAtOnce) to know whether a FINGER must press and hold before its
@@ -172,6 +188,8 @@ class SliderWdgt extends ControllerWdgt
   # indicator is intangible (above), so a press only ever reaches me fat or plain. My thumb is
   # covered by ancestry.
   ownsDragsStartingOnMe: -> true
+
+  #: layout
 
   # How far my thumb sits inside my track, read by the thumb's own arrange. A thin indicator
   # paints no track for a thumb to sit inside, so there the thumb fills the bar; every look a
@@ -196,6 +214,8 @@ class SliderWdgt extends ControllerWdgt
     unless @_contentStackSpec?.isContentStackCapable?()
       @_contentStackSpec = new VerticalStackLayoutSpec 0
 
+  #: structure
+
   _reactToBeingAdded: (whereTo, beingDropped) ->
     @_reLayoutSelfAndButton()
     # An indicator presentation is something a HOST of scroll indicators puts on the bar it HOLDS.
@@ -208,6 +228,8 @@ class SliderWdgt extends ControllerWdgt
     @showAsScrollIndicator undefined  unless whereTo.isMyScrollBar? @
     # (My tracking edges are re-declared by the add itself, for me and for every control in a
     # subtree that joins the world with me — see Widget._addNoSettle.)
+
+  #: layout
 
   # Re-lay-out me and my thumb, then repaint -- the couplet every value/geometry change
   # ends with.
@@ -237,6 +259,8 @@ class SliderWdgt extends ControllerWdgt
     @_contentStackSpec = new FrameContentLayoutSpec FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW , FrameContentLayoutSpec.THIS_ONE_I_HAVE_NOW, 0
 
   
+  #: accessing
+
   rangeSize: ->
     @stop - @start
   
@@ -293,6 +317,8 @@ class SliderWdgt extends ControllerWdgt
     if @value != newvalue
       @setValue newvalue
 
+  #: pins and dataflow
+
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
     # a bang is a FORCE-fire (spec §8): mark stale+forced so it propagates despite the equal-value cutoff.
@@ -328,6 +354,8 @@ class SliderWdgt extends ControllerWdgt
     return unless range?
     @_updateSpecs range.start, range.stop, wire.target[pin.getterName](), range.size
 
+  #: testing
+
   # Could I FOLLOW this pin of this target — is there a thumb geometry to derive?
   # (ControllerWdgt._canTrackWire, which asks this of the follower because only the follower knows
   # what it can render.) A scale is what I need and what most targets have no answer for, so this is
@@ -338,13 +366,15 @@ class SliderWdgt extends ControllerWdgt
   _canReflectPin: (theTarget, pin) ->
     return (theTarget.sliderRangeForPin? pin)?
 
+  #: pins and dataflow
+
   # My `value` pin's reader (dataflow spec §9.3), which is also what exportedValue answers because
   # `value` is my principal pin: a slider-valued spreadsheet cell reads as its number, and a
   # reference to that cell yields the number. The duck-typed cluster already probed `x.getValue?()`
   # at the setStart/setStop/setSize call sites; this makes a SliderWdgt answer it on itself too.
   getValue: -> @value
 
-  # SliderWdgt menu:
+  #: menus
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     menu.addLine()
@@ -384,6 +414,8 @@ class SliderWdgt extends ControllerWdgt
   # my value in a bubble, as the value it is (_informOfValue)
   showValue: ->
     @_informOfValue @value
+
+  #: accessing
 
   # Adopt a whole scale at once — the APPLY half of reflectTarget, and a reflect-without-firing (it
   # deliberately does not call updateTarget: I am SHOWING a value, not producing one, so announcing
@@ -426,6 +458,8 @@ class SliderWdgt extends ControllerWdgt
     @updateTarget()
     @_reLayoutSelfAndButton()
   
+  #: event handling
+
   # A track press JUMPS my button to the pointer and drags it from there when my owning context asks
   # for that, and then the press STOPS here; otherwise it goes on up (a slider sitting on a pane lets
   # a press on its track reach the pane).
@@ -441,6 +475,8 @@ class SliderWdgt extends ControllerWdgt
     true
 
 
+  #: accessing
+
   setSize: (size) ->
     if typeof size is "number"
       @size = Math.min Math.max(size, 1), @stop - @start
@@ -455,6 +491,8 @@ class SliderWdgt extends ControllerWdgt
     @_reLayoutSelfAndButton()
   
   
+  #: pins and dataflow
+
   # `value` is my principal pin and the only READABLE one here (getValue -> @value). start/stop/size
   # are write-only for want of readers, not by policy. Each pin states its own kinds, so "a bang takes
   # anything" and "a value takes a number or the string spelling of one" are said once each.

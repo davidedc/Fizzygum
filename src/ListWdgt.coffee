@@ -1,9 +1,13 @@
 class ListWdgt extends ViewportWdgt
 
+  #: printing
+
   # what a person calls me; without it the chain answers my base's "viewport" (my contents panel
   # has no name of its own to lend, ViewportWdgt.colloquialName)
   colloquialName: ->
     "list"
+
+  #: colour roles
 
   # my pane's fill, mine and my plane's (which my rows panel stands on), read as we paint while no
   # builder dresses me otherwise (ViewportWdgt._paneFill)
@@ -21,6 +25,8 @@ class ListWdgt extends ViewportWdgt
   # a list IS its scrolling — cropping an inspector's member list would hide
   # entries with no cue (see ViewportWdgt.offersScrollPolicyToggle)
   offersScrollPolicyToggle: false
+
+  #: testing
 
   # my pane holds the list's own rows machinery (@listContents), not loose scrollable
   # content — so the loose-content policies (drag-scroll-vs-detach, caret follow, the
@@ -55,6 +61,8 @@ class ListWdgt extends ViewportWdgt
   # on, it answers {subject, member, name} or undefined (toOpenInANewInspectorBy). Asked at each ask,
   # never as my rows are built.
   newInspectorQuery: undefined
+
+  #: initialization
 
   # The rows are the operand: every caller supplies them, while target/action are configuration,
   # supplied by a member list (MemberListWdgt) and by an object list (ObjectListWdgt, which reads the
@@ -152,6 +160,8 @@ class ListWdgt extends ViewportWdgt
 
     @contents._addNoSettle @listContents
 
+  #: layout
+
   # A ListWdgt is excluded from the "viewport re-fits its contained stack
   # panel" notification (the old amIPanelOfScrollPanelWdgt returned false for
   # lists): opt OUT so a contained panel re-lays out itself, as before. This
@@ -160,6 +170,8 @@ class ListWdgt extends ViewportWdgt
   # which is exactly why those are kept separate from this notification.
   _reLayOutAfterContainedPanelChange: ->
     undefined
+
+  #: selecting
 
   # A row's click dispatches here with the row itself in slot 1 (ButtonWdgt.trigger); slot 2, the
   # row's subject, is always this list, so it carries nothing and is not taken; slot 3 is the row's
@@ -189,6 +201,8 @@ class ListWdgt extends ViewportWdgt
   rowLabelled: (label) ->
     (row for row in @listContents.children when row.labelString is label)[0]
 
+  #: scrolling
+
   # `row`, one of mine, scrolled WHOLE into my view, the least way: a row above my view's top comes to
   # its top, one below its bottom to its bottom, one already whole in view moves nothing. Vertical
   # only: a member list's rows are as wide as I am (_positionAndResizeChildren), and a plain list's
@@ -207,12 +221,16 @@ class ListWdgt extends ViewportWdgt
       @scrollTo new Point @scrollOffsetX, @scrollOffsetY + (row.bottom() - viewBottom)
     return
 
+  #: event handling
+
   # A row's DOUBLE-click dispatches here, the row again in slot 1 (ButtonWdgt.triggerDoubleClick), and
   # follows the click that selected it: my target's doubleClickAction is run on the row's label and
   # its place, as select hands them.
   openRow: (row) ->
     @target[@doubleClickAction].call @target, row.labelString, row.argumentToAction1
     return
+
+  #: choosing
 
   # WHAT A ROW OF MINE OPENS IN A NEW INSPECTOR (ButtonWdgt.toOpenInANewInspector asks me, the row's
   # target): my target's newInspectorQuery answer for the row's label and its place, the two facts
@@ -222,6 +240,8 @@ class ListWdgt extends ViewportWdgt
   toOpenInANewInspectorBy: (button) ->
     return undefined  unless @newInspectorQuery? and button.action is "select"
     @target[@newInspectorQuery] button.labelString, button.argumentToAction1
+
+  #: layout
 
   # MY MEMBER ROWS ARE AS WIDE AS I AM. At every arrange of mine -- the settle of my build, a resize,
   # a re-fit -- and before my viewport's arrange measures my plane, my rows panel takes my width and

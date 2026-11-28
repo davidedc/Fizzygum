@@ -8,6 +8,8 @@ class MapPinIconWdgt extends IconWdgt
   # the size I have as a tool, which a toolbar builds me at (the rule: SpeechBubbleWdgt's toolExtent)
   toolExtent: new Point 35, 50
 
+  #: initialization
+
   createAppearance: -> new MapPinIconAppearance @
 
   constructor: (@color) ->

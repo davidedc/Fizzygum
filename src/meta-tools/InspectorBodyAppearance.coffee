@@ -22,6 +22,8 @@
 # MemberEditorWdgt).
 class InspectorBodyAppearance extends SeamRulesAppearance
 
+  #: testing
+
   # Do I paint the body under my widget? Exactly while its holder lays none under its parts.
   _paintsTheBody: ->
     !(@widget.parent?.laysTheInspectorBodyUnderItsParts?() is true)
@@ -32,14 +34,20 @@ class InspectorBodyAppearance extends SeamRulesAppearance
   castsOnlyTheBody: (appliedShadow) ->
     appliedShadow? and @widget.alpha == 1 and @_paintsTheBody()
 
+  #: colour roles
+
   # the colour I fill with when I paint the body, read as I paint (Widget.opaqueCoveredRect asks it too)
   _fillColor: ->
     WorldWdgt.theme.inspectorBodyFill
+
+  #: geometry
 
   # what I fill fully opaque: my widget's box while I paint the body, nothing otherwise
   opaqueCoveredRect: ->
     return undefined unless @_paintsTheBody()
     @widget.boundingBox()
+
+  #: drawing
 
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     unless @_paintsTheBody()

@@ -3,15 +3,21 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
 
   category: 'Widgetic-Layouts'
 
+  #: printing
+
   # what a person calls the bar dragged to re-apportion a split
   colloquialName: -> "splitter"
 
+
+  #: hit testing
 
   # I am a grab strip between stacked elements, layoutAdjusterThickness across the split, one flat
   # plate with only my grip dots on it (SplitPieceAppearance): every pixel of that strip has to drag,
   # between the dots as on them, or the divider is unusable.
   catchesPointerAt: (aPoint) ->
     @boundsContainPoint aPoint
+
+  #: initialization
 
   # My division box is layoutAdjusterThickness on both sides: the stack stretches the side along
   # the split (its cross axis), so which side is my thickness follows from the axis I am added on.
@@ -24,12 +30,16 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   # my look: a split's piece, one flat plate (LayoutChromeWdgt.createAppearance)
   createAppearance: -> new SplitPieceAppearance @
 
+  #: layout
+
   # THE AXIS I SPLIT ALONG: my division spec's ('x', across a row's cells; 'y', down a column's), 'x'
   # while I stand in no division stack. Asked by my drag and its solve, my cursor, an inspector's
   # divider's solve (InspectorDividerWdgt), and an inspector building the split button that turns with
   # me (InspectorWdgt._reconcileSplitGripNoSettle).
   splitAxis: ->
     @layoutSpec?.axis ? 'x'
+
+  #: joined piece
 
   # I LEFT THE STACK I DIVIDE -- picked out, attached elsewhere or destroyed -- told by it (an
   # inspector browser's set, InspectorRowWdgt._reactToChildRemoved, or the browser itself,
@@ -45,11 +55,15 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
   _myJoinedPiece: ->
     @joinedPiece  if @joinedPiece?._myJoinedPiece() is @
 
+  #: drag and drop
+
   detachesWhenDragged: ->
     return false
 
   grabsToParentWhenDragged: ->
     return false
+
+  #: event handling
 
   # I am CHROME: a drag that starts on me re-apportions the split I sit in, which is the only thing I
   # am for, and nothing competes for it. The hand asks this of a press's ancestry
@@ -102,6 +116,8 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     # (end-of-cycle-flush-drawdown -- CONVERT)
     split.before._setMaxDimDeferredSettle split.beforeMax
     split.after._setMaxDimDeferredSettle split.afterMax
+
+  #: layout
 
   # THE SPLIT that puts my LEADING EDGE at `targetLeft` (in MY plane, along my division axis): the two
   # division cells flanking me and the max dims the split asks of them, as {before, beforeMax, after,
@@ -208,11 +224,15 @@ class StackElementsSizeAdjustingWdgt extends LayoutChromeWdgt
     else
       {before: leftWidget, beforeMax: (new Point lmdd.x, lmdd.y + delta), after: rightWidget, afterMax: (new Point rmdd.x, rmdd.y - delta)}
 
+  #: event handling
+
   # my hover shows the resize cursor of my axis (LayoutChromeWdgt.hoverEntered): across a row's split,
   # down a column's
   _resizeCursor: ->
     if @splitAxis() == 'x' then "col-resize" else "row-resize"
 
+
+  #: drawing
 
   # MY PLATE'S CORNERS (SplitPieceAppearance): square, ends included -- a divider is a strip from
   # cell to cell, and the tab joined to me meets my edge with no step

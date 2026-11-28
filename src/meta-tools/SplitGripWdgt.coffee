@@ -42,6 +42,8 @@ class SplitGripWdgt extends LayoutChromeWdgt
   @serializationTransients: ["_dragAnchor"]
   @copyTransients: ["_dragAnchor"]
 
+  #: initialization
+
   # `axis` is my identity, my one positional parameter. My box is fixed, my band holding me at my own
   # size: splitButtonWidth along my axis by a chrome target's side across it -- across, 32 wide and 44
   # tall; turned, 44 wide and 32 tall.
@@ -54,9 +56,13 @@ class SplitGripWdgt extends LayoutChromeWdgt
     @__commitExtent extent
     @setMinAndMaxBoundsAndSpreadability extent, extent, 0
 
+  #: testing
+
   # am I TURNED a quarter, splitting heights under a divider that lies across ('y')?
   _isTurned: ->
     @axis is 'y'
+
+  #: layout
 
   # WHERE I STAND DOWN A BAND (BandWdgt._pieceFor asks): turned, I hang from its TOP, so my top meets the
   # divider above my band's inspector with no gap, my band being taller than me; across, I am as tall as
@@ -64,20 +70,29 @@ class SplitGripWdgt extends LayoutChromeWdgt
   crossAlignInABand: ->
     if @_isTurned() then "start" else "center"
 
+  #: initialization
+
   # my look: a split's piece, one flat plate (LayoutChromeWdgt.createAppearance)
   createAppearance: -> new SplitPieceAppearance @
+
+  #: event handling
 
   # I am CHROME, as the divider is: a drag that starts on me sizes what the divider sizes, at once, for
   # a finger as for a mouse (ActivePointerWdgt._touchPressArmsAtOnce), and it never lifts me, nor my
   # inspector, out of where we stand
   ownsDragsStartingOnMe: -> true
+  #: drag and drop
   detachesWhenDragged: -> false
   grabsToParentWhenDragged: -> false
+
+  #: event handling
 
   # my hover shows the cursor my divider shows (LayoutChromeWdgt.hoverEntered): across a column
   # divider's split, down the strip's
   _resizeCursor: ->
     if @_isTurned() then "row-resize" else "col-resize"
+
+  #: joined piece
 
   # the divider I drag: the nearest container of mine that can say (an inspector) says, or none
   _mySplitter: ->
@@ -91,12 +106,16 @@ class SplitGripWdgt extends LayoutChromeWdgt
   _myJoinedPiece: ->
     @joinedPiece  if @joinedPiece? and @_mySplitter() is @joinedPiece
 
+  #: lifecycle
+
   # MY TEARDOWN: the divider joined to me must not name me once I am gone, so I tell it, and we part
   # (LayoutChromeWdgt.joinedPiece's rule), while I am still standing where I stood. In the core, not
   # the public destroy(): a bulk teardown (my inspector's, my window's) recurses core to core.
   _destroyNoSettle: ->
     @joinedPiece?.notePartedFrom @
     super
+
+  #: drawing
 
   # MY PLATE'S CORNERS (SplitPieceAppearance), at layoutChromePlateRadius, in the order top-left,
   # top-right, bottom-right, bottom-left: joined, the two against the divider square, so its edge runs
@@ -133,6 +152,8 @@ class SplitGripWdgt extends LayoutChromeWdgt
       reach = if splitter? then splitter.getDesiredDim().x else 0
       field = new Rectangle (-reach), 0, @width(), @height()
     [field, {mostColumns: most, mostRows: most}]
+
+  #: event handling
 
   # A DRAG ON ME: the divider I drag sizes the cell before it (a column, or the strip of lists), by the
   # seam's solve, the one its own drag asks (InspectorDividerWdgt.nonFloatDragging): my drag's first

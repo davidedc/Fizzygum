@@ -152,6 +152,8 @@ class FrameWdgt extends ClippingWdgt
   # the window is going away -- see the note there.
   _beingFullDestroyed: undefined
 
+  #: title bar
+
   # §4.1 pure measure (Stage D): a window's preferred height-at-width, side-effect-free (no
   # @bounds write, no seam) -- it MIRRORS the steady-state _positionAndResizeChildren WITHOUT
   # mutating anything, so a parent (a stack/scroll holding this window) can MEASURE this window
@@ -274,6 +276,8 @@ class FrameWdgt extends ClippingWdgt
     return true if !dockSpec? or @contents?.collapsed
     (@_bandThicknessUnder dockSpec) > WorldWdgt.theme.barStripThickness
 
+  #: edit mode
+
   # Do I offer my own edit toggle -- the pencil in my strip? When my payload, or I, hold an edit mode
   # (providesAmenitiesForEditing) that can be switched -- not one held FIXED (alwaysInEditMode: a
   # folder window) -- and I am not a docked band (a band's strip is a grip: editing
@@ -291,6 +295,8 @@ class FrameWdgt extends ClippingWdgt
   # (isInEditMode).
   _holdsAnEditMode: ->
     !!(@providesAmenitiesForEditing or @contents?.providesAmenitiesForEditing)
+
+  #: title bar
 
   # The height my window title takes in my strip: the title piece's own line height (a fitted
   # string paints its text at the TOP of the box it is granted, so the box is exactly its text and
@@ -343,6 +349,8 @@ class FrameWdgt extends ClippingWdgt
     return false unless @contents? and !@contents.collapsed
     !!@contents.identifiesItself?()
 
+  #: docking
+
   # The edge spec a HOST handed me, if I am docked in one of its slots; undefined otherwise (a
   # desktop window, a card in a stack, a pop-up). The one place the "am I a band?" question is
   # asked, through the spec family's duck-typed capability query.
@@ -355,6 +363,8 @@ class FrameWdgt extends ClippingWdgt
   # payload asks it to learn whom it works for (ToolbarWdgt.hostWindow).
   dockHost: ->
     @parent if @_myEdgeDockSpec()?
+
+  #: title bar
 
   # The POP-UP row of the same vocabulary: my strip is my header BAND -- inside my border, across
   # my content box (bandInset past the border at both ends, so it spans exactly what my rows
@@ -415,6 +425,8 @@ class FrameWdgt extends ClippingWdgt
     return 0 unless @_barSpec().axis is "vertical"
     @_barSpec().thickness
 
+  #: layout
+
   # ===== my body's edges =====
   # My BODY is what my border encloses, less my strips: my payload and my docked bands lie in it.
   # Its inner edge sits in from my outer edge by my STRIP's thickness on the side my strip runs
@@ -464,6 +476,8 @@ class FrameWdgt extends ClippingWdgt
     return 0 unless aPayload is @contents and @_hostsAPage()
     @_bodyMargin()
 
+  #: drag and drop
+
   # WHO RECEIVES A DROP ON MY BODY -- on a point of it that none of my children covers: my page
   # gutter, my border. While I keep a gutter around a PAGE that room is the page's, so a payload
   # released there goes to the page: to the child my page names as receiving drops around it
@@ -487,6 +501,8 @@ class FrameWdgt extends ClippingWdgt
     return (@contents.receiverOfDropsAroundMe?() ? @contents) if @_hostsAPage()
     return undefined if @contents.isFrame?()
     @contents.dropReceiverForPointsOnMyBody?()
+
+  #: layout
 
   # How far in from my outer TOP my body's inner edge sits: my strip, when it runs across my top
   # (it always spans my border), else my border inset.
@@ -566,6 +582,8 @@ class FrameWdgt extends ClippingWdgt
   _chromeBesidesStripsAcross: (crossAxis) ->
     docks = if crossAxis is "vertical" then @_topDockThickness() + @_bottomDockThickness() else @_leftDockThickness() + @_rightDockThickness()
     2 * (@_borderInset() + @_bodyMargin()) + docks
+
+  #: docking
 
   # ===== the four edge slots' layout terms =====
   # The frames docked at one of my edges THAT COUNT, outermost first: each still my child, its
@@ -657,6 +675,8 @@ class FrameWdgt extends ClippingWdgt
 
   _rightDockThickness: ->
     @_dockThicknessAt "right"
+
+  #: layout
 
   # Frame chrome WIDTH -- everything that is not content width: my body's left and right edges (a
   # strip running down my side is the left one), my body margin past each, and the bands docked
@@ -769,6 +789,8 @@ class FrameWdgt extends ClippingWdgt
     recommendedElementWidth = @contents.contentStackSpec().getWidthInStack availW - chromeWidth
     @contents.preferredExtentForWidth(recommendedElementWidth).y
 
+  #: initialization
+
   # `contents` (the widget this window wraps) is the one meaningful argument; every call site
   # passes only it. closeButton is optional, supplied via the opts object (FolderWindowWdgt
   # injects its own). The former `internal` / `alwaysShowInternalExternalButton`
@@ -829,6 +851,8 @@ class FrameWdgt extends ClippingWdgt
     else
       new Point 300, 300
 
+  #: layout
+
   # SIZE ME TO MY PAYLOAD -- the one derivation a free-floating home with a self-measuring payload
   # uses instead of a number from its opener (owner ruling: a floating toolbar hugs its cells, one
   # criterion for every toolbar). The payload names its own box within the ROOM I have left, which
@@ -857,6 +881,8 @@ class FrameWdgt extends ClippingWdgt
     theme = WorldWdgt.theme
     theme.frameBorderWidth + theme.frameBodyMargin
 
+
+  #: shortcuts
 
   # in general, windows just create a reference of themselves and
   # that is it. However, windows containing a ScriptWdgt create
@@ -887,6 +913,8 @@ class FrameWdgt extends ClippingWdgt
   _buildShortcutWidget: (referenceName, opts) ->
     @contents?.specialFrameReferenceShortcut?(@, referenceName, opts) ? super referenceName, opts
 
+
+  #: testing
 
   # A window is "internal" -- drawn with the flat, embedded title-bar skin and called an
   # "internal window" -- exactly when it is NESTED inside a real container: its parent is
@@ -920,6 +948,8 @@ class FrameWdgt extends ClippingWdgt
   # a top-level window is focused, never selected.
   isTopLevelWindow: ->
     @isPersistent() and @_parentThroughIslands() is world
+
+  #: title
 
   # The window title a (re)mounted content yields -- ONE home for the ctor and
   # _addNoSettle title sites. A framed CITIZEN (a FrameWdgt subclass that IS its
@@ -999,11 +1029,15 @@ class FrameWdgt extends ClippingWdgt
     @label._setTextNoSettle newTitle
     @bar?._invalidateLayout() unless @label.text is titleBefore and @label.displayCase is caseBefore
 
+  #: shortcuts
+
   representativeIcon: ->
     if @contents == @defaultContents
       return super
     else
       return @contents.representativeIcon()
+
+  #: lifecycle
 
   # The close-from-bar POLICY (Frame-model plan §5.E E2): a tracked field replaces
   # the per-instance `closeFromFrameBar = -> …` monkey-patches the sample/info
@@ -1028,6 +1062,8 @@ class FrameWdgt extends ClippingWdgt
   _closeFromFrameBarWhenSaveOrAsk: ->
     @contents?.closeFromContainerFrame @
 
+  #: title bar
+
   # The title-bar buttons announce their press to their holder (the bar, which
   # forwards here) instead of testing `@parent instanceof FrameWdgt` themselves
   # -- the frame owns what its bar buttons MEAN. closeButtonInBarPressed mirrors
@@ -1046,6 +1082,8 @@ class FrameWdgt extends ClippingWdgt
 
   uncollapseButtonInBarPressed: ->
     @contents.unCollapse()
+
+  #: layout
 
   # duringReInflation: true ONLY for the one synchronous re-fit inside _reactToChildUnCollapsed --
   # the content must KEEP its just-restored extent instead of being stretched to a mid-restore
@@ -1076,6 +1114,8 @@ class FrameWdgt extends ClippingWdgt
     return false
 
 
+  #: drag and drop
+
   # A FRAME is the DELIBERATE-EMBED payload class (drag-embed spec §4): dropping one into a container
   # must be armed by a dwell (spec §6), so a frame is never nested by accident during the constant
   # move-a-window gesture. (Overrides Widget's plain default.)
@@ -1098,6 +1138,8 @@ class FrameWdgt extends ClippingWdgt
   releasesRatioConstraintOnGrabbedChildren: ->
     true
 
+  #: title
+
   # Re-title the (content-less) window through the NON-settling label core (hence the NoSettle
   # name): reached either during construction (orphan -> deferred) or from _resetToDefaultContents
   # once my contents has left me, inside the settle of the verb that took it, which flushes it -- a
@@ -1110,6 +1152,8 @@ class FrameWdgt extends ClippingWdgt
       @_retitleNoSettle "empty internal window"
     else
       @_retitleNoSettle "empty window"
+
+  #: testing
 
   # Polymorphic replacement for `instanceof FrameWdgt`: lets Widget / the smart-placer
   # ask "are you a window?" without naming this subclass. Defined ONLY here -- there is NO
@@ -1126,6 +1170,8 @@ class FrameWdgt extends ClippingWdgt
   isMyContents: (aWdgt) ->
     aWdgt is @contents
 
+  #: printing
+
   colloquialName: ->
     if @isInternal()
       return "internal window"
@@ -1141,6 +1187,8 @@ class FrameWdgt extends ClippingWdgt
     title = @label.transformTextOneToOne @label.text
     return undefined if @colloquialName().toLowerCase().includes title.toLowerCase()
     title
+
+  #: layout
 
   # The re-fit chokepoint (the `_reLayoutChildren?` size-tracking marker keys off this
   # definition): re-fit chrome + content via the frame's own arrange below.
@@ -1191,6 +1239,8 @@ class FrameWdgt extends ClippingWdgt
   # a stack, whose synchronous re-lay keeps its container-assigned width.
   _reLayoutMayResizeOwnWidth: ->
     @isFreeFloating() and !@contents?.contentStackSpec()?.desiredWidth?
+
+  #: structure
 
   # _addNoSettle -- the non-settling core of add(): Widget.add, the one public settle wrapper,
   # reaches it by late binding. Folds in the frame's content bookkeeping (title, @contents
@@ -1261,6 +1311,8 @@ class FrameWdgt extends ClippingWdgt
       super aWdgt, opts
     @resizer?._moveInFrontOfSiblings()
 
+  #: notifications
+
   # (A2a, was inherited from the stack) membership-change re-fit -- same
   # absorb-or-refit contract as the inline in _reactToChildDropped below.
   #   A departing BAND frees its slot here, leaving its side's list (the bands inward of it close
@@ -1303,6 +1355,8 @@ class FrameWdgt extends ClippingWdgt
     return if @parent?._reLayOutAfterContainedPanelChange?()
     @_reFitContainer()
 
+  #: docking
+
   # Forget a band, wherever it went (dragged out, destroyed, re-docked elsewhere): it leaves the list
   # of the side that held it, and the others keep their order.
   _freeDockSlotOf: (child) ->
@@ -1310,6 +1364,8 @@ class FrameWdgt extends ClippingWdgt
     for side in FrameWdgt.DOCK_SIDES
       @dockedFrames[side] = (each for each in @dockedFrames[side] when each isnt child)
     return
+
+  #: visibility
 
   _beforeChildCollapsed: (child) ->
     if child == @contents
@@ -1339,6 +1395,8 @@ class FrameWdgt extends ClippingWdgt
     return unless @desiredExtent? and @contents?.collapsed
     @barsOwnWidth = @desiredExtent.x
     @desiredExtent = new Point @desiredExtent.x, @height()
+
+  #: handles
 
   # Do I offer a resize grip right now? Not while a host places me, seen through the transform islands
   # I am the sole content of (_enclosingIslandFigure): tilted or scaled, I float free inside my island,
@@ -1452,6 +1510,8 @@ class FrameWdgt extends ClippingWdgt
       return
     visit @contents if @contents?
 
+  #: notifications
+
   _reactToChildCollapsed: (child) ->
     if child == @contents
       # a collapsed window is JUST its titlebar, so its bands are gone with its body
@@ -1484,6 +1544,8 @@ class FrameWdgt extends ClippingWdgt
       @_rememberFractionalSituationInHoldingPanel()
       @_invalidateLayout()   # (property sub-seam deletion) uniform climb replaces the property re-fit seam
       @parent.parent._invalidateLayout() if @_amIDirectlyInsideNonTextWrappingViewport()   # (proper-layouts) reach the viewport grandparent; the window's bare climb is dropped at the non-tracking @contents PanelWdgt
+
+  #: docking
 
   # ===== the slots' occupants =====
 
@@ -1778,6 +1840,8 @@ class FrameWdgt extends ClippingWdgt
       payloads.push dockedFrame.contents if dockedFrame.parent is @ and dockedFrame.contents?
     payloads
 
+  #: accessing
+
   # THE ONE WRITE of the tool I hold (armedDrawingTool above), the User's twin: it only states the
   # fact, and IDEMPOTENTLY -- holding what I already hold changes nothing and tells no one. After a
   # real change each payload I wear is told its tools' states may have moved (noteToolStatesChanged,
@@ -1790,6 +1854,8 @@ class FrameWdgt extends ClippingWdgt
     for eachPayload in @dockedPayloads()
       eachPayload.noteToolStatesChanged?()
     return
+
+  #: docking
 
   # Build my content's toolbar variant and dock it, framed, at the side the variant asks for, joining
   # the bands that side holds. A framed CITIZEN declares its kind's variant itself (_buildToolbar,
@@ -1810,6 +1876,8 @@ class FrameWdgt extends ClippingWdgt
     # (bandBoxIfDocked) builds one too
     band.layoutSpec.broughtByContent = true
     return
+
+  #: menus
 
   # The frame's own context-menu entries (on top of the generic Widget set), DELIBERATELY menu
   # entries, never bar buttons (owner ruling D9, Frame-model plan §5.C: don't spend bar space on
@@ -1864,6 +1932,8 @@ class FrameWdgt extends ClippingWdgt
     for side in FrameWdgt.DOCK_SIDES
       menu.addMenuItem (CommandPanelWdgt.rowLabelOfValue side), @, "addToolbarAtSide", arg1: side
     menu.popUpAtHand()
+
+  #: docking
 
   # Move me to another of my host's slots. A dock IS a placement, so re-siding is an edit to the
   # spec that places me -- the same frame, the same payload, a different edge. I leave my side's
@@ -1923,6 +1993,8 @@ class FrameWdgt extends ClippingWdgt
     @_applyMoveTo payloadPosition.subtract @_payloadOffset()
     @_moveWithin world
 
+  #: drag and drop
+
   # LIFTED OUT OF A DOCK SLOT by my grip: the band's look goes (Widget._beforeBeingGrabbed drops my
   # edge spec) and a window's comes, whose bar runs across my top where the band's ran down my side.
   # Kept at my outer size, a top or bottom band would hand its payload the bar's height out of its
@@ -1939,6 +2011,8 @@ class FrameWdgt extends ClippingWdgt
     @_liftedAsTheOwnBandOf = @parent  if dockSpec?.broughtByContent
     super()
 
+  #: layout
+
   # My extent around a payload of `payloadExtent`, in the chrome I wear NOW: read off the mounted
   # content's own spec, the one home the measure and the arrange share, no literals. Both ways out of
   # a dock slot re-wrap with it (floatOutOfDock and a grab of my grip), so the two cannot disagree.
@@ -1947,6 +2021,8 @@ class FrameWdgt extends ClippingWdgt
   # whatever my chrome measures).
   extentWrappingPayloadAt: (payloadExtent) ->
     payloadExtent.add new Point @_chromeWidth(), @_chromeHeight()
+
+  #: lifecycle
 
   # Consulted where I hear my contents leave (_reactToChildRemoved: a mid-teardown rebuild
   # strands fresh chrome on already-destroyed parts of me) and by a framed CITIZEN's
@@ -1959,6 +2035,8 @@ class FrameWdgt extends ClippingWdgt
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true
     super
+
+  #: structure
 
   # SHOW MY DEFAULT CONTENT AGAIN, my contents having left me: the placeholder, titled as an empty
   # window, drops accepted again. Every band I wear stays, in its list, alive: a plain window docks
@@ -1981,6 +2059,8 @@ class FrameWdgt extends ClippingWdgt
     # public self-settler.
     @_buildAndConnectChildrenNoSettle()
     @_setEmptyWindowLabelNoSettle()
+
+  #: drag and drop
 
   _beforeChildDropped: (child) ->
     @removeChild @contents
@@ -2015,6 +2095,8 @@ class FrameWdgt extends ClippingWdgt
       @_setExtentNoSettle @extentWrappingPayloadAt @_payloadExtentInTheBand
       @_payloadExtentInTheBand = undefined
 
+  #: menus
+
   # ===== the transient policy: registries, dismissal, pinning =====
 
   hierarchyOfPopUps: ->
@@ -2038,6 +2120,8 @@ class FrameWdgt extends ClippingWdgt
     world.popUpsMarkedForClosure.add @
     @isPopUpMarkedForClosure = true
 
+  #: lifetime
+
   # "Am I furniture?" — the persistent half of the lifetime state, under the name the rows
   # (CommandPanelWdgt.wantsDetachOfChild), the shadow policy and the close policy ask by.
   #   This and its transient twin below are the ONLY readers of the lifetime field: every branch
@@ -2057,6 +2141,8 @@ class FrameWdgt extends ClippingWdgt
   isTransientPopUp: ->
     @lifetime is 'transient'
 
+  #: menus
+
   getParentPopUp: ->
     if @isPersistent()
       return @parent
@@ -2065,6 +2151,8 @@ class FrameWdgt extends ClippingWdgt
         return @widgetOpeningThePopUp.enclosingFrame()
     return undefined
 
+  #: structure
+
   # The climb STOPS AT ME (the base walks on to the root): I am the pop-up my subtree belongs
   # to — the rows that ask whether they may be lifted, the hand's dismissal sweep and my own
   # rows viewport's re-hug all mean ME. A frame MARKED for closure is on its way out, so the
@@ -2072,6 +2160,8 @@ class FrameWdgt extends ClippingWdgt
   enclosingFrame: ->
     if !@isPopUpMarkedForClosure or !@parent? then return @
     return @parent.enclosingFrame()
+
+  #: lifetime
 
   # The public, self-settling half of the lifetime state (the core below does the work).
   setLifetime: (aLifetime) ->
@@ -2130,6 +2220,8 @@ class FrameWdgt extends ClippingWdgt
     pinMenuItem.enclosingFrame().propagateKillPopUps()
     world.closePopUpsMarkedForClosure()
 
+  #: drawing
+
   # Pinning changes what my ROWS draw: a command row in a pinned menu wears a grip, because
   # being pinned is what makes it liftable (ButtonWdgt.isDetachablePayloadOfMyParent →
   # CommandPanelWdgt.wantsDetachOfChild). That is a fact about ME which they read, so nothing
@@ -2175,6 +2267,8 @@ class FrameWdgt extends ClippingWdgt
   _reCastRestingShadow: ->
     figure = @_enclosingIslandFigure()
     figure.addShadow() if figure.parent is world
+
+  #: pop ups
 
   # ALWAYS-ON invariant, in the family of Widget._assertBoundsWellFormed: a pop-up bigger
   # than the world is a pop-up with rows nothing can click. It needs a guard of its own
@@ -2237,6 +2331,8 @@ class FrameWdgt extends ClippingWdgt
     # already set the dedup flag, so no trailing repaint call is needed here.)
     @addShadow()
 
+  #: lifecycle
+
   # ===== teardown =====
 
   # Leaving the open set belongs in the CORE, beside the _closeNoSettle half below: bulk teardown
@@ -2265,6 +2361,8 @@ class FrameWdgt extends ClippingWdgt
     else
       @_fullDestroyNoSettle()
 
+  #: copying and serialization
+
   # A duplicate is born furniture: nobody is mid-gesture with a copy, so it must not evaporate on
   # the next click (SystemTest_macroDuplicatedMenuAutoPinsOnDesktop asserts exactly that).
   # The state is written directly rather than through the lifetime entry: the copy is a fresh ORPHAN,
@@ -2289,6 +2387,8 @@ class FrameWdgt extends ClippingWdgt
       copiedWidget.rowsViewport?._reLayOutAfterContainedPanelChange()
     return copiedWidget
 
+  #: structure
+
   # My whole skin follows my nesting (isInternal, derived from parentage), so it is re-derived
   # (_deriveAndSetSkin) whenever I land in a new home: a container makes me a card, the desktop a
   # window. Drag-drop and a programmatic add both route through here after the reparent, so a
@@ -2306,6 +2406,8 @@ class FrameWdgt extends ClippingWdgt
     # moved into a transform island, I cast my shadow through it: a tilt homes the island EMPTY on
     # the desktop before I move in, so the shadow it took there names no look of mine yet
     @_reCastRestingShadow() if @_enclosingIslandFigure() isnt @
+
+  #: notifications
 
   _reactToChildDropped: (theWidget) ->
     # a band that just landed in one of my slots is a payload I HOLD: it does not become my content
@@ -2328,6 +2430,8 @@ class FrameWdgt extends ClippingWdgt
     # (not the public _buildAndConnectChildren wrapper, which would re-enter the flush guard) -- same
     # as the _resetToDefaultContents lifecycle path above.
     @_buildAndConnectChildrenNoSettle()
+
+  #: drawing
 
   # MY LOOK: every value my skin wears, as ONE plain record -- the one place a frame's look is
   # decided. My body (_deriveAndSetBodyAppearance), my strip (FrameBarWdgt: its background's build,
@@ -2523,6 +2627,8 @@ class FrameWdgt extends ClippingWdgt
     @_reCastRestingShadow()
     @_changed()
 
+  #: geometry
+
   # ===== the ROUNDED CHILD CLIP (redesign plan §3a option (a), spikes S1b/S1c) =====
   # My LOOK decides it (_frameLook's bodyClipsChildrenToOutline, set on my body's appearance as its
   # clipsChildrenToOutline knob): every rounded frame -- a window, a card, a docked band, a menu or a
@@ -2566,6 +2672,8 @@ class FrameWdgt extends ClippingWdgt
     regionOrigin = @position().add @_payloadOffset()
     regionCorner = regionOrigin.add new Point @width() - @_chromeWidth(), @height() - @_chromeHeight()
     clipSoFar.intersect new Rectangle regionOrigin, regionCorner
+
+  #: drawing
 
   # ===== my page's SELECTION RING, in my page gutter (window-page-gutter plan D3, D8) =====
   # While I keep a gutter around a PAGE, the editor-selection ring of my page lies OUTSIDE the page,
@@ -2661,6 +2769,8 @@ class FrameWdgt extends ClippingWdgt
       radii, theme.selectionOutline, false
     aContext.restore()
 
+  #: initialization
+
   # ONE settle around the whole rebuild via the single-mutation tier (_settleLayoutsAfter). The
   # core is non-settling: it adds the bar (whose pieces build through the bar's own non-settling
   # core) AND the content through @_addNoSettle, so nothing self-settles per add and nothing
@@ -2716,6 +2826,8 @@ class FrameWdgt extends ClippingWdgt
       @_addNoSettle resizer, layoutSpec: resizer.defaultLayoutSpecWhenAddedTo(@)
       @resizer = resizer
 
+  #: title bar
+
   # My bar's roster follows my ATTACHMENT (a host that owns my placement owns my membership,
   # so a host-owned frame carries no close piece -- ruling C6) and my LIFETIME (a menu wears the
   # title-only strip, furniture the window strip -- ruling C4), so it is re-derived wherever either
@@ -2756,6 +2868,8 @@ class FrameWdgt extends ClippingWdgt
     else
       @_invalidateLayout()
 
+  #: layout
+
   # A spec that OWNS my placement makes me host-owned, which is exactly what my bar's roster
   # (and the resize handle's visibility, in the base) turns on.
   #   THE PRINCIPLE: deriving the roster CONSTRUCTS a gained piece, and a widget constructor
@@ -2778,6 +2892,8 @@ class FrameWdgt extends ClippingWdgt
       @_reDeriveBarRosterNoSettle()
       return
     @_invalidateLayout() if @bar?._rosterDisagreesWithSpec()
+
+  #: edit mode
 
   # Reflect the content's edit/view mode in the title-bar edit-mode toggle, whose knob
   # stands under the icon of the current mode (pencil = editing now, eye = viewing now);
@@ -2844,6 +2960,8 @@ class FrameWdgt extends ClippingWdgt
         @showEditModeInBar()
       else
         @showViewModeInBar()
+
+  #: layout
 
   # (A2a, was inherited from the stack) when THIS frame is another frame's CONTENT (a
   # window nested in a window), its spec pins canSetHeightFreely = false on top of the

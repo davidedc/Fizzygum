@@ -5,11 +5,15 @@ class GraphsPlotsChartsWdgt extends RatioLockedWdgt
   # PRNG seed for the sample data, set by each Example*PlotWdgt subclass
   seed: undefined
 
+  #: initialization
+
   constructor: (@drawOnlyPartOfBoundingRect)->
     super()
     @appearance = new GraphsPlotsChartsAppearance @
     @_applyExtent new Point 200, 200
     world.steppingWdgts.add @
+
+  #: lifecycle
 
   # true while a SystemTest replays (aTestIsPlaying) -- animated widgets must then render a FIXED,
   # deterministic frame (mirrors AnalogClockAppearance._calculateHandsAngles, which pins
@@ -28,6 +32,8 @@ class GraphsPlotsChartsWdgt extends RatioLockedWdgt
     @_changed()
 
 
+  #: plot data
+
   # see https://stackoverflow.com/a/19303725
   seededRandom: ->
     x = Math.sin(@seed++) * 10000
@@ -44,6 +50,8 @@ class GraphsPlotsChartsWdgt extends RatioLockedWdgt
     while v == 0
       v = @seededRandom()
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
+
+  #: drawing
 
   simpleShadow: (context, appliedShadow) ->
 

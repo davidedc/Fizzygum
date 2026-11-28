@@ -12,6 +12,8 @@ class IconGridPanelWdgt extends PanelWdgt
   laysIconsHorizontallyInGrid: true
   iconsLayingInGridWrapCount: 3
 
+  #: structure
+
   # the options ride through to Widget.add untouched (bare super forwards all
   # arguments), so a plain payload lands free-floating via Widget.add's own defaulting.
   add: (aWdgt, opts = {}) ->
@@ -21,6 +23,8 @@ class IconGridPanelWdgt extends PanelWdgt
     # then automatic grid positioning is better: my next free slot (an add
     # of anything that takes no part in my grid leaves it where it is).
     @_placeIconInNextFreeSlotNoSettle aWdgt unless opts.beingDropped
+
+  #: layout
 
   # THE ONE PLACEMENT RULE of my icon grid: `aWdgt`, an icon of mine just made or just moved in,
   # goes to my NEXT FREE SLOT -- the first slot, in my grid's own order (_iconSlotTopLeft), whose
@@ -75,6 +79,8 @@ class IconGridPanelWdgt extends PanelWdgt
     origin = theme.desktopIconGridOrigin
     new Point 2 * origin.x + columns * theme.desktopIconCellWidth + (columns - 1) * theme.desktopIconColumnGap,
       2 * origin.y + rows * theme.desktopIconHeight + (rows - 1) * theme.desktopIconRowGap
+
+  #: notifications
 
   # keeps folders and shortcuts and scripts in the background in respect
   # to other windows and widgets.

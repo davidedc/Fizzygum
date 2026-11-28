@@ -49,6 +49,8 @@ class BandWdgt extends Widget
   # my height, my rule included: what my box pins, and how tall my gaps and my spring stand
   bandHeight: undefined
 
+  #: initialization
+
   # `height` and `items` are my identity; opts.rule names the edge my rule lies along
   constructor: (height, items, opts = {}) ->
     super()
@@ -80,6 +82,8 @@ class BandWdgt extends Widget
       @_addNoSettle piece, layoutSpec: piece.divisionBox()
     @_invalidateLayout()
 
+  #: structure
+
   # MY LEAD AGAIN: every piece of mine before `piece` taken away (destroyed), and the pieces `items`
   # write put in their place, before it, each made as my build makes it. A holder re-leads me with it
   # (an inspector's header, which opens with a split button exactly while a splitter stands before
@@ -95,6 +99,8 @@ class BandWdgt extends Widget
       lead = @_pieceFor item
       @_addNoSettle lead, atIndex: i, layoutSpec: lead.divisionBox()
     return
+
+  #: layout
 
   # the piece an item makes: a gap or a spring for a number or SPRING; for a widget, a control fixed
   # at its own size; for a text that gives, that text as my spring, at its box's least width and its
@@ -114,6 +120,8 @@ class BandWdgt extends Widget
       piece.setMinAndMaxBoundsAndSpreadability extent, extent, 0
     piece.divisionBox()._setCrossAlignNoSettle (piece.crossAlignInABand?() ? "center")
     piece
+
+  #: drawing
 
   # My one seam: my rule, inside my height, along my ruleEdge (none without one).
   _seamRects: ->

@@ -20,6 +20,8 @@ class Example3DPlotWdgt extends Widget
   # so to show interactive graph/plot
   parameterValue: 0
 
+  #: initialization
+
   constructor: ->
     super()
     @appearance = new Example3DPlotAppearance @
@@ -41,8 +43,12 @@ class Example3DPlotWdgt extends Widget
 
     @step()
 
+  #: printing
+
   colloquialName: ->
     "3D plot"
+
+  #: pins and dataflow
 
   setParameter: (parameterValue, ignored) ->
     @parameterValue = parameterValue
@@ -55,6 +61,8 @@ class Example3DPlotWdgt extends Widget
   # (width/height/alpha/padding and the appearance's). Dropping the chain here silently narrows a
   # plot to a single pin, which is a failure that looks exactly like a deliberate declaration.
   pins: -> super().concat [ new PinSpec "param", "numerical", set: "setParameter" ]
+
+  #: drag and drop
 
   # ---------------------------------------------------------------
   # Outside of a stack, the plot can take any dimension.
@@ -114,6 +122,8 @@ class Example3DPlotWdgt extends Widget
         @parent._applyMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
         @parent._moveWithin world
 
+  #: layout
+
   _setWidthSizeHeightAccordingly: (newWidth) ->
     if @ratio?
       @_applyExtent new Point newWidth, Math.round(newWidth / @ratio)
@@ -129,6 +139,7 @@ class Example3DPlotWdgt extends Widget
       new Point availW, Math.round(availW / @ratio)
     else
       super
+  #: lifecycle
   # -----------------------------------------------------------------
 
   step: ->
@@ -141,6 +152,8 @@ class Example3DPlotWdgt extends Widget
     @_calculateNewPlotValues()
 
   
+  #: plot data
+
   # TODO seems like in a plot and a grid like these
   # one could really reuse past vertices and just modify them
   # and avoid aaaaaall these constructions every time
@@ -172,6 +185,8 @@ class Example3DPlotWdgt extends Widget
 
     @_changed()
 
+  #: event handling
+
   # Spinning the plot is a DRAG across it, so only the pressed move channel reaches me; the
   # button is the fact that says which drag, and only the primary one spins. That channel reaches
   # whatever the pointer is over, whoever's press it is, so only a press that began on ME spins me.
@@ -202,6 +217,8 @@ class Example3DPlotWdgt extends Widget
   # that wandered off me and may come back): that press's ending is what starts it.
   hoverExited: ->
     @autoRotate = true unless @_lastPressedPoint?
+
+  #: drawing
 
   # the drawing tail: the PUBLIC per-plot body Example3DPlotAppearance dispatches to
   # (the plot family's drawPlot precedent)

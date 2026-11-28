@@ -19,6 +19,8 @@ class ToolbarsApp extends WindowedApp
   optionalParts: ["maps", "plots"]
 
 
+  #: launching
+
   buildWindow: ->
     world.openFrameHuggingPayload (new SuperToolbarWdgt), (new Point 170, 170)
 

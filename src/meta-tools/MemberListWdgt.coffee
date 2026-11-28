@@ -96,6 +96,8 @@ class MemberListWdgt extends Widget
     square = new Point side, side
     list.setMinAndMaxBoundsAndSpreadability square, square, DivisionStackLayoutSpec.SPREADABILITY_SPACERS
 
+  #: initialization
+
   # The subject is my identity, my one positional parameter. My own division box takes my
   # inspector's slack: its most size is large, while my least and desired sizes are my bands' and my
   # list's, which the stack derives.
@@ -105,6 +107,8 @@ class MemberListWdgt extends Widget
     @setMinAndMaxBoundsAndSpreadability (new Point 1, 1), (new Point 1, 1), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
     @_buildAndConnectChildren()
 
+  #: drawing
+
   # MY SHADOW IS THE BODY'S BOX, my parts' silhouettes left out, while I paint the body
   # (InspectorBodyAppearance.castsOnlyTheBody says when, and its header why); otherwise my base's pass.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
@@ -112,6 +116,8 @@ class MemberListWdgt extends Widget
       @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     else
       super
+
+  #: initialization
 
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled). Built once, at construction: a filter change or a member add / duplicate / rename /
@@ -158,6 +164,8 @@ class MemberListWdgt extends Widget
   _addCellNoSettle: (cell) ->
     @_addNoSettle cell, layoutSpec: cell.divisionBox('y')
 
+  #: verbs
+
   # MY VERBS (my verbs band's protocol, ListVerbsBandWdgt): the TABLE of the verbs I offer, each the
   # name of my method that performs it and the words that say it -- all four while my subject's members
   # are edited (MemberRef.canEdit), none otherwise, and then I have no band. A subject whose members no
@@ -203,6 +211,8 @@ class MemberListWdgt extends Widget
       each.verbsBand?.reflectVerbs()  if each.inspectedObject is holder
     return
 
+  #: filtering
+
   # My toggles' ACTIONS, one per toggle (a toggle hands itself in slot 1; none of them needs it).
   # Each flips the filter field its toggle stands for and re-filters me, in ONE settle: the field is
   # the filter's truth, and the re-filter shows every toggle its field (_reflectFiltersOnToggles).
@@ -231,6 +241,8 @@ class MemberListWdgt extends Widget
       @showingOwnPropsOnly = !@showingOwnPropsOnly
       @_refilterMembersNoSettle()
     InspectorBrowserWdgt.showChoice @, undefined
+
+  #: listing
 
   # My subject's ITEMS -- an INDEXED subject's: an Array's (a subclass's too), a typed array's (a buffer
   # view with a length; a DataView has none), a string's -- the first MOST_ITEMS_LISTED of them in index
@@ -262,12 +274,16 @@ class MemberListWdgt extends Widget
   @_isAnIndex: (name) ->
     /^(0|[1-9]\d*)$/.test(name) and Number(name) < 4294967295
 
+  #: testing
+
   # Duplicate, rename and remove act only on a member my member reference can act on: one my subject
   # OWNS, and never `constructor` (MemberRef.canBeRenamedOrRemoved says why). Nor on anything, while
   # my subject's members are edited by no step (MemberRef.canEdit).
   _selectedMemberCanBeRenamedOrRemoved: ->
     name = @_selectedMemberName()
     name? and (MemberRef.canEdit @inspectedObject) and MemberRef.of(@inspectedObject, name).canBeRenamedOrRemoved()
+
+  #: choosing
 
   # THE MEMBER A LABEL OF MY LIST NAMES, or undefined: a label that names no member of my subject is
   # no member, and nothing of mine chooses it or acts on it. My list's rows are my subject's members
@@ -285,6 +301,8 @@ class MemberListWdgt extends Widget
   # the member my list's selected row names, or undefined: none selected, or the placeholder
   _selectedMemberName: ->
     @_memberNamedBy @list?.selected?.labelString
+
+  #: filtering
 
   # My toggles show my filter: each is ON exactly while the showing* field it stands for is true.
   # The build and every re-filter end here, and nothing else sets a toggle of mine, so a toggle and
@@ -310,12 +328,16 @@ class MemberListWdgt extends Widget
     @_reflectFiltersOnToggles()
     @_invalidateLayout()
 
+  #: listing
+
   # MY LIST READ AGAIN, as my inspector asks when its chooser's lit toggle, mine, is pressed
   # (InspectorWdgt._showViewNoSettle): a re-filter, keeping my filter as it stands. The name every view
   # a chooser offers answers (ObjectListWdgt's derives its list again). A core: my inspector calls it
   # inside its switch's settle.
   _rereadNoSettle: ->
     @_refilterMembersNoSettle()
+
+  #: filtering
 
   # The names of the members my filter lets through, in the order my list shows them. It starts
   # from every enumerable property of my subject and of its whole prototype chain (a Fizzygum
@@ -355,6 +377,8 @@ class MemberListWdgt extends Widget
     items = items.filter((i) => !Utils.isFunction @inspectedObject[i]) if !@showingMethods
     items = items.filter((i) => Utils.isFunction @inspectedObject[i]) if !@showingFields
     items.concat attribs
+
+  #: listing
 
   # My member LIST, built from the names my filter lets through (_filteredMemberNames) and added to
   # me as the element after my toggles band. The build makes the first one; a re-filter makes it again:
@@ -403,6 +427,8 @@ class MemberListWdgt extends Widget
   _subjectsClassPrototype: ->
     classPrototype = @inspectedObject?.constructor?.prototype
     classPrototype if classPrototype? and typeof classPrototype is "object"
+
+  #: choosing
 
   # A CLICK on a member row (ListWdgt.select hands me its member's name, my list's selection already
   # moved to that row): my verbs follow the selection, and the member is my CHOICE -- the
@@ -485,6 +511,8 @@ class MemberListWdgt extends Widget
     @list?.clearSelection()
     @verbsBand?.reflectVerbs()
     return
+
+  #: member editing
 
   # MY EDITS. Each of my four edit gestures -- Add…, Duplicate…, Rename…, Remove -- is one STEP of my
   # member's reference (MemberRef.of: its add, duplicate, rename and remove), which makes the edit,

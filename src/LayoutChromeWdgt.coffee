@@ -49,6 +49,8 @@ class LayoutChromeWdgt extends Widget
   @serializationTransients: ["joinedPiece"]
   @copyTransients: ["joinedPiece"]
 
+  #: initialization
+
   # MY POINTER STATE is the hand's, as a handle's is (HandleWdgt), asked as I am painted and kept
   # nowhere (_plateFillForMyState): pressed while the hand presses me (ActivePointerWdgt.pressesOn)
   # where a press shows on my plate (_showsPressOnMyPlate), hovered while the pointer rests on me
@@ -64,6 +66,8 @@ class LayoutChromeWdgt extends Widget
   # reskins by overriding it (widget-authoring guidelines §5): a split's adjuster and its button
   # wear a split's piece.
   createAppearance: -> new LayoutChromeAppearance @
+
+  #: event handling
 
   # Layout-editing CHROME (the spacer, the element adder/droplet, the stack-size adjuster / divider) is
   # never editor content (§5.D D-3/D21). Clicking or dragging one to reshape a layout must NOT make it
@@ -85,10 +89,14 @@ class LayoutChromeWdgt extends Widget
       return false
     super
 
+  #: menus
+
   # A divider IS a division cell, and the adder/droplet/spacer carry division boxes too, but each box is
   # machinery working state, not a user knob: I offer no division-cell submenu
   # (Widget._addMyDivisionCellMenuEntries).
   _addMyDivisionCellMenuEntries: (widgetOpeningThePopUp, menu) ->
+
+  #: drawing
 
   # THE GLYPH ON MY PLATE, which my appearance paints centred over it in the normal pass: [the
   # size-aware icon appearance that draws it, in layoutChromeGlyph, and the side of its square], or []
@@ -99,6 +107,8 @@ class LayoutChromeWdgt extends Widget
   # Whether a press on me shows on my plate: it does on what a press acts on (an adder adds a slot, an
   # adjuster drags its split); a spacer answers no.
   _showsPressOnMyPlate: -> true
+
+  #: notifications
 
   # The hand's answers about me may have moved (ActivePointerWdgt._tellPointerStateChanged): my plate
   # is read from them as I am painted, so I repaint, and so does the part joined to me, whose plate
@@ -111,6 +121,8 @@ class LayoutChromeWdgt extends Widget
   # look reads them as I am painted, so I repaint.
   noteMyPieceChanged: ->
     @_changed()
+
+  #: joined piece
 
   # `piece` and I are INTRODUCED (joinedPiece's rule says where): I do my half -- I part from any part
   # I held (it repaints as a part alone), hold `piece` and repaint -- and tell `piece`, which does its
@@ -143,6 +155,8 @@ class LayoutChromeWdgt extends Widget
   # spacer and the adder join nothing.
   _myJoinedPiece: -> undefined
 
+  #: drawing
+
   # Does my PIECE show a press? My plate does, or the plate of the part joined to me.
   _pieceShowsPress: ->
     @_showsPressedPlate() or (@_myJoinedPiece()?._showsPressedPlate() ? false)
@@ -151,6 +165,8 @@ class LayoutChromeWdgt extends Widget
   _pieceShowsHover: ->
     joined = @_myJoinedPiece()
     world.hand.restsOn(@) or (joined? and world.hand.restsOn joined)
+
+  #: event handling
 
   # THE RESIZE CURSOR my hover shows, a CSS cursor name, or undefined for none: what a drag on me
   # does, said by the page's pointer while the pointer is over me or drags me. Default: none -- a
@@ -177,6 +193,8 @@ class LayoutChromeWdgt extends Widget
     return unless @_resizeCursor()?
     if world.hand.topWdgtUnderPointer() != @
       document.getElementById("world").style.cursor = "auto"
+
+  #: drawing
 
   # Does my plate show a press? While the hand presses me, where a press shows on my plate.
   _showsPressedPlate: ->

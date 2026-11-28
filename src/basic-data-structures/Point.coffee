@@ -14,7 +14,11 @@ class Point
   # same mechanism as Rectangle.EMPTY and the Color constants.
   @ZERO: new Point 0, 0
 
+  #: initialization
+
   constructor: (@x = 0, @y = 0) ->
+
+  #: printing
 
   # Point string representation: e.g. '12@68'
   toString: ->
@@ -26,12 +30,12 @@ class Point
   codeForm: ->
     Utils.callFormOf "new Point", [@x, @y]
 
-  # Point comparison:
+  #: testing
   isZero: ->
     # ==
     @x is 0 and @y is 0
   
-  # Point comparison:
+  #: comparing
   equals: (aPoint) ->
     # ==
     @x is aPoint.x and @y is aPoint.y
@@ -58,12 +62,14 @@ class Point
     return aPoint if aPoint.x <= @x and aPoint.y <= @y
     new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)
   
-  # Point conversion:
+  #: rounding
   # (the return-`@` guards: already-integral coordinates are the common case under
   # the integer-placement policy, so these ops mostly need no allocation at all)
   round: ->
     return @ if Number.isInteger(@x) and Number.isInteger(@y)
     new @constructor Math.round(@x), Math.round(@y)
+
+  #: arithmetic
 
   abs: ->
     return @ if @x >= 0 and @y >= 0
@@ -71,6 +77,8 @@ class Point
 
   neg: ->
     new @constructor -@x, -@y
+
+  #: rounding
 
   # NOTE: floor also clamps to >= 0
   floor: ->
@@ -82,6 +90,8 @@ class Point
     new @constructor Math.ceil(@x), Math.ceil(@y)
   
 
+  #: accessing
+
   # these two in theory don't make sense
   # for a Point BUT it's handy because sometimes
   # we store dimensions in Points
@@ -92,7 +102,7 @@ class Point
     return @y
 
   
-  # Point arithmetic:
+  #: arithmetic
   # adding/subtracting zero and multiplying by one return `this` (exact no-ops);
   # multiplying by zero returns THE canonical Point.ZERO — but only for finite
   # coordinates, since NaN/Infinity times zero is not zero.
@@ -126,10 +136,12 @@ class Point
       return new @constructor Math.floor(@x / other.x), Math.floor(@y / other.y)
     new @constructor Math.floor(@x / other), Math.floor(@y / other)
   
+  #: transforming
+
   toLocalCoordinatesOf: (aWdgt) ->
     new @constructor @x - aWdgt.left(), @y - aWdgt.top()
   
-  # Point polar coordinates:
+  #: polar coordinates
   r: ->
     t = @multiplyBy @
     Math.sqrt t.x + t.y
@@ -150,7 +162,7 @@ class Point
     180 + theta.toDegrees()
   
   
-  # Point functions:
+  #: polar coordinates
   distanceTo: (aPoint) ->
     aPoint.subtract(@).r()
   
@@ -171,7 +183,7 @@ class Point
     new @constructor x + @x, @y + y
   
   
-  # Point transforming:
+  #: transforming
   scaleBy: (scalePoint) ->
     @multiplyBy scalePoint
   
@@ -179,11 +191,11 @@ class Point
     @add deltaPoint
   
   
-  # Point conversion:
+  #: converting
   asArray: ->
     [@x, @y]
   
-  # creating Rectangle instances from Points:
+  #: converting
   corner: (cornerPoint) ->
     # answer a new Rectangle
     new Rectangle @x, @y, cornerPoint.x, cornerPoint.y

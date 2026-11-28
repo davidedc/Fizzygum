@@ -11,8 +11,12 @@
 
 class SpreadsheetWdgt extends MakerDocumentWdgt
 
+  #: initialization
+
   _makeStartingPayload: ->
     new SimpleSpreadsheetWdgt
+
+  #: printing
 
   # ⚠ Do NOT delete this as "the same as the derivation". It IS what Widget's derivation would
   # produce, but I extend FrameWdgt -- so without it the chain answers FrameWdgt's "window", not the
@@ -22,10 +26,14 @@ class SpreadsheetWdgt extends MakerDocumentWdgt
   colloquialName: ->
     "Sheets Maker"
 
+  #: docking
+
   # the frame docks this variant in its toolbar-slot (§5.C): the text tools, which act on the
   # sheet's selected cell, and the sheet's own
   _buildToolbar: ->
     new SheetToolbarWdgt
+
+  #: testing
 
   # changed = some cell holds an entry or a format (SheetModel.isBlank)
   hasStartingContentBeenChangedByUser: ->

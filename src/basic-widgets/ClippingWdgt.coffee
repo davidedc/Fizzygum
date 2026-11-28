@@ -16,6 +16,8 @@ class ClippingWdgt extends Widget
   # declares it. (A save never writes it: it is never a widget's own field.)
   clipsAtRectangularBounds: true
 
+  #: structure
+
   # used for example:
   # - to determine which widgets you can attach a widget to
   # - for a SliderWdgt's "set target" so you can change properties of another Widget
@@ -48,6 +50,8 @@ class ClippingWdgt extends Widget
         result = result.concat child.plausibleTargetAndDestinationWidgets theWidget
 
     return result
+
+  #: geometry
 
   # here is the magic of a Frame: the recursion
   # stops and we can ignore the bounds of potentially
@@ -129,6 +133,8 @@ class ClippingWdgt extends Widget
     child = descendant
     child = child.parent while child.parent? and child.parent isnt @
     child
+
+  #: drawing
 
   # My children's paint, over the damaged part of me: inside my rounded outline while I cut my
   # children to one (_roundedChildClipRadii, a rounded frame's), else over that rectangle; either way
@@ -249,6 +255,8 @@ class ClippingWdgt extends Widget
 
         aContext.restore()
 
+
+  #: geometry
 
   # Fast whole-subtree translate for MOVING a clipping panel (a window drag, a
   # programmatic reposition): one bounds rewrite per node, no per-child re-layout.

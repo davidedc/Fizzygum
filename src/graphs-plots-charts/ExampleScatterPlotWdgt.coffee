@@ -2,9 +2,13 @@ class ExampleScatterPlotWdgt extends GraphsPlotsChartsWdgt
 
   fps: 1
 
+  #: printing
+
   colloquialName: ->
     "scatter plot"
 
+
+  #: drawing
 
   # The paint scaffold is GraphsPlotsChartsAppearance, inherited via
   # GraphsPlotsChartsWdgt (the whole plot family shares it); this class

@@ -6,5 +6,7 @@ class SimpleSlideApp extends WindowedApp
   requiredParts: ["authoring"]
   optionalParts: ["maps"]
 
+  #: launching
+
   buildWindow:  -> world.openFrameWith (new SlideWdgt), (new Point 460, 400), (new Point 168, 134)
   windowOpened: (wm) -> InfoDocs.createNextTo @constructor.name, wm

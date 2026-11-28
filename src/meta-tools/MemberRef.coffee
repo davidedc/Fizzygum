@@ -85,15 +85,23 @@ class MemberRef
   @codeReceiverOf: (holder) ->
     holder if holder?.injectProperty? and holder.evaluateString? and !isAClassPrototype holder
 
+  #: initialization
+
   constructor: (@holder, @name) ->
+
+  #: testing
 
   # I am shown as ONE TEXT, a BODY: an inspector whose subject I am shows my editor, and no member list
   # and no class button (InspectorWdgt.showsOneText), whoever holds me, and an inspector browser stands
   # that inspector where its body goes (InspectorBrowserWdgt._placeNoSettle).
   editsAsText: -> true
 
+  #: printing
+
   # what an inspector titles me (Utils.colloquialNameOf asks): my member's name
   colloquialName: -> @name
+
+  #: comparing
 
   # Do I name the same member as `other` -- the same holder's, under the same name? Two references
   # made for one member at two clicks are two objects, and an inspector showing one shows the other
@@ -102,6 +110,8 @@ class MemberRef
   # `name` (another subject shown as one text) is ever the same member as I am.
   sameMemberAs: (other) ->
     other?.sameMemberAs? and other.holder is @holder and other.name is @name
+
+  #: printing
 
   # What an inspector shows of my member, which its member editor shows (MemberEditorWdgt: its build,
   # its reload when the member is chosen again, and after a Save of a value): a function's source,
@@ -147,6 +157,8 @@ class MemberRef
   _fieldSource: ->
     undefined
 
+  #: testing
+
   # Can a rename, a removal or a duplicate act on my member? Only on a member my holder OWNS. One up
   # its prototype chain belongs to a class, and is edited as that class's member: removed here it
   # would delete nothing, and renamed or duplicated here it would become a copy of the class's member
@@ -154,6 +166,8 @@ class MemberRef
   # is my holder's class itself (Class.refuseTheConstructor).
   canBeRenamedOrRemoved: ->
     @name isnt "constructor" and Object::hasOwnProperty.call @holder, @name
+
+  #: member editing
 
   # the one differing step between an object's and a class's add (mirroring save below): an object's
   # member goes through its holder's addOwnProperty twin, and a twin that refused (my header) makes
@@ -216,6 +230,8 @@ class MemberRef
     return false unless @holder.removeOwnProperty @name
     @_notifyOfEdit()
     true
+
+  #: notifications
 
   # The one notification each of my edit steps ends in, once its edit is made -- mine and
   # ClassMemberRef's alike, so it is the ONE seat a step tells from -- in two parts. First, what the

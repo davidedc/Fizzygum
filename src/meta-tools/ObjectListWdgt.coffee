@@ -59,6 +59,8 @@ class ObjectListWdgt extends Widget
   @serializationTransients: ["objects"]
   @copyTransients: ["objects"]
 
+  #: initialization
+
   # The subject and my derivation's name are my identity, my two positional parameters.
   #   A BUILD THAT THROWS LEAVES NOTHING OF ME -- a guard of this class's own, because a view switch
   # recovers from my build failing (InspectorWdgt._showViewNoSettle) and must not leak the view it gave
@@ -78,6 +80,8 @@ class ObjectListWdgt extends Widget
       @_fullDestroyNoSettle()
       throw error
 
+  #: drawing
+
   # MY SHADOW IS THE BODY'S BOX, my parts' silhouettes left out, while I paint the body
   # (InspectorBodyAppearance.castsOnlyTheBody says when, and its header why); otherwise my base's pass.
   _fullPaintIntoAreaOrBlitFromBackBufferContentPotentiallyAsShadow: (aContext, clippingRectangle, appliedShadow) ->
@@ -86,12 +90,16 @@ class ObjectListWdgt extends Widget
     else
       super
 
+  #: initialization
+
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
     @_settleLayoutsAfter => @_buildAndConnectChildrenNoSettle()
 
   _buildAndConnectChildrenNoSettle: ->
     @_rereadNoSettle()
+
+  #: listing
 
   # MY LIST READ AGAIN from my subject as it stands, in this order: what it replaces goes FIRST -- my
   # list and my cut-notice band, each destroyed where it stands in me (one a person took out is theirs,
@@ -121,6 +129,8 @@ class ObjectListWdgt extends Widget
     @_reconcileMyVerbsBandNoSettle()
     @_invalidateLayout()
 
+  #: verbs
+
   # where my verbs band stands among my children, or undefined while none of mine does: the place a
   # cell built after my list goes, so my band stays my last cell
   _indexOfMyVerbsBand: ->
@@ -146,11 +156,15 @@ class ObjectListWdgt extends Widget
     @verbsBand?.reflectVerbs()
     return
 
+  #: notifications
+
   # THE DEVELOPER MODE SWITCHED (WorldWdgt.toggleDevMode tells every widget that answers this): the verbs I
   # offer are developer mode's (verbsOffered), so my verbs band follows it at once, built or taken away
   # (_reconcileMyVerbsBandNoSettle). A core, inside the world's one settle.
   _devModeChangedNoSettle: ->
     @_reconcileMyVerbsBandNoSettle()
+
+  #: verbs
 
   # MY VERBS (my verbs band's protocol, ListVerbsBandWdgt): the TABLE of the verbs I offer, each the name
   # of my method that performs it and the words that say it. A CHILDREN list offers the widget menu's two
@@ -191,6 +205,8 @@ class ObjectListWdgt extends Widget
     else
       !child.windowClosedInMyPlace()?
 
+  #: choosing
+
   # THE OBJECT MY CHOSEN ROW STANDS FOR, or undefined: my list's selected row (ListWdgt.selected),
   # honoured as a press on it is (_objectOfRow: my label at its place the row's own, the object there
   # still in my derivation), among the objects I hold -- none while I hold none (a copy or a restore of
@@ -198,6 +214,8 @@ class ObjectListWdgt extends Widget
   _chosenObject: ->
     row = @list?.selected
     @_objectOfRow @objects, row.labelString, row.argumentToAction1  if row? and @objects?
+
+  #: verbs
 
   # MY VERBS' ACTIONS, my verbs band's buttons' (each hands me its verb, which names nothing more I
   # need). Each acts only while its verb applies (verbApplies): a press on a disabled button, or a call
@@ -224,6 +242,8 @@ class ObjectListWdgt extends Widget
       @_settleLayoutsAfter => @_rereadNoSettle()
       InspectorBrowserWdgt.showChoice @, undefined
     return
+
+  #: listing
 
   # THE ONE DERIVATION, objects and labels together: every object my derivation answers, the first
   # MOST_ITEMS_LISTED of them kept, their labels, and how many there are in all.
@@ -279,6 +299,8 @@ class ObjectListWdgt extends Widget
   objectRowFactsOf: (ignored) ->
     kindTag: ""
     dimmed: false
+
+  #: choosing
 
   # A CLICK on a row: ListWdgt.select hands me the row's LABEL and the PLACE the row carries (its
   # element's index in the list that built it; undefined for a hand-made row). I ask BOTH: the place
@@ -338,12 +360,16 @@ class ObjectListWdgt extends Widget
     object = @_objectOfRow @objects, label, place  if @objects?
     {subject: object, name: label}  if object?
 
+  #: testing
+
   # DO I LIST NOTHING? My derivation answered no object as I last read it: my labels, parallel to my
   # objects and carried by copies and files, are none (my list then shows its placeholder row). Asked by
   # the inspector that shows me as the view a walk keeps (InspectorWdgt._keepTheWalksViewNoSettle: a
   # walk whose view lists nothing shows its first view instead).
   listsNothing: ->
     @labels.length is 0
+
+  #: choosing
 
   # THE LABEL OF MY CHOSEN ROW, while that row chose `subject`, else undefined: my list's selected row
   # (ListWdgt.selected), honoured as chooseRow honours a press -- my label at the row's place is the

@@ -75,9 +75,13 @@ class InspectorRowWdgt extends Widget
   @serializationTransients: ["_heldScrollOffset", "_heldAtViewWidth"]
   @copyTransients: ["_heldScrollOffset", "_heldAtViewWidth"]
 
+  #: drawing
+
   # I lay the inspector's body under my parts: my browser paints it, under me and so under all of
   # them, so an inspector of mine paints none of its own (InspectorBodyAppearance asks, as it paints).
   laysTheInspectorBodyUnderItsParts: -> true
+
+  #: structure
 
   # my COLUMNS, left to right: my children that are columns of mine (_isMyColumn: my other children
   # are splitters, or not mine to arrange). The one statement of my columns as my row lays them: my
@@ -92,6 +96,8 @@ class InspectorRowWdgt extends Widget
   # in me is none.
   _isMyColumn: (child) ->
     child.showsSubject? and (child.layoutSpec?.isDivisionElement?() is true)
+
+  #: layout
 
   # MY MEASURE, which my viewport commits as my frame (it is content-sizing: InspectorRowViewportWdgt),
   # read from FIELDS and my viewport's own size only, never from where a cell of mine lies laid out (a
@@ -177,6 +183,8 @@ class InspectorRowWdgt extends Widget
   takesMySlack: (column) ->
     column is @columns().pop()
 
+  #: structure
+
   # `inspector` added after my last column, as an element of my row, then my splitters reconciled: a
   # divider between it and the column before it, and its split button. My browser places every
   # inspector it adds here (InspectorBrowserWdgt._placeNoSettle).
@@ -185,6 +193,8 @@ class InspectorRowWdgt extends Widget
     atIndex = if last? then @children.indexOf(last) + 1 else undefined
     @_addNoSettle inspector, atIndex: atIndex, layoutSpec: inspector.divisionBox()
     @_reconcileSplittersNoSettle()
+
+  #: splitting
 
   # MY CELLS: my children that are a column of mine or one of my splitters, in order -- the only
   # children my reconcile reads or touches
@@ -274,6 +284,8 @@ class InspectorRowWdgt extends Widget
       previous = cell
     return
 
+  #: notifications
+
   # A CHILD OF MINE LEFT ME (destroyed, or re-homed: a "Pick up", an "Attach", a drop into another
   # widget -- or re-added to me elsewhere, which also tells me). A splitter that left me, however it
   # left (my own reconcile's removals and my teardown included), is told so first, and parts from the
@@ -287,6 +299,8 @@ class InspectorRowWdgt extends Widget
     return if @destroyed or @_beingFullDestroyed or @_reconcilingSplitters
     child._reconcileSplitGripNoSettle?()  unless child.destroyed or child in @columns()
     @_reconcileSplittersNoSettle()
+
+  #: lifecycle
 
   # Destroyed as a whole: flagged at entry, so every child my teardown destroys finds me being torn
   # down (_reactToChildRemoved) and nothing is built into a dying row.

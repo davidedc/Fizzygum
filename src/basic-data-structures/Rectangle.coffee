@@ -44,6 +44,8 @@ class Rectangle
 
   @EMPTY: new Rectangle
   
+  #: initialization
+
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
     
     if (typeof(left) is "number") and (typeof(top) is "number") and (typeof(right) is "number") and (typeof(bottom) is "number")
@@ -66,6 +68,8 @@ class Rectangle
       @corner = left.corner
   
   
+  #: printing
+
   # Rectangle string representation: e.g. '[0@0 | 160@80]'
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
@@ -76,7 +80,7 @@ class Rectangle
   codeForm: ->
     Utils.callFormOf "new Rectangle", [@left(), @top(), @right(), @bottom()]
 
-  # Rectangle accessing - setting
+  #: accessing
   # This is used to create a bound with the specified
   # width and height: the corner needs to be displaced
   # of (width, bound) in respect to the origin
@@ -97,7 +101,7 @@ class Rectangle
       result.corner = @corner
     return result
   
-  # Rectangle accessing - getting:
+  #: accessing
   area: ->
     #requires width() and height() to be defined
     w = @width()
@@ -134,12 +138,16 @@ class Rectangle
   extent: ->
     @corner.subtract @origin
   
+  #: testing
+
   isEmpty: ->
     return ((@width() <= 0) or (@height() <= 0))
 
   isNotEmpty: ->
     !@isEmpty()
   
+  #: accessing
+
   height: ->
     @corner.y - @origin.y
   
@@ -173,17 +181,19 @@ class Rectangle
   position: ->
     @origin
   
-  # Rectangle comparison:
+  #: comparing
   equals: (aRect) ->
     if !aRect? then return false
     @origin.equals(aRect.origin) and @corner.equals(aRect.corner)
   
+  #: arithmetic
+
   abs: ->
     newOrigin = @origin.abs()
     newCorner = @corner.max newOrigin
     newOrigin.corner newCorner
   
-  # Rectangle functions:
+  #: arithmetic
   insetBy: (delta) ->
     # delta can be either a Point or a Number
     return @ if delta is 0 or delta.isZero?()
@@ -214,6 +224,8 @@ class Rectangle
     result.corner = @corner.add delta
     result
   
+  #: combining
+
   # Note that "negative" rectangles can come
   # out of this operation. E.g.
   # new Rectangle(10,10,20,20).intersect(new Rectangle(15,25,19,25))
@@ -249,6 +261,8 @@ class Rectangle
     result.corner = a.corner.max b.corner
     result
   
+  #: rounding
+
   # true when all four coordinates are already integers — the common case under the
   # integer-placement policy, and the guard for the return-`@` shortcuts below
   _isIntegral: ->
@@ -273,10 +287,12 @@ class Rectangle
     return @ if @_isIntegral() and @origin.x >= 0 and @origin.y >= 0
     @origin.floor().corner @corner.ceil()
   
+  #: transforming
+
   toLocalCoordinatesOf: (aWdgt) ->
     new @constructor @origin.x - aWdgt.left(),@origin.y - aWdgt.top(),@corner.x - aWdgt.left(),@corner.y - aWdgt.top()
   
-  # Rectangle testing:
+  #: testing
   containsPoint: (aPoint) ->
     @origin.le(aPoint) and aPoint.lt(@corner)
   
@@ -292,7 +308,7 @@ class Rectangle
       ro.y <= @corner.y
   
   
-  # Rectangle transforming:
+  #: transforming
   scaleBy: (scale) ->
     # scale can be either a Point or a scalar
     return @ if scale is 1 or (scale.x is 1 and scale.y is 1)
@@ -315,6 +331,6 @@ class Rectangle
     new @constructor aPoint.x, aPoint.y, c.x, c.y
   
   
-  # Rectangle converting:
+  #: converting
   asArray: ->
     [@left(), @top(), @right(), @bottom()]

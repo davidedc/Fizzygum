@@ -14,6 +14,8 @@ class SampleDashboardApp extends WindowedApp
 
   opensOneWindow: true
 
+  #: launching
+
   buildWindow: ->
     slideWdgt = new DashboardWdgt
 

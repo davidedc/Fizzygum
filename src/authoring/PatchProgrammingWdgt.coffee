@@ -5,12 +5,18 @@
 
 class PatchProgrammingWdgt extends GenericPanelWdgt
 
+  #: printing
+
   # the app's one name, as its desktop caption writes it (AppCatalog)
   colloquialName: ->
     "Patch programming"
 
+  #: shortcuts
+
   representativeIcon: ->
     new PatchProgrammingIconWdgt
+
+  #: docking
 
   # the frame docks this variant in its toolbar-slot (§5.C) -- the SAME list
   # the floating components toolbar summons (one-variant rule)

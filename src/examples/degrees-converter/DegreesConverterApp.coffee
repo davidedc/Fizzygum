@@ -15,6 +15,8 @@ class DegreesConverterApp extends WindowedApp
 
   opensOneWindow: true
 
+  #: launching
+
   buildWindow: ->
     xCorrection = 32
     yCorrection = 50

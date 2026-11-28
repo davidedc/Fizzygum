@@ -293,13 +293,15 @@ AUTHORED 2026-11-24, spiked the same day; the inspector-overhaul loop landed U1 
 - [ ] **An inspector saved open on a paint tool restores a detached copy of it** — the copy's Save writes its whole member record over the person's, so an edit made since through the palette's edit mark is lost — reachable, low; by reading, not pressed.
 
 ### `plans/inspector-browser-plan.md`
-AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; IN PROGRESS (U1–U5, U3.2 and the matcher (L19) landed; U6 next). The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
+AUTHORED 2026-11-26 after five prototype rounds on the real build and four spikes; IN PROGRESS (U1–U6, U3.2 and the matcher (L19) landed; U7 next). The inspector as a browser: a set of columns that scrolls, the body below the lists, packages, method categories and comments. It overturns five statements of `plans/inspector-overhaul-plan.md`, each marked there.
 - [ ] Filed by U3.2 (Review A A5): a Children list's verb re-reads the list, which labels each child through its `colloquialName`; a person's injected one that throws leaves the view with no list after the verb ran — low, reachable by injected code (§6 U3.2).
 - [ ] Filed by U3.2 (Review A A6): a band of verbs picked out of its list (dev mode, Pick up) outlives the view it targets; its press acts on a live child and re-reads into a destroyed view — low, reachable (§6 U3.2; the member list's band has the same shape).
 - [ ] Filed by U3.2 (Review A A7): a widget file saved in developer mode and opened in user mode keeps a Children list's band until the view is toggled (its presses do nothing) — low, reachable (§6 U3.2).
 - [ ] Filed by the matcher's fix (L19): two CENSUSES read headers with a local regex instead of the shared matcher — `census-property-placement.js` (~:154, misfiles 71 methods as properties) and `census-widget-conformance.js` `setterParams` (~:161, `: +`) — advisory counts, no gate (lint §6b).
 - [ ] Filed by the inspector browser's U4: raising a window puts it over a tooltip that is showing (`Widget._bandAboveMe` counts pop-ups and ephemeral overlays above a window, not tooltips) — low, reachable (§5.8, As built in U4).
-- [ ] U6: the 64 classes a person opens first get their categories, as marker comments only (decision D1).
+- [ ] Filed by U6: Widget's `step: noOperation` FIELD takes the category of the marker above it, "layout", while every real `step` is lifecycle (a field cannot open a category alone: EMPTY_CATEGORY) — move the field into Widget's lifecycle run (method-categories.md §4).
+- [ ] Filed by U6's gauntlet: under the parallel wave the `selftests` leg failed 3 self-tests that pass alone — run-sequence's two INVALID cases read "NOT RUN: cannot play every named test" instead, and the smoke's and parts-snapshot's ran past 480 s (log in the loop's u6/).
+- [ ] L20 (granted 2026-11-28): the production smoke refuses a world file whose class record names a malformed category, at the load's re-entry on a production tree, with its plant — lands with U7 or the next unit.
 - [ ] U7: the code browser: packages, classes, method categories, a class's comment, a member's comment above its code, and its door in the Dev tools menu (§5.11, §5.12).
 - [ ] U8: the verbs of categories (add, rename, remove an empty one) and a method moved to another category (§5.14).
 - [ ] U9: the verbs of classes: add, and remove of a class made at run time, with the snapshot record that carries such a class (§5.14, decision D2).
@@ -317,7 +319,7 @@ AUTHORED 2026-11-26 after five prototype rounds on the real build and four spike
 - [ ] **A member list keeps a band a dev-mode Destroy destroyed** — `verbsBand` still names it, as `cutNoticeBand` names its own, so a live list retains a destroyed widget and every later choice asks it to reflect its verbs (it holds no buttons) — reachable in developer mode, low.
 
 ### `plans/macro-input-clock-plan.md`
-AUTHORED 2026-11-28 after a reproduction, a suite-wide census and a prototype measured on the real build (14 suite configurations, 6 860 executions, 0 failures); NOT STARTED. Event time from the macro's own schedule, never from the cycle a wait ended in: ends DETERMINISM.md §3k's class.
+AUTHORED 2026-11-28 after a reproduction, a suite-wide census and a prototype measured on the real build (14 suite configurations, 6 860 executions, 0 failures); NOT STARTED; the owner (2026-11-28): run after the inspector-browser loop, both asks granted. Event time from the macro's own schedule, never from the cycle a wait ended in: ends DETERMINISM.md §3k's class.
 - [ ] U0: preconditions — §1.5's counts re-checked, the investigation's instruments present, the control (the unfixed drop under a 250 ms stall) still FAILS
 - [ ] U1: the stamping time as a pure refactor — the 58 toolkit sites and the 30 macro-source sites (15 tests) read `stepTimeNow()`; suite green under both pointers
 - [ ] U2: the input clock — step-base snapping, the due clock anchored only on an empty queue, fixed epoch, ε 16, the seam `WorldWdgt.inputClockNow`, the mixers routed, the macro ends once drained; WorldWdgt's method ceiling 136 → 137 (owner)

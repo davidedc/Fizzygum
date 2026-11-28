@@ -173,6 +173,8 @@ class Color
   _b: undefined # intensity of blue as an integer between 0 and 255
   _a: undefined # opacity as a number between 0.0 (fully transparent) and 1.0 (fully opaque)
 
+  #: initialization
+
   # all values are optional, just (r, g, b) is fine
   # this should ONLY be used from the static factories
   # the reason being that from the static factories you can
@@ -228,6 +230,8 @@ class Color
     @_permanent[theColor._r + "," + theColor._g + "," + theColor._b + "," + theColor._a] = theColor
     theColor
 
+  #: printing
+
   # Color string representation: e.g. 'rgba(255,165,0,1)'. Built on every call, and kept nowhere: a
   # colour's fields never change, so its string is a pure function of them, and holding no copy leaves
   # nothing for a class edit of this method to leave stale. Building it is a few concatenations, paid a
@@ -252,7 +256,7 @@ class Color
     Utils.callFormOf "Color.create", (if @_a is 1 then [@_r, @_g, @_b] else [@_r, @_g, @_b, @_a])
 
 
-  # Color comparison:
+  #: comparing
   equals: (aColor) ->
     @==aColor or (aColor and @_r == aColor._r and @_g == aColor._g and @_b == aColor._b and @_a == aColor._a)
 
@@ -263,11 +267,15 @@ class Color
   channelDistanceTo: (aColor) ->
     Math.abs(@_r - aColor._r) + Math.abs(@_g - aColor._g) + Math.abs(@_b - aColor._b)
 
+  #: testing
+
   # Am I fully see-through? Public for the same reason as channelDistanceTo: the alpha channel is
   # private, and the question gets asked from outside — a pixel READ that comes back fully
   # transparent generally means the sample point was off the buffer, not that anything was picked.
   isFullyTransparent: ->
     @_a == 0
+
+  #: converting
 
   # Me as HSL: [hue 0..360, saturation 0..1, lightness 0..1], the standard sRGB conversion — i.e.
   # the exact inverse of the `hsl(h,s%,l%)` spelling. Public, and here rather than at its caller,
@@ -305,6 +313,8 @@ class Color
     [sextant * 60, saturation, lightness]
 
 
+  #: mixing
+
   # Color mixing (dataflow spec §9.5 — the value-class method algebra a spreadsheet formula operates
   # with). Answer a NEW color that is this color blended with `otherColor`, `proportion` being THIS
   # color's weight: proportion = 1 ⇒ this color unchanged, 0 ⇒ otherColor, 0.5 ⇒ halfway. ALL FOUR
@@ -332,6 +342,8 @@ class Color
   darker: (amount = 0.5) ->
     @mixed 1 - amount, Color.BLACK
 
+  #: converting
+
   # Spreadsheet presenter (dataflow spec §9.4): a cell whose value is a Color displays as a solid
   # swatch. Answer a fresh RectangleWdgt filled with this color; the sheet mounts it in the cell's
   # rect. Presentation knowledge lives HERE, on the value's class (live-editable via the meta system),
@@ -341,6 +353,8 @@ class Color
     swatch = new RectangleWdgt
     swatch.setColor @
     swatch
+
+  #: copying and serialization
 
   # Colors are immutable and cached (see @create): a deep COPY therefore returns the
   # SAME object rather than cloning it. The Duplicator consults this per-class shell

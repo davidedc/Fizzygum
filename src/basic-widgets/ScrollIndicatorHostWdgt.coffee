@@ -41,12 +41,16 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     "_pointerInScrollBand"
   ]
 
+  #: testing
+
   # Capability query: is aWdgt one of MY scrollbars? A SliderWdgt asks this of its parent to know whether
   # it is CHROME (a scrollbar → excluded from the editor-focus selection overlay, and its click its own)
   # or content (a dropped value control → framable). Only my actual bars match, so a content slider
   # dropped into my content stays framable. See SliderWdgt._isMyParentsScrollBar.
   isMyScrollBar: (aWdgt) ->
     aWdgt is @vBar or aWdgt is @hBar
+
+  #: initialization
 
   # Build my two bars and wire each to the scroll pin of mine it drives (`hAction`, `vAction`: the
   # names of those pins' setters), with no settle of my own: my subclass builds them inside its own
@@ -74,6 +78,8 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     # bar's constructed default at me.
     @hBar.trackTarget @, hAction
     @vBar.trackTarget @, vAction
+
+  #: layout
 
   # The thickness of my FAT bars: my own when I hold one, else the theme's.
   _fullBarThickness: ->
@@ -138,6 +144,8 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     else
       Math.max WorldWdgt.theme.scrollIndicatorEndInset, @_scrollBarRunMargin()
 
+  #: drawing
+
   # Hand the bars the presentation my state implies. _-tier: my own arrange is the only caller and
   # the only one there can be — the look is settled in the same pass that decided which bars show
   # at all, so there is nothing left for anyone else to advance and nothing steps.
@@ -149,12 +157,16 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
       bar.showAsScrollIndicator mode
     return
 
+  #: testing
+
   # Is this bar CHROME I present? My @hBar/@vBar fields deliberately survive the bar being picked
   # up off me (it keeps driving me from wherever it lands — that is the point of the dataflow
   # edge), so the field alone does not say. Parentage does: a bar outside my children is a plain
   # slider somebody put on the desktop, and its look and its thickness are its own business.
   _barIsMineToPresent: (bar) ->
     bar.parent is @
+
+  #: event handling
 
   # THE HOVER PASS. A thin indicator is not a target, so it can never notice the
   # pointer itself — I notice for it, and I can: I am in the hand's mouse-over ancestry for
@@ -189,6 +201,8 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
   # (CommandPanelWdgt.sliderTrackPressJumpsButton).
   sliderTrackPressJumpsButton: ->
     true
+
+  #: layout
 
   # Where I place a bar of mine at a given cross-axis THICKNESS, `edgeInset` in from my edge and
   # `endInset` short of each end of its run: the vertical one along the right edge and the
@@ -228,6 +242,8 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
     return false  unless other? and other.parent is @ and other.isWiredTo?(@)
     @_scrollAxisOverflows other
 
+  #: hit testing
+
   # The SCREEN box in which a pointer ARRIVING at one of my bars finds that bar's button. A thin
   # indicator is intangible, and the arrival — a finger's own down, a mouse's approach — fattens it
   # before any press is dispatched (hoverMoved), so a press always meets THIS look and never the thin
@@ -266,6 +282,8 @@ class ScrollIndicatorHostWdgt extends ClippingWdgt
       thumb = (bar.button.boxInSliderFrame frame.extent(), bar.trackThumbInset).translateBy frame.origin
       met = if thumb.containsPoint pos then bar.button else bar
     met
+
+  #: layout
 
   # Does the frame a press meets one of my bars in have ROOM for the bar's thumb? That frame is the
   # bar at my full thickness, flush, the run's whole length (_barFrameAt), whatever look the bar

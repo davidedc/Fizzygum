@@ -5,10 +5,14 @@
 
 class SuperToolbarWdgt extends ToolbarWdgt
 
+  #: printing
+
   # the app's one name, as its desktop caption writes it (AppCatalog), so my window is titled with
   # it; every other toolbar is plain "toolbar" (ToolPanelWdgt.viewportColloquialName)
   colloquialName: ->
     "Super toolbar"
+
+  #: initialization
 
   # The plots toolbar and the button that summons it both belong to the LAZY 'plots' part, so this
   # row simply does not offer it until the part is in. That is deliberate and it is why the toolbar

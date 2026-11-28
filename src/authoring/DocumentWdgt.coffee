@@ -15,6 +15,8 @@ class DocumentWdgt extends MakerDocumentWdgt
 
   startingText: "Your text here."
 
+  #: initialization
+
   # The naked document payload. The viewport class stays generic/UNSEEDED
   # (bare-panel fixtures depend on that), so the CITIZEN seeds the starting
   # paragraph -- one of the viewport's own paragraphs (getNormalParagraph), set in
@@ -24,15 +26,23 @@ class DocumentWdgt extends MakerDocumentWdgt
     viewport.setContents viewport.getNormalParagraph @startingText
     viewport
 
+  #: printing
+
   colloquialName: ->
     "Docs Maker"
+
+  #: shortcuts
 
   representativeIcon: ->
     new TypewriterIconWdgt
 
+  #: docking
+
   # the frame docks this variant in its toolbar-slot (§5.C)
   _buildToolbar: ->
     new TextToolbarWdgt
+
+  #: testing
 
   # changed = anything but the one starting paragraph, still reading the starting text
   hasStartingContentBeenChangedByUser: ->

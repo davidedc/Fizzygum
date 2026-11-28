@@ -9,6 +9,8 @@
 # so the occlusion culler keeps painting what lies under me.
 class SeamRulesAppearance extends Appearance
 
+  #: drawing
+
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     return if appliedShadow?
     @_paintInLocalScope aContext, clippingRectangle, appliedShadow, (ctx, localDamageBox) =>

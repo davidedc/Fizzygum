@@ -18,6 +18,8 @@ class SpreadsheetApp extends WindowedApp
 
   requiredParts: ["spreadsheet"]
 
+  #: launching
+
   # My launcher wears the spreadsheet's own icon, SpreadsheetIconWdgt (core art, named by
   # AppCatalog's entry; the sheet's representativeIcon answers the same one).
   #   THE OPENING SIZE is the SHEET's, never the window's: a fresh sheet opens at its default

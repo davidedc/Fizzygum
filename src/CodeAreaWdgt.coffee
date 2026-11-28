@@ -21,6 +21,8 @@ class CodeAreaWdgt extends Widget
   # footer band.
   externalPadding: 0
 
+  #: initialization
+
   # I paint no background (my window's body shows) -- only my footer band's rule.
   constructor: ->
     super()
@@ -76,6 +78,8 @@ class CodeAreaWdgt extends Widget
     @textWidget = @tempPromptEntryField.textWdgt
     @_addNoSettle @tempPromptEntryField
 
+  #: layout
+
   # My footer band's two groups of buttons, each in order, left to right (FooterBandLayout).
   # None by default: each subclass names its own.
   _footerLeftButtons: ->
@@ -92,10 +96,14 @@ class CodeAreaWdgt extends Widget
   _hasAFooterBand: ->
     (@_footerLeftButtons().concat @_footerRightButtons()).some (button) -> button?
 
+  #: drawing
+
   # My one seam: my footer band's rule, between the code area and the buttons -- none without a band.
   _seamRects: ->
     return [] unless @_hasAFooterBand()
     [FooterBandLayout.ruleIn new Rectangle 0, 0, @width(), @height()]
+
+  #: layout
 
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout

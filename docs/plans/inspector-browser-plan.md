@@ -130,13 +130,15 @@ words win):
 | L17 | A trail longer than its browser shows its LAST levels, the earlier ones folded behind a leading "…" button that opens them as a menu — low priority, a later pass (2026-11-27; §5.5) |
 | L18 | No second shortcut for "Open in a new inspector" on PC keyboards (Ctrl+click opens the context menu, which carries the row); revisit if PC users ask (2026-11-27; §5.8) |
 | L19 | The build's shared method-header matcher is fixed in its OWN change (it misses 7 real methods: a header with no space after the colon, one continued by a backslash; ten gates never read those bodies) — before U5, its own gauntlet and commit (2026-11-27). **Built** the same day: both matchers read `: *`, the guard four shapes on either side, a self-test judged by the product's parse, the continued header joined, the six steps it revealed `_`-tiered (lint §6b) |
+| L20 | The production smoke gains ONE rule: a world file whose class record carries a malformed category is refused on a production tree at the load's re-entry (after the reflective layer arrives, before anything changes) — GRANTED (a change to an existing check), with its plant; lands with U7 or the next unit (2026-11-28) |
+| L21 | The category name "colour roles" is KEPT as written (the house's prose spells "colour"); the comment rubric's marker line is pushed (2026-11-28) |
 
 **OPEN: ask the owner at the start. On "use the defaults", run on the default of each row.** D1 and D2 decide the
 arc's size; the rest are a pass of yes or no.
 
 | # | Decision | Default the loop runs on, and why |
 |---|---|---|
-| **D1** | **Where real categories come from, and how much of the tree gets them in this arc** | The source says them, as marker comments (`  #: accessing`, §5.10), the meta-object keeps them, a build gate holds them, as a budget that falls. **This arc marks the 64 classes a person opens first**: the `meta-tools` part, `Widget`, `FrameWdgt`, `StringWdgt`, `TextWdgt`, `WorldWdgt`, `ListWdgt`, `PanelWdgt`, `RectangleWdgt`, `Point`, `Rectangle`, `Color`, the desktop's and the Examples folder's apps and what their windows hold, and every superclass of those (so Inherited inside a category finds its methods): 1594 of the tree's 4764 methods. No method is moved in its file (markers are inserted; a category may open more than once in a file). A class with no marker shows "all" alone. Options and their cost: below |
+| **D1** | **Where real categories come from, and how much of the tree gets them in this arc** | The source says them, as marker comments (`  #: accessing`, §5.10), the meta-object keeps them, a build gate holds them, as a budget that falls. **This arc marks the 64 classes a person opens first**: the `meta-tools` part, `Widget`, `FrameWdgt`, `StringWdgt`, `TextWdgt`, `WorldWdgt`, `ListWdgt`, `PanelWdgt`, `RectangleWdgt`, `Point`, `Rectangle`, `Color`, the desktop's and the Examples folder's apps and what their windows hold, and every superclass of those (so Inherited inside a category finds its methods): 1594 of the tree's 4764 methods (AS BUILT in U6: 87 classes, 1843 of the tree's 4630 instance methods, in 716 marker lines — the recipe gives 74 classes and 1728 methods on U6's tree, the inspector package having grown in U1–U5, and "what their windows hold" brings the Examples folder's windows, 13 classes and 115 methods more; §6 U6). No method is moved in its file (markers are inserted; a category may open more than once in a file). A class with no marker shows "all" alone. Options and their cost: below |
 | **D2** | **Which verbs work on CLASSES at first landing** | **Add** (a new class in a package; a new subclass of a class) and **remove of a class made at run time** (no instance, no subclass, named by no other class's code). Duplicate and rename are ABSENT and filed. For a class the build ships, rename and remove are not honourable without writing files out (§4.4). It is its own unit, U9, the last to build, so everything else lands whatever becomes of it. Options and their cost: below |
 | D3 | Comments | Shown and EDITABLE: a member's comment stands above its code and Save keeps both; a class's comment is its "Comment" view, with a Save. §4.2 measured that the edit path already takes a comment typed above a function; what U5 adds is that it is kept as the member's comment and survives a snapshot |
 | D4 | Writing an edit back to a `.coffee` file | NOT in this arc. Edits live in the running classes and in the world's change list, as today. Filed (§11) |
@@ -159,7 +161,7 @@ U6, the comment-only edits:
 | Option | Classes, methods | What the browser shows | Cost of U6 | Risk |
 |---|---|---|---|---|
 | a. The inspector's own classes only | 12 classes, 186 methods | Categories in the `meta-tools` package; "all" alone everywhere else | half a day | The level looks empty wherever a person looks first |
-| **b. The classes a person opens first, with their superclasses (default)** | **64 classes, 1594 methods** (a third of the tree; `Widget`, `FrameWdgt`, `StringWdgt` and `WorldWdgt` hold 858 of them) | Categories on every widget's inherited members and on the classes the desktop leads to | 1 to 2 days: one careful agent pass per big class, small classes in batches, a sampled review; about 900 marker lines | The four big classes are where a name rule did worst (a quarter to a third right): they are read, not ruled |
+| **b. The classes a person opens first, with their superclasses (default)** | **64 classes, 1594 methods** (a third of the tree; `Widget`, `FrameWdgt`, `StringWdgt` and `WorldWdgt` hold 858 of them; AS BUILT in U6: 87 classes, 1843 instance methods, 716 marker lines) | Categories on every widget's inherited members and on the classes the desktop leads to | 1 to 2 days: one careful agent pass per big class, small classes in batches, a sampled review; about 900 marker lines | The four big classes are where a name rule did worst (a quarter to a third right): they are read, not ruled |
 | c. The whole tree | 560 classes, 4764 methods | Categories everywhere | 4 to 6 days; 1600 to 2500 marker lines in about 370 files; about 3100 placements by judgment | Too many judgments to review in one arc; the budget lets the rest fall over time instead |
 
 Whatever the option, the gate's budget is set at what is left, and falls as classes are marked.
@@ -2014,6 +2016,65 @@ vocabulary; a class whose sample is under four in five right goes back to its ag
 
 **Predicted failing set: EMPTY** (no widget reads a category before U7).
 
+**Landed 2026-11-28** (inspector-browser loop; from `329f6bcb` / `39285b2d7`; one commit, Fizzygum's; the research and
+its tools in `u6/`, each agent's report `u6/<batch>/RETURN.md`). **Marked**: **87 classes, 1843 instance methods**, in
+716 marker lines. Why 87: D1's recipe re-run on U6's tree gives 74 classes and 1728 instance methods (the inspector
+package grew in U1–U5; `u6/classes.json`), and D1's own words, "what their windows hold", bring the 13 classes the
+Examples folder's windows hold (115 methods) — ruled in the loop on the default. **The placement rule, as measured**
+(`u6/placement.js` / `placement.json`: a marker written at every place above a member of the tree at once, through
+the real parse and the real compile): AFTER the blank lines that stand there, above the member's whole comment block,
+with one new blank line below it, it changes no source, no comment and no compiled byte at any of the 5697 such
+places; where no blank line stands (1356 places), the marker alone, no blank line either side, changes none either;
+ABOVE the standing blank lines it moves 4096 member sources, with a NEW blank line above it 5187 (the compiled output
+the same in both — the reason U5 said U6's proof compares sources); BETWEEN a comment block and its member it is
+harmless to the parse but cuts the header-block sanctions, four of them in D1's classes (`WorldWdgt.edit`,
+`stopEditing`, `StringWdgt.edit`, `ViewportWdgt.addMany`), so it is FORBIDDEN. As placed: 668 markers inserted (666
+after a blank line, 2 where none stood) and 48 banners REPLACED one for one, of the 125 banner lines found
+(`u6/banners.json`; the 77 others STAY, a marker beside them where one is needed). **The work**: fifteen batches —
+the five big classes alone (A1 `Widget`, A2 `FrameWdgt`, A3 `StringWdgt`, A4 `WorldWdgt`, A5 `ViewportWdgt`, each
+read whole, `Widget` in parts) and ten of related classes (B1 the value classes and the tree, B2 the core superclasses, B3
+chrome and small widgets, B4 the text and list subclasses, B5 the maker documents, B6 the apps and their openers, B7
+the inspector browser, B8 the inspector's lists and references, B9 the appearances, B10 what the Examples windows
+hold) — one Opus agent each, in FIVE WAVES of at most four agents, a batch after its superclasses' batches so an
+override takes its superclass's category (the chain B1 → A1 → B2 → A3 → B4 is five long): W1 B1 B6 B9 · W2 A1 · W3 B2
+B3 B8 · W4 A2 A3 A5 B10 · W5 A4 B4 B5 B7, the Fizzygum count after each 492, 491, 471, 455, 433. Each agent returned
+its diff, a table of every method and its category (`u6/method-table.js`) and the methods it was least sure of; each
+wave was checked whole (the proof over its files, the gate) before the next. **The proof** (`u6/proof.js`, HEAD's
+text of every touched file against its working text through the real parse and the real compile; its self-test's
+five plants — a marker with a new blank line above it, a moved code line, a reworded comment, a marker between a
+comment and its member, a STAY banner made a marker — each failing by the checks it names): PROOF PASS over all 87
+files — every member's source and every class's compiled output identical, every comment identical but the replaced
+banners, 0 instance methods uncategorised, the diff mechanised (every added line a marker or a blank line, every
+removed one a banner `banners.json` replaces: 716, 666 and 48), the placement walked line by line; the gate OK.
+**Two slips the proof caught**: the Edit tool writes a whitespace-only line back EMPTY, so one banner edit in
+`Widget` emptied HEAD's two-space line 4465 (the proof's byte comparison failed on it, the parse's records unchanged);
+no Edit call can write the two spaces, so the A1 agent restored that ONE line with a guarded `node -e` (it checked the
+marker line above, the empty line itself and the comment line below, wrote `"  "` and nothing else) — a breach of
+"Edit tool only" in its letter, ACCEPTED for keeping its purpose (no blanket script edit; the proof checks every
+byte), and the lesson went into every later brief (anchor an Edit on non-blank lines; report, never repair by
+script). And in B10 an Edit anchor ending on a mid-line space dropped it, which the proof's SOURCE check failed and a
+second Edit fixed. **The sampled review** (Review B, `u6/REVIEW-BRIEF-B.md`, `u6/review/`: seeded 20261128, one
+instance method in each block of ten of every class, 238 picks): **225 RIGHT, 13 DEFENSIBLE, 0 WRONG**; every batch
+over the four-in-five bar, no class sent back. Of its eight consistency findings across batches, six were applied as
+marker-only edits: `FrameWdgt`'s child callbacks to notifications (one marker added above `_reactToChildRemoved`,
+`_reactToChildDropped`'s and the collapse callbacks' markers renamed), `MemberEditorWdgt._reloadNoSettle` to choosing (one
+marker added), `ListWdgt.toOpenInANewInspectorBy` to choosing, `SliderWdgt.getValue` to pins and dataflow, `Widget`'s
+connection-menu builders to menus, and `FrameWdgt`'s "popping up" renamed "pop ups" (the world's name); the proof
+PASSED again after them. KEPT: "colour roles" (the house's prose spells colour). FILED (BACKLOG, the docs'
+stated limit): `Widget`'s `step: noOperation` is a FIELD standing among the layout methods, so it reads "layout"
+while every `step` method is lifecycle — only moving the field fixes it, and a marker cannot (`EMPTY_CATEGORY`).
+The review's vocabulary census went into `docs/architecture/method-categories.md` §4: the names used across
+batches with one meaning (docking, scrolling, colour roles, edit mode, visibility — lifecycle no longer holds showing
+and hiding —, shortcuts, evaluating code, storage, handles, hit testing), the four rules the batches followed (a
+child's callback vs my own event's; a pin's getter or setter vs a field setter a pin also names; a `note…` door with
+its class's topic; a menu builder in menus), and the class-own names. **Ratchet moved**:
+`UNMARKED_CLASSES_BUDGET.fizzygum` lowered 520 → 433, its dated reason beside it (the tests repo's 13 unchanged);
+the gate "716 marker(s) … Fizzygum 433 (budget 433), Fizzygum-tests 13 (budget 13) -- OK". **Evidence** (so far):
+every wave's proof and the whole proof PASS (above); `fg presuite` EXIT=0 OK (dpr 1, paint audit and fracplane
+rider PASS: the predicted failing set EMPTY, met), run before the review's six marker-only edits, the proof and the
+gate green after them. `fg gauntlet` OK (3091 s): 17 legs in-wave; `selftests`, `capstone` and `refs` passing alone after failing in the parallel wave — `capstone` and `refs` killed by their alarms with nothing reported, `selftests` 3 self-tests (two past their 480 s budget, run-sequence's two INVALID cases reading NOT RUN) — U6 is comment-only, so a load effect (filed: a rig that flakes); `fg homepage` OK. The six consistency edits were checked by the proof and the gate (PROOF PASS over the 87 files, 716 markers); no
+later review was run.
+
 ### U7. The code browser (2–3 days)
 
 **Goal.** §5.11, §5.12, and U5.4 if it was held: the four lists of the owner's picture, on real packages, real
@@ -2453,4 +2514,13 @@ way; the list's rebuild already reads both only while the list is their parent (
 - [x] U2: the body below the lists as a setting of the browser, the where-you-are band, the default window, the class named by a plain button (§5.4 to §5.6, §5.13). — CLOSED 2026-11-27 (inspector-browser loop, U2): the body below, the trail, the class button, the clamped window, the held scroll (§6 U2, its Landed paragraph).
 - [x] U3: every list its own footer of drawn icon buttons, each verb absent, disabled or enabled by one rule; the four marks are placeholders (§5.7). — CLOSED 2026-11-27 (inspector-browser loop, U3): the member lists' band of drawn icon buttons, one seat for what a member step changes; U3.2 (the object lists') PARKED (§6 U3, its Landed paragraph).
 - [x] U4: "Open in a new inspector" by a menu row and by Cmd-click (§5.8). — CLOSED 2026-11-27 (inspector-browser loop, U4): the capability, the row in both modes, Cmd-click, one gesture opening apart once, D12's landing (§6 U4, its Landed paragraph).
+- [x] U3.2: the Children list's verbs — RULED 2026-11-27 (L15): Duplicate beside the original in its parent, Remove the menu's Delete into the bin, in developer mode; the Instances list none. With L16 (a browser with no column hides its strip) (§5.7, §5.4) — CLOSED 2026-11-27 (inspector-browser loop, U3.2): a Children list's band in developer mode, Duplicate by the rule next place / free copy / none, Remove the menu's Delete, the strip hidden with no column (§6 U3.2, its Landed paragraph).
+- [x] The build's shared method-header matcher misses 7 real methods (fizzytiles: `name:(…) ->` with no space; a header continued by a backslash): the ten gates grouping code into methods never read those bodies — RULED 2026-11-27 (L19): fixed in its own change, before U5 (plan §6 U5). — CLOSED 2026-11-27 (inspector-browser loop, UM): both matchers read `: *`, the guard four shapes, its self-test, the six steps it revealed `_`-tiered (§0.4 L19, lint §6b).
+- [x] U5: the meta-object keeps a class's comments and its methods' categories, edits and snapshots keep them, and a build gate holds the `#:` marker (§5.9, §5.10). — CLOSED 2026-11-28 (inspector-browser loop, U5): the parse, the edits, the records, the marker gate (§6 U5, its Landed paragraph).
+- [x] U6: the 64 classes a person opens first get their categories, as marker comments only (decision D1). — CLOSED 2026-11-28 (inspector-browser loop, U6): 87 classes by D1's own words, every instance method categorised, the budget 520 → 433 (§6 U6, its Landed paragraph).
+- Noted, not queued (U5, low and reached by no gesture): a malformed category on a LEAN tree is not refused (no meta-system there) and rides the registry into a later save, which a dev page then refuses whole — reached only by a hand-made file.
+- Noted, not queued (U5): a record the replay refuses stays in the loaded world's registry, so every later save carries it and every load says it "cannot re-apply", blaming the build — reached only by a hand-made or older file.
+- Noted, not queued (U5): the notice for a member still running after a load (`pageMembersStillRunning`, `_lastRecordSays`) judges sources only, so it says the member "did not return to its source" when only its notes stayed away.
+- Noted, not queued (U5, for U7): split-after-join is not the identity for a source that opens on an empty line then a `#` line, or whose first line is a comment (join-after-split is).
+- Noted, not queued (U5): a `###` block between members reads as STASH_HOLDS_CODE (a stated limit; its advice row says so).
 - [x] §11: packages, categories, families of members and comments in the inspector — a plan of its own, authored after U2 lands (owner, 2026-11-24) — CLOSED 2026-11-26: this plan is that plan (moved from the `plans/inspector-overhaul-plan.md` section; the work itself is this plan's units, each with its own line).

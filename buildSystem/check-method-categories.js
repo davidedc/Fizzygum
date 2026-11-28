@@ -75,7 +75,9 @@ const ROOTS = sourceRoots(ARGV, 'method-categories');
 // tree's own counts, the day this gate first read the tree, when no class held a marker; lowered whenever fewer remain
 // (a class marked whole), and raised only in the change that needs it, its dated reason beside the number
 const UNMARKED_CLASSES_BUDGET = {
-  fizzygum: 520,
+  // lowered 520 -> 433 on 2026-11-28: the inspector browser's U6 marked the 87 classes of decision D1 (the meta-tools
+  // part, the named classes, the desktop's and the Examples folder's apps, what their windows hold, every superclass)
+  fizzygum: 433,
   tests: 13,
 };
 const HALVES = [

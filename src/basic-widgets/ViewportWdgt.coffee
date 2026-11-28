@@ -91,11 +91,15 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # and a copy or a restore runs no gesture of mine (_reactToBeingCopied, _afterDeserialization).
   _scrollStep: undefined
 
+  #: lifecycle
+
   # My step runs my gesture's scroll step. A `step` of a subclass's, or one a person gives me (an
   # inspector's Save, a run), replaces mine as any override of a member does: it calls `super` to keep
   # my gestures scrolling.
   step: ->
     @_scrollStep?()
+
+  #: copying and serialization
 
   # A COPY runs no gesture of mine: it was aligned into the stepping set because I was in it
   # (Widget.alignCopiedWidgetToSteppingStructures) and holds my scroll step, a closure bound to me, so
@@ -114,6 +118,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     world.steppingWdgts.delete @
     @_scheduleRelayoutRespectingPhase()
 
+  #: testing
+
   # Role query, the plane-side twin of isMyScrollBar (ScrollIndicatorHostWdgt's): is aWdgt the
   # contents panel I clip and scroll? THE one place the viewport topology is stated — the chokepoints
   # (_amITheContentsPanelOfAViewport, _amIDirectlyInsideViewport, the hierarchy
@@ -131,12 +137,16 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   contentsPanelHoldsLooseContent: ->
     true
 
+  #: menus
+
   # My contents panel is internal structure — hide it from the ancestor hierarchy
   # (disambiguation) menu. Asked by Widget.hierarchyMenuWidgets via ?(); replaces two of its
   # structural exclusions (plain-panel-in-viewport, stack-in-stack-viewport — the
   # stack IS its viewport's contents). FolderWindowWdgt declares the third the same way.
   hidesContainedWidgetFromHierarchyMenu: (aWdgt) ->
     @isMyContentsPanel aWdgt
+
+  #: testing
 
   # While I keep a margin, selecting ME selects my PLANE: a click in my margin -- the only place a
   # pointer meets me rather than my plane -- selects the page, as a click on the page's empty area
@@ -147,6 +157,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # Without a margin I am selected as myself, like any widget.
   resolvesEditorSelectionToContent: ->
     @planeMargin > 0
+
+  #: notifications
 
   # ── the plane's up-relays (scroll-frame role plan P3) ─────────────────────────────────────
   # My paint values MIMIC my contents' (I DO paint every repaint, at alpha 1 once
@@ -170,6 +182,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     unless @alpha == alpha
       @alpha = alpha
       @_changed() if @planeMargin > 0
+
+  #: colour roles
 
   # ── MY LOOK, read as I am painted ─────────────────────────────────────────────────────────
   # No fill or stroke colour of my own until one is set on me (or, as the mimic, on my plane):
@@ -230,6 +244,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   canScrollByDraggingBackground: false
   canScrollByDraggingForeground: false
 
+  #: initialization
+
   constructor: (
     @contents,
     @scrollBarsThickness = (WorldWdgt.theme.scrollBarsThickness),
@@ -279,6 +295,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
     @_reLayoutScrollbars()
 
+  #: drag and drop
+
   wantsDropOfChild: (aWdgt) ->
     # the CONTENTS vetoes raw drops into the viewport (a folder's contents are managed by the
     # folder-window machinery) — capability via ?(), instead of `@contents instanceof FolderPanelWdgt`
@@ -303,6 +321,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # where it was let go, moved nowhere. A carry under a held button keeps my bars thin.
   dropReceiverForPointsOnMyBody: ->
     if @planeMargin > 0 then @contents else undefined
+
+  #: drawing
 
   # ── MY PLANE'S SELECTION RING ──────────────────────────────────────────────────────────────
   # My plane is as tall as its content, so a ring inside its box scrolls away with it. I am the box
@@ -355,10 +375,14 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
       (@cornerRadiiFollowingMyOutline ringBox), theme.selectionOutline, false
     aContext.restore()
 
+  #: printing
+
   colloquialName: ->
     # the CONTENTS names the construct ("folder"/"toolbar") — capability via ?(), was two
     # `@contents instanceof` tests (type-test-elimination ε)
     @contents?.viewportColloquialName?() ? "viewport"
+
+  #: pins and dataflow
 
   # ── THE SCROLL PINS ──────────────────────────────────────────────────────────────────────────
   # How far my content is scrolled inside my viewport, along each axis: 0 at the top/left, growing
@@ -374,6 +398,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   getScrollX: -> @scrollOffsetX
 
   getScrollY: -> @scrollOffsetY
+
+  #: geometry
 
   # ── THE STORED SCROLL OFFSET (paint-time-scroll-translation plan §3.1) ────────────────────
   # THE scroll state: how far the visible window sits into the content FRAME, per axis —
@@ -406,11 +432,15 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   _planeBox: ->
     @boundingBox().insetBy @planeMargin
 
+  #: layout
+
   # The margin my bars keep from the ends of their run (ScrollIndicatorHostWdgt._scrollBarRunMargin):
   # my plane margin, so a thin bar of mine runs along the side of the box my plane shows through, and
   # a bar I present shows only where that side holds its thumb.
   _scrollBarRunMargin: ->
     @planeMargin
+
+  #: drawing
 
   # THE BOX I PRESENT TO AN OVERLAY laid over me (Widget's answer names the overlays that ask): what
   # shows of me (clippedThroughBounds), less my margin while I keep one, so such an overlay frames my
@@ -419,6 +449,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   boxPresentedToOverlays: ->
     shown = @clippedThroughBounds()
     if @planeMargin is 0 then shown else shown.intersect @_planeBox()
+
+  #: geometry
 
   # THE PLANE-MAPPING PROTOCOL, my half (TransformFrameWdgt answers it too, for its content).
   # Widget's screen↔plane walks — mapRectToScreen, screenPointToMyPlane, localPointToScreen,
@@ -472,6 +504,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     cropped = if @planeMargin is 0 then clipSoFar else clipSoFar.intersect @_planeBox()
     translation = @scrollTranslationOfChild child
     if translation? then cropped.translateBy translation.neg() else cropped
+
+  #: drawing
 
   # The paint-time scroll (plan §3.3), intercepted at the same content-recursion point the
   # island composites at: self (the mimic rect) and the BAR children paint in place; the
@@ -538,6 +572,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
               child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, damagedPartOfFrame, appliedShadow
         aContext.restore()
 
+  #: pins and dataflow
+
   # The pin-setter contract (widget-authoring-guidelines §11): every delivery passes ONE argument,
   # the value.
   #   ⚠ CLAMPED, through the same `_scrollX`/`_scrollY` every other scroll path uses. The predecessor
@@ -596,6 +632,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     return undefined if @scrollPolicy is 'never'
     SliderRange.forScrolling viewport, content
 
+  #: scrolling
+
   # The runtime crop⇄scroll flip: validate, assign, then INVALIDATE inside a
   # settle — the flush re-lays me (my _reLayout is 'super; @_reLayoutChildren'),
   # so a flip on a live overflowing viewport shows/hides its bars and re-clamps
@@ -616,6 +654,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   toggleScrollPolicyFromMenu: (ignored, ignored2) ->
     @setScrollPolicy (if @scrollPolicy is 'never' then 'auto' else 'never')
 
+  #: accessing
+
   setColor: (aColor) ->
     aColor = super aColor
     # keep in sync the color of the content.
@@ -625,6 +665,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @contents.setColor aColor
     return aColor
 
+  #: pins and dataflow
+
   setAlphaScaled: (alpha) ->
     alpha = super
     # update the alpha of the Viewport - note that I paint it every repaint too (occluded
@@ -632,6 +674,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     # it so its value mimics the contained Panel's
     @contents.setAlphaScaled alpha
     return alpha
+
+  #: scrolling
 
   # CAN I be scrolled right now: is there overflow to move, and does my policy allow moving it?
   # This is the question every scroll GESTURE asks — deliberately NOT "is a bar visible". Under
@@ -650,6 +694,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   claimsPlainDragsForScrolling: ->
     @isScrollingByfloatDragging and @isScrollableNow()
 
+  #: layout
+
   # Does my plane overflow me along `bar`'s axis, under a policy that lets me scroll
   # (ScrollIndicatorHostWdgt._scrollAxisOverflows)? Along my horizontal bar's axis, my plane's width
   # against mine; along my vertical one's, its height against mine: the facts isScrollableNow reads,
@@ -661,6 +707,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     else
       @contents.height() >= @height() + 1
 
+  #: structure
+
   # RE-PARENTED: the line at my edge is where I stand (a window holding me as its whole content
   # runs its own border round me, and I stroke none: _surfaceStroke), and my thin indicators stand
   # clear of that line (_indicatorEdgeInset), so they are placed again for my new parent. Not every
@@ -671,6 +719,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   _reactToBeingAdded: (whereTo, beingDropped) ->
     super
     @_reLayoutScrollbars()
+
+  #: layout
 
   # The width my @contents must lay itself out within: my viewport width. Asked via ?() by
   # content that wraps to its container (ToolPanelWdgt's row-wrap). Capability, was
@@ -694,6 +744,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # wraps its text. A class-level query the arrange site asks, in place of a type test.
   _isContentSizing: ->
     @isTextLineWrapping
+
+  #: structure
 
   # when you add things to the ViewportWdgt they actually
   # end up in the plane inside it.
@@ -742,6 +794,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @_invalidateLayout()
 
 
+  #: handles
+
   # Override the NON-settling CORE (the public showResizeAndMoveHandlesAndLayoutAdjusters wrapper is inherited from
   # Widget and self-settles once around the whole show-handles tree). super adds the handles + climbs; @_reLayout
   # Children re-fits my contents+scrollbars synchronously, riding that outer settle. (end-of-cycle-flush-drawdown.)
@@ -750,6 +804,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @_reLayoutChildren()
 
   
+  #: structure
+
   setContents: (aWdgt, extraPadding = 0) ->
     @extraPadding = extraPadding
     # the outgoing contents is construction scaffold (every caller replaces a
@@ -764,6 +820,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
     @add aWdgt
 
+
+  #: geometry
 
   # SCROLL-POSITION POLICY, not a child re-lay (schedule-valve V1): a REAL immediate resize of a
   # text-wrapping viewport resets its scroll to the content origin (offset := 0 — the shipped
@@ -783,6 +841,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     super aPoint
 
 
+  #: notifications
+
   # Gesture-driven container re-fit (a widget was dropped into / grabbed out of me): DEFER it to the
   # cycle via _reFitContainer -> _scheduleRelayoutRespectingPhase. These are dispatched from
   # ActivePointerWdgt.drop/grab AFTER a self-settling add, so they always run OUTSIDE any layout pass --
@@ -794,6 +854,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
 
   _reactToChildGrabbed: (child) ->
     @_reFitContainer()
+
+  #: layout
 
   # Re-fit my contents area and my scrollbars: the named "re-fit me" pair, shared
   # by every trigger that changes what I contain (drops, grabs, attaches, a
@@ -970,6 +1032,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     # need fixing. Cheap to check when there's nothing to do.
     @_keepScrollOffsetInBounds()
 
+  #: scrolling
+
   # THE offset write funnel (paint-time scroll): every `@scrollOffsetX/Y` change in the class
   # routes through here. The offset is MAPPING state — part of the screen↔plane translation the
   # version-keyed derived-geometry caches (clipThrough / clippedThroughBounds / fullClippedBounds)
@@ -988,6 +1052,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @_changed()
     true
 
+  #: geometry
+
   # THE MARGIN WRITE DOOR: every write of my plane margin on a live viewport comes through here, for
   # the offset funnel's reason (above): the margin is mapping state the version-keyed clip caches fold
   # in, so a change breaks them, and my whole box repaints. A write of the margin I keep does nothing.
@@ -996,6 +1062,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @planeMargin = margin
     WorldWdgt.geometryVersion++
     @_changed()
+
+  #: scrolling
 
   # §4.2 Stage 3 (structural arrange): the SCROLL CLAMP keeping the visible window inside the
   # content frame — the offset stays in [0, max(0, content − window)] per axis, so a shrink
@@ -1007,7 +1075,7 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     newY = Math.min (Math.max 0, @scrollOffsetY), (Math.max 0, @contents.height() - @height())
     @_writeScrollOffset newX, newY
 
-  # ViewportWdgt scrolling by floatDragging:
+  #: scrolling
   _scrollX: (steps) ->
     # under 'never' every scroll path refuses HERE, at the movement core: the
     # pin setters, scrollTo/scrollToBottom, the edge auto-scroll and the
@@ -1065,6 +1133,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     # content/scrollbar update.
     @_writeScrollOffset @scrollOffsetX, newY
 
+  #: event handling
+
   # A plain drag over my content scrolls me (particularly useful on touch devices); the same gesture
   # works with the mouse when dragging over content that isn't itself draggable (e.g. text in a
   # viewport anchored to a non-draggable background, such as a color palette).
@@ -1120,6 +1190,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
   # from getting a parting scroll.
   pressCancelled: ->
     @_scrollStep @screenPointToMyPlane world.hand.position()  if @_scrollStep?
+
+  #: scrolling
 
   # THE LATCH, asked by the hand of this stroke's OWNER at the DRAINED EVENT where the press first
   # leaves the grab radius (ActivePointerWdgt._notePressTravelledPastDragThreshold), with the press
@@ -1444,6 +1516,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @_positionAndResizeChildren()
     @_reLayoutScrollbars()
 
+  #: event handling
+
   # ViewportWdgt events.
   scrolledBy: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
 
@@ -1506,6 +1580,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     x * WorldWdgt.preferencesAndSettings.wheelScaleX
 
 
+  #: menus
+
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     if @takesOverAndMergesChildrensMenus
       if @contents
@@ -1520,6 +1596,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
         else
           menu.addMenuItem "Don't scroll (crop)", @, "toggleScrollPolicyFromMenu", toolTip: "crop the contents at my\nedges instead of scrolling"
   
+  #: layout
+
   # Set this viewport's text-line-wrapping state; turning wrapping ON fills
   # the content to the viewport's bounds. (Called by SimpleTextWdgt's soft-wrap
   # toggle, which used to write this flag + resize the content from outside.)
@@ -1540,6 +1618,8 @@ class ViewportWdgt extends ScrollIndicatorHostWdgt
     @isTextLineWrapping = wraps
     if wraps
       @contents._applyBounds @position(), @extent()
+
+  #: edit mode
 
   _enableDragsDropsAndEditingNoSettle: ->
     if @dragsDropsAndEditingEnabled

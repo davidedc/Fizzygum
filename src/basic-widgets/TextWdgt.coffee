@@ -26,6 +26,8 @@ class TextWdgt extends StringWdgt
   heightOfPossiblyCroppedText: undefined
   widthOfPossiblyCroppedText: undefined
 
+  #: initialization
+
   # Same head and same opts vocabulary as StringWdgt, which does all the assigning: every
   # option this class accepts is one StringWdgt already knows, and every default except the
   # placeholder text is StringWdgt's own. So this constructor assigns no option of its own: it
@@ -51,6 +53,8 @@ class TextWdgt extends StringWdgt
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
   
 
+  #: fitting
+
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
   # the font size here because is the one we are going to
@@ -62,6 +66,8 @@ class TextWdgt extends StringWdgt
       return true
     doesItFit = @breakTextIntoLines text, overrideFontSize, @_textArea().extent()
     return doesItFit
+
+  #: wrapping
 
   # The paragraph and word splits are keyed by their text alone: the split runs no code of mine, so
   # my own code (Widget._ownCodeKeySuffix, which keys every cache whose work runs some) cannot change it.
@@ -293,6 +299,8 @@ class TextWdgt extends StringWdgt
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textWrappingData
     return textWrappingData
 
+  #: layout
+
   # §4.1 PURE MEASURE (proper-layouts): the side-effect-free preferred extent of this
   # wrapping text -- round+min-extent clamp MUST mirror __commitExtent (byte-matches the
   # commit). Campaign history: docs/archive/proper-layouts-4.1-pure-measure-campaign-plan.md
@@ -331,6 +339,8 @@ class TextWdgt extends StringWdgt
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT
       @_contentStackSpec.grow ?= 1
+
+  #: fitting
 
   # adjust the data models behind the text. E.g.
   # is it going to be shown as cropped? What size
@@ -377,6 +387,8 @@ class TextWdgt extends StringWdgt
     @__commitExtent new Point widthOfText + 2 * inset.x, heightOfText + 2 * inset.y
     @reflowText()
 
+  #: layout
+
   # FIT_BOX_TO_TEXT layout pass: resize our OWN extent to hug the text. This is
   # the contained-text engine — gated by the mode, so ANY TextWdgt used as window
   # / panel / scroll content (not just a SimpleTextWdgt) re-wraps +
@@ -421,6 +433,8 @@ class TextWdgt extends StringWdgt
 
     @_changed()
 
+  #: geometry
+
   # a FIT_BOX_TO_TEXT widget re-wraps + re-heights to the new measure whenever its
   # extent is set by the layout (a container resize feeds it the width). Gated by
   # the mode, so it is a no-op for a normal free-floating (FIT_TEXT_TO_BOX)
@@ -428,6 +442,8 @@ class TextWdgt extends StringWdgt
   _applyExtent: (aPoint) ->
     super
     if @fittingSpec == FittingSpecText.FIT_BOX_TO_TEXT then @_reLayoutSelf()
+
+  #: drawing
 
   createBufferCacheKey: ->
     return super() +  "-" + @softWrap
@@ -494,7 +510,7 @@ class TextWdgt extends StringWdgt
     return @backBuffer
 
 
-  # text widget measuring ////
+  #: measuring
 
   # answer the logical position point of the given index ("slot")
   # i.e. the row and the column where a particular character is.
@@ -616,6 +632,8 @@ class TextWdgt extends StringWdgt
     [row] = @slotRowAndColumn slot
     TextSlots.slotAtOrBefore @text, @wrappedLineSlots[row] + @wrappedLines[row].length - 1
 
+  #: wrapping
+
   toggleSoftWrap: ->
     @softWrap = not @softWrap
     @_changed()
@@ -624,6 +642,8 @@ class TextWdgt extends StringWdgt
     # re-deliver my text along my wire.
     world.dataflow.markNonValueChange @
     world.stopEditing()
+
+  #: menus
 
   # what a reflecting menu row reads to decide whether it is ticked (MenuRowReflectionSpec.readerName)
   isSoftWrapping: -> @softWrap
@@ -655,6 +675,8 @@ class TextWdgt extends StringWdgt
       menu.addMenuItem "Inspect selection", @, "inspectSelection", toolTip: "run the\nselected code\nand inspect its value"
     menu.addMenuItem "Run contents", @, "runContents"
 
+  #: style
+
   setAlignmentToLeft: ->
     @alignment = "left"
     @_changed()
@@ -667,18 +689,22 @@ class TextWdgt extends StringWdgt
     @alignment = "center"
     @_changed()
   
+  #: testing
+
   # Multi-line text inserts a newline on Enter rather than accepting -- override of
   # StringWdgt.enterKeyAccepts, inherited by all TextWdgt subclasses. (type-test-elimination campaign)
   enterKeyAccepts: ->
     false
 
-  # StringWdgt editing:
+  #: editing
   edit: ->
     # force a repaint on entering edit
     # mode; the actual editing setup is
     # StringWdgt's (super).
     @_changed()
     return super
+
+  #: evaluating code
 
   # The object code typed in me runs against, asked of the place I stand in rather than kept in a
   # field: the nearest container of mine that DEFINES codeReceiver answers, and its answer stands
@@ -728,6 +754,8 @@ class TextWdgt extends StringWdgt
       @inform "There is nothing here for this code to run against"
       return undefined
     @_runningTypedCodeAgainst receiver, code, withTheValue
+
+  #: event handling
 
   # selects the whole line (if it's wrapped, just
   # what sits on the very line, not what wraps

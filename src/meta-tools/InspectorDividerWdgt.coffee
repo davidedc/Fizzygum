@@ -50,11 +50,15 @@ class InspectorDividerWdgt extends StackElementsSizeAdjustingWdgt
   @serializationTransients: ["_dragAnchor"]
   @copyTransients: ["_dragAnchor"]
 
+  #: initialization
+
   # my box, my base's thickness each way, with no most beyond it (my header says why)
   constructor: ->
     super()
     thickness = WorldWdgt.theme.layoutAdjusterThickness
     @setMinAndMaxBoundsAndSpreadability (new Point thickness, thickness), (new Point thickness, thickness), 0
+
+  #: splitting
 
   # THE CELL I SIZE: my holder's answer (cellSizedBy: my set's column just before me, or my browser's
   # set's viewport just above me), or undefined -- a divider picked out of its holder, or standing
@@ -119,6 +123,8 @@ class InspectorDividerWdgt extends StackElementsSizeAdjustingWdgt
     size = Math.round(@_along(point) - anchor)
     size = Math.min most, size  if most?
     {cell: cell, size: Math.max least, size}
+
+  #: event handling
 
   # A DRAG ON ME: the seam's solve (my header). My drag's first move, and any move while I hold no
   # anchor, takes the anchor and moves nothing; every later move hands the cell the size the solve

@@ -14,6 +14,8 @@ class IconAppearance extends Appearance
   # word do.
   typesGlyphs: false
 
+  #: colour roles
+
   # Icon fill color: the explicit ownColorInsteadOfWidgetColor if set, otherwise the ink the
   # host widget's STATE shows, for a widget whose ink is a function of its state (an icon
   # button's glyph by its pointer state, IconButtonWdgt._fillForMyState; a toolbar property
@@ -30,6 +32,8 @@ class IconAppearance extends Appearance
   _iconColorString: ->
     @_iconColor().toString()
 
+  #: copying and serialization
+
   # A PICTURE OF MY FACE THAT STAYS LIVE, for a widget that shows what my widget looks like
   # (InertIconHolderWdgt: a toolbar overflow menu's row picture), when my face types glyphs
   # (typesGlyphs); for any other face, none (the holder keeps a raster). The picture is my own kind of
@@ -45,10 +49,14 @@ class IconAppearance extends Appearance
     aWidget.setColor @_iconColor()
     new @constructor aWidget
 
+  #: colour roles
+
   # The system-wide icon outline colour, as a string (the theme's iconOutline role; Color.toString
   # computes the string once per Color and keeps it, so every paint after the first reads a field).
   _outlineColorString: ->
     WorldWdgt.theme.iconOutline.toString()
+
+  #: drawing
 
   # default icon is a ring — one direct mid-radius stroke: outer r 91.5, inner r 78.1 in
   # specification space. It stays a circle under the icon transform because
@@ -60,6 +68,8 @@ class IconAppearance extends Appearance
 
 
 
+
+  #: geometry
 
   calculateRectangleOfIcon: ->
     boxHeight = @widget.height()
@@ -108,6 +118,8 @@ class IconAppearance extends Appearance
   widthWithoutSpacing: ->
     @calculateRectangleOfIcon().width()
 
+  #: drawing
+
   # This method only paints this very widget's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
@@ -153,6 +165,8 @@ class IconAppearance extends Appearance
 
     aContext.restore()
 
+  #: path building
+
   oval: (context, x, y, w, h) ->
     context.save()
     context.beginPath()
@@ -181,6 +195,8 @@ class IconAppearance extends Appearance
       context.closePath()
     context.restore()
     return
+
+  #: shared figures
 
   # ---- shared icon frame primitives (pure code-motion from subclass paintFunctions) ----
   # These emit exactly the same context ops, in the same order, as the inline copies

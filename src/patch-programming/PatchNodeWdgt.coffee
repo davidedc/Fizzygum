@@ -43,6 +43,8 @@ class PatchNodeWdgt extends ControllerWdgt
   # external padding
   internalPadding: 5
 
+  #: pins and dataflow
+
   # the bang makes the node fire the current output value
   bang: (newvalue) ->
     @updateTarget true
@@ -88,10 +90,14 @@ class PatchNodeWdgt extends ControllerWdgt
 
   pins: -> super().concat @_inputPins()
 
+  #: menus
+
   addWidgetSpecificMenuEntries: (widgetOpeningThePopUp, menu) ->
     super
     @_addTargetConnectionMenuEntries menu
 
+
+  #: initialization
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   # _buildAndConnectChildrenNoSettle is the subclass hook that actually creates the node's children.
@@ -112,6 +118,8 @@ class PatchNodeWdgt extends ControllerWdgt
     textBox.configureAsMonoTextPanel isEditable
     textBox.wearPaneRoles stroke: "patchNodeTextBoxStroke"
     textBox
+
+  #: layout
 
   # the whole layout shape is Widget's own-contents template; each node subclass supplies only
   # its own _layOutOwnContents

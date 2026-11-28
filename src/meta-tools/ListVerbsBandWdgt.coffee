@@ -33,6 +33,8 @@
 # rename, a bin outline for remove, each in a square of inspectorVerbMarkSize.
 class ListVerbsBandWdgt extends BandWdgt
 
+  #: initialization
+
   # My view is my identity, my one positional parameter: my buttons are built from what it offers,
   # before my base builds me from them (the items a band is handed). The verbs' enabled states are my
   # view's to have me reflect, once it can answer them (reflectVerbs).
@@ -63,6 +65,8 @@ class ListVerbsBandWdgt extends BandWdgt
   @_buttonOf: (view, verb, mark, entry) ->
     face = new MenuRowIndicatorWdgt mark, glyphSize: WorldWdgt.theme.inspectorVerbMarkSize
     new SimpleButtonWdgt target: view, action: entry.action, arg1: verb, face: face, toolTip: entry.words
+
+  #: verbs
 
   # EACH OF MY BUTTONS ENABLED exactly while its verb applies now, as its target, my view, answers
   # (verbApplies: a connection by method name on a target). My view asks this at the seats where it

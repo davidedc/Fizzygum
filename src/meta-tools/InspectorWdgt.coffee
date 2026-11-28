@@ -101,6 +101,8 @@ class InspectorWdgt extends Widget
   # as it is.
   statedWidth: undefined
 
+  #: initialization
+
   # The subject is my identity, my one positional parameter (undefined for an empty body: my header
   # says what I am then). I open on my first view; a walk that keeps its view shows another once my
   # browser stands me in its sequence (_keepTheWalksViewNoSettle). A copy and a save of me run no
@@ -118,6 +120,8 @@ class InspectorWdgt extends Widget
     @_buildAndConnectChildren()
     @setMinAndMaxBoundsAndSpreadability (new Point 1, 1), (new Point 1, 1), DivisionStackLayoutSpec.SPREADABILITY_SPACERS
 
+  #: drawing
+
   # I lay the inspector's body under my views: the browser I stand in paints it under me -- as a column
   # of its set, whose row lays it under me too, or as its body below the set, a cell of the browser
   # itself -- and standing in neither I paint it myself (InspectorBodyAppearance), so a view of mine
@@ -132,6 +136,8 @@ class InspectorWdgt extends Widget
       @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     else
       super
+
+  #: layout
 
   # MY DESIRED SIZE: my natural one, what my cells desire (my base's, which the stack derives), but
   # across, while a person stated my width (statedWidth), that width, never below my least. Read by
@@ -179,6 +185,8 @@ class InspectorWdgt extends Widget
     @statedWidth = width
     @_invalidateLayout()
 
+  #: initialization
+
   # Build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns
   # settled): my header, my chooser when my subject offers more than one view, then my first view, put
   # in me as a switch puts a view (_replaceViewNoSettle: nothing shows a view in me yet, so it goes
@@ -195,6 +203,8 @@ class InspectorWdgt extends Widget
     @_buildChooserNoSettle views  if views.length > 1
     @_replaceViewNoSettle views[0]
     @_reflectViewOnToggles()
+
+  #: views
 
   # A WALK KEEPS ITS VIEW: chosen in a view of the inspector before me that lists objects, I show the
   # view of that title in place of my first (`title`: InspectorWdgt.titleOfMyChoice, asked of that
@@ -266,12 +276,16 @@ class InspectorWdgt extends Widget
   _relationOfMyView: ->
     @_viewRowTitled(@shownViewTitle)?[3]
 
+  #: testing
+
   # IS MY SUBJECT SHOWN AS ONE TEXT -- am I a BODY? It answers editsAsText (a member: MemberRef). The
   # one question that decides what such a subject offers (_views: its source alone), that it stands
   # below no class of its own (_classAbove), and where my browser stands me (its body's place:
   # InspectorBrowserWdgt._placeNoSettle), asked of me, never of my subject, by my browser.
   showsOneText: ->
     @inspectedObject?.editsAsText?() is true
+
+  #: views
 
   # MY VIEWS' BUILDERS, named by my views' table (_views) and each handed a row's derivation name,
   # which only a list of objects takes.
@@ -294,6 +308,8 @@ class InspectorWdgt extends Widget
   _newObjectList: (derivationName) ->
     new ObjectListWdgt @inspectedObject, derivationName
 
+  #: initialization
+
   # MY CHOOSER BAND, written as a member list's toggles band is: toggleBandInset in, one toggle per view
   # (its face and its argument the view's title, its action showViewNamed), toggleBandGap between them,
   # a spring, toggleBandInset again; its rule along its bottom. The toggles are shown my view
@@ -309,6 +325,8 @@ class InspectorWdgt extends Widget
     items.push BandWdgt.SPRING, theme.toggleBandInset
     @chooser = new BandWdgt theme.toggleBandHeight, items, rule: "bottom"
     @_addNoSettle @chooser, layoutSpec: @chooser.divisionBox('y')
+
+  #: views
 
   # My chooser shows my view: the toggle of the view I show ON, every other OFF. My build and every
   # switch end here, and nothing else sets a toggle of mine, so a toggle and my view cannot disagree.
@@ -417,6 +435,8 @@ class InspectorWdgt extends Widget
     place._fullDestroyNoSettle()  if place?.parent is @
     return
 
+  #: initialization
+
   # MY HEADER BAND: inspectorHeaderInset in, my title, my CLASS BUTTON when my subject has a class
   # above it, and inspectorHeaderInset again; its rule along its bottom. It opens with no split button:
   # my holder's reconcile gives me one where a splitter stands before me.
@@ -444,6 +464,8 @@ class InspectorWdgt extends Widget
     @header = new BandWdgt theme.inspectorHeaderHeight, items, rule: "bottom"
     @_addNoSettle @header, layoutSpec: @header.divisionBox('y')
 
+  #: testing
+
   # Do I show `subject`? It is my subject, or -- a member chosen again, made again as a new
   # reference -- it names the same member as mine (MemberRef.sameMemberAs); and my view stands in me
   # to show it (_myViewStandsInMe: itself, or wrapped in place). A view a person took out of me shows
@@ -453,6 +475,8 @@ class InspectorWdgt extends Widget
   showsSubject: (subject) ->
     return false unless @_myViewStandsInMe()
     subject is @inspectedObject or (@inspectedObject?.sameMemberAs? subject) is true
+
+  #: notifications
 
   # MY VIEW LEFT ME -- picked out, carried off by a drag, deleted into the bin, attached elsewhere,
   # destroyed, itself or the island that wrapped it in place: heard here, the one seat every door
@@ -474,11 +498,15 @@ class InspectorWdgt extends Widget
     @_addNoSettle @viewsPlace, atIndex: @_indexAfterMyBands(), layoutSpec: @viewsPlace.divisionBox('y')
     return
 
+  #: lifecycle
+
   # Destroyed as a whole: flagged at entry, so my view, destroyed with me, finds me being torn down
   # (_reactToChildRemoved) and no place is built into a dying inspector.
   _fullDestroyNoSettle: ->
     @_beingFullDestroyed = true
     super
+
+  #: choosing
 
   # MY SUBJECT CHOSEN AGAIN (InspectorBrowserWdgt.showChoice, which asks only while I show it, my view
   # standing in me): my view takes it back -- a member editor puts its member's text back over what is
@@ -488,6 +516,8 @@ class InspectorWdgt extends Widget
   _reloadNoSettle: ->
     @view._reloadNoSettle()
     return
+
+  #: printing
 
   # my window's title, and how a row names me: "Inspector — " and my subject's name, as it is
   colloquialName: ->
@@ -517,6 +547,8 @@ class InspectorWdgt extends Widget
     name = String @_subjectName()
     return name  if isAClassPrototype(@inspectedObject) or @showsOneText()
     StringWdgt.inDisplayCase name, "sentence"
+
+  #: choosing
 
   # The class my subject is made by: the first link ABOVE it on its prototype chain that is a
   # class's own prototype (it owns a `constructor` that is a function), unless that is Object. An
@@ -595,6 +627,8 @@ class InspectorWdgt extends Widget
     @view.list.scrollRowIntoView row  if row?
     return
 
+  #: splitting
+
   # The divider that stands before me, or undefined: read off my holder's children each time I am asked
   # (InspectorRowWdgt.splitterBefore, the column divider on my left in my set; InspectorBrowserWdgt's,
   # the divider above me as its body), never stored, so a split button never drags the divider of a set
@@ -660,6 +694,8 @@ class InspectorWdgt extends Widget
       @header._replacePiecesBeforeNoSettle @headerTitle, lead
     splitter.noteJoinedBy @splitGrip  if wanted
     return
+
+  #: copying and serialization
 
   # The two notifications a widget built without its constructor gets (Duplicator, Deserializer: both
   # ask them through ?(), and no class above me answers either): a copy of me, or a restore of me,

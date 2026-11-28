@@ -29,13 +29,19 @@ class MakerDocumentWdgt extends FrameWdgt
   # kind (a document's items melt into the page, a panel's lock, a sheet puts its headers away).
   providesAmenitiesForEditing: true
 
+  #: initialization
+
   constructor: ->
     super @_makeStartingPayload()
+
+  #: title
 
   # the kind names the window -- the base hook would title it from the payload's colloquialName
   # ("document", "stretchable panel", ...)
   _titleForContents: (aWdgt) ->
     @colloquialName()
+
+  #: lifecycle
 
   # The 'saveOrAsk' close (FrameWdgt.closeFromFrameBar). Nothing put in it and nothing reaching in:
   # destroy it. Something put in it and nothing reaching in: offer to save it, the save prompt
@@ -52,6 +58,8 @@ class MakerDocumentWdgt extends FrameWdgt
       prompt.popUpAtHand()
     else
       @_settleLayoutsAfter => @_closeNoSettle()
+
+  #: structure
 
   # Losing the payload rebuilds a FRESH one of my kind, in MY mode and in MY box: drops stay disabled
   # (the frame is occupied again), my mode and my extent stay put, and my title is my kind's name

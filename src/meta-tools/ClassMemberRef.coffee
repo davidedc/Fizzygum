@@ -18,6 +18,8 @@
 # made its edit.
 class ClassMemberRef extends MemberRef
 
+  #: member editing
+
   # `opts` goes to the edit (Class.applyMemberEdit): the member's comment and category where my step
   # SETS them (opts.comment, opts.category), or, for a copy, the member whose two it CARRIES
   # (opts.notesOf); else the edit keeps the member's. The record carries the notes the edit set -- a
@@ -37,6 +39,8 @@ class ClassMemberRef extends MemberRef
     @holder.constructor.class.removeMember memberName
     world?.sourceEditsRegistry?.recordClassMemberRemoval? @holder, memberName
 
+  #: notifications
+
   # What my steps' edit reaches, told (the first part of the one notification every step ends in,
   # MemberRef._notifyOfEdit, whose second part -- the member lists on my holder asking their verbs
   # again -- is the base's for me too): code changed under every widget (WorldWdgt.noteCodeChanged),
@@ -47,6 +51,8 @@ class ClassMemberRef extends MemberRef
     # gestures reach (a member list's Add…, Duplicate…, Rename… and Remove, a member editor's Save), at event
     # time and never inside a settle -- the notification is the edit's own settle
     world.noteCodeChanged()
+
+  #: printing
 
   # Prototype-level truth for a FIELD: its recorded SOURCE, the first class up the chain that
   # records one -- its current source (its body's, or an edit's since: Class.applyMemberEdit
@@ -65,6 +71,8 @@ class ClassMemberRef extends MemberRef
         return theClass.nonStaticPropertiesSources[@name]
       goingUpTargetProtChain = goingUpTargetProtChain.__proto__
     undefined
+
+  #: member editing
 
   # a member added to my class is an edit of it to "undefined"
   add: ->

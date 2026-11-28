@@ -10,15 +10,21 @@ class PlotWithAxesWdgt extends RatioLockedWdgt
   # painted (_surfaceFill), so a plot saved, loaded or duplicated wears the world's look
   color: undefined
 
+  #: initialization
+
   constructor: (@plot) ->
     super
     @plot.drawOnlyPartOfBoundingRect = true
     @appearance = new RectangularAppearance @
     @_buildAndConnectChildren()
 
+  #: colour roles
+
   # the fill my RectangularAppearance paints my surround in while I hold no colour of my own
   _surfaceFill: ->
     WorldWdgt.theme.plotSurroundFill
+
+  #: initialization
 
   # build via the NoSettle core, settle ONCE at the end (orphan-settledness: `new X()` returns settled).
   _buildAndConnectChildren: ->
@@ -34,8 +40,12 @@ class PlotWithAxesWdgt extends RatioLockedWdgt
 
     @_invalidateLayout()
 
+  #: printing
+
   colloquialName: ->
     @plot.colloquialName()
+
+  #: layout
 
   _reLayout: (newBoundsForThisLayout) ->
     @_reLayoutWithOwnContents newBoundsForThisLayout

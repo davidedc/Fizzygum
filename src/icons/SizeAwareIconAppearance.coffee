@@ -1,5 +1,7 @@
 class SizeAwareIconAppearance extends IconAppearance
 
+  #: drawing
+
   # Base for SIZE-AWARE icons (extracted 2026-07-21 from TypewriterIconAppearance,
   # the reference implementation, on the second conversion — see
   # docs/plans/pixel-icons-plan.md §5b).
@@ -91,6 +93,8 @@ class SizeAwareIconAppearance extends IconAppearance
 
     aContext.restore()
 
+  #: geometry
+
   # THE BOX my art is painted into, as integer DEVICE px [x0, y0, wDev, hDev].
   # _paintColoredIcon is its one reader, and both the normal pass and the
   # shadow-pass silhouette run that, so a glyph's shadow is cast by exactly the
@@ -123,9 +127,13 @@ class SizeAwareIconAppearance extends IconAppearance
       width = height = side
     [left * ceilPixelRatio, top * ceilPixelRatio, width * ceilPixelRatio, height * ceilPixelRatio]
 
+  #: drawing
+
   # subclass responsibility: all-integer device-pixel drawing into the
   # (x0, y0, wDev, hDev) box _paintBoxInDevicePx hands over
   _paintSizeAware: (ctx, x0, y0, wDev, hDev) ->
+
+  #: geometry
 
   # ---- the line unit of an icon drawn in the design's style ----------------
   # The design draws its glyphs on a GLYPH_GRID-unit square, and the line of
@@ -161,6 +169,8 @@ class SizeAwareIconAppearance extends IconAppearance
   _parityFitSide: (S, t) ->
     S - ((S - t) % 2)
 
+  #: path building
+
   # a polygon's points, offset by (x, y), as one more subpath of the path
   # being built: the caller closes it and fills the path
   _addPolygonSubpath: (ctx, x, y, points) ->
@@ -194,6 +204,8 @@ class SizeAwareIconAppearance extends IconAppearance
     else
       ctx.rect x, y, w, h
 
+  #: geometry
+
   # a span in a glyph square of S px with the given PARITY (0 even, 1 odd):
   # the whole px of that parity nearest S * units / GLYPH_GRID, never under
   # `least`. A part that must centre on an axis of that parity -- a bar t
@@ -204,6 +216,8 @@ class SizeAwareIconAppearance extends IconAppearance
     n = 2 * Math.round((exact - parity) / 2) + parity
     n += 2 while n < least
     n
+
+  #: colour roles
 
   # ---- colour roles --------------------------------------------------------
   # Every painter picks its colour through these — the ONE choke point that
@@ -233,6 +247,8 @@ class SizeAwareIconAppearance extends IconAppearance
     s = WorldWdgt.theme.iconPaper.toString()
     ctx.fillStyle = s
     ctx.strokeStyle = s
+
+  #: shared figures
 
   # ---- the content card of an icon drawn in the design's style -------------
   # The design's shared CONTENT card (docs/archive/redesign/desktop-canvas.html):

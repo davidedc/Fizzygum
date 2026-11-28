@@ -2,7 +2,9 @@
 
 **PLAN ONLY. Written to be executed COLD by an LLM/engineer with ZERO prior context.**
 
-**STATUS: AUTHORED 2026-11-28, NOTHING BUILT.**
+**STATUS: AUTHORED 2026-11-28, NOTHING BUILT. The owner, 2026-11-28: run it AFTER the inspector-browser loop finishes (its
+whole-suite runs would clash with the loop's), and both of its asks are GRANTED in advance — WorldWdgt's method ceiling
+136 → 137 (U2) and the new `WALL_CLOCK_STAMP` rule in `check-macro-source-discipline.js` (U3).**
 - Every fact in §1 was read off the tree at Fizzygum `58d48282` / Fizzygum-tests `d97074a2c` (497 SystemTests, 483 of them
   playable under a finger, on 2026-11-28).
 - Every number in §2 and §4 was MEASURED on that tree on 2026-11-27/28: by a reproduction (§2.3), a whole-suite census
@@ -93,8 +95,10 @@ ELIMINATE a class of nondeterminism, not make it rarer: **an under-window hold b
    - **Each unit is two commits, Fizzygum first, then Fizzygum-tests**, so either repo's history builds.
 4. Grants. Each of these needs the owner's word: ask with the summary and the proposed message, never act alone.
    - **every commit and push;**
-   - **WorldWdgt's method ceiling 136 → 137** (`buildSystem/check-complexity-ratchets.js`, U2), with a dated reason;
-   - **a NEW rule in an EXISTING gate** (`check-macro-source-discipline.js`, U3);
+   - **WorldWdgt's method ceiling 136 → 137** (`buildSystem/check-complexity-ratchets.js`, U2), with a dated reason —
+     GRANTED by the owner in advance, 2026-11-28 (the dated reason still written beside the number);
+   - **a NEW rule in an EXISTING gate** (`check-macro-source-discipline.js`, U3) — GRANTED by the owner in advance,
+     2026-11-28 (for this rule as §4.5 specifies it; a different rule is asked anew);
    - **any doc ceiling.** Both CLAUDE.md files are AT their byte ceilings (Fizzygum 35 555, Fizzygum-tests 66 307 on
      2026-11-28, `buildSystem/check-doc-narration-baseline.json`).
 5. Long ops:
@@ -860,9 +864,9 @@ node $S/up/holds-compare.js <dir A> <dir B>
 > §0.5 lists. Run `/Users/davidedellacasa/code/Fizzygum-all/fg status`, then §0.5 step 2's two `git log` checks; if either
 > lists commits, re-run §1.5's counts and correct the plan before acting.
 >
-> Before U2, ask me for WorldWdgt's method-ceiling raise 136 → 137 (`buildSystem/check-complexity-ratchets.js`, with a
-> dated reason). Before U3, ask me for the new `WALL_CLOCK_STAMP` rule in the existing gate
-> `check-macro-source-discipline.js`.
+> I granted in advance (2026-11-28) WorldWdgt's method-ceiling raise 136 → 137 (`buildSystem/check-complexity-ratchets.js`,
+> with a dated reason, in U2) and the new `WALL_CLOCK_STAMP` rule in the existing gate `check-macro-source-discipline.js`
+> (U3, as §4.5 specifies it); anything beyond those, ask me.
 >
 > Then run U0 (preconditions; the control that must still FAIL) and continue unit by unit: U1 pure refactor → U2 the
 > clock, with its NEW MEASUREMENT of non-empty-queue boundaries → U3 enforcement → U4 docs and comments → U5 the standing

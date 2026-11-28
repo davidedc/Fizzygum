@@ -9,4 +9,6 @@ class FridgeMagnetsApp extends WindowedApp
 
   requiredParts: ["fizzytiles"]
 
+  #: launching
+
   buildWindow: -> world.openFrameWith (new FridgeMagnetsWdgt), (new Point 570, 400), world.hand.position()
