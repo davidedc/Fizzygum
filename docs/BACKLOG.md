@@ -317,6 +317,16 @@ AUTHORED 2026-11-26 after five prototype rounds on the real build and four spike
 - [ ] **Under a finger a tooltip comes up after a tap** — a tap whose press opens nothing (a list's Remove, a disabled verb) leaves the tip's countdown running, so the tip shows ~500 ms later with no finger there and stays until the next press; every tooltipped control (the verbs' words are tooltips only) — reachable, low.
 - [ ] **A member list keeps a band a dev-mode Destroy destroyed** — `verbsBand` still names it, as `cutNoticeBand` names its own, so a live list retains a destroyed widget and every later choice asks it to reflect its verbs (it holds no buttons) — reachable in developer mode, low.
 
+### `plans/macro-input-clock-plan.md`
+AUTHORED 2026-11-28 after a reproduction, a suite-wide census and a prototype measured on the real build (14 suite configurations, 6 860 executions, 0 failures); NOT STARTED. Event time from the macro's own schedule, never from the cycle a wait ended in: ends DETERMINISM.md §3k's class.
+- [ ] U0: preconditions — §1.5's counts re-checked, the investigation's instruments present, the control (the unfixed drop under a 250 ms stall) still FAILS
+- [ ] U1: the stamping time as a pure refactor — the 58 toolkit sites and the 30 macro-source sites (15 tests) read `stepTimeNow()`; suite green under both pointers
+- [ ] U2: the input clock — step-base snapping, the due clock anchored only on an empty queue, fixed epoch, ε 16, the seam `WorldWdgt.inputClockNow`, the mixers routed, the macro ends once drained; WorldWdgt's method ceiling 136 → 137 (owner)
+- [ ] U3: enforcement — the chokepoint refusal under a new `WALL_CLOCK_STAMP` gate token, and a `WALL_CLOCK_STAMP` rule in `check-macro-source-discipline.js` (owner's grant: a change to an existing gate)
+- [ ] U4: docs and in-code comments — macros/CLAUDE.md, MACRO-PATTERNS, DETERMINISM §1/§3k/§4, input-and-gestures (:53–54 already stale), the lint index, Fizzygum-tests/CLAUDE.md
+- [ ] U5: the standing witness — a SystemTest that writes the class's shape on purpose, and a headless self-test that plays it under a stall, with a clock plant and a refusal plant
+- [ ] U6: `fg gauntlet` and `fg homepage`; close the arc and archive the plan
+
 ### `plans/reference-widgets-plan.md` — RE-SCOPED (UI + lifecycle areas only)
 AUTHORED+RE-SCOPED 2026-07-18; link/GC → graph-edges plan, launcher/Factory → creation plan. Residual = the visible reference UI + desktop lifecycle areas, built on those two arcs.
 - [ ] §4.2: minimise-to-a-bar, distinct from collapse-in-place (second wave)
