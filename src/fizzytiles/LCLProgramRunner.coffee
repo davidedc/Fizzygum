@@ -9,26 +9,14 @@
 
 class LCLProgramRunner
   
-  # this array is used to keep track of all the instances of "doOnce" in the
-  # code we need to keep this so we can put the ticks next to doOnce once
-  # that doOnce block has run.
-  doOnceOccurrencesLineNumbers = []
-  
-  # contains the draw function as a Function object. Never mind the
-  # initialisation as an empty string.
-  drawFunction = ""
-  
-  consecutiveFramesWithoutRunTimeError = 0
+  # @doOnceOccurrencesLineNumbers keeps track of all the instances of "doOnce" in
+  # the code: we need it so we can put the ticks next to doOnce once that doOnce
+  # block has run.
 
-  # contains the last stable draw function as a Function object. Never mind the
-  # initialisation as an empty string.
-  lastStableProgram = undefined
+  # @drawFunction contains the draw function as a Function object.
 
-  # contains the code that is meant to be run, as a string.
-  # note that it might be impossible to run it because of errors, in which case
-  # LiveCodeLab might be running an older version.
-  currentCodeString = ""
-  
+  # @lastStableProgram contains the last stable draw function as a Function object.
+
   constructor: (@eventRouter, @lclCodeCompiler, @globalScope) ->
 
   addToScope: (scope) ->

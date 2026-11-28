@@ -259,7 +259,9 @@ class Deserializer
 
   # What makes an envelope unrestorable WHOEVER restores it and whatever this build contains — a
   # clause in whyItCanNeverBeRestored's form, or undefined (its two id rules, which need the widget's class,
-  # judge a class this page has; the door asks again once a lazy part's has arrived). Every record the Serializer writes
+  # judge a class this page has; the door asks again once a lazy part's has arrived; a source edit's method
+  # category, whose rule is the meta-system's, is judged likewise where Class is,
+  # SourceEditsRegistry.malformedCategoryIn). Every record the Serializer writes
   # carries a non-empty string `class` (a class name or a tag), and @instantiate resolves nothing else,
   # so a record without one is a malformed table, not an unknown class.
   @_envelopeShapeProblem: (envelope) ->
@@ -572,6 +574,19 @@ class Deserializer
       # after it (Widget.refuseCodeAfterAFunction), which every load replaying the edit would run again
       for r, i in section.sourceEdits when typeof r.source is "string" and Widget.functionLiteralReading(r.source)?.after?
         return ".sourceEdits[" + i + "] holds a member's code with a statement after its function, which no save writes"
+      # and the method categories the records name: the last rule, so its answer is the list's
+      return @_sourceEditsCategoryProblem section.sourceEdits
+    undefined
+
+  # The source-edit list's method categories, each a category's name by the rule the parse reads a marker by: a
+  # record naming a malformed one -- a line break, a capital, two spaces, a word opening with `extends`, or, in a
+  # class's category list, an empty name -- is refused, before anything changes, wherever the meta-system that holds
+  # the rule is (SourceEditsRegistry.malformedCategoryIn says where that is). A member record's "" names no category
+  # (it clears the member's), so it is no malformed one. A clause naming the record, or undefined. Asked of records
+  # isARecord passed.
+  @_sourceEditsCategoryProblem: (sourceEdits) ->
+    for r, i in sourceEdits when (name = SourceEditsRegistry.malformedCategoryIn r)?
+      return ".sourceEdits[" + i + "] names the category " + @_shown(name) + ", which is no method category's name"
     undefined
 
   # A value read out of a file, shown in a refusal: its JSON, cut short -- the message is a person's

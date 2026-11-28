@@ -448,9 +448,11 @@ Facts worth knowing before touching any of this:
   caught it, because the only lazy part until then (`fizzytiles`) does not ship in production, and the dev-tree rigs
   run compile-at-boot where the meta-system is present anyway. `fg homepage` now asserts it (§8).
 - Its entire runtime consumer surface is **the inspector** (`meta-tools`: its member lists and member editors,
-  through the member references they edit by, `MemberRef` and `ClassMemberRef`, each class's meta-object and `Class`'s member records) and core's `SourceEditsRegistry` (`Class?`, `Class.membersAwayFrom`, and each
-  meta-object's `bootMemberSources` / `applyMemberEdit` / `removeMember`, a snapshot load's return to boot and its
-  replay). There is no runtime `new Class` anywhere outside boot.
+  through the member references they edit by, `MemberRef` and `ClassMemberRef`, each class's meta-object and `Class`'s member records) and core's `SourceEditsRegistry` (`Class?`, `Class.membersAwayFrom` /
+  `classNotesAwayFrom` / `isACategoryName`, and each meta-object's `bootRecord` / `editsAwayFromBoot` /
+  `applyMemberEdit` / `removeMember` / `setClassComment` / `setCategories` / `commentOf` / `categoryOf`: a snapshot
+  load's vetting of the method categories a file names, its confirm's count, its return to boot and its replay).
+  There is no runtime `new Class` anywhere outside boot.
 - **`compileFGCode` is NOT part of it.** It is defined in the same file the layer fetches
   (`js/src/loading-and-compiling-coffeescript-sources-min.js`) but `ScriptWdgt`, `Widget.evaluateString` and
   the spreadsheet's `FormulaCompiler` all call it at runtime, in core, in every profile — runtime compilation is

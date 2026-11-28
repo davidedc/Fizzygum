@@ -2832,19 +2832,25 @@ class WorldWdgt extends IconGridPanelWdgt
     # file takes step 0's load-then-re-enter path, and the re-entry runs this pure check again —
     # which is also when a method's source on such a class, an app key naming it, and its records' ids
     # (a second record with one id, an id above its class's count) are judged, after the confirm and the
-    # part's fetch, still before step 1.
+    # part's fetch, still before step 1. A source edit's method category is judged where Class is
+    # loaded, its rule being the meta-system's (SourceEditsRegistry.malformedCategoryIn): on a page that
+    # compiles at boot (or wherever Class has come already), here; on a pre-compiled tree before the
+    # reflective layer arrives, at the re-entry once step 0 has brought it, after the confirm and still
+    # before step 1; on a build with no meta-system (lean) never -- no class record is applied there,
+    # and each rides the restored registry as the file wrote it.
     whyNot = Deserializer.whyItCanNeverBeRestored envelope, (className) => @parts.canEverProvideClass className
     if whyNot?
       @inform "This world snapshot cannot be loaded here: " + whyNot + ".\nYour desktop has been left as it was."
       return
-    # The confirm names everything the load replaces: the desktop, and every class member this page
-    # holds edited (by a person here, or by an earlier load), which step 2b returns to its source at
-    # boot (SourceEditsRegistry).
+    # The confirm names everything the load replaces: the desktop, and every class edit this page
+    # holds (by a person here, or by an earlier load) -- a member's source, comment or category, a
+    # class's own comment or category list -- which step 2b returns to how it stood at boot
+    # (SourceEditsRegistry).
     unless opts.skipConfirm
-      edited = SourceEditsRegistry.membersAwayFromBootCount()
+      edited = SourceEditsRegistry.editsAwayFromBootCount()
       msg = "Load this world snapshot?\n\nIt REPLACES everything on your desktop" +
-        (if edited is 1 then ", returns 1 edited class member to its source at boot" else "") +
-        (if edited > 1 then ", returns " + edited + " edited class members to their source at boot" else "") +
+        (if edited is 1 then ", returns 1 class edit to how it stood at boot" else "") +
+        (if edited > 1 then ", returns " + edited + " class edits to how they stood at boot" else "") +
         ", and can run code the snapshot carries."
       return unless (typeof window.confirm is "function") and window.confirm msg
     # 0. WHAT THE FILE NEEDS, LOADED FIRST, then re-enter (Deserializer.loadWhatItNeeds, the step the
@@ -2900,20 +2906,21 @@ class WorldWdgt extends IconGridPanelWdgt
       #     records nothing (Widget.injectProperty). The rebuilt registry is installed with the
       #     rest of the world, below.
       restoredRegistry = SourceEditsRegistry.fromRecords section.sourceEdits
-      # The file's records reproduce its members from boot, so the page goes back to boot first: every
-      # class member edited here returns to its source at boot
-      # (SourceEditsRegistry.returnThePageToBootSources), and the loaded world is the file's, not the
-      # file's edits laid over this page's. Code changed under every widget when any member returned
-      # or any record replayed (noteCodeChanged): a load keeps its world, and with it the caches the
-      # code before the replay filled.
+      # The file's records reproduce its class edits from boot, so the page goes back to boot first:
+      # every class edit here -- a member's source, comment or category, a class's own comment or
+      # category list -- returns to how it stood at boot (SourceEditsRegistry.returnThePageToBootSources),
+      # and the loaded world is the file's, not the file's edits laid over this page's. Code changed
+      # under every widget when any edit returned or any record replayed (noteCodeChanged): a load keeps
+      # its world, and with it the caches the code before the replay filled.
       {returned, unreturned} = SourceEditsRegistry.returnThePageToBootSources()
       replayed = restoredRegistry.replayClassEdits()
       @noteCodeChanged() if returned + replayed > 0
       # What either step did NOT do is said ONCE, to the user, once the rest is restored -- counted,
       # never predicted. The class-level records the replay did not apply: an artifact that ships no
       # class source text has no meta-system and applies none (arc 5's lean profile); a build that lacks
-      # the class a record names (step 0 brought in every part that holds one) skips it; a
-      # record whose source this build does not compile is caught and logged. And the members this page
+      # the class a record names (step 0 brought in every part that holds one) skips it; a record the
+      # meta-object refuses -- a source this build does not compile, or a note it does not take -- is
+      # caught and logged. And the members this page
       # had edited that still run its edited version: each one the return could not give back (its boot
       # source failed to apply, caught and logged) that no replayed record has since replaced. The
       # alternative is that code changes in the loaded world without a word. The widgets and their

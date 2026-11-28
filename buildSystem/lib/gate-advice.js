@@ -328,6 +328,23 @@ const ROWS = {
       head: 'an override identical to the definition it inherits: the same code, with nothing bound to its class.',
       body: 'Quiet fixes: a cosmetic edit so the two bodies stop matching; `# identical-override-sanctioned:` with a reason that names no reader of ownership. Right: delete it, a comment on it that describes the subclass moving to the core it describes. The member then belongs to the base, and an inspector\'s own-member list shows it there (docs/architecture/widget-authoring-guidelines.md §16): a screenshot that changes with it is a recapture, never a reason to keep the copy. The marker, on or directly above the header, answers a reader whose behaviour needs this prototype to OWN the member (the menu sweep finds its contributors by the prototypes owning addWidgetSpecificMenuEntries), and its reason names that reader.' },
   },
+  'check-method-categories': {
+    'MARKER_MISPLACED CATEGORY_NAME_MALFORMED': { class: 'B',
+      head: 'a `#:` line the meta-system reads as no marker: the members below it keep the category above it, or none, and nothing else says so.',
+      body: 'Quiet fixes: the `#:` deleted so the line reads as a plain comment, which drops the category its author meant; a spelling the scan does not read as a marker-shaped comment (`# :`, `#;`). Right: the one form, `  #: <category>` at the member column between two members (two spaces, `#:`, one space, the name), its name lower-case words with one space between two, none of them opening with `extends` (the boot dependency scan reads an edge from one): docs/architecture/method-categories.md. A marker typed inside a body moves above the member it names; one above the class line moves below it, above the first member it names.' },
+    STASH_HOLDS_CODE: { class: 'A',
+      head: 'code the meta-system never compiles: a line between two members, above the class line or after the last member is no member\'s source, and it runs nowhere.',
+      body: 'A comment or a marker at the member column (two spaces, then `#`) ends the member above it, so one typed inside a body cuts the body there and drops the rest of it here. Quiet fixes: the line commented out, which hides that it never ran; the line re-indented until it joins some member by accident. Right: find the member it belongs to — re-indent the comment or marker that cut it to the body\'s own indent, or move the marker above the member; a line that never ran and that nothing needs is deleted, the class\'s compiled output proved unchanged. A `###` block comment between members reads here too (its inner lines are no comment by Class.isAComment): write it as `#` lines.' },
+    EMPTY_CATEGORY: { class: 'B',
+      head: 'a category with no method under it: it names a group that holds nothing, and the method meant for it stands in another.',
+      body: 'Quiet fixes: a field or a throwaway method put under it so it holds something. Right: the marker moves above the methods it names, or goes; a category may open more than once, so a method that belongs in an earlier one gets that marker again above it.' },
+    MARKED_CLASS_UNMARKED_METHOD: { class: 'B',
+      head: 'a method above its class\'s first marker: it stands in no category, in a class whose other methods each stand in one.',
+      body: 'Quiet fixes: every method put under one marker (`private`, or one name for all) so none is above the first; the class\'s markers deleted so it counts as unmarked. Right: a marker above it naming what it does (docs/architecture/method-categories.md holds the recommended names, and a class may name its own); a class is marked whole or not at all.' },
+    UNMARKED_CLASSES_ABOVE_BUDGET: { class: 'C',
+      head: 'UNMARKED_CLASSES_BUDGET holds back classes landing with no categories: a class is cheapest to categorise as it is written.',
+      body: 'First mark the new class whole: a marker above each group of its methods. A raise is right when the class comes out of an unmarked one by a mechanical move whose methods nobody re-read — a class split in two (one unmarked class becomes two: the count of its repo rises by one), or moved between the two repos (the count of the repo it lands in rises by one; a rename within a repo moves no count) — its dated reason beside the number. Markers placed by a name rule nobody read, or every method under one name, are the wrong answer.' },
+  },
   // ---- the tests repo's static gates (Fizzygum-tests/scripts)
   'check-macro-source-discipline': {
     'TOOLKIT_EVAL UNDECLARED_EVAL': { class: 'A',

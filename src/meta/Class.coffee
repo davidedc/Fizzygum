@@ -14,11 +14,27 @@ class Class
 
   nonStaticPropertiesSources: undefined
   staticPropertiesSources: undefined
+  # What my text says beside my members' code, read by the same parse (getSourceOfAllProperties): each member's
+  # comment and category, by name, statics and instance members apart, a store holding a member only where my text
+  # gives it one; my class's own comment, "" where my text writes none; and my categories' names, each once, in the
+  # order my markers first name them. Each kept current by my edits since, as my sources are (live member editing,
+  # below).
+  nonStaticPropertiesComments: undefined
+  staticPropertiesComments: undefined
+  nonStaticPropertiesCategories: undefined
+  staticPropertiesCategories: undefined
+  classComment: ""
+  categoryNames: undefined
   name: ""
   superClassName: undefined
   classRegex: /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
   propertyRegex: /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *(.*)/m
   topLevelCommentRegex: /^  #.*/m
+  # A METHOD CATEGORY's marker: a line that is exactly two spaces, `#:`, one space and the category's name
+  # (Class.isACategoryName). A comment at the member column ends the body above it (topLevelCommentRegex), so a
+  # marker stands between two members, in the next one's stash, as every such comment does; it gives its category
+  # to every member after it, up to the next marker.
+  categoryMarkerRegex: /^  #: (.*)$/
 
 
   # What a `super` in this class's `memberName` calls: the member of that name on the superclass's
@@ -259,6 +275,9 @@ class Class
   # instances then inherit the member from my superclass). The live members are thereby a function
   # of the stores, which is what lets a world snapshot reproduce them by replaying the edits in
   # order (SourceEditsRegistry). It is also what keeps a member editable as CoffeeScript.
+  # My member's comment and category are kept by the same two edits (an edit keeps them, sets them
+  # where it is handed them, or carries another member's for a copy; a removal drops them), and my
+  # class's own comment and category list by two whole-value verbs (setClassComment, setCategories).
   # A rename is no edit of mine: it is an edit under the new name plus a removal of the old
   # (ClassMemberRef.rename), so the member is RECOMPILED and its `super` follows
   # the new name (_superOf).
@@ -275,11 +294,22 @@ class Class
   # polluting every later member listing of the class. (The compiled output may
   # re-declare the CoffeeScript helper vars -- indexOf etc. -- at global scope; harmless, the
   # globals already hold exactly those values.) The super forms are rewritten exactly as the boot
-  # emit does (_rewriteSuperCalls), so an edited member keeps calling super. Throws on compile
-  # errors, having changed nothing.
-  applyMemberEdit: (memberName, source) ->
+  # emit does (_rewriteSuperCalls), so an edited member keeps calling super.
+  # The member's comment and category ride in opts: opts.comment (lines of comment, Class.isAComment)
+  # and opts.category (a category's name, Class.isACategoryName), each KEPT as the member has it
+  # where its key is absent (or undefined), set where it is handed, "" clearing it. A handed note is
+  # a person's or a file's, and one that is none of these is refused before the compile
+  # (_refuseNotes). A copy hands none: opts.notesOf names my member whose comment and category the
+  # edit CARRIES, as my stores hold them, unjudged (a duplicate's or a rename's copy,
+  # ClassMemberRef._editCopyUnder); a note handed beside it is set instead. Throws on a refusal or a
+  # compile error, having changed nothing.
+  applyMemberEdit: (memberName, source, opts = {}) ->
     Class.refuseTheConstructor memberName, @name
     Widget.refuseCodeAfterAFunction source
+    Class._refuseNotes opts.comment, opts.category
+    notesOf = opts.notesOf ? memberName
+    comment = opts.comment ? @commentOf notesOf
+    category = opts.category ? @categoryOf notesOf
     proto = window[@name].prototype
     # the typed source sits behind the assignment, so a compile error is placed in it (typedFrom);
     # a `super` the rewrite expands shifts the columns after it on its line
@@ -289,24 +319,84 @@ class Class
     proto[memberName] = window.__fzEditedClassMember
     delete window.__fzEditedClassMember
     @nonStaticPropertiesSources[memberName] = source
+    Class._keepIn @nonStaticPropertiesComments, memberName, comment
+    Class._keepIn @nonStaticPropertiesCategories, memberName, category
     Class.keepMemberRecord proto[memberName], source
     Class.refreshFieldRecord proto, memberName
     return
 
-  # Remove ONE member from my prototype, with its source and its field record. Then my instances
-  # read the member my superclass holds, if any, as if I had never defined it.
+  # The notes an edit hands in (applyMemberEdit's opts), refused where they are none: a comment is
+  # lines of comment (Class.isAComment, which "" is: no comment), a category a category's name
+  # (Class.isACategoryName) or "" (none). A note not handed (undefined) refuses nothing: the edit
+  # keeps the member's, or carries the ones of the member opts.notesOf names, as they stand. So a
+  # note is judged only as it comes in from outside my stores, never one my text gave a member: a
+  # class made at run time, whose text may hold a `###` block or code between two members (the
+  # parse keeps those lines as the next member's comment), keeps what its parse read there, and
+  # each of its members is still edited, duplicated and renamed.
+  @_refuseNotes: (comment, category) ->
+    if comment? and !Class.isAComment comment
+      throw new Error "a member's comment is lines of comment: each one blank or opening with #"
+    if category? and category isnt "" and !Class.isACategoryName category
+      throw new Error JSON.stringify(category) + " is no method category's name: lower-case words, one space between two, none of them opening with \"extends\""
+    return
+
+  # Remove ONE member from my prototype, with its source, its comment and category, and its field
+  # record. Then my instances read the member my superclass holds, if any, as if I had never defined
+  # it.
   removeMember: (memberName) ->
     Class.refuseTheConstructor memberName, @name
     proto = window[@name].prototype
     delete proto[memberName]
     delete @nonStaticPropertiesSources[memberName]
+    delete @nonStaticPropertiesComments[memberName]
+    delete @nonStaticPropertiesCategories[memberName]
     Class.refreshFieldRecord proto, memberName
+    return
+
+  # My class's own comment, replaced whole: lines of comment (Class.isAComment), "" for none;
+  # anything else is refused, having changed nothing. It compiles nothing and tells no one, as my
+  # member edits do.
+  setClassComment: (text) ->
+    unless Class.isAComment text
+      throw new Error "a class's comment is lines of comment: each one blank or opening with #"
+    @classComment = text
+    return
+
+  # My category list, replaced whole: distinct category names (Class.isACategoryName) in the order a
+  # reader meets them, a category no member stands in yet included; anything else is refused, having
+  # changed nothing. A member's category is the member's own (applyMemberEdit), so a member in a
+  # category the list leaves out still shows it, after the list's (categories). It compiles nothing
+  # and tells no one, as my member edits do.
+  setCategories: (names) ->
+    unless Array.isArray(names) and names.every((name) -> Class.isACategoryName name) and new Set(names).size is names.length
+      throw new Error "a class's categories are distinct category names, each lower-case words, one space between two, none of them opening with \"extends\": " + JSON.stringify names
+    @categoryNames = names.slice()
     return
 
   # Do I define member `memberName` -- did my source text, or a later edit, give it to me? (My store has no
   # prototype: an inherited `constructor` is no entry of it.)
   definesMember: (memberName) ->
     memberName of @nonStaticPropertiesSources
+
+  # My instance member `memberName`'s comment: the one my text writes above it, as the parse keeps it
+  # (_commentAndMarkersOf), or the one an edit gave it since (applyMemberEdit); "" where it has none, or where I define
+  # no such member. (A static's is in my staticPropertiesComments.)
+  commentOf: (memberName) ->
+    @nonStaticPropertiesComments[memberName] ? ""
+
+  # The category my instance member `memberName` stands in: the name of the last marker above it in my text, or the
+  # one an edit put it in since; "" for none (a member above my first marker), or a name I define no member under.
+  categoryOf: (memberName) ->
+    @nonStaticPropertiesCategories[memberName] ? ""
+
+  # My categories, in the order a reader meets them: my category list (categoryNames: my markers' names, each once, as
+  # first met, or the list setCategories gave me since), then any other category one of my members stands in, each
+  # once, in my category store's order.
+  categories: ->
+    names = @categoryNames.slice()
+    for own memberName, category of @nonStaticPropertiesCategories when category not in names
+      names.push category
+    names
 
   # `constructor` is no member to edit or remove: a prototype's `constructor` IS its class -- what
   # every `.constructor.name` and `.constructor.class` read answers (the Serializer writes it as a
@@ -379,15 +469,23 @@ class Class
       # what we collected is no good
       return false
 
-  # The two record stores, name -> source, carry NO prototype: a name nobody recorded is
-  # no record at any reader -- `constructor`, `toString` and every other Object.prototype member included.
+  # A RECORD STORE, keyed by member names, with NO prototype: a name nobody recorded is no record at any reader --
+  # `constructor`, `toString` and every other Object.prototype member included. Every store of mine is made here.
+  @_newRecordStore: -> Object.create null
+
+  # My members' SOURCES, name -> source, statics and instance members in two stores, each in my text's order; then,
+  # after them, what my text says beside the code (_notesOf). The first two positions are every reader's (a rig reads
+  # them by position). Each member's STASH -- the lines between the body above it and its own line -- is kept as
+  # written, beside the name, for that second pass: this loop splits, it reads no comment.
   getSourceOfAllProperties: (remainingSourceLines) ->
-    staticPropertiesSources = Object.create null
-    nonStaticPropertiesSources = Object.create null
+    staticPropertiesSources = Class._newRecordStore()
+    nonStaticPropertiesSources = Class._newRecordStore()
+    stashes = []
 
     while returned = @findUpTo remainingSourceLines, @propertyRegex
       propertyName = (returned[0].match @propertyRegex)[1]
       propertyComment = returned[1]
+      stashes.push [propertyName, propertyComment]
       propertyFirstLineOfBody = (returned[0].match @propertyRegex)[2]
       remainingSourceLines = returned[2]
       if window.srcLoadCompileDebugWrites
@@ -414,29 +512,121 @@ class Class
         nonStaticPropertiesSources[propertyName] = propertyBody
 
 
-    [staticPropertiesSources, nonStaticPropertiesSources]
+    [staticPropertiesSources, nonStaticPropertiesSources, @_notesOf stashes]
 
+  # What my members' stashes say beside the code ([name as written, stash], in my text's order, from
+  # getSourceOfAllProperties), statics and instance members alike: each member's comment (_commentAndMarkersOf), and
+  # its category -- the last marker at or above it, none above my first marker; and my categories' names, each once,
+  # in the order their markers are first met. A member written twice keeps what its last writing says, as its source
+  # does.
+  _notesOf: (stashes) ->
+    notes =
+      staticPropertiesComments: Class._newRecordStore()
+      nonStaticPropertiesComments: Class._newRecordStore()
+      staticPropertiesCategories: Class._newRecordStore()
+      nonStaticPropertiesCategories: Class._newRecordStore()
+      categoryNames: []
+    category = ""
+    for [writtenName, stash] in stashes
+      [comment, markers] = @_commentAndMarkersOf stash
+      for marker in markers
+        category = marker
+        notes.categoryNames.push marker unless marker in notes.categoryNames
+      if writtenName[0] is "@"
+        Class._keepIn notes.staticPropertiesComments, writtenName[1..], comment
+        Class._keepIn notes.staticPropertiesCategories, writtenName[1..], category
+      else
+        Class._keepIn notes.nonStaticPropertiesComments, writtenName, comment
+        Class._keepIn notes.nonStaticPropertiesCategories, writtenName, category
+    notes
 
+  # A member's stash read as what it says: the names of its markers, in order, and its comment -- every other line,
+  # less the two spaces of the member column, blank lines trimmed at its ends (Class._commentOfLines). A `#:` line
+  # whose name is no category's (Class.isACategoryName) is no marker: it stays a line of the comment. Nothing here
+  # throws: the build's syntax gate drives this parse over every file, where a throw fails the build.
+  _commentAndMarkersOf: (stash) ->
+    markers = []
+    lines = []
+    for line in stash.split "\n"
+      if (marker = line.match(@categoryMarkerRegex)?[1])? and Class.isACategoryName marker
+        markers.push marker
+      else
+        lines.push (if line.startsWith "  " then line.slice 2 else line)
+    [Class._commentOfLines(lines), markers]
 
-  # A class's source text parsed into what it is made of: its name, and its static and instance
-  # member sources -- every field definition, the constructor, the methods and the static members
-  # alike. Pure: read by my constructor, and by bootMemberSources to read my source text again.
+  # Lines read as a comment: joined, the blank lines at both ends trimmed; "" where no other line is left.
+  @_commentOfLines: (lines) ->
+    isBlank = (line) -> /^\s*$/.test line
+    from = 0
+    from++ while from < lines.length and isBlank lines[from]
+    to = lines.length
+    to-- while to > from and isBlank lines[to - 1]
+    lines[from...to].join "\n"
+
+  # A text kept in a record store under `memberName`, or, for "", no entry there at all: a store holds a member only
+  # where there is something to say of it.
+  @_keepIn: (store, memberName, text) ->
+    if text then store[memberName] = text else delete store[memberName]
+    return
+
+  # Is `name` a METHOD CATEGORY's name: lower-case words, one space between two, none of them opening with `extends`.
+  # The boot dependency scan (src/boot/dependencies-finding.coffee, EXTENDS) reads a blank, then `extends`, then the
+  # word glued to it or after it on the line, as an edge, on any line of a class's text, a comment's included: a marker
+  # naming `extendsfoo` or `extends things` would make its class load after a class `foo` or `things`. (The scan reads
+  # one line at a time, so a name's last word `extends` reads no edge; it is refused all the same, by the one rule.)
+  @isACategoryName: (name) ->
+    typeof name is "string" and /^[a-z]+(?: [a-z]+)*$/.test(name) and !/(?:^| )extends/.test(name)
+
+  # Is `text` lines of comment: every line of it blank, or opening (past its indent) with `#`. A `###` block's inner
+  # lines do not, so a block comment is none by this rule.
+  @isAComment: (text) ->
+    typeof text is "string" and text.split("\n").every (line) -> /^\s*(#|$)/.test line
+
+  # A member's text as an editor shows it (withLeadingComment), split back into the member's comment and its source.
+  # The comment is the text's leading run of blank and `#` lines up to its LAST `#` line, "" where the text opens on
+  # no `#` line; the source is everything after the line break that ends it. Up to the last `#` line, never to the
+  # run's end: a source may open on a blank line (its value on the lines below), and that line stays the source's.
+  # The one place this rule lives.
+  @splitLeadingComment: (text) ->
+    lines = text.split "\n"
+    last = -1
+    for line, i in lines
+      if /^\s*#/.test line then last = i
+      else break unless /^\s*$/.test line
+    return {comment: "", source: text} if last < 0
+    {comment: lines[..last].join("\n"), source: lines[last + 1..].join "\n"}
+
+  # A member's comment and source joined as an editor shows them: the comment, a line break, the source; the source
+  # alone where the comment is "". splitLeadingComment's inverse.
+  @withLeadingComment: (comment, source) ->
+    if comment then comment + "\n" + source else source
+
+  # A class's source text parsed into what it is made of: its name; its static and instance member sources -- every
+  # field definition, the constructor, the methods and the static members alike; and what the text says beside them
+  # (_notesOf), with the class's own comment -- the lines above its `class` line, as written, blank lines trimmed at
+  # its ends. Pure: read by my constructor, and by bootRecord to read my source text again.
   _parsedSource: (source) ->
     sourceLines = source.split "\n"
-    [name, ignored, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
-    [staticPropertiesSources, nonStaticPropertiesSources] = @getSourceOfAllProperties sourceLines
-    name: name
-    staticPropertiesSources: staticPropertiesSources
-    nonStaticPropertiesSources: nonStaticPropertiesSources
+    [name, header, sourceLines] = @findClassDescriptionHeaderCommentAndClassName sourceLines
+    [staticPropertiesSources, nonStaticPropertiesSources, notes] = @getSourceOfAllProperties sourceLines
+    parsed =
+      name: name
+      classComment: Class._commentOfLines header.split "\n"
+      staticPropertiesSources: staticPropertiesSources
+      nonStaticPropertiesSources: nonStaticPropertiesSources
+    Object.assign parsed, notes
 
-  # My instance members as my source text at boot gives them -- the SourceVault's text, the one my
-  # constructor parsed: what a world-snapshot load returns me to before it replays a file's edits
+  # My record as my source text at boot gives it -- the SourceVault's text, the one my constructor
+  # parsed, read again by the same parse (_parsedSource): my members' sources, comments and
+  # categories, my class's comment and category list, each under the name I hold it by, so one
+  # comparison reads me and my boot alike (Class.membersAwayFrom, classNotesAwayFrom). What a
+  # world-snapshot load returns me to before it replays a file's edits
   # (SourceEditsRegistry.returnThePageToBootSources). Undefined for a class the vault holds no text
   # for: one made at run time has no boot.
-  bootMemberSources: ->
+  bootRecord: ->
     source = SourceVault.get @name
     return undefined unless source?
-    @_parsedSource(source).nonStaticPropertiesSources
+    @_parsedSource source
 
   findClassDescriptionHeaderCommentAndClassName: (sourceLines) ->
     [classLine, classDescriptionHeaderComment, remainingSourceLines] = @findUpTo sourceLines, @classRegex
@@ -470,6 +660,12 @@ class Class
     @superClassName = @findIfItExtendsAnotherClass source
     @staticPropertiesSources = parsed.staticPropertiesSources
     @nonStaticPropertiesSources = parsed.nonStaticPropertiesSources
+    @staticPropertiesComments = parsed.staticPropertiesComments
+    @nonStaticPropertiesComments = parsed.nonStaticPropertiesComments
+    @staticPropertiesCategories = parsed.staticPropertiesCategories
+    @nonStaticPropertiesCategories = parsed.nonStaticPropertiesCategories
+    @classComment = parsed.classComment
+    @categoryNames = parsed.categoryNames
 
     if generatePreCompiledJS or createClass
       # --------------------
@@ -678,17 +874,37 @@ class Class
       keep klass[staticName], @staticPropertiesSources[staticName]
     return
 
-  # The members whose source in `currentSources` (a meta-object's store) is not the one `bootSources`
-  # holds -- an edit, an addition or a removal -- never the constructor, which no edit reaches
-  # (refuseTheConstructor). The one comparison of a store with its boot: membersAwayFromBoot below,
-  # and a world-snapshot load's return to boot (SourceEditsRegistry.returnThePageToBootSources).
-  @membersAwayFrom: (currentSources, bootSources) ->
-    memberNames = new Set Object.keys(currentSources).concat Object.keys bootSources
-    (memberName for memberName from memberNames when memberName isnt "constructor" and currentSources[memberName] isnt bootSources[memberName])
+  # The members of `current` (a meta-object) away from `boot` (its boot record, bootRecord): each
+  # whose source, comment or category is not the one boot holds -- an edit, an addition or a removal
+  # -- never the constructor, which no edit reaches (refuseTheConstructor). A note reads "" where a
+  # store holds none (a store keeps no entry for ""). The one comparison of a member with its boot:
+  # editsAwayFromBoot below, and a world-snapshot load's return to boot
+  # (SourceEditsRegistry.returnThePageToBootSources).
+  @membersAwayFrom: (current, boot) ->
+    noteOf = (store, memberName) -> store[memberName] ? ""
+    differs = (memberName) ->
+      current.nonStaticPropertiesSources[memberName] isnt boot.nonStaticPropertiesSources[memberName] or
+        noteOf(current.nonStaticPropertiesComments, memberName) isnt noteOf(boot.nonStaticPropertiesComments, memberName) or
+        noteOf(current.nonStaticPropertiesCategories, memberName) isnt noteOf(boot.nonStaticPropertiesCategories, memberName)
+    memberNames = new Set Object.keys(current.nonStaticPropertiesSources).concat Object.keys boot.nonStaticPropertiesSources
+    (memberName for memberName from memberNames when memberName isnt "constructor" and differs memberName)
 
-  # My members away from my boot sources (bootMemberSources): none for a class with no boot.
-  membersAwayFromBoot: ->
-    bootSources = @bootMemberSources()
-    return [] unless bootSources?
-    Class.membersAwayFrom @nonStaticPropertiesSources, bootSources
+  # Which of the class's own two notes `current` (a meta-object) holds away from `boot` (its boot
+  # record): "classComment", "categoryNames", each where it differs -- the list compared name by
+  # name, in order.
+  @classNotesAwayFrom: (current, boot) ->
+    away = []
+    away.push "classComment" if current.classComment isnt boot.classComment
+    sameList = current.categoryNames.length is boot.categoryNames.length and
+      current.categoryNames.every (name, i) -> name is boot.categoryNames[i]
+    away.push "categoryNames" unless sameList
+    away
+
+  # My edits away from my boot (bootRecord): each member away (membersAwayFrom), then each of my
+  # class's notes away (classNotesAwayFrom) -- none for a class with no boot. What a load's confirm
+  # counts (SourceEditsRegistry.editsAwayFromBootCount).
+  editsAwayFromBoot: ->
+    boot = @bootRecord()
+    return [] unless boot?
+    Class.membersAwayFrom(@, boot).concat Class.classNotesAwayFrom @, boot
 

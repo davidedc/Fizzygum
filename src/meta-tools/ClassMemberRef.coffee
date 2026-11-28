@@ -18,9 +18,20 @@
 # made its edit.
 class ClassMemberRef extends MemberRef
 
-  _editClassMember: (memberName, source) ->
-    @holder.constructor.class.applyMemberEdit memberName, source
-    world?.sourceEditsRegistry?.recordClassEdit? @holder, memberName, source
+  # `opts` goes to the edit (Class.applyMemberEdit): the member's comment and category where my step
+  # SETS them (opts.comment, opts.category), or, for a copy, the member whose two it CARRIES
+  # (opts.notesOf); else the edit keeps the member's. The record carries the notes the edit set -- a
+  # copy's as the edited member then holds them, each only where there is one -- and neither where it
+  # set none (SourceEditsRegistry.recordClassEdit).
+  _editClassMember: (memberName, source, opts = {}) ->
+    theClass = @holder.constructor.class
+    theClass.applyMemberEdit memberName, source, opts
+    recorded = opts
+    if opts.notesOf?
+      recorded =
+        comment: theClass.commentOf(memberName) or undefined
+        category: theClass.categoryOf(memberName) or undefined
+    world?.sourceEditsRegistry?.recordClassEdit? @holder, memberName, source, recorded
 
   _removeClassMember: (memberName) ->
     @holder.constructor.class.removeMember memberName
@@ -75,7 +86,13 @@ class ClassMemberRef extends MemberRef
     true
 
   # THE COPY a duplicate and a rename share, which tells no one: an edit under newName of my member's
-  # recorded SOURCE, so the copy is recompiled and its `super` calls the new name. The source is the
+  # recorded SOURCE, so the copy is recompiled and its `super` calls the new name. The copy carries
+  # my member's comment and category with its source, as my class's stores hold them (opts.notesOf):
+  # carried, never judged, so the member of a class made at run time, whose text may hold a `###`
+  # block or code above a member (Class._refuseNotes), copies as any other. Its record carries only
+  # the notes there are, and a replay keeps newName's for one it does not carry: none, since newName
+  # is a name my holder does not answer, by my callers' guard below (Class.applyMemberEdit,
+  # SourceEditsRegistry.recordClassEdit). The source is the
   # one I show for my member (shownText): a function's, the one its FUNCTION keeps
   # (Class.memberRecordOf); a field's, its class's only while my holder holds the value it made
   # (Class.fieldRecordHolds). A member my class has no source for (one its source never wrote, nor any
@@ -92,7 +109,7 @@ class ClassMemberRef extends MemberRef
     unless theClass.definesMember(@name) and sourceIsWhatItHolds
       world.inform '"' + @name + '" has no CoffeeScript\nsource in ' + theClass.name + "\nto " + verb
       return false
-    @_editClassMember newName, source
+    @_editClassMember newName, source, notesOf: @name
     true
 
   # A duplicate is the copy alone (_editCopyUnder), recorded as the one edit under the new name, then

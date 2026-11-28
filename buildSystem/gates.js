@@ -499,6 +499,19 @@ const GATES = [
     banner: "checking for overrides identical to what they inherit ...",
     failure: "!!!!!!!!!!! error: an override identical to what it inherits -- aborting build.",
     ok: "... identical-override check OK" },
+  // --- the METHOD-CATEGORY marker gate --------------------------------------------------------------
+  // A class's text names its methods' categories by marker lines, `  #: <category>` at the member column, and the
+  // meta-system keeps each member's (src/meta/Class.coffee). The marker is a comment: it excludes nothing and changes no
+  // compiled byte. This holds its form, read by the REAL meta-compiler's parse, so a marker or comment typed inside a
+  // body, which cuts the member above it there, fails as the code it drops; and the classes naming no category yet, one
+  // number per repo, to a budget that falls. ~1.5 s. Reads the compiled sources (src/ and the harness) whatever the
+  // flavour ships.
+  { script: path.join(BUILD_SYSTEM, "check-method-categories.js"),
+    args: [],
+    when: "checked",
+    banner: "checking method-category markers ...",
+    failure: "!!!!!!!!!!! error: a method-category marker is wrong, or the unmarked classes grew -- aborting build.",
+    ok: "... method-category markers OK" },
 ];
 
 module.exports = { GATES, WHEN, BUILD_ARGS, TESTS_REPO };

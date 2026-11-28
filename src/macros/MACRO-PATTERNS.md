@@ -3079,6 +3079,29 @@ assertion a recapture after a regression silently stores two different hashes an
   in the same assertion rather than let it out of the macro. A class edit inside a test (a member added through a browser on a prototype, `new
   InspectorBrowserWdgt Point.prototype`, saved through `@memberEditorFedBy`'s Save) is taken off again in a `finally`, since the page outlives
   the test.
+- **What a class's record keeps of its text beside its code, on a class of the test's OWN made from a BLOCK STRING**
+  (`macroClassKeepsItsCommentsAndCategories`, assertion-only, no screenshots, no input): the class's comment, each member's comment
+  and method category (the `  #: <category>` markers, `docs/architecture/method-categories.md`), the class's categories, an edit with
+  and without its `comment` / `category` options and with `""` for each, `setClassComment` / `setCategories`, `removeMember`, the
+  meta-object's REFUSALS, and `Class.splitLeadingComment` / `Class.withLeadingComment`. A refusal is read twice, in ONE assertion:
+  that the verb threw (a test-local `throws` catching it inside the macro, so it never leaves the generator) and that the class is
+  as it stood — the refused edit's code answering a value the test can tell (`-> 99`), so an edit that compiled before it refused
+  shows too. (1) Never a product class: a page's class edits outlive a test and no
+  reset compares a class's record to its boot, so an edit of a product class's notes would leak unseen. Make ONE class inside the
+  `try`, `klass = classNamed (new Class ownClassText, false, true).name`, extending nothing, and `delete window[klass.name] if klass?`
+  in the `finally` (a class the page did not boot with reads, at the next reset, as page state that drifted). The meta-object's verbs
+  are called directly — no gesture sets a comment or a category yet — and record nothing (the gesture records), so the test leaves
+  no record. (2) The text is a CoffeeScript block string (`"""`), which keeps its lines as they stand less the indentation of its
+  least indented one: the class comment and the `class` line at the first column, the members at the member column, blank lines
+  and `#` lines as typed (a `#` inside it is text; only `#{` interpolates). ⚠ A QUOTED text — one `\\n`-escaped string, as
+  `macroClassEditShowsOnTheNextFrame` writes classes whose members override methods the tree already defines, or a list of quoted
+  lines joined — does NOT serve a class whose own NEW members the test then calls: the build's `check-unresolved-sends.js` reads
+  every macro source's sends, and its definitions are LINE-ANCHORED (`buildSystem/lib/name-definitions.js`): a block string's
+  lines are lines of code to it, so the class's own `value: -> @n` and `last: -> 2` define the `.value(` and `.last(` the test
+  sends, while inside a quoted string the same text is a run in the middle of a line — and with no other class defining either
+  name, the build fails on `UNRESOLVED_SEND`. (3) Every expected value is
+  read off the test's own text by the rule under test, never off the product, and compared as the JSON of a list, so a line break
+  in a comment shows in a failure as itself.
 
 ## Touch and the finger run mode
 

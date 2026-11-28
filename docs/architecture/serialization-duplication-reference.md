@@ -875,7 +875,8 @@ source-edit notice):
      to widgets' records, the bin a `BinWdgt`'s, the shelf a `ShelfWdgt`'s, the preferences the
      `PreferencesAndSettings` record, the desktop colour a `Color`'s; its plain fields of their type; an info-doc flag
      only under an `infoDoc_…` name (`WorldWdgt.isInfoDocFlagName`); the source-edit list record by record, as `SourceEditsRegistry.isARecord` reads
-     one, and no record's code a function with a statement after it, which every load replaying it would run),
+     one, no record's code a function with a statement after it, which every load replaying it would run, and — where
+     `Class` is — no class record naming a method category that is none (§12)),
      a widget file carrying a world section (no widget save writes one; its source edits would be fetched for
      and never replayed), a widget file's `root` not a widget's record, `memberships` that are no list or stand on a record that is
      no widget's, a `{"$src"}` on a record of a class that cannot
@@ -913,12 +914,13 @@ source-edit notice):
    boot and the replay did NOT do, each counted where it happens: the class-level records the replay
    did not apply (`classLevelRecordCount` − the replay's applied count — all of them on a `sources:
    "none"` build, and elsewhere each whose class this build lacks once every part that could
-   hold one has loaded, or whose source this build does not compile); and the members this page had
+   hold one has loaded, or that the meta-object refuses — a source this build does not compile, a note it does not
+   take); and the members this page had
    edited that are STILL its edited versions after the replay — each the return to boot could not give
    back (`returnThePageToBootSources` answers them, `unreturned`, with the source each was left
-   running) and no replayed record has since replaced, nor the file's last record of that member already
-   describes (the registry's `pageMembersStillRunning`). Each of those is also RECORDED in the loaded world's
-   registry (`recordMembersStillRunning`, the record the page's own edit would have been), so a save of the
+   running and its comment and category) and no replayed record has since replaced, nor the file's last record of
+   that member already describes (the registry's `pageMembersStillRunning`). Each of those is also RECORDED in the
+   loaded world's registry (`recordMembersStillRunning`, the record the page's own edit would have been), so a save of the
    loaded world carries the code it runs. A build with no meta-system has
    no page edits to return, so there the second count is always 0.
 2. **Structural teardown** — `_teardownWorldStructureNoSettle`, the SHARED shipping core this and
@@ -989,10 +991,27 @@ wallpaper): `serialization-roundtrip-headless.js`'s world leg.
 
 `SourceEditsRegistry.coffee` at `world.sourceEditsRegistry` (constructed in the WorldWdgt
 ctor; a PRODUCT collaborator in the `core` part, so every profile ships it). It logs in-world SOURCE edits so a
-whole-world snapshot can carry and replay them. Record: `{scope, className,
-uniqueID?, propertyName, source?, deleted?}` — plain JSON, embedded verbatim in `world.sourceEdits` (§11).
-A record of any other shape — a scope other than `"instance"` or `"class"` among them — is no record
-(`SourceEditsRegistry.isARecord`), and a file carrying one is refused whole as a malformed world section (§11).
+whole-world snapshot can carry and replay them. A record is plain JSON, embedded verbatim in `world.sourceEdits`
+(§11), of one of four shapes (the registry's header states them):
+
+- an instance edit, `{scope: "instance", className, uniqueID?, propertyName, source}`;
+- a class member's edit or removal, `{scope: "class", className, propertyName, source | deleted: true, comment?,
+  category?}` — the member's comment and method category only where the edit SET them (`""` for none, which clears
+  it: never `undefined`, whose key JSON drops); an edit that kept them carries neither, and its replay keeps them too;
+- a class's own comment, `{scope: "class", className, classComment}` (`""` for none);
+- a class's category list, `{scope: "class", className, categories: [names]}` (an empty list included).
+
+A record of any other shape — a scope other than `"instance"` or `"class"`, a class record of two kinds at once, a
+note that is no text — is no record (`SourceEditsRegistry.isARecord`, which reads SHAPE alone and asks nothing of
+`Class`, so it judges alike on every build), and a file carrying one is refused whole as a malformed world section
+(§11). What a record's note SAYS is judged by the rule that owns it: a METHOD CATEGORY that is no category's name (in
+a member's record or in a category list; `docs/architecture/method-categories.md`) makes the file refused before
+anything changes (`SourceEditsRegistry.malformedCategoryIn`, by `Class.isACategoryName`, asked by
+`Deserializer._sourceEditsCategoryProblem`) wherever `Class` is — at once on a page that compiles at boot, at the
+load's re-entry once the reflective layer has come on a production tree (its first look found no `Class`); a build
+with no meta-system applies no class record at all and says how many (below). A comment that is not lines of comment,
+or a category list naming one category twice, is refused by the meta-object as the replay applies it, as a source
+that does not compile is.
 
 Two scopes, each recorded by the person's GESTURE that makes it, never by the edit verb the
 gesture drives (a meta-object or a meta-verb edits, telling no one and recording nothing; the gesture tells and records) — and,
@@ -1014,7 +1033,16 @@ recorded as that member's edit would have been (`recordMembersStillRunning`, §1
   member kind, methods and fields alike; its class removal step (`_removeClassMember`) removes
   through `Class.removeMember` and records `recordClassMemberRemoval(prototype, name)`, a
   `deleted: true` record. This is the ESSENTIAL case: a prototype edit mutates the live class
-  but leaves no other serializable trace (§2.7).
+  but leaves no other serializable trace (§2.7). The edit step hands its `opts` — a member's comment and category,
+  where it sets them — to the edit and to its record alike (`recordClassEdit(prototype, name, txt, opts)` writes
+  each only then). A COPY (a duplicate's, a rename's, `ClassMemberRef._editCopyUnder`) hands the edit `notesOf`
+  instead, the member whose comment and category the copy CARRIES, as the class's stores hold them and unjudged
+  (`Class.applyMemberEdit`), and its record gets the carried notes, each only where there is one. ⚠ A stated
+  limit: a carried comment the comment rule would refuse (a class made at run time whose text holds a `###` block or
+  code above a member, which the parse keeps as that member's comment) is recorded as it stands, and a replay of
+  that record judges it as a file's note and refuses the whole record, its source included. No gesture sets a
+  member's comment or category, a class's comment or its category list yet, so a registry holds the two class-level
+  kinds only from a file.
 
 In the class scope an ADD is an edit whose source is `"undefined"`, a DUPLICATE one edit under the new
 name of the member's recorded source, and a RENAME is two records — an edit under the new name, then a removal of
@@ -1028,26 +1056,33 @@ included. Replay is EXACT because the live state is a function of one store: eac
 keeps the CURRENT source of every member it defines (an edit writes it, a removal deletes it),
 and its prototype holds the member its store defines; after a removal its instances read the
 member its superclass holds, if any, as if it had never defined it (`Class.removeMember`;
-`Class.coffee`, "live member editing").
+`Class.coffee`, "live member editing"). It keeps each member's comment and category beside its source, by the same
+two edits, and the class's comment and category list by two whole-value verbs (`setClassComment`, `setCategories`;
+`docs/architecture/method-categories.md` §3).
 Replay walks the records in order, so remove-then-re-add lands in its final state.
 
 **Restore** (`loadWorldSnapshot`): the records reproduce the file's members FROM BOOT, so the load
 first returns the page to boot (`SourceEditsRegistry.returnThePageToBootSources`): every class
-gives each member whose source differs from the one its source text at boot gives
-(`Class.bootMemberSources`, the vault's text parsed as the constructor parsed it) that one
-back, through its own `applyMemberEdit` / `removeMember` — so a member the page added goes, one it
-removed comes back, and the loaded world is the file's, never the file's edits laid over the page's
-own. What the page edited is read from the STORES against the vault, not from a registry: a world's
+gives each member whose source, comment or category differs from the one its source text at boot gives
+(`Class.bootRecord`, the vault's text parsed again as the constructor parsed it; `Class.membersAwayFrom`) all three
+back, through its own `applyMemberEdit` (handed boot's comment and category, `""` where boot has none) /
+`removeMember` — so a member the page added goes, one it removed comes back, and the loaded world is the file's,
+never the file's edits laid over the page's own; then the class's own comment and category list, each where it is
+away (`Class.classNotesAwayFrom`), through `setClassComment` / `setCategories`. What the page edited is read from
+the STORES against the vault, not from a registry: a world's
 registry lists the edits made under it, while the prototypes are the page's. A class the
 vault holds no text for (one made at run time) has no boot and is left as it is. A member whose boot
 source fails to apply is logged and left, and the return answers it among the ones it LEFT, with the
-source it was left running. The load's confirm
-names how many members it would return (`membersAwayFromBootCount`). Then the registry is rebuilt from
+source, comment and category it was left running. The load's confirm names how many CLASS EDITS it would return —
+a member once, however many of its three are away, and a class's comment and its category list one each ("returns N
+class edits to how they stood at boot", `SourceEditsRegistry.editsAwayFromBootCount` over each meta-object's
+`editsAwayFromBoot`). Then the registry is rebuilt from
 `world.sourceEdits` (`SourceEditsRegistry.fromRecords`) and its **class-scope edits are replayed
-BEFORE deserialization** (`replayClassEdits`), so a shell (`Object.create(prototype)`) already sees the
-edited methods; an edit that no longer compiles is logged, not fatal. The return answers how many
-members it returned and which it left; the replay answers how many records it applied; and when any
-member returned or any record applied, the load tells the world its code changed
+BEFORE deserialization** (`replayClassEdits`, each record applied by its kind), so a shell
+(`Object.create(prototype)`) already sees the edited methods; a record the meta-object refuses (a source that no
+longer compiles, a note it does not take) is logged, not fatal, and counted as one the replay did not apply. The
+return answers how many edits it returned and which members it left; the replay answers how many records it
+applied; and when any edit returned or any record applied, the load tells the world its code changed
 (`WorldWdgt.noteCodeChanged`, a class member edit's own notification): a load KEEPS its world, and
 with it every cache the old code filled — measured lines, line breaks, immutable back buffers,
 each keyed by content — so a page that already showed the edited class's widgets would otherwise
@@ -1061,8 +1096,8 @@ class edits silently — as does a build that lacks the class an edit names (the
 brings in every lazy part that holds an edited class, §9). Instance-scope edits
 ride the normal `{"$src"}` path on their own widget — those still load on such a build, since
 they need only the compiler every profile ships. The rebuilt registry — the file's records, then each page
-member the load could not return that the loaded world still runs as the page edited it
-(`pageMembersStillRunning`: not one the file's own last record already describes) — is installed after
+member the load could not return that the loaded world still runs as the page edited it, recorded with its comment
+and category (`pageMembersStillRunning`: not one the file's own last record already describes) — is installed after
 deserialize, with the rest of the world. A file/menu load confirms first, warning that a
 snapshot can execute code (§4.12 of the plan). Proven fresh-session by
 `serialization-roundtrip-headless.js`'s source-edit leg (`sourceEdits.*`): an `injectProperty`
@@ -1071,11 +1106,28 @@ inspector's gestures take), and
 of a body member never edited (its rename recompiled so `super` follows it), each hold in a fresh
 page exactly as the editing page left them; and a page that already showed a text before loading a file carrying a
 class edit of it shows exactly what the fresh page shows (`sourceEdits.warmLoadEqualsColdLoad`).
+A member's comment and category set by its edit, and a class's comment and its category list (one category no
+member stands in among them), each carried by the file's records, hold in the editing page and in a fresh one
+(`sourceEdits.classMemberNotesReplayed`, `sourceEdits.classCommentAndEmptyCategoryReplayed`); a duplicate and a
+rename of a member whose text gives it a comment and a category carry both into the new member and into its record,
+replayed alike (`sourceEdits.renameAndDuplicateCarryNotes`); and a record handed `""` for both, written by the save
+and read back through JSON, clears the notes the member's text gives it (`sourceEdits.clearedNotesReplayed`).
 A page's own edits — a class member edited, added and removed, another class's member saved, a file's member
-re-edited — leave exactly the file's members away from boot when the file loads onto it
-(`sourceEdits.loadOverPageEditsIsTheFilesWorld`), the confirm names how many members the load returns
-(`sourceEdits.loadConfirmNamesTheEditsItReturns`), and a file carrying no records leaves the page at
-boot (`sourceEdits.loadReturnsThePageToBoot`). On a pre-compiled tree, where the meta-system parses
+re-edited, a boot member's comment and category alone, a class's own comment and category list — leave exactly the
+file's edits away from boot when the file loads onto it (`sourceEdits.loadOverPageEditsIsTheFilesWorld`), the
+page's own notes over the file's member and class give way to the file's (`sourceEdits.notesAreTheFilesAfterALoad`),
+the confirm names how many class edits the load returns (`sourceEdits.loadConfirmNamesTheEditsItReturns`), and a
+file carrying no records leaves the page at boot (`sourceEdits.loadReturnsThePageToBoot`), each member's notes and
+each class's at boot included (`sourceEdits.loadReturnsMemberNotesToBoot`, `sourceEdits.loadReturnsClassNotesToBoot`,
+the latter reading each class's category LIST). A page member the load could not return, which the loaded world
+still runs, is in its registry and its next save with the comment and category it carries
+(`sourceEdits.unreturnedPageEditIsRecorded`). The vetting: a class record naming a method category that is none,
+by shape or by name, is refused before anything changes, a page's class edit still in force after (`world.loadGuard.malformedCategoryRefused`); a class's comment that
+is no text, or a class record of two kinds at once, is a malformed section
+(`world.loadGuard.malformedWorldSectionRefused`); and the shapes a save writes — a member's edit with its notes and
+with both cleared, a class's comment and a cleared one, a category list and an empty one — pass
+(`world.loadGuard.wellFormedEdgeShapesAccepted`). On a pre-compiled tree, where the meta-system parses
 sources beside code already running, `fg homepage`'s production smoke loads a world file carrying the
-class-scope edits of a core class and of a lazy part's class, and holds both in force after the load
-(`CLASS_EDIT_FILE_LOADS`).
+class-scope edits of a core class (with the member's comment and category, beside a record of the class's own
+comment) and of a lazy part's class, and holds them all in force after the load — or, on a tree with no
+meta-system, holds that it says once that it cannot re-apply every one of the class records (`CLASS_EDIT_FILE_LOADS`).

@@ -7,7 +7,9 @@
 // every `super` into a plain `__super__` call (`_rewriteSuperCalls`, read from the lexer's tokens), and compiles
 // each fragment with {bare: true}. Re-porting that transform would drift, so this loads and runs it. Readers:
 // check-coffee-syntax.js (compiles every fragment: the syntax gate), lib/call-sites.js (taps `_rewriteSuperCalls`
-// for the fragments it parses) and compile-fragment.js (the real super rewrite).
+// for the fragments it parses), compile-fragment.js (the real super rewrite) and check-method-categories.js (reads
+// each class's members, comments and categories off the parse). The two that place a member on its file's lines
+// share one rule for it, placesOfMember.
 //
 // THE SHIM. Class touches a few globals at construction time; they are supplied as closed-over factory parameters
 // plus a `window` Proxy:
@@ -82,4 +84,21 @@ function rewriteSuper(Class, className, memberName, src) {
   return Class.prototype._rewriteSuperCalls.call(Object.assign(Object.create(Class.prototype), { name: className }), memberName, src);
 }
 
-module.exports = { bundledCoffeeScript, loadMetaCompiler, rewriteSuper, COMPILER };
+// Where a member's recorded SOURCE stands in its class file's `lines`: the index (from 0) of every line whose member
+// header — `  name: rest`, `  @name: rest` for a class-side member — has the source's first line as its rest, the
+// source's other lines following it verbatim. The parse cuts a member's source out of its file exactly so (the rest of
+// its header line, then its body's lines), so the source read back lands where it was cut. A member found once is
+// placed; what any other count means is the reader's to say (lib/call-sites.js refuses it; check-method-categories.js
+// keeps the last, as the parse keeps a member's last writing).
+function placesOfMember(lines, memberName, isStatic, source) {
+  const header = new RegExp('^  ' + (isStatic ? '@' : '') + memberName.replace(/\$/g, '\\$') + ' *: *(.*)$');
+  const sourceLines = source.split('\n');
+  const at = [];
+  for (let h = 0; h < lines.length; h++) {
+    const m = header.exec(lines[h]);
+    if (m && m[1] === sourceLines[0] && sourceLines.every((l, k) => k === 0 || lines[h + k] === l)) at.push(h);
+  }
+  return at;
+}
+
+module.exports = { bundledCoffeeScript, loadMetaCompiler, rewriteSuper, placesOfMember, COMPILER };

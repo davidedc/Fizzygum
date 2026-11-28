@@ -1139,6 +1139,57 @@ No pop-out button stands in a column's header (owner, 2026-11-26).
 - **Out of scope, said**: a class's STATICS stay where they are (shown read-only on the class function, never
   recorded); their comments and categories are kept by the same pass and shown by nothing yet. No file is written
   out (decision D4).
+- **As built in U5** (the loop's rulings, `u5/PREP.md` §2, on the research's findings, `u5/research/R5-A-meta-object.md`,
+  `R5-B-gate-tests-docs.md`; PREP §1's corrections of this section folded in; the present-tense reference is
+  `docs/architecture/method-categories.md` §3 and `serialization-duplication-reference.md` §12):
+  - **The stores and the accessors** (`src/meta/Class.coffee`): `nonStaticPropertiesComments`,
+    `staticPropertiesComments`, `nonStaticPropertiesCategories`, `staticPropertiesCategories` (each a record store,
+    `Class._newRecordStore`, holding a member only where its text or an edit gives it something, `Class._keepIn`),
+    `classComment` (`""` for none) and `categoryNames` (the list); `commentOf name` and `categoryOf name` answer `""` for
+    none; `categories()` is the list, then any other category an instance member stands in, in the store's order.
+    No accessor reads the static stores.
+  - **The parse**: `getSourceOfAllProperties` keeps each member's stash beside its name and answers
+    `[statics, instance, notes]`, the first two positions as they were; the second pass is `_notesOf` over
+    `_commentAndMarkersOf` and `Class._commentOfLines`. A `#:` line whose name is no category's stays a line of the
+    comment, and nothing throws (the syntax gate drives this parse over every file). The comment and its source are
+    split at the LAST leading `#` line (`Class.splitLeadingComment`, PREP §1.4; this section's "the end of its leading
+    block of blank and `#` lines" would take a blank line a source opens on), joined by `Class.withLeadingComment`;
+    `Class.isAComment` is the one comment rule (a `###` block is none: a stated limit, none in the tree).
+  - **The edits**: a cleared note is `""`, never `undefined` (PREP §1.8: JSON drops an `undefined` key, which reads
+    "keep", so a cleared comment came back after a save and a load); a HANDED note (a person's, a file's) that is none
+    is refused before the compile (`Class._refuseNotes`), and one the member already has is never judged again — nor
+    one a copy carries: `opts.notesOf` names the member whose notes the edit carries, as the stores hold them,
+    unjudged (the fix pass, Review A's (3): a duplicate or a rename of a run-time class's member whose text holds a
+    `###` block or code above it threw). The class's own: TWO whole-value
+    verbs, `setClassComment text` and `setCategories names` — `addCategory`, `renameCategory` and `removeCategory` are
+    U8's (PREP §2). `bootMemberSources` is `bootRecord` (the whole `_parsedSource`); `Class.membersAwayFrom current,
+    boot` takes a meta-object and a record; `Class.classNotesAwayFrom` names the class's two notes away;
+    `membersAwayFromBoot` / `membersAwayFromBootCount` are `editsAwayFromBoot` / `editsAwayFromBootCount`; the return
+    is `SourceEditsRegistry._returnMember` (an edit handed boot's notes, `""` where none) and `_returnClassNotes`; the
+    load's confirm says "returns N class edits to how they stood at boot" (a member once, a class's comment and its
+    category list one each: R5-A's default).
+  - **The records**: a member's record carries `comment` / `category` only where its edit set them
+    (`recordClassEdit(proto, name, source, opts)`); the two class-level kinds `{classComment}` and `{categories}`,
+    which a registry holds only from a file (no gesture records either before U7/U8); `isARecord` by SHAPE, naming no
+    `Class` (`_isAClassRecordsBody`: one of three kinds, by the field carried); a malformed category refused before
+    anything changes where `Class` is (`SourceEditsRegistry.malformedCategoryIn`, asked by
+    `Deserializer._sourceEditsCategoryProblem`, the last rule of `_sectionSourceEditsProblem`: dev at once, a
+    production tree at the load's re-entry after the layer, lean applying no class record and saying how many); a
+    comment that is no comment, or a list naming one twice, refused by the meta-object at the replay, logged and
+    counted as unapplied (`_applyClassRecord`); `recordMembersStillRunning` writes the member's notes with its source.
+  - **U5.4 HELD for U7** (PREP §2): `shownText` and the Save's split are not built; `ClassMemberRef._editClassMember`
+    takes `opts` for edit and record alike, and `_editCopyUnder` carries a member's comment and category through a
+    duplicate and a rename (`notesOf: @name`; the copy's record gets the carried notes, each only where there is one).
+    No product caller of `splitLeadingComment` / `withLeadingComment` yet: the SystemTest
+    reaches them.
+  - **Measured** (`u5/cp2b/parse-proof.txt`, HEAD's `Class` and the working one each on the working text of every
+    file, 566 class files, 551 src + 15 harness): every member's source string and every class's compiled output
+    identical (0 differ each); kept 336 class comments, 3620 instance and 329 static member comments; the class rebuilt
+    from what is kept explained in 566 of 566 (byte-exact 1; blank lines set aside in 563 classes, 1965 lines; the
+    spacing around a member's colon in 10, 152 member lines — PREP §1.5's "other 10"; a tail after the last member in
+    4, 14 lines; statics' places in 66, 241 statics after an instance member); split of the join and the text laid back
+    differing for 0 of 7053 members (PREP §1.4's one exception, `LCLProgramRunner.constructor`, passing once its five
+    dead lines went); markers planted in six classes, every member in its planted category; four plants biting.
 
 ### 5.10 The marker, the vocabulary and the gate (U5)
 
@@ -1159,8 +1210,9 @@ existing lines); dropping the `#` by mistake is a compile error the syntax gate 
 `# category: x` would silently make a field); compiled output, dependency edges and every gate were identical with
 410 markers planted. **It excludes nothing and changes no shipped byte of code**: it is no successor of the two
 retired exclusion markers (`check-region-markers.js`, `check-whole-file-markers.js`), whose lesson was that
-invisible text-level EXCLUSION is the wrong tool. A category's name is lower-case words; the word `extends` is
-refused in one (the boot scanner reads it anywhere on a line).
+invisible text-level EXCLUSION is the wrong tool. A category's name is lower-case words; no word of it may open
+with `extends` (the boot scanner reads `extends` and the word glued to it or after it anywhere on a line, so
+`extendsfoo` makes an edge to `foo` as `extends foo` does).
 
 **The vocabulary is recommended, not closed**: a class may name a category of its own where none fits (the
 inspector's "choosing", "filtering", "member editing", which the owner saw and liked). The standard names, each
@@ -1186,7 +1238,7 @@ which do not end at a member-column comment. Its rules:
 |---|---|---|
 | `MARKER_MISINDENTED` | B, zero | a line shaped like a marker that is not at exactly two spaces (it silently becomes method text) |
 | `STASH_HOLDS_CODE` | B, zero | a line of code between two members (a marker written inside a body truncates the method; today five dead lines of `src/fizzytiles/LCLProgramRunner.coffee`, which U5 deletes after proving the compiled output identical without them) |
-| `CATEGORY_NAME_MALFORMED` | B, zero | a `#:` line whose name is not lower-case words, or holds the word `extends` |
+| `CATEGORY_NAME_MALFORMED` | B, zero | a `#:` line whose name is not lower-case words, or holds a word opening with `extends` |
 | `EMPTY_CATEGORY` | B, zero | a marker with no method under it before the next marker or the class's end |
 | `MARKED_CLASS_UNMARKED_METHOD` | B, zero | in a class that has a marker, an instance method above the first one |
 | `UNMARKED_METHODS_ABOVE_BUDGET` | C, falls | the tree's instance methods with no category are more than the number recorded (4485 on 2026-11-26, before U6) |
@@ -1196,6 +1248,50 @@ right on all 4764 of the tree where a regex on the first line is wrong on five. 
 
 **The comment rubric** (the umbrella's `.claude/comment-rubric.md`) gains `#:` in its list of machine-read markers
 that no audit edits, counts or reflows, and one hard rule: an audit never moves a member across a marker.
+
+- **As built in U5** (PREP §1 and §2; the present-tense reference is `docs/architecture/method-categories.md`, and the
+  gate's lines in `lint-and-static-checks.md` §3, §3b, §5 and §6b):
+  - **The form**: `Class::categoryMarkerRegex` `/^  #: (.*)$/` and the name rule `Class.isACategoryName`,
+    `/^[a-z]+(?: [a-z]+)*$/` with no word OPENING with `extends` (none of `/(?:^| )extends/`; the fix pass's, below)
+    — not this section's `/^  #: ([a-z][a-z ]*[a-z])$/`, which admits a
+    double space (a second spelling of one category) and refuses a one-letter name. ONE definition: the parse owns it
+    and the gate reads it off the loaded `Class`.
+  - **The marker stands only BETWEEN members** (PREP §1.2): a `#:` line at the member column always ENDS the method
+    above it (`topLevelCommentRegex`), so one typed inside a body cuts the method short; the blank lines around it are
+    the house's layout, not a rule (no reader depends on them).
+  - **The rules as built** (`buildSystem/check-method-categories.js`, row 35 of `gates.js`): `MARKER_MISPLACED`
+    (B; this table's `MARKER_MISINDENTED` widened: a `#:` comment at any indent but two spaces, a well-formed one ABOVE
+    the `class` line, which the parse reads as class-comment text, and one in a compiled file that holds no class);
+    `CATEGORY_NAME_MALFORMED` (B; also no single space after `#:`); `STASH_HOLDS_CODE` (**class A**, not B: PREP §1.3 —
+    code the meta-system never compiles is the product wrong; today zero, the five `LCLProgramRunner` lines deleted);
+    `EMPTY_CATEGORY` (B, each marker judged); `MARKED_CLASS_UNMARKED_METHOD` (B); `UNMARKED_CLASSES_ABOVE_BUDGET` (C;
+    this table's `UNMARKED_METHODS_ABOVE_BUDGET` re-unitised by L14). **The budget counts CLASSES, ONE NUMBER PER REPO**
+    (PREP §1.1; `UNMARKED_CLASSES_BUDGET` `{fizzygum: 520, tests: 13}`, recorded 2026-11-28 at the gate's own count,
+    "579 compiled files (566 classes), 4630 instance methods, 0 marker(s)"; `meta/Class.coffee` counted like every
+    class) — not "4485 methods", which counted methods against L14 and was stale besides.
+  - **What a method is**: the product's own `Widget.functionLiteralReading`, compiled from Widget's record (the
+    lexer's tokens, as this section asks) — never the shared header matcher, which L19 fixed before U5 but which ends
+    a span at no member-column comment (lint §6b). Members are placed on their lines by `placesOfMember`, lifted from
+    `lib/call-sites.js` into `lib/meta-compiler.js` and shared by both (the same regex and test, moved).
+  - **Exit 2** where it measures nothing (a reading gone, a parse keeping no categories, a member placed nowhere, the
+    lines' category and the parse's disagreeing). Its bite-proof `check-method-categories-selftest.js` (55 cases after
+    the fix pass): the control passing at its budget or under it (`-- UNDER` and its NOTE — the first build had
+    demanded `-- OK`, so U6's first marked class would have failed every build: Review A's (6)), every rule planted and
+    seen by its own lines (`#: extendsfoo` among them), the budget per repo, three INVALID runs, and a tree one under
+    its budget passing; five advice rows in `lib/gate-advice.js`, the budget's naming what a split, a move between the
+    repos and a rename each do to a count.
+  - **U6 must compare SOURCE strings** (PREP §1.7): a marker written with a NEW blank line above it lengthens the
+    source of the member above (a marker ends that body, its blank lines included) — 5148 member sources moved while
+    the compiled output stayed identical — so U6's proof holds every member's source string as well as the compiled
+    output, and markers go into the blank lines a class already has. **D1's recipe now gives 74 classes / 1714
+    instance methods** (PREP §1.7; this plan's 64 / 1594: the inspector package grew in U1–U4), all holding an
+    instance method, so U6 marking them all lowers the Fizzygum budget by 74.
+  - **The prefix rule, from the docs pass**: the rule as first built refused the WORD `extends` only, while the boot
+    scanner (`src/boot/dependencies-finding.coffee` `EXTENDS`, `\sextends\s*(\w+)`) also reads a word that only BEGINS
+    with it: `  #: extendsfoo` passed `Class.isACategoryName` and the gate, and made an edge to `foo` (unreached: no
+    marker in the tree). The fix pass made it the rule that no word may OPEN with `extends` (the scanner reads one
+    line at a time, so no edge crosses a line's end), stated in both refusal messages, the advice row and the gate's
+    header, and planted as `#: extendsfoo` in the gate's self-test.
 
 ### 5.11 The new subjects and their views (U7)
 
@@ -1818,6 +1914,86 @@ two today); `Class`'s method ceiling and complexity records where a method grows
 **Stop conditions.** Any member's source string or any class's compiled output differing in U5.1's proof: stop,
 the parse changed what it must not. `fg homepage` failing after the gauntlet (the first run of the kept stores on a
 pre-compiled tree, where meta-objects are built at the reflective layer's load): read it as a real break.
+
+**Landed 2026-11-28** (inspector-browser loop; one commit per repo, this unit's: U5.1, U5.2, U5.3, U5.5, U5.6; U5.4
+HELD for U7 by PREP §2, so no editor shows a comment: the predicted failing set EMPTY). **Built**: the meta-object's
+six stores and its accessors (`classComment`, `commentOf`, `categoryOf`, `categories()`, `categoryNames`), the parse's second
+pass (`_notesOf`, `_commentAndMarkersOf`, `Class._commentOfLines`, `Class._keepIn`, `Class._newRecordStore`), the
+pure rules (`Class.isACategoryName`, `Class.isAComment`, `Class.splitLeadingComment`, `Class.withLeadingComment`),
+`categoryMarkerRegex`; `applyMemberEdit`'s `comment` / `category` options (judged, `Class._refuseNotes`) and its
+`notesOf` (a copy's carried notes, unjudged), `removeMember`
+dropping both, `setClassComment`, `setCategories`, `bootRecord`, `Class.membersAwayFrom` over a meta-object and a
+record, `Class.classNotesAwayFrom`, `editsAwayFromBoot` (§5.9 as built); `SourceEditsRegistry`'s header, the record's
+two notes and its two class-level kinds, `recordClassEdit`'s `opts`, `serializableRecords` copying a category list,
+`isARecord` by shape (`_isAName`, `_isAMembersEdit`, `_isAClassRecordsBody`), `malformedCategoryIn`, the return to
+boot by `_returnMember` and `_returnClassNotes`, `recordMembersStillRunning` with the notes, `editsAwayFromBootCount`,
+`replayClassEdits` through `_applyClassRecord` and `_whatItEdits`; `Deserializer._sourceEditsCategoryProblem`;
+`ClassMemberRef._editClassMember`'s `opts` (a copy's record getting the carried notes) and `_editCopyUnder`'s
+`notesOf: @name`; the load's confirm wording
+(`WorldWdgt.loadWorldSnapshot`); the gate `buildSystem/check-method-categories.js` with its registry, its five advice
+rows, its bite-proof and its row in `gates.js`, and `lib/meta-compiler.js` `placesOfMember` (shared with
+`lib/call-sites.js`); the docs (NEW `docs/architecture/method-categories.md`; `lint-and-static-checks.md` §3, §3b, §5,
+§6b and its appendix; `serialization-duplication-reference.md` §11 and §12; `build-and-packaging.md` §2's consumer
+list; `src/macros/MACRO-PATTERNS.md`'s entry for the new test). **Deleted**: `LCLProgramRunner`'s five dead lines (five
+class-body local assignments in a stash, never compiled: `doOnceOccurrencesLineNumbers`, `drawFunction`,
+`consecutiveFramesWithoutRunTimeError`, `lastStableProgram`, `currentCodeString`), their comments kept as the
+constructor's, worded for the three fields they describe; the LiveCodeLang plan's R14 (delete the class) stays that
+plan's. **Ruled in the loop** (PREP §2): the parse keeps its first two result positions; `""` clears; TWO whole-value
+class verbs; the records carry notes only where set; `isARecord` by shape, the category refused by the meta-system's
+rule where it is; U5.4 held; the budget in classes, one number per repo, `meta/Class.coffee` counted; blank lines
+around a marker documented, not a rule; the shared matcher not the gate's reading. **Tests**: new
+`macroClassKeepsItsCommentsAndCategories` (assertion-only, no screenshots, no `pointerKinds`, seventeen assertions on
+a class of its own made from a block string and deleted in its `finally` — the parse, the edits and the class's two
+verbs, then (11)–(15) the meta-object's REFUSALS, each throwing and changing nothing: a category that is none, a
+comment one of whose lines is code, a class comment that is code, a category list naming one twice, one naming
+`extendsfoo`;
+then the split and the join; eighteen plants under `u5/plants/`, each naming the line it must fail first — the fix
+pass's Node run of the macro, `u5/fix-tests/run-test-in-node.txt`: the control 17/17, every plant BITES, CROSS-CHECK
+OK); the serialization rig's new checks `sourceEdits.classMemberNotesReplayed`,
+`sourceEdits.classCommentAndEmptyCategoryReplayed`, `sourceEdits.renameAndDuplicateCarryNotes` (a member whose text
+gives it notes, in the rig's own warm-load class, duplicated and renamed: both carried into the new members and their
+records, in A and replayed in B), `sourceEdits.clearedNotesReplayed` (a record handed `""` for both, through JSON,
+clears them in A and B), `sourceEdits.notesAreTheFilesAfterALoad`, `sourceEdits.loadReturnsMemberNotesToBoot`,
+`sourceEdits.loadReturnsClassNotesToBoot` (reading each class's `categoryNames`, the list alone) and
+`world.loadGuard.malformedCategoryRefused`; `sourceEdits.unreturnedPageEditIsRecorded` widened to the member's
+comment and category; the class-record clauses of `malformedWorldSectionRefused`, the notes' shapes among
+`wellFormedEdgeShapesAccepted`'s, the confirm's pin moved to the product's words; `refusal()` restoring the page's
+registry after its planted loads (a refused record no longer rides a later check's save); its self-test unchanged
+(new checks add no rule); the production smoke's core edit carrying a comment and a category beside a class-comment
+record (`CLASS_EDIT_FILE_LOADS`, no new rule); twelve rig plants and one smoke plant under `u5/plants/`.
+**Reviews**: Review A (the source, `u5/REVIEW-BRIEF-A.md`; no blocker, seven low) and Review B (tests, plants, rig,
+`u5/REVIEW-BRIEF-B.md`; no product defect), then ONE fix pass, two agents by repo (`u5/FIX-BRIEF-SRC.md`,
+`u5/FIX-BRIEF-TESTS.md`; the LEDGER's U5 lines hold each finding and its answer): the source's (`u5/fix-src/`) — a
+copy CARRIES its member's notes unjudged (`applyMemberEdit`'s `notesOf`; a run-time class whose text holds a `###`
+block or code above a member threw on Duplicate… and Rename…, Review A's (3)), the `extends`-PREFIX rule (§5.10 as
+built) in both messages, the Deserializer's wording exact, `WorldWdgt`'s three load comments made true, the gate's
+self-test control accepting `-- UNDER` with a case one under its budget (Review A's (6): U6's first marked class
+would have failed every build) and `#: extendsfoo` planted (55 cases), the headers and the advice row's wording;
+the tests' (`u5/fix-tests/`) — the test's comparisons and wording, the refusals as assertions, the rig's two
+over-failing plants explained and fixed (`categoryNames`; the registry restored in `refusal()`), the three new or
+widened checks, the plant headers. Filed as LEDGER lines, low and unreached (the owner's bar): lean refusing no
+malformed category; a refused record riding the loaded world's registry; the still-running notice judging sources
+only; split-after-join for U7; a `###` block read as code; and, for U9, a run-time class's copied member recording a
+carried note the replay refuses. PARKED and asked: a homepage load of a malformed-category file, driven by no rig.
+No separate re-review of the fix pass was run: each finding's fix is held by a run that would fail without it — the test's five refusal assertions and their plants, the rig's three new checks and their plants, the two over-failing plants re-run and failing exactly their headers' checks, the gate self-test's under-budget case and `extendsfoo` plant (and its bite probe on temp copies), the notes probe reproducing the pre-fix throw.
+**Evidence** (so far): the parse proof GREEN with its four plants biting (`u5/cp1/after.txt` on CP1's tree,
+`u5/cp2b/parse-proof.txt` on CP2's, `u5/fix-src/parse-proof.txt` on the fix pass's); the fix pass's notes probe
+(`u5/fix-src/notes-probe.txt`, PASS: a run-time class's member with a `###` or code stash edited, duplicated and
+renamed, and the pre-fix copy reproducing the throw) and its self-test bite probe on temp copies
+(`selftest-bite-probe.txt`, PASS: the self-test passes a tree one under its budget, and fails with the control's old
+`-- OK` line, with the exact-word `extends` rule put back, and with a gate that fails a tree under its budget);
+every gate the fix pass ran exit 0 (`u5/fix-src/*.log`: `run-selftests`
+OK — 75 self-tests, 2791 cases; the method-category gate at its budget); CP2's Node probe of the edits, the return
+to boot and the records through the real meta-compiler (`u5/cp2b/probe-output.txt`: 29 checks, 13 plants biting); the static gates exit 0 on
+CP2's tree but `check-dead-methods` (`splitLeadingComment` and `withLeadingComment`, unreached until the SystemTest)
+and every one CP4 ran on its tree, that one included (`u5/cp2b/checks/`, `u5/cp4/checks/`: `run-selftests` OK —
+75 self-tests, 2789 cases; the macro compiled as the engine rewrites it, `COMPILE OK`), the new gate at its budget,
+`check-doc-narration` OK. On the final tree: `fg presuite` OK (dpr 1 PASS, paint PASS, fracplane PASS — the predicted failing set EMPTY, met); the finger suite 484 tests, 0 failed; the new test passing under both pointers and its 18 plants each seen failing first on its own assertion under both (36 runs); its follower under both pointers, zero `WORLD_INVENTORY_` lines; the serialization rig OK ("all 206 expectations … SERIALIZATION RIG OK") and its 12 plants each failing exactly the checks its header names; the smoke on the dev tree read as production: its control firing only the tree's own two rules, its plant adding `CLASS_EDIT_FILE_LOADS`; `fg gauntlet` OK, all 20 legs in-wave; `fg homepage` OK ("the load fetched app-kit, then the reflective layer, replayed 3 class record(s) … the core edit's comment and category and its class's comment answered"); the lean smoke by hand OK ("loaded, and told once that the 2 class records cannot be re-applied").. **Ratchets moved**: the
+`null-literal` stink's sanction from `getSourceOfAllProperties` (count 2) to the one-line `@_newRecordStore` (count 1),
+the stink's baseline 6 unchanged; the new `UNMARKED_CLASSES_BUDGET` recorded (520 / 13, dated); `comment-narration`
+lowered 79 → 78 with its dated reason beside it (`LCLProgramRunner`'s "used to keep track", a false hit of the
+pattern, went with the dead lines). No `METHOD_CEILINGS` entry holds
+`Class` (this unit's "`Class`'s method ceiling" names none) and no complexity record moved.
 
 ### U6. The first classes get their categories (1–2 days, D1)
 

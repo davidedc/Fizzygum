@@ -91,7 +91,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { loadMetaCompiler } = require('./meta-compiler');
+const { loadMetaCompiler, placesOfMember } = require('./meta-compiler');
 const { testsRepoFiles } = require('./tests-repo-code');
 const { srcFiles } = require('./source-files');
 const { testMacroSourcesIn, verbMacroSourcesIn } = require('./macro-sources');
@@ -324,13 +324,7 @@ function callSites({ srcDir, testsRepoDir } = {}) {
       for (const f of fragments.slice(before)) {
         counts.fragments++;
         // fragment line 0 is the rest of the `  name: …` header line, line k > 0 is header + k, verbatim
-        const header = new RegExp('^  ' + (f.isStatic ? '@' : '') + f.member.replace(/\$/g, '\\$') + ' *: *(.*)$');
-        const fl = f.input.split('\n');
-        const at = [];
-        for (let h = 0; h < lines.length; h++) {
-          const m = header.exec(lines[h]);
-          if (m && m[1] === fl[0] && fl.every((l, k) => k === 0 || lines[h + k] === l)) at.push(h);
-        }
+        const at = placesOfMember(lines, f.member, f.isStatic, f.input);
         if (at.length !== 1) { unreadable.push({ file, message: `member ${f.member}: its fragment maps to ${at.length} places in the file` }); continue; }
         const h = at[0];
         units.push({ file, where, lang: 'coffee', home: 'page', text: f.output, cls: c.name, lineOf: (k0) => h + k0 + 1,
